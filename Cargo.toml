@@ -4,3 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+joystick = { path = "crates/joystick", version = "0.1.0", optional = true }
