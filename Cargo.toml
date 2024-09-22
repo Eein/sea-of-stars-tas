@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 # joystick = { path = "crates/joystick", version = "0.1.0" }
 memory = { path = "crates/memory", version = "0.1.0" }
+seq = { path = "crates/seq", version = "0.1.0" }
 sysinfo = { version = "0.31.2", default-features = false, features = ["system"] }
 egui = "0.28"
 eframe = { version = "0.28", default-features = false, features = [

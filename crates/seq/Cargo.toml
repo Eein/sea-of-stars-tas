@@ -1,0 +1,7 @@
+[package]
+name = "seq"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+delta = "0.2.1"
