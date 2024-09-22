@@ -15,19 +15,22 @@
           inherit system overlays;
         };
         libPath = with pkgs; lib.makeLibraryPath [
-          # libGL
-          # libxkbcommon
-          # wayland
-          # xorg.libX11
-          # xorg.libXcursor
-          # xorg.libXi
-          # xorg.libXrandr
+          libGL
+          libxkbcommon
+          wayland
+          wayland
+          xorg.libX11
+          xorg.libXcursor
+          xorg.libXi
+          xorg.libXrandr
         ];
       in
       {
         devShells.default = with pkgs; mkShell {
           buildInputs = [
             pkg-config
+            openssl
+            xorg.libxcb
             # wasm-pack
             rust-analyzer
             rustfmt

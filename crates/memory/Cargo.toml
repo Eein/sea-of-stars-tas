@@ -1,0 +1,10 @@
+[package]
+name = "memory"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bytemuck = "1.18.0"
+proc-maps = "0.3.0"
+read-process-memory = "0.1.6"
+sysinfo = { version = "0.31.2", default-features = false, features = ["system"] }
