@@ -1,4 +1,6 @@
+mod gui;
 mod state;
+
 use eframe::egui;
 
 fn main() {

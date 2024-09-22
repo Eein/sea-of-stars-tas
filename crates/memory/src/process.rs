@@ -9,10 +9,9 @@ use core::{
     slice,
 };
 
+use crate::process_list::ProcessList;
 use proc_maps::{MapRange, Pid};
 use read_process_memory::{CopyAddress, ProcessHandle};
-
-use crate::process_list::ProcessList;
 
 #[derive(Debug)]
 pub enum OpenError {
@@ -63,11 +62,8 @@ impl Process {
                     modules: Vec::new(),
                     last_check: Instant::now() - Duration::from_secs(1),
                 })
-            },
-            None => {
-                Err(OpenError::ProcessDoesntExist)
-
             }
+            None => Err(OpenError::ProcessDoesntExist),
         }
     }
 
@@ -83,12 +79,14 @@ impl Process {
             };
             self.last_check = now;
         }
-        match self.modules
+        match self
+            .modules
             .iter()
             .find(|m| m.filename().map_or(false, |f| f.ends_with(module)))
-            .map(|m| m.start() as u64) {
+            .map(|m| m.start() as u64)
+        {
             Some(module) => Ok(module),
-            None => Err(ModuleError::ModuleDoesntExist)
+            None => Err(ModuleError::ModuleDoesntExist),
         }
     }
 

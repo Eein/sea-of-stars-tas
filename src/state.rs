@@ -1,3 +1,4 @@
+use super::gui::GUI;
 use memory::process::Process;
 use memory::process_list::ProcessList;
 
@@ -20,6 +21,32 @@ impl State {
             process_list: ProcessList::new(),
         }
     }
+
+    pub fn maybe_deregister_process(&mut self) {
+        if let Some(process) = &self.process {
+            if !&self
+                .process_list
+                .is_open(sysinfo::Pid::from(process.pid as usize))
+            {
+                self.process = None
+            }
+        }
+    }
+
+    pub fn register_process(&mut self) {
+        if self.process.is_none() {
+            let process_name = "SeaOfStars.exe";
+            match Process::with_name(process_name, &mut self.process_list) {
+                Ok(mut process) => {
+                    if let Ok(address) = process.module_address("GameAssembly.dll") {
+                        self.process = Some(process);
+                        self.module = address;
+                    };
+                }
+                Err(_err) => (),
+            }
+        }
+    }
 }
 
 impl eframe::App for State {
@@ -29,60 +56,15 @@ impl eframe::App for State {
     // }
 
     /// Called each time the UI needs repainting, which may be many times per second.
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         // Put your widgets into a `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
         // For inspiration and more examples, go to https://emilk.github.io/egui
 
-        if let Some(process) = &self.process {
-            if !self.process_list.is_open(sysinfo::Pid::from(process.pid as usize)) {
-                self.process = None
-            }
-        };
+        // Deregister the project in state if its not running anymore
+        let _ = &self.maybe_deregister_process();
+        // Register the process if its not in state
+        let _ = &self.register_process();
 
-        if let Some(process) = &self.process  {
-            // If process is loaded then:
-            egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-                // The top panel is often a good place for a menu bar:
-
-                egui::menu::bar(ui, |ui| {
-                    // NOTE: no File->Quit on web pages!
-                    ui.menu_button("File", |ui| {
-                        if ui.button("Quit").clicked() {
-                            ctx.send_viewport_cmd(egui::ViewportCommand::Close);
-                        }
-                    });
-                    ui.add_space(16.0);
-
-                    egui::widgets::global_dark_light_mode_buttons(ui);
-                });
-            });
-
-            egui::CentralPanel::default().show(ctx, |ui| {
-                ui.heading("Test");
-
-                ui.horizontal(|ui| {
-                    ui.label("Testing the Application");
-                });
-            });
-        } else {
-        // If process needs to be loaded/reloaded:
-            let process_name = "SeaOfStars.exe";
-            match Process::with_name(process_name, &mut self.process_list) {
-                Ok(mut process) => {
-                    if let Ok(address) = process.module_address("GameAssembly.dll") {
-                            self.process = Some(process);
-                            self.module = address;
-                    };
-                }
-                Err(_err) => (),
-            }
-
-            egui::CentralPanel::default().show(ctx, |ui| {
-                ui.label("Game is not running...");
-            });
-        }
-
-
+        GUI::update(self, ctx, frame)
     }
 }
-
