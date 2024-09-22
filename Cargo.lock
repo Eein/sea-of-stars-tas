@@ -1950,7 +1950,6 @@ version = "0.1.0"
 dependencies = [
  "eframe",
  "egui",
- "joystick",
  "memory",
  "sysinfo",
  "winit 0.28.7",

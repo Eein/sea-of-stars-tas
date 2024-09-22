@@ -1,3 +1,4 @@
-// #[cfg_attr(windows, path = "windows.rs")]
+#[cfg_attr(windows, path = "windows.rs")]
+pub mod windows;
 #[cfg_attr(target_os = "linux", path = "linux.rs")]
-pub mod joystick;
+pub mod linux;
