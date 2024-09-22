@@ -30,7 +30,7 @@ pub struct Joystick {
     events: Vec<JoystickEvent>,
     instant: Instant,
 }
-~
+
 impl Default for Joystick {
     fn default() -> Self {
         let name = "Future TAS Joystick Linux";
