@@ -1,11 +1,16 @@
 use super::gui::GUI;
+// Move these to preludes later
+use super::memory::title_sequence_manager::TitleSequenceManager;
+use memory::game_engine::il2cpp::Module;
 use memory::process::Process;
 use memory::process_list::ProcessList;
+use memory::memory_manager::{MemoryManager, MemoryManagement};
 
 pub struct State {
     pub process: Option<Process>,
-    pub module: u64,
+    pub module: Option<Module>,
     pub process_list: ProcessList,
+    pub memory_managers: Vec<Box<dyn MemoryManagement>>,
 }
 
 impl State {
@@ -17,8 +22,9 @@ impl State {
 
         Self {
             process: None,
-            module: 0,
+            module: None,
             process_list: ProcessList::new(),
+            memory_managers: vec![],
         }
     }
 
@@ -38,13 +44,19 @@ impl State {
             let process_name = "SeaOfStars.exe";
             match Process::with_name(process_name, &mut self.process_list) {
                 Ok(mut process) => {
-                    if let Ok(address) = process.module_address("GameAssembly.dll") {
-                        self.process = Some(process);
-                        self.module = address;
-                    };
+                    println!("Found {} at pid {}", process_name, process.pid);
+                    self.module = Module::attach(&mut process);
+                    self.process = Some(process);
+                    self.memory_managers.push(Box::new(TitleSequenceManager::default()));
                 }
                 Err(_err) => (),
             }
+        }
+    }
+
+    pub fn update_managers(&self) {
+        for m in self.memory_managers.iter() {
+            m.update()
         }
     }
 }
@@ -64,6 +76,8 @@ impl eframe::App for State {
         let _ = &self.maybe_deregister_process();
         // Register the process if its not in state
         let _ = &self.register_process();
+
+        let _ = &self.update_managers();
 
         GUI::update(self, ctx, frame)
     }

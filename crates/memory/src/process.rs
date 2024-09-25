@@ -28,10 +28,10 @@ pub enum ModuleError {
 pub struct Error;
 
 pub struct Process {
-    handle: ProcessHandle,
+    pub handle: ProcessHandle,
     pub pid: Pid,
-    modules: Vec<MapRange>,
-    last_check: Instant,
+    pub modules: Vec<MapRange>,
+    pub last_check: Instant,
 }
 
 impl std::fmt::Debug for Process {
@@ -105,7 +105,34 @@ impl Process {
         }
     }
 
-    pub fn read_pointer_path64<T: Pod>(&self, mut address: u64, path: &[u64]) -> Result<T, Error> {
+    pub fn read_pointer(
+        &self,
+        address: u64,
+    ) -> Result<u64, Error> {
+        self.read::<u64>(address)
+    }
+
+
+    pub fn read_into_uninit_buf<'buf>(
+        &self,
+        address: u64,
+        buf: &'buf mut [u8],
+    ) -> Result<&'buf mut [u8], Error> {
+        // SAFETY: The process handle is guaranteed to be valid. We provide a
+        // valid pointer and length to the buffer. We also do proper error
+        // handling afterwards. The buffer is guaranteed to be initialized
+        // afterwards, so we can safely return an u8 slice of it.
+        unsafe {
+            let buf_len = buf.len();
+            if self.read_mem(address, buf).is_ok() {
+                Ok(slice::from_raw_parts_mut(buf.as_mut_ptr().cast(), buf_len))
+            } else {
+                Err(Error {})
+            }
+        }
+    }
+
+    pub fn read_pointer_path<T: Pod>(&self, mut address: u64, path: &[u64]) -> Result<T, Error> {
         let (&last, path) = path.split_last().ok_or(Error)?;
         for &offset in path {
             address = self.read(address.wrapping_add(offset))?;

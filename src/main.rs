@@ -1,5 +1,6 @@
 mod gui;
 mod state;
+mod memory;
 
 use eframe::egui;
 

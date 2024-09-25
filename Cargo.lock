@@ -1300,7 +1300,9 @@ dependencies = [
 name = "memory"
 version = "0.1.0"
 dependencies = [
+ "arrayvec",
  "bytemuck",
+ "memchr",
  "proc-maps",
  "read-process-memory",
  "sysinfo",
