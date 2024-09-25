@@ -5,12 +5,18 @@ use memory::game_engine::il2cpp::Module;
 use memory::process::Process;
 use memory::process_list::ProcessList;
 use memory::memory_manager::{MemoryManager, MemoryManagement};
+use std::time::Instant;
+
+pub struct StateDebug {
+    pub last_update: Option<Instant>
+}
 
 pub struct State {
     pub process: Option<Process>,
     pub module: Option<Module>,
     pub process_list: ProcessList,
     pub memory_managers: Vec<Box<dyn MemoryManagement>>,
+    pub debug: StateDebug
 }
 
 impl State {
@@ -25,6 +31,7 @@ impl State {
             module: None,
             process_list: ProcessList::new(),
             memory_managers: vec![],
+            debug: StateDebug { last_update: None }
         }
     }
 
