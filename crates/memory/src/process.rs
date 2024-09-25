@@ -49,8 +49,27 @@ impl Process {
         // select the higher pid in case all records are equally maximum; otherwise
         // use the process that was started the most recently, it's more
         // predictable for the user.
+        // for m in process.modules.clone() {
+        //     if let Some(filename) = m.filename() {
+        //         if let Some(filename_str) = filename.to_str() {
+        //             if filename_str.contains("GameAssembly.dll") {
+        //                 println!("Found Gameassembly.dll");
+        //                 println!("Filename: {:?}", m.filename());
+        //                 println!("Start: {:?}", m.start());
+        //                 println!("SIZE: {:?}", m.size());
+        //             }
+        //         }
+        //     }
 
-        match &processes.max_by_key(|p| (p.start_time(), p.pid().as_u32())) {
+        // }
+
+        match &processes.min_by_key(|p| {
+
+            // println!("start_time: {:?}", p.name());
+            // println!("start_time: {:?}", p.start_time());
+            // println!("pid: {:?}", p.pid().as_u32());
+            (p.start_time(), p.pid().as_u32())
+        }) {
             Some(process) => {
                 let pid = process.pid().as_u32() as Pid;
                 let handle = pid

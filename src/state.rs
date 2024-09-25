@@ -1,10 +1,10 @@
 use super::gui::GUI;
 // Move these to preludes later
 use super::memory::title_sequence_manager::TitleSequenceManager;
-use memory::game_engine::il2cpp::Module;
+use memory::game_engine::il2cpp::{Module, Image};
 use memory::process::Process;
 use memory::process_list::ProcessList;
-use memory::memory_manager::{MemoryManager, MemoryManagement};
+use memory::memory_manager::{UnityMemoryManager, MemoryManagement};
 use std::time::Instant;
 
 pub struct StateDebug {
@@ -14,6 +14,7 @@ pub struct StateDebug {
 pub struct State {
     pub process: Option<Process>,
     pub module: Option<Module>,
+    pub image: Option<Image>,
     pub process_list: ProcessList,
     pub memory_managers: Vec<Box<dyn MemoryManagement>>,
     pub debug: StateDebug
@@ -29,6 +30,7 @@ impl State {
         Self {
             process: None,
             module: None,
+            image: None,
             process_list: ProcessList::new(),
             memory_managers: vec![],
             debug: StateDebug { last_update: None }
@@ -48,22 +50,57 @@ impl State {
 
     pub fn register_process(&mut self) {
         if self.process.is_none() {
+            println!("PROCESS IS NONE");
             let process_name = "SeaOfStars.exe";
+            // Find the Process
             match Process::with_name(process_name, &mut self.process_list) {
-                Ok(mut process) => {
+                Ok(process) => {
                     println!("Found {} at pid {}", process_name, process.pid);
-                    self.module = Module::attach(&mut process);
                     self.process = Some(process);
-                    self.memory_managers.push(Box::new(TitleSequenceManager::default()));
+                    println!("{:?}", self.process);
                 }
                 Err(_err) => (),
             }
         }
     }
 
-    pub fn update_managers(&self) {
-        for m in self.memory_managers.iter() {
-            m.update()
+    pub fn register_module(&mut self) {
+        if let Some(ref mut process) = &mut self.process {
+            if self.module.is_none() {
+                println!("GETTING MODULE");
+                // Attach to GameAssembly.dll
+                self.module = Module::attach(process);
+                println!("{:?}", self.module);
+            }
+        }
+
+    }
+    pub fn register_image(&mut self) {
+        // If the module attached, set the default image (usually Assembly-Csharp)
+        if let Some(process) = &self.process {
+            if let Some(module) = &self.module {
+                println!("GETTING IMAGE");
+                self.image = module.get_default_image(process)
+            }
+        }
+    }
+
+    pub fn register_managers(&mut self) {
+        if self.process.is_some() && self.image.is_some() && self.memory_managers.is_empty() {
+                println!("PUSHING MANAGERS");
+            self.memory_managers.push(
+                Box::new(TitleSequenceManager::default())
+            );
+        }
+    }
+
+    pub fn update_managers(&mut self) {
+        if let Some(process) = &self.process {
+            if let Some(image) = &self.image {
+                for m in self.memory_managers.iter_mut() {
+                    m.update(process, image)
+                }
+            }
         }
     }
 }
@@ -83,6 +120,9 @@ impl eframe::App for State {
         let _ = &self.maybe_deregister_process();
         // Register the process if its not in state
         let _ = &self.register_process();
+        let _ = &self.register_module();
+        let _ = &self.register_image();
+        let _ = &self.register_managers();
 
         let _ = &self.update_managers();
 

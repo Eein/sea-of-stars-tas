@@ -14,6 +14,7 @@ use crate::signature::Signature;
 const CSTR: usize = 128;
 
 /// Represents access to a Unity game that is using the IL2CPP backend.
+#[derive(Debug)]
 pub struct Module {
     offsets: &'static Offsets,
     assemblies: u64,
@@ -28,8 +29,17 @@ impl Module {
     pub fn attach(process: &mut Process) -> Option<Self> {
         let _ = process.module_address("GameAssembly.dll");
         // for m in process.modules.clone() {
-        //     println!("Filename: {:?}", m.filename());
-        //     println!("Start: {:?}", m.start());
+        //     if let Some(filename) = m.filename() {
+        //         if let Some(filename_str) = filename.to_str() {
+        //             if filename_str.contains("GameAssembly.dll") {
+        //                 println!("Found Gameassembly.dll");
+        //                 println!("Filename: {:?}", m.filename());
+        //                 println!("Start: {:?}", m.start());
+        //                 println!("SIZE: {:?}", m.size());
+        //             }
+        //         }
+        //     }
+
         // }
         let mono_module = {
             let module = process.modules.iter().find_map(|m| {
@@ -55,7 +65,10 @@ impl Module {
             const ASSEMBLIES_TRG_SIG: Signature<12> =
             Signature::new("48 FF C5 80 3C ?? 00 75 ?? 48 8B 1D");
 
-            let addr = ASSEMBLIES_TRG_SIG.scan_process_range(process, mono_module.unwrap())? + 12;
+            let scan = ASSEMBLIES_TRG_SIG.scan_process_range(process, mono_module.unwrap())?;
+            println!("{:?}", scan);
+            let addr = scan + 12;
+
             addr + 0x4 + process.read::<u64>(addr).ok()?
         };
 
@@ -183,7 +196,7 @@ impl Image {
         let metadata_ptr = match type_count {
             Ok(_) => {
                 process.read_pointer(
-                    self.image as u64 + module.offsets.monoimage_metadatahandle as u64
+                    self.image + module.offsets.monoimage_metadatahandle as u64
                 )
             },
             _ => Err(Error {}),
@@ -597,6 +610,7 @@ impl Field {
     // // }
 // }
 
+#[derive(Debug)]
 struct Offsets {
     monoassembly_image: u8,
     monoassembly_aname: u8,
@@ -620,12 +634,12 @@ impl Offsets {
             monoassembly_image: 0x0,
             monoassembly_aname: 0x18,
             monoassemblyname_name: 0x0,
-            monoimage_typecount: 0x1C,
-            monoimage_metadatahandle: 0x18, // MonoImage.typeStart
+            monoimage_typecount: 0x18,
+            monoimage_metadatahandle: 0x28,
             monoclass_name: 0x10,
             monoclass_name_space: 0x18,
             monoclass_fields: 0x80,
-            monoclass_field_count: 0x114,
+            monoclass_field_count: 0x120,
             monoclass_static_fields: 0xB8,
             monoclass_parent: 0x58,
             monoclassfield_structsize: 0x20,

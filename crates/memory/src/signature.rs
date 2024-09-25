@@ -164,7 +164,9 @@ impl<const N: usize> Signature<N> {
 
     fn scan(&self, haystack: &[u8]) -> Option<usize> {
         match self {
-            Signature::Simple(needle) => memchr::memmem::find(haystack, needle),
+            Signature::Simple(needle) => {
+                memchr::memmem::find(haystack, needle)
+            },
             Signature::Complex {
                 needle,
                 mask,
@@ -174,6 +176,9 @@ impl<const N: usize> Signature<N> {
                 let end = N - 1;
                 while let Some(scan) = strip_pod::<[u8; N]>(&mut &haystack[current..]) {
                     if matches(scan, needle, mask) {
+                        println!("{:?}", scan);
+                        println!("{:?}", needle);
+                        println!("{:?}", mask);
                         return Some(current);
                     }
                     let offset = skip_offsets[scan[end] as usize];
@@ -196,6 +201,7 @@ impl<const N: usize> Signature<N> {
         // boundary.
         let overall_end = addr + len;
         let mut buf = [0; 4 << 10];
+
         while addr < overall_end {
             // We round up to the 4 KiB address boundary as that's a single
             // page, which is safe to read either fully or not at all. We do
@@ -206,6 +212,7 @@ impl<const N: usize> Signature<N> {
             let current_read_buf = &mut buf[..len as usize];
             if let Ok(current_read_buf) = process.read_into_uninit_buf(addr, current_read_buf) {
                 if let Some(pos) = self.scan(current_read_buf) {
+                    println!("{:?}", addr);
                     return Some(addr + pos as u64);
                 }
             };
