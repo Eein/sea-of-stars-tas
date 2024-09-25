@@ -48,7 +48,6 @@ impl Module {
                 Some((0,0))
             }
         };
-        println!("{:?}", mono_module);
 
         let offsets = Offsets::new()?;
 
