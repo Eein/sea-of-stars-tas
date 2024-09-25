@@ -2,7 +2,7 @@
 
 use core::mem::{self, MaybeUninit};
 
-use bytemuck::{AnyBitPattern, Pod, CheckedBitPattern};
+use bytemuck::{AnyBitPattern, CheckedBitPattern, Pod};
 
 use crate::process::Process;
 
@@ -164,9 +164,7 @@ impl<const N: usize> Signature<N> {
 
     fn scan(&self, haystack: &[u8]) -> Option<usize> {
         match self {
-            Signature::Simple(needle) => {
-                memchr::memmem::find(haystack, needle)
-            },
+            Signature::Simple(needle) => memchr::memmem::find(haystack, needle),
             Signature::Complex {
                 needle,
                 mask,
@@ -210,7 +208,7 @@ impl<const N: usize> Signature<N> {
             if let Ok(current_read_buf) = process.read_into_uninit_buf(addr, current_read_buf) {
                 if let Some(pos) = self.scan(current_read_buf) {
                     return Some(addr + pos as u64);
-                } 
+                }
             };
             addr = end;
         }

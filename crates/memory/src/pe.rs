@@ -2,8 +2,8 @@
 
 use core::{fmt, mem};
 
+use crate::process::{Error, Process};
 use bytemuck::{Pod, Zeroable};
-use crate::process::{Process, Error};
 
 use crate::string::ArrayCString;
 
@@ -323,13 +323,17 @@ pub fn symbols(
             address: address
                 + process
                     .read::<u32>(
-                        address + symbols_def.function_address_array_index as u64 + i.wrapping_mul(4) as u64,
+                        address
+                            + symbols_def.function_address_array_index as u64
+                            + i.wrapping_mul(4) as u64,
                     )
                     .ok()? as u64,
             name_addr: address
                 + process
                     .read::<u32>(
-                        address + symbols_def.function_name_array_index as u64 + i.wrapping_mul(4) as u64,
+                        address
+                            + symbols_def.function_name_array_index as u64
+                            + i.wrapping_mul(4) as u64,
                     )
                     .ok()? as u64,
         })

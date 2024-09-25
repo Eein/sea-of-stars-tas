@@ -45,9 +45,7 @@ impl Process {
         process_list.refresh();
         let processes = process_list.processes_by_name(name);
 
-        match &processes.max_by_key(|p| {
-            (p.start_time(), p.pid().as_u32())
-        }) {
+        match &processes.max_by_key(|p| (p.start_time(), p.pid().as_u32())) {
             Some(process) => {
                 let pid = process.pid().as_u32() as Pid;
                 let handle = pid
@@ -91,7 +89,6 @@ impl Process {
         self.handle.copy_address(address as usize, buf)
     }
 
-
     pub fn read<T: Pod>(&self, address: u64) -> Result<T, Error> {
         unsafe {
             let mut value = MaybeUninit::<T>::uninit();
@@ -103,13 +100,9 @@ impl Process {
         }
     }
 
-    pub fn read_pointer(
-        &self,
-        address: u64,
-    ) -> Result<u64, Error> {
+    pub fn read_pointer(&self, address: u64) -> Result<u64, Error> {
         self.read::<u64>(address)
     }
-
 
     pub fn read_into_uninit_buf<'buf>(
         &self,
@@ -129,7 +122,6 @@ impl Process {
             }
         }
     }
-
 
     pub fn read_pointer_path<T: Pod>(&self, mut address: u64, path: &[u64]) -> Result<T, Error> {
         let (&last, path) = path.split_last().ok_or(Error)?;

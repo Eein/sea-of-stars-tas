@@ -1,14 +1,14 @@
 use super::gui::GUI;
 // Move these to preludes later
-use super::memory::title_sequence_manager::TitleSequenceManager;
-use memory::game_engine::il2cpp::{Module, Image};
+use super::memory::title_sequence_manager::MemoryManager;
+use memory::game_engine::il2cpp::{Image, Module};
+use memory::memory_manager::unity::*;
 use memory::process::Process;
 use memory::process_list::ProcessList;
-use memory::memory_manager::{UnityMemoryManager, MemoryManagement};
 use std::time::Instant;
 
 pub struct StateDebug {
-    pub last_update: Option<Instant>
+    pub last_update: Option<Instant>,
 }
 
 pub struct State {
@@ -16,8 +16,8 @@ pub struct State {
     pub module: Option<Module>,
     pub image: Option<Image>,
     pub process_list: ProcessList,
-    pub memory_managers: Vec<Box<dyn MemoryManagement>>,
-    pub debug: StateDebug
+    pub memory_managers: Vec<MemoryManager>,
+    pub debug: StateDebug,
 }
 
 impl State {
@@ -33,7 +33,7 @@ impl State {
             image: None,
             process_list: ProcessList::new(),
             memory_managers: vec![],
-            debug: StateDebug { last_update: None }
+            debug: StateDebug { last_update: None },
         }
     }
 
@@ -50,7 +50,7 @@ impl State {
 
     pub fn register_process(&mut self) {
         if self.process.is_none() {
-            println!("PROCESS IS NONE");
+            println!("- Attaching Process");
             let process_name = "SeaOfStars.exe";
             // Find the Process
             match Process::with_name(process_name, &mut self.process_list) {
@@ -65,22 +65,21 @@ impl State {
     }
 
     pub fn register_module(&mut self) {
-        if let Some(ref mut process) = &mut self.process {
-            if self.module.is_none() {
-                println!("GETTING MODULE");
+        if self.module.is_none() {
+            if let Some(ref mut process) = &mut self.process {
+                println!("- Loading Module");
                 // Attach to GameAssembly.dll
                 self.module = Module::attach(process);
                 println!("{:?}", self.module);
             }
         }
-
     }
     pub fn register_image(&mut self) {
         // If the module attached, set the default image (usually Assembly-Csharp)
-        if let Some(process) = &self.process {
-            if let Some(module) = &self.module {
-                if self.image.is_none() {
-                    println!("GETTING IMAGE");
+        if self.image.is_none() {
+            if let Some(process) = &self.process {
+                if let Some(module) = &self.module {
+                    println!("- Loading Image");
                     self.image = module.get_default_image(process);
                     println!("{:?}", self.image);
                 }
@@ -90,18 +89,30 @@ impl State {
 
     pub fn register_managers(&mut self) {
         if self.process.is_some() && self.image.is_some() && self.memory_managers.is_empty() {
-                println!("PUSHING MANAGERS");
+            println!("- Pushing Managers");
+            self.memory_managers = Vec::new();
             self.memory_managers.push(
-                Box::new(TitleSequenceManager::default())
+                MemoryManager{
+                    name: "TitleSequenceManager".to_string(),
+                    manager: UnityMemoryManager{..UnityMemoryManager::default()}
+                }
+            );
+            self.memory_managers.push(
+                MemoryManager{
+                    name: "CombatManager".to_string(),
+                    manager: UnityMemoryManager{..UnityMemoryManager::default()}
+                }
             );
         }
     }
 
     pub fn update_managers(&mut self) {
         if let Some(process) = &self.process {
-            if let Some(image) = &self.image {
-                for m in self.memory_managers.iter_mut() {
-                    m.update(process, image)
+            if let Some(module) = &self.module {
+                if let Some(image) = &self.image {
+                    for m in self.memory_managers.iter_mut() {
+                        m.update(process, module, image)
+                    }
                 }
             }
         }
@@ -121,12 +132,14 @@ impl eframe::App for State {
 
         // Deregister the project in state if its not running anymore
         let _ = &self.maybe_deregister_process();
+
         // Register the process if its not in state
         let _ = &self.register_process();
         let _ = &self.register_module();
         let _ = &self.register_image();
         let _ = &self.register_managers();
 
+        // Run self.update() on each manager
         let _ = &self.update_managers();
 
         GUI::update(self, ctx, frame)

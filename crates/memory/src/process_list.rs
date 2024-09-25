@@ -19,7 +19,7 @@ impl ProcessList {
         }
     }
 
- pub fn refresh(&mut self) {
+    pub fn refresh(&mut self) {
         let now = Instant::now();
         if now >= self.next_check {
             self.system

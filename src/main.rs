@@ -1,32 +1,39 @@
 mod gui;
-mod state;
 mod memory;
+mod state;
 
 use eframe::egui;
 
-use seq::{Sequencer, SeqLog, SeqList, SeqCheckpoint};
+use seq::{SeqCheckpoint, SeqList, SeqLog, Sequencer};
 
 fn seq_test() {
     // Create a sequencer object
-    let mut sequencer = Sequencer::create(
-        SeqList::create("Root", vec![
+    let mut sequencer = Sequencer::create(SeqList::create(
+        "Root",
+        vec![
             SeqLog::create("Starting TAS"),
             SeqLog::create("Selecting character"),
             SeqLog::create("Mountain Trail 1"),
             SeqCheckpoint::create("Mooncradle"),
-            SeqList::create("Mooncradle", vec![
-                SeqLog::create("Garl nooo..."),
-                SeqLog::create("Training"),
-                SeqLog::create("Final Trials"),
-            ]),
-            SeqList::create("Forbidden Cave", vec![
-                SeqLog::create("Juking snails"),
-                SeqLog::create("Big boss"),
-                SeqLog::create("Leaving caves"),
-            ]),
+            SeqList::create(
+                "Mooncradle",
+                vec![
+                    SeqLog::create("Garl nooo..."),
+                    SeqLog::create("Training"),
+                    SeqLog::create("Final Trials"),
+                ],
+            ),
+            SeqList::create(
+                "Forbidden Cave",
+                vec![
+                    SeqLog::create("Juking snails"),
+                    SeqLog::create("Big boss"),
+                    SeqLog::create("Leaving caves"),
+                ],
+            ),
             SeqLog::create("Make jam"),
-        ])
-    );
+        ],
+    ));
 
     // Optionally, advance to a checkpoint in the sequence
     //sequencer.advance_to_checkpoint("Checkpoint");
@@ -35,9 +42,7 @@ fn seq_test() {
     sequencer.run();
 }
 
-
 fn main() {
-
     seq_test();
 
     let options = eframe::NativeOptions {

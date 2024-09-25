@@ -25,3 +25,14 @@ members = [
   "crates/joystick", 
   "crates/memory"
 ]
+
+[profile.dev]
+opt-level = 1
+
+[profile.release]
+opt-level = 3
+lto = true
+panic = "abort"
+codegen-units = 1
+strip = true
+
