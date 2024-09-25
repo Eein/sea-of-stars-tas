@@ -176,9 +176,6 @@ impl<const N: usize> Signature<N> {
                 let end = N - 1;
                 while let Some(scan) = strip_pod::<[u8; N]>(&mut &haystack[current..]) {
                     if matches(scan, needle, mask) {
-                        println!("{:?}", scan);
-                        println!("{:?}", needle);
-                        println!("{:?}", mask);
                         return Some(current);
                     }
                     let offset = skip_offsets[scan[end] as usize];
@@ -200,7 +197,7 @@ impl<const N: usize> Signature<N> {
         // TODO: Handle the case where a signature may be cut in half by a page
         // boundary.
         let overall_end = addr + len;
-        let mut buf = [0; 4 << 10];
+        let mut buf = vec![0; 4 << 10];
 
         while addr < overall_end {
             // We round up to the 4 KiB address boundary as that's a single
@@ -212,9 +209,8 @@ impl<const N: usize> Signature<N> {
             let current_read_buf = &mut buf[..len as usize];
             if let Ok(current_read_buf) = process.read_into_uninit_buf(addr, current_read_buf) {
                 if let Some(pos) = self.scan(current_read_buf) {
-                    println!("{:?}", addr);
                     return Some(addr + pos as u64);
-                }
+                } 
             };
             addr = end;
         }
@@ -274,7 +270,6 @@ fn matches<const N: usize>(scan: &[u8; N], needle: &[u8; N], mask: &[u8; N]) -> 
         true
     }
 }
-
 
 fn strip_pod<'a, T: AnyBitPattern>(cursor: &mut &'a [u8]) -> Option<&'a T> {
     if cursor.len() < mem::size_of::<T>() {

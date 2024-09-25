@@ -79,8 +79,11 @@ impl State {
         // If the module attached, set the default image (usually Assembly-Csharp)
         if let Some(process) = &self.process {
             if let Some(module) = &self.module {
-                println!("GETTING IMAGE");
-                self.image = module.get_default_image(process)
+                if self.image.is_none() {
+                    println!("GETTING IMAGE");
+                    self.image = module.get_default_image(process);
+                    println!("{:?}", self.image);
+                }
             }
         }
     }

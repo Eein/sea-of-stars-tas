@@ -5,6 +5,7 @@ use crate::process::Process;
 use crate::process::Error;
 use crate::string::ArrayCString;
 use crate::signature::Signature;
+use crate::pe;
 
 // use crate::{
 //     deep_pointer::DeepPointer, file_format::pe, future::retry, signature::Signature,
@@ -28,35 +29,11 @@ impl Module {
     /// advance, use [`attach_auto_detect`](Self::attach_auto_detect) instead.
     pub fn attach(process: &mut Process) -> Option<Self> {
         let _ = process.module_address("GameAssembly.dll");
-        // for m in process.modules.clone() {
-        //     if let Some(filename) = m.filename() {
-        //         if let Some(filename_str) = filename.to_str() {
-        //             if filename_str.contains("GameAssembly.dll") {
-        //                 println!("Found Gameassembly.dll");
-        //                 println!("Filename: {:?}", m.filename());
-        //                 println!("Start: {:?}", m.start());
-        //                 println!("SIZE: {:?}", m.size());
-        //             }
-        //         }
-        //     }
 
-        // }
         let mono_module = {
-            let module = process.modules.iter().find_map(|m| {
-                if let Some(filename) = m.filename() {
-                    if let Some(filename_str) = filename.to_str() {
-                        if filename_str.contains("GameAssembly.dll") {
-                           println!("Found Gameassembly.dll at {} with size {}", m.start() as u64, m.size() as u64);
-                           Some((m.start() as u64, m.size() as u64))
-                        } else { None }
-                    } else { None }
-                } else { None }
-            });
-            if module.is_some() {
-                module
-            } else {
-                Some((0,0))
-            }
+            let address = process.module_address("GameAssembly.dll").ok()?;
+            let size = pe::read_size_of_image(process, address)? as u64;
+            (address, size)
         };
 
         let offsets = Offsets::new()?;
@@ -65,11 +42,10 @@ impl Module {
             const ASSEMBLIES_TRG_SIG: Signature<12> =
             Signature::new("48 FF C5 80 3C ?? 00 75 ?? 48 8B 1D");
 
-            let scan = ASSEMBLIES_TRG_SIG.scan_process_range(process, mono_module.unwrap())?;
-            println!("{:?}", scan);
+            let scan = ASSEMBLIES_TRG_SIG.scan_process_range(process, mono_module)?;
             let addr = scan + 12;
 
-            addr + 0x4 + process.read::<u64>(addr).ok()?
+            addr + 0x4 + process.read::<i32>(addr).ok()? as u64
         };
 
         let type_info_definition_table = {
@@ -77,7 +53,7 @@ impl Module {
                 Signature::new("48 83 3C ?? 00 75 ?? 8B C? E8");
 
             let addr = TYPE_INFO_DEFINITION_TABLE_TRG_SIG
-                .scan_process_range(process, mono_module.unwrap())?
+                .scan_process_range(process, mono_module)?
                 .checked_add_signed(-4).unwrap();
 
             process
@@ -148,7 +124,7 @@ impl Module {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 struct Assembly {
     assembly: u64,
 }
@@ -179,7 +155,7 @@ impl Assembly {
 
 ///// An image is a .NET DLL that is loaded by the game. The `Assembly-CSharp`
 ///// image is the main game assembly, and contains all the game logic.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Image {
     image: u64,
 }

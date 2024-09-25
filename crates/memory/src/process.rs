@@ -45,29 +45,7 @@ impl Process {
         process_list.refresh();
         let processes = process_list.processes_by_name(name);
 
-        // Sorts the processes (asc) by numeric pid, to allow max_by_key to
-        // select the higher pid in case all records are equally maximum; otherwise
-        // use the process that was started the most recently, it's more
-        // predictable for the user.
-        // for m in process.modules.clone() {
-        //     if let Some(filename) = m.filename() {
-        //         if let Some(filename_str) = filename.to_str() {
-        //             if filename_str.contains("GameAssembly.dll") {
-        //                 println!("Found Gameassembly.dll");
-        //                 println!("Filename: {:?}", m.filename());
-        //                 println!("Start: {:?}", m.start());
-        //                 println!("SIZE: {:?}", m.size());
-        //             }
-        //         }
-        //     }
-
-        // }
-
-        match &processes.min_by_key(|p| {
-
-            // println!("start_time: {:?}", p.name());
-            // println!("start_time: {:?}", p.start_time());
-            // println!("pid: {:?}", p.pid().as_u32());
+        match &processes.max_by_key(|p| {
             (p.start_time(), p.pid().as_u32())
         }) {
             Some(process) => {
@@ -113,6 +91,7 @@ impl Process {
         self.handle.copy_address(address as usize, buf)
     }
 
+
     pub fn read<T: Pod>(&self, address: u64) -> Result<T, Error> {
         unsafe {
             let mut value = MaybeUninit::<T>::uninit();
@@ -150,6 +129,7 @@ impl Process {
             }
         }
     }
+
 
     pub fn read_pointer_path<T: Pod>(&self, mut address: u64, path: &[u64]) -> Result<T, Error> {
         let (&last, path) = path.split_last().ok_or(Error)?;
