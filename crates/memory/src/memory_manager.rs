@@ -26,7 +26,7 @@ impl MemoryManager {
         let fields_base = self.fields_base.unwrap_or(0);
         let singleton_base = self.singleton_base.unwrap_or(0);
         println!(
-            "Memory Manager: {} :: Base 0x{:x} :: Fields Base 0x{:x} :: Singleton Base 0x{:x} :: Debug {:?}", 
+            "Memory Manager: {} | Base: 0x{:x} | Fields Base: 0x{:x} | Singleton Base: 0x{:x} | Debug {:?}", 
             self.name,
             base,
             fields_base,
