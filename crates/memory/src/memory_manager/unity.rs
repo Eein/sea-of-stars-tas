@@ -10,18 +10,20 @@ pub struct UnityMemoryManager {
 }
 
 impl UnityMemoryManagement for UnityMemoryManager {
-    fn update(&mut self, process: &Process, module: &Module, image: &Image, name: String) {
-        if self.class.is_none() || self.parent.is_none() || self.static_table.is_none() {
-            self.class = image.get_class(process, module, &name);
+    fn update(&mut self, process: &Process, module: &Module, image: &Image, name: &str) {
+        println!("Unity MEMORY UPDATE");
+        if self.class.is_none() {
+            println!("{}", &name);
+            self.class = image.get_class(process, module, name);
+            println!("CLASS {:?}", self.class);
             if let Some(class) = self.class {
               self.parent = class.get_parent(process, module);
+                println!("PARENT {:?}", self.parent);
                 if let Some(parent) = self.parent {
                     self.instance = parent.get_field_offset(process, module, "instance");
+                    println!("INSTANCE {:?}", self.instance);
                     self.static_table =parent.get_static_table(process, module);
-                    println!("{:?}", self.class);
-                    println!("{:?}", self.parent);
-                    println!("{:?}", self.instance);
-                    println!("{:?}", self.static_table);
+                    println!("STABLE: {:?}", self.static_table);
                 }
             }
         }
@@ -29,5 +31,5 @@ impl UnityMemoryManagement for UnityMemoryManager {
 }
 
 pub trait UnityMemoryManagement {
-    fn update(&mut self, process: &Process, module: &Module, image: &Image, name: String);
+    fn update(&mut self, process: &Process, module: &Module, image: &Image, name: &str);
 }

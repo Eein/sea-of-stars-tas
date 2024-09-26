@@ -58,7 +58,7 @@ impl Module {
                 .unwrap();
 
             process
-                .read_pointer(addr + 0x4 + process.read::<u64>(addr).ok()?)
+                .read_pointer(addr + 0x4 + process.read::<i32>(addr).ok()? as u64)
                 .ok()
                 .filter(|val| *val != 0)?
         };
@@ -118,7 +118,7 @@ impl Module {
     }
 
     fn size_of_ptr(&self) -> u64 {
-        64
+        8
     }
 }
 
@@ -141,11 +141,12 @@ impl Assembly {
     }
 
     fn get_image(&self, process: &Process, module: &Module) -> Option<Image> {
-        Some(Image {
+        let image = Image {
             image: process
                 .read_pointer(self.assembly + module.offsets.monoassembly_image as u64)
                 .ok()?,
-        })
+        };
+        Some(image)
     }
 }
 
@@ -167,8 +168,8 @@ impl Image {
             process.read::<u32>(self.image + module.offsets.monoimage_typecount as u64);
 
         let metadata_ptr = match type_count {
-            Ok(_) => {
-                process.read_pointer(self.image + module.offsets.monoimage_metadatahandle as u64)
+            Ok(tc) => {
+                process.read_pointer::<u32>(self.image + module.offsets.monoimage_metadatahandle as u64)
             }
             _ => Err(Error {}),
         };
@@ -176,21 +177,25 @@ impl Image {
         let metadata_handle = match type_count {
             Ok(0) => None,
             Ok(_) => match metadata_ptr {
-                Ok(x) => process.read::<u32>(x).ok(),
+                Ok(x) => process.read::<u32>(x.into()).ok(),
                 _ => None,
             },
             _ => None,
         };
 
-        let ptr = metadata_handle.map(|val| {
-            module.type_info_definition_table + (val as u64).wrapping_mul(module.size_of_ptr())
-        });
+        let ptr = 
+            module.type_info_definition_table + (metadata_handle.unwrap() as u64 * module.size_of_ptr());
 
-        (0..type_count.unwrap_or_default() as u64).filter_map(move |i| {
+        let range = 0..type_count.unwrap_or_default() as u64;
+        (range).filter_map(move |i| {
+            let ptr = ptr + (i * module.size_of_ptr());
             let class = process
-                .read_pointer(ptr? + i.wrapping_mul(module.size_of_ptr()))
+                .read_pointer::<u64>(ptr)
                 .ok()
-                .filter(|val| *val != 0)?;
+                .filter(|val| {
+                    *val != 0x0
+                })?;
+
             Some(Class { class })
         })
     }
@@ -200,7 +205,9 @@ impl Image {
         self.classes(process, module).find(|class| {
             class
                 .get_name::<CSTR>(process, module)
-                .is_ok_and(|name| name.matches(class_name))
+                .is_ok_and(|name| {
+                    name.matches(class_name)
+                })
         })
     }
 }
@@ -255,7 +262,7 @@ impl Class {
 
                 let fields = match field_count {
                     Ok(_) => process
-                        .read_pointer(this_class.class + module.offsets.monoclass_fields as u64)
+                        .read_pointer::<u32>(this_class.class + module.offsets.monoclass_fields as u64)
                         .ok(),
                     _ => None,
                 };
@@ -271,7 +278,7 @@ impl Class {
                 Some(
                     (0..field_count.unwrap_or_default() as u64).filter_map(move |i| {
                         Some(Field {
-                            field: fields? + i.wrapping_mul(monoclassfield_structsize),
+                            field: fields? as u64 + (i * monoclassfield_structsize),
                         })
                     }),
                 )

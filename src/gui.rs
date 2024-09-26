@@ -23,15 +23,14 @@ impl GUI {
                 // FPS Counter
                 let tnow = Instant::now();
 
-                let fps_string = if let Some(tprev) = state.debug.last_update {
+                let tprev = state.debug.last_update;
+                let fps_string = {
                     let dt = (tnow - tprev).as_secs_f64();
                     let fps = 1.0 / dt;
                     format!("FPS: {}", fps.round())
-                } else {
-                    "---".to_string()
                 };
 
-                state.debug.last_update = Some(tnow);
+                state.debug.last_update = tnow;
 
                 egui::widgets::global_dark_light_mode_buttons(ui);
 
@@ -46,6 +45,11 @@ impl GUI {
                 ui.label("Testing the Application");
             });
         });
+
+        // TODO(eein)
+        // Request a repaint on every update:
+        // This is probably not performant, and can be handled in other ways.
+        ctx.request_repaint();
     }
 
     pub fn inactive(_state: &mut State, ctx: &egui::Context, _frame: &mut eframe::Frame) {

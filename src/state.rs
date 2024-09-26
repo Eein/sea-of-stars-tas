@@ -9,8 +9,8 @@ use memory::process_list::ProcessList;
 use std::time::Instant;
 
 pub struct StateDebug {
-    pub last_update: Option<Instant>,
-    pub last_memory_update: Option<Instant>,
+    pub last_update: Instant,
+    pub last_memory_update: Instant,
 }
 
 pub struct State {
@@ -35,7 +35,7 @@ impl State {
             image: None,
             process_list: ProcessList::new(),
             memory_managers: Vec::new(),
-            debug: StateDebug { last_update: None, last_memory_update: None },
+            debug: StateDebug { last_update: Instant::now(), last_memory_update: Instant::now() },
         }
     }
 
@@ -97,11 +97,10 @@ impl State {
     }
 
     pub fn update_managers(&mut self) {
-        if let Some(last_memory_update) = self.debug.last_memory_update {
             let now = Instant::now();
             // Update managers at 100 fps >> 10ms
-            if now.duration_since(last_memory_update).as_millis() > 10 {
-                self.debug.last_memory_update = Some(Instant::now());
+            if now.duration_since(self.debug.last_memory_update).as_millis() >= 10 {
+                self.debug.last_memory_update = now;
                 if let Some(process) = &self.process {
                     if let Some(module) = &self.module {
                         if let Some(image) = &self.image {
@@ -111,7 +110,6 @@ impl State {
                         }
                     }
                 }
-            }
         }
     }
 }

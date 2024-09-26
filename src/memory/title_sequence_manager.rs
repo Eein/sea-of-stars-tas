@@ -29,10 +29,18 @@ impl MemoryManager for TitleSequenceManager {
     }
 
     fn update_manager(&mut self, process: &Process, module: &Module, image: &Image) {
-        self.manager.update(process, module, image, self.name.clone())
+        self.manager.update(process, module, image, &self.name)
     }
 
     fn update_memory(&mut self) {
+        if self.manager.instance.is_some() {
+            println!("UPDATE MEMORY");
+            let instance = self.manager.instance.unwrap() as *const u32;
+            println!("{:?}", instance);
+            let instance_ptr = unsafe { std::ptr::read(instance) };
+            println!("{:?}", instance_ptr);
+        }
+
     }
 }
 

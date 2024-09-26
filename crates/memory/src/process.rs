@@ -86,7 +86,9 @@ impl Process {
     }
 
     pub fn read_mem(&self, address: u64, buf: &mut [u8]) -> io::Result<()> {
-        self.handle.copy_address(address as usize, buf)
+        let bytes = self.handle.copy_address(address as usize, buf);
+        println!("{:?}", bytes);
+        bytes
     }
 
     pub fn read<T: Pod>(&self, address: u64) -> Result<T, Error> {
@@ -100,8 +102,8 @@ impl Process {
         }
     }
 
-    pub fn read_pointer(&self, address: u64) -> Result<u64, Error> {
-        self.read::<u64>(address)
+    pub fn read_pointer<T: Pod>(&self, address: u64) -> Result<T, Error> {
+        self.read::<T>(address)
     }
 
     pub fn read_into_uninit_buf<'buf>(
@@ -126,8 +128,8 @@ impl Process {
     pub fn read_pointer_path<T: Pod>(&self, mut address: u64, path: &[u64]) -> Result<T, Error> {
         let (&last, path) = path.split_last().ok_or(Error)?;
         for &offset in path {
-            address = self.read(address.wrapping_add(offset))?;
+            address = self.read_pointer::<u64>(address + offset)?;
         }
-        self.read(address.wrapping_add(last))
+        self.read(address + last)
     }
 }
