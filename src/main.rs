@@ -2,7 +2,7 @@ mod gui;
 mod memory;
 mod state;
 
-use eframe::egui;
+use crate::gui::Gui;
 
 use seq::{SeqCheckpoint, SeqList, SeqLog, Sequencer};
 
@@ -44,18 +44,5 @@ fn seq_test() {
 
 fn main() {
     seq_test();
-
-    let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default()
-            .with_inner_size([300.0, 300.0])
-            .with_min_inner_size([300.0, 300.0]),
-
-        ..Default::default()
-    };
-    eframe::run_native(
-        "Sea of Stars TAS",
-        options,
-        Box::new(|cc| Ok(Box::new(state::State::new(cc)))),
-    )
-    .expect("Error loading application");
+    Gui::run();
 }

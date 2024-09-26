@@ -1,9 +1,7 @@
 use crate::memory::memory_manager::MemoryManager;
 use crate::state::StateContext;
-use memory::game_engine::il2cpp::*;
 use memory::memory_manager::unity::*;
 use memory::process::{Error, Process};
-use memory::watcher::Watcher;
 
 #[derive(Default)]
 pub struct TitleSequenceManager {
@@ -14,27 +12,24 @@ pub struct TitleSequenceManager {
 
 impl TitleSequenceManager {
     pub fn new() -> Box<Self> {
-        Box::new(Self {
+        let manager = Self {
             name: "TitleSequenceManager".to_string(),
             data: TitleSequenceManagerData::default(),
             manager: UnityMemoryManager {
                 ..UnityMemoryManager::default()
             },
-        })
+        };
+        println!("{} Loaded", manager.name);
+        Box::new(manager)
     }
 }
 
 impl MemoryManager for TitleSequenceManager {
-    fn update(&mut self, ctx: &StateContext) {
-        self.update_manager(&ctx);
-        self.update_memory(&ctx);
-    }
-
     fn update_manager(&mut self, ctx: &StateContext) {
         if let Some(process) = &ctx.process {
             if let Some(module) = &ctx.module {
                 if let Some(image) = &ctx.image {
-                    self.manager.update(&process, &module, &image, &self.name);
+                    self.manager.update(process, module, image, &self.name);
                 }
             }
         }
@@ -46,8 +41,6 @@ impl MemoryManager for TitleSequenceManager {
         }
     }
 }
-
-#[derive(Default, Debug)]
 
 // self._read_relics()
 // self._read_load_save_done()
@@ -66,6 +59,7 @@ impl MemoryManager for TitleSequenceManager {
 // self.relic_selection_screen = self.memory.get_field(
 //     self.fields_base, "relicSelectionScreen"
 // )
+#[derive(Default, Debug)]
 pub struct TitleSequenceManagerData {
     pub relics: Vec<Relic>,
     pub title_menu: TitleMenu,
@@ -82,122 +76,80 @@ impl TitleSequenceManagerData {
             if let Some(process) = &ctx.process {
                 if let Some(module) = &ctx.module {
                     if let Some(singleton) = manager.singleton {
-                        let field = class
+                        if class
                             .follow_fields(
                                 singleton,
                                 process,
                                 module,
-                                &[
-                                    "titleScreen".to_string(),
-                                    "newGameButton".to_string(),
-                                    "selected".to_string(),
-                                ],
+                                &["titleScreen", "newGameButton", "selected"],
                             )
-                            .ok();
-                        if process
-                            .read_pointer::<u8>(field.unwrap())
-                            .unwrap_or_default()
-                            == 1
+                            .ok()
+                            == Some(1)
                         {
                             self.title_menu.selected = TitleMenuOption::NewGame;
                             return;
                         }
-                        let field = class
+                        if class
                             .follow_fields(
                                 singleton,
                                 process,
                                 module,
-                                &[
-                                    "titleScreen".to_string(),
-                                    "newGamePlusButton".to_string(),
-                                    "selected".to_string(),
-                                ],
+                                &["titleScreen", "newGamePlusButton", "selected"],
                             )
-                            .ok();
-                        if process
-                            .read_pointer::<u8>(field.unwrap())
-                            .unwrap_or_default()
-                            == 1
+                            .ok()
+                            == Some(1)
                         {
                             self.title_menu.selected = TitleMenuOption::NewGamePlus;
                             return;
                         }
-                        let field = class
+                        if class
                             .follow_fields(
                                 singleton,
                                 process,
                                 module,
-                                &[
-                                    "titleScreen".to_string(),
-                                    "continueButton".to_string(),
-                                    "selected".to_string(),
-                                ],
+                                &["titleScreen", "continueButton", "selected"],
                             )
-                            .ok();
-                        if process
-                            .read_pointer::<u8>(field.unwrap())
-                            .unwrap_or_default()
-                            == 1
+                            .ok()
+                            == Some(1)
                         {
                             self.title_menu.selected = TitleMenuOption::Continue;
                             return;
                         }
-                        let field = class
+                        if class
                             .follow_fields(
                                 singleton,
                                 process,
                                 module,
-                                &[
-                                    "titleScreen".to_string(),
-                                    "loadGameButton".to_string(),
-                                    "selected".to_string(),
-                                ],
+                                &["titleScreen", "loadGameButton", "selected"],
                             )
-                            .ok();
-                        if process
-                            .read_pointer::<u8>(field.unwrap())
-                            .unwrap_or_default()
-                            == 1
+                            .ok()
+                            == Some(1)
                         {
                             self.title_menu.selected = TitleMenuOption::LoadGame;
                             return;
                         }
-                        let field = class
+                        if class
                             .follow_fields(
                                 singleton,
                                 process,
                                 module,
-                                &[
-                                    "titleScreen".to_string(),
-                                    "optionsButton".to_string(),
-                                    "selected".to_string(),
-                                ],
+                                &["titleScreen", "optionsButton", "selected"],
                             )
-                            .ok();
-                        if process
-                            .read_pointer::<u8>(field.unwrap())
-                            .unwrap_or_default()
-                            == 1
+                            .ok()
+                            == Some(1)
                         {
                             self.title_menu.selected = TitleMenuOption::Options;
                             return;
                         }
-                        let field = class
+                        if class
                             .follow_fields(
                                 singleton,
                                 process,
                                 module,
-                                &[
-                                    "titleScreen".to_string(),
-                                    "quitGameButton".to_string(),
-                                    "selected".to_string(),
-                                ],
+                                &["titleScreen", "quitGameButton", "selected"],
                             )
-                            .ok();
-                        if process
-                            .read_pointer::<u8>(field.unwrap())
-                            .unwrap_or_default()
-                            == 1
+                            .ok()
+                            == Some(1)
                         {
                             self.title_menu.selected = TitleMenuOption::QuitGame
                         }
@@ -246,6 +198,7 @@ pub struct Relic {
     selected: bool,
 }
 
+#[derive(Default, Debug)]
 pub struct UnityItems;
 impl UnityItems {
     pub fn count(process: &Process, items_ptr: u64) -> Result<u32, Error> {

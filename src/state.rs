@@ -1,4 +1,4 @@
-use super::gui::GUI;
+use super::gui::Gui;
 // Move these to preludes later
 use super::memory::memory_manager::MemoryManager;
 use super::memory::title_sequence_manager::*;
@@ -6,10 +6,17 @@ use memory::game_engine::il2cpp::{Image, Module};
 use memory::process::Process;
 use memory::process_list::ProcessList;
 use std::time::Instant;
+use crate::gui::helpers::GuiHelper;
+use egui_dock::DockState;
 
 pub struct StateDebug {
     pub last_update: Instant,
     pub last_memory_update: Instant,
+}
+
+pub struct StateGui {
+    pub helpers: Vec<Box<dyn GuiHelper>>,
+    pub dock_state: DockState<String>
 }
 
 pub struct State {
@@ -17,6 +24,7 @@ pub struct State {
     pub process_list: ProcessList,
     pub memory_managers: Vec<Box<dyn MemoryManager>>,
     pub debug: StateDebug,
+    pub gui: StateGui
 }
 
 pub struct StateContext {
@@ -32,6 +40,18 @@ impl State {
         // Use the cc.gl (a glow::Context) to create graphics shaders and buffers that you can use
         // for e.g. egui::PaintCallback.
 
+        // Register any GUI helpers here
+        let gui_helpers: Vec<Box<dyn GuiHelper>> = vec![
+            Box::new(super::gui::helpers::main::MainHelper::default()),
+            Box::new(super::gui::helpers::title::TitleHelper::default())
+        ];
+
+        let mut tree_names: Vec<String> = vec![]; 
+
+        for h in gui_helpers.iter() {
+            tree_names.push(h.name());
+        }
+            
         Self {
             context: StateContext {
                 process: None,
@@ -40,6 +60,10 @@ impl State {
             },
             process_list: ProcessList::new(),
             memory_managers: Vec::new(),
+            gui: StateGui {
+                helpers: gui_helpers,
+                dock_state: DockState::new(tree_names)
+            },
             debug: StateDebug {
                 last_update: Instant::now(),
                 last_memory_update: Instant::now(),
@@ -117,7 +141,7 @@ impl State {
         {
             self.debug.last_memory_update = now;
             for m in self.memory_managers.iter_mut() {
-                m.update(&mut self.context);
+                m.update(&self.context);
             }
         }
     }
@@ -146,6 +170,6 @@ impl eframe::App for State {
         // Run self.update() on each manager
         let _ = &self.update_managers();
 
-        GUI::update(self, ctx, frame)
+        Gui::update(self, ctx, frame)
     }
 }

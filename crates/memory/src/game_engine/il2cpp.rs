@@ -5,6 +5,7 @@ use crate::process::Error;
 use crate::process::Process;
 use crate::signature::Signature;
 use crate::string::ArrayCString;
+use bytemuck::Pod;
 use core::iter;
 
 const CSTR: usize = 128;
@@ -279,13 +280,13 @@ impl Class {
         .flatten()
     }
 
-    pub fn follow_fields(
+    pub fn follow_fields<T: Pod>(
         &self,
         singleton: Class,
         process: &Process,
         module: &Module,
-        fields: &[String],
-    ) -> Result<u64, Error> {
+        fields: &[&str],
+    ) -> Result<T, Error> {
         if fields.is_empty() {
             panic!("Don't send empty fields list to follow fields")
         }
@@ -296,29 +297,15 @@ impl Class {
             class: singleton.class,
         };
         let mut fields_base = Class { class: self.class };
-        // println!("-----------------");
-        // println!("::: BASE ");
-        // println!("::: 0x{:x}", address.class);
-        // println!("-----------------");
         for field in fields {
-            // println!("-----------------");
-            // println!("::: FIELD {}", field);
             match fields_base.get_field_offset(process, module, field) {
                 Some(offset) => {
-                    // println!("::: offset: 0x{:x}", offset);
                     if field == last {
-                        // println!("field == last");
                         address.class += offset as u64;
                     } else {
-                        // println!("::: old base address: 0x{:x}", address.class);
-                        // println!("::: read address at: 0x{:x}", address.class + offset as u64);
-
                         address.class =
                             process.read_pointer::<u64>(address.class + offset as u64)?;
                         fields_base.class = process.read_pointer::<u64>(address.class)?;
-
-                        // println!("::: new base address: 0x{:x}", address.class);
-                        // println!("-----------------");
                     }
                 }
                 None => {
@@ -326,40 +313,8 @@ impl Class {
                 }
             };
         }
-        Ok(address.class)
+        process.read_pointer::<T>(address.class)
     }
-
-    // def follow_fields(self: Self, manager: any, fields: list[str], debug: bool = False) -> int:
-    //     last = fields[-1]
-
-    //     if manager.fields_base is None:
-    //         raise Exception("follow_fields", "must has a manager that has `fields_base` set.")
-
-    //     if manager.base is None:
-    //         raise Exception("follow_fields", "must has a manager that has `base` set.")
-
-    //     base = manager.fields_base
-    //     addr = manager.base
-    //     if debug:
-    //         logger.debug("")
-    //         logger.debug("::: BASE ")
-    //         logger.debug(f"::: {hex(base)}")
-    //         logger.debug(f"addr: {hex(addr)}")
-    //         logger.debug("-----------------")
-
-    //     for field in fields:
-    //         base = self.get_class_base(addr)
-    //         offset = self.get_field(base, field)
-    //         if debug:
-    //             logger.debug(f"::: {field}")
-    //             logger.debug(f"base: {hex(base)}")
-    //             logger.debug(f"offset: {hex(offset)}")
-    //         addr = addr + offset if field == last else self.follow_pointer(addr, [offset, 0])
-    //         if debug:
-    //             logger.debug(f"addr: {hex(addr)}")
-    //             logger.debug("-----------------")
-
-    //     return addr
 
     /// Tries to find a field with the specified name in the class. This returns
     /// the offset of the field from the start of an instance of the class. If
