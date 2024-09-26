@@ -3,7 +3,6 @@ use super::gui::GUI;
 use super::memory::title_sequence_manager::*;
 use super::memory::memory_manager::MemoryManager;
 use memory::game_engine::il2cpp::{Image, Module};
-use memory::memory_manager::unity::*;
 use memory::process::Process;
 use memory::process_list::ProcessList;
 use std::time::Instant;
@@ -23,7 +22,7 @@ pub struct State {
 }
 
 impl State {
-    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+    pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         // Customize egui here with cc.egui_ctx.set_fonts and cc.egui_ctx.set_visuals.
         // Restore app state using cc.storage (requires the "persistence" feature).
         // Use the cc.gl (a glow::Context) to create graphics shaders and buffers that you can use

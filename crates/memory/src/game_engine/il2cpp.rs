@@ -5,12 +5,7 @@ use crate::process::Error;
 use crate::process::Process;
 use crate::signature::Signature;
 use crate::string::ArrayCString;
-use core::{array, cell::RefCell, iter};
-
-// use crate::{
-//     deep_pointer::DeepPointer, file_format::pe, future::retry, signature::Signature,
-//     string::ArrayCString, Address, Address64, Error, PointerSize, Process,
-// };
+use core::iter;
 
 const CSTR: usize = 128;
 
@@ -168,7 +163,7 @@ impl Image {
             process.read::<u32>(self.image + module.offsets.monoimage_typecount as u64);
 
         let metadata_ptr = match type_count {
-            Ok(tc) => {
+            Ok(_) => {
                 process.read_pointer::<u32>(self.image + module.offsets.monoimage_metadatahandle as u64)
             }
             _ => Err(Error {}),

@@ -1,8 +1,8 @@
 //! Support for finding patterns in a process's memory.
 
-use core::mem::{self, MaybeUninit};
+use core::mem;
 
-use bytemuck::{AnyBitPattern, CheckedBitPattern, Pod};
+use bytemuck::AnyBitPattern;
 
 use crate::process::Process;
 

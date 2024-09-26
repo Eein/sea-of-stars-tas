@@ -2,7 +2,7 @@ use std::{
     str,
     time::{Duration, Instant},
 };
-use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, RefreshKind, System, UpdateKind};
+use sysinfo::{ProcessRefreshKind, ProcessesToUpdate, RefreshKind, System, UpdateKind};
 
 pub struct ProcessList {
     system: System,
