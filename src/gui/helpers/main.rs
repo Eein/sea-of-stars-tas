@@ -19,7 +19,7 @@ impl GuiHelper for MainHelper {
     fn name(&self) -> String {
         self.name.clone()
     }
-    fn draw(&self, _ctx: &MemoryManagers, ui: &mut egui::Ui, _tab: &mut String) {
-        ui.label("Drawing inside".to_string());
+    fn draw(&self, _managers: &MemoryManagers, ui: &mut egui::Ui, _tab: &mut String) {
+        ui.label("The Default Main Window".to_string());
     }
 }

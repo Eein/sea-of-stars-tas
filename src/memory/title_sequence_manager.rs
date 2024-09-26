@@ -59,20 +59,19 @@ impl TitleSequenceManagerData {
                 if let Some(module) = &ctx.module {
                     if let Some(singleton) = manager.singleton {
                         if class
-                            .follow_fields(
+                            .follow_fields::<u8>(
                                 singleton,
                                 process,
                                 module,
                                 &["titleScreen", "newGameButton", "selected"],
                             )
-                            .ok()
-                            == Some(1)
+                            .ok() == Some(1)
                         {
                             self.title_menu.selected = TitleMenuOption::NewGame;
                             return;
                         }
                         if class
-                            .follow_fields(
+                            .follow_fields::<u8>(
                                 singleton,
                                 process,
                                 module,
@@ -85,7 +84,7 @@ impl TitleSequenceManagerData {
                             return;
                         }
                         if class
-                            .follow_fields(
+                            .follow_fields::<u8>(
                                 singleton,
                                 process,
                                 module,
@@ -98,7 +97,7 @@ impl TitleSequenceManagerData {
                             return;
                         }
                         if class
-                            .follow_fields(
+                            .follow_fields::<u8>(
                                 singleton,
                                 process,
                                 module,
@@ -111,7 +110,7 @@ impl TitleSequenceManagerData {
                             return;
                         }
                         if class
-                            .follow_fields(
+                            .follow_fields::<u8>(
                                 singleton,
                                 process,
                                 module,
@@ -124,7 +123,7 @@ impl TitleSequenceManagerData {
                             return;
                         }
                         if class
-                            .follow_fields(
+                            .follow_fields::<u8>(
                                 singleton,
                                 process,
                                 module,
@@ -159,14 +158,14 @@ pub enum TitleMenuOption {
 
 #[derive(Default, Debug)]
 pub struct TitleMenu {
-    selected: TitleMenuOption,
+    pub selected: TitleMenuOption,
 }
 
 #[derive(Default, Debug)]
 pub struct Relic {
-    name: String,
-    enabled: bool,
-    selected: bool,
+    pub name: String,
+    pub enabled: bool,
+    pub selected: bool,
 }
 
 #[derive(Default, Debug)]

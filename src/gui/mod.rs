@@ -30,8 +30,6 @@ impl egui_dock::TabViewer for TabViewer<'_> {
 
     fn ui(&mut self, ui: &mut egui::Ui, tab: &mut Self::Tab) {
         self.draw(ui, tab, tab.to_string());
-        
-        ui.label(format!("Content of {tab}"));
     }
 }
 

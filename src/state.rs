@@ -36,8 +36,8 @@ impl State {
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         // Register any GUI helpers here
         let gui_helpers: Vec<Box<dyn GuiHelper>> = vec![
+            Box::new(super::gui::helpers::title::TitleHelper::default()),
             Box::new(super::gui::helpers::main::MainHelper::default()),
-            Box::new(super::gui::helpers::title::TitleHelper::default())
         ];
 
         let mut tree_names: Vec<String> = vec![]; 

@@ -5,7 +5,7 @@ use crate::memory::title_sequence_manager::TitleSequenceManager;
 
 #[derive(Default)]
 pub struct MemoryManagers {
-    title_sequence_manager: TitleSequenceManager,
+    pub title_sequence_manager: TitleSequenceManager,
 }
 
 impl MemoryManagers {
