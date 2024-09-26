@@ -1,4 +1,4 @@
-use bytemuck::Pod;
+use bytemuck::{Pod, CheckedBitPattern};
 use std::{
     io,
     time::{Duration, Instant},
@@ -86,9 +86,7 @@ impl Process {
     }
 
     pub fn read_mem(&self, address: u64, buf: &mut [u8]) -> io::Result<()> {
-        let bytes = self.handle.copy_address(address as usize, buf);
-        println!("{:?}", bytes);
-        bytes
+        self.handle.copy_address(address as usize, buf)
     }
 
     pub fn read<T: Pod>(&self, address: u64) -> Result<T, Error> {
@@ -125,11 +123,11 @@ impl Process {
         }
     }
 
-    pub fn read_pointer_path<T: Pod>(&self, mut address: u64, path: &[u64]) -> Result<T, Error> {
+    pub fn read_pointer_path<T: CheckedBitPattern + Pod>(&self, mut address: u64, path: &[u64]) -> Result<T, Error> {
         let (&last, path) = path.split_last().ok_or(Error)?;
         for &offset in path {
             address = self.read_pointer::<u64>(address + offset)?;
         }
-        self.read(address + last)
+        self.read::<T>(address + last)
     }
 }

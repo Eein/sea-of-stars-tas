@@ -209,7 +209,7 @@ impl Image {
 
 #[derive(Copy, Clone, Debug)]
 pub struct Class {
-    class: u64,
+    pub class: u64,
 }
 
 impl Class {
@@ -226,7 +226,7 @@ impl Class {
         process: &Process,
         module: &Module,
     ) -> Result<ArrayCString<N>, Error> {
-        process.read_pointer_path(
+        process.read_pointer_path::<ArrayCString<N>>(
             self.class,
             &[module.offsets.monoclass_name_space.into(), 0x0],
         )
@@ -243,7 +243,7 @@ impl Class {
         iter::from_fn(move || {
             if iter_break {
                 None
-            } else if !this_class.class == 0
+            } else if this_class.class != 0
                 && this_class
                     .get_name::<CSTR>(process, module)
                     .is_ok_and(|name| !name.matches("Object"))
@@ -251,14 +251,16 @@ impl Class {
                     .get_name_space::<CSTR>(process, module)
                     .is_ok_and(|name| !name.matches("UnityEngine"))
             {
-                let field_count = process.read::<u64>(
-                    (this_class.class as u64) + module.offsets.monoclass_field_count as u64,
+                let field_count = process.read::<u16>(
+                    (this_class.class) + module.offsets.monoclass_field_count as u64,
                 );
 
                 let fields = match field_count {
-                    Ok(_) => process
+                    Ok(_) => {
+                        process
                         .read_pointer::<u32>(this_class.class + module.offsets.monoclass_fields as u64)
-                        .ok(),
+                        .ok()
+                    },
                     _ => None,
                 };
 
@@ -271,9 +273,9 @@ impl Class {
                 }
 
                 Some(
-                    (0..field_count.unwrap_or_default() as u64).filter_map(move |i| {
+                    (0..field_count.unwrap_or_default()).filter_map(move |i| {
                         Some(Field {
-                            field: fields? as u64 + (i * monoclassfield_structsize),
+                            field: fields? as u64 + (i as u64 * monoclassfield_structsize),
                         })
                     }),
                 )
@@ -335,7 +337,7 @@ impl Class {
     /// values of all the static fields.
     pub fn get_static_table(&self, process: &Process, module: &Module) -> Option<u64> {
         process
-            .read_pointer(self.get_static_table_pointer(module))
+            .read_pointer::<u64>(self.get_static_table_pointer(module))
             .ok()
             .filter(|val| *val != 0)
     }
@@ -343,14 +345,14 @@ impl Class {
     /// Tries to find the parent class.
     pub fn get_parent(&self, process: &Process, module: &Module) -> Option<Class> {
         let parent = process
-            .read_pointer(self.class + module.offsets.monoclass_parent as u64)
+            .read_pointer::<u64>(self.class + module.offsets.monoclass_parent as u64)
             .ok()
             .filter(|val| *val != 0)?;
         Some(Class { class: parent })
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 struct Field {
     field: u64,
 }

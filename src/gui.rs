@@ -4,7 +4,7 @@ use std::time::Instant;
 
 impl GUI {
     pub fn update(state: &mut State, ctx: &egui::Context, frame: &mut eframe::Frame) {
-        match state.process.is_some() {
+        match state.context.process.is_some() {
             true => Self::active(state, ctx, frame),
             false => Self::inactive(state, ctx, frame),
         }

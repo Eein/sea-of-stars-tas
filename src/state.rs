@@ -13,12 +13,16 @@ pub struct StateDebug {
 }
 
 pub struct State {
-    pub process: Option<Process>,
-    pub module: Option<Module>,
-    pub image: Option<Image>,
+    pub context: StateContext,
     pub process_list: ProcessList,
     pub memory_managers: Vec<Box<dyn MemoryManager>>,
     pub debug: StateDebug,
+}
+
+pub struct StateContext {
+    pub process: Option<Process>,
+    pub module: Option<Module>,
+    pub image: Option<Image>,
 }
 
 impl State {
@@ -29,9 +33,11 @@ impl State {
         // for e.g. egui::PaintCallback.
 
         Self {
-            process: None,
-            module: None,
-            image: None,
+            context: StateContext {
+                process: None,
+                module: None,
+                image: None,
+            },
             process_list: ProcessList::new(),
             memory_managers: Vec::new(),
             debug: StateDebug { last_update: Instant::now(), last_memory_update: Instant::now() },
@@ -39,26 +45,26 @@ impl State {
     }
 
     pub fn maybe_deregister_process(&mut self) {
-        if let Some(process) = &self.process {
+        if let Some(process) = &self.context.process {
             if !&self
                 .process_list
                 .is_open(sysinfo::Pid::from(process.pid as usize))
             {
-                self.process = None
+                self.context.process = None
             }
         }
     }
 
     pub fn register_process(&mut self) {
-        if self.process.is_none() {
+        if self.context.process.is_none() {
             println!("- Attaching Process");
             let process_name = "SeaOfStars.exe";
             // Find the Process
             match Process::with_name(process_name, &mut self.process_list) {
                 Ok(process) => {
                     println!("Found {} at pid {}", process_name, process.pid);
-                    self.process = Some(process);
-                    println!("{:?}", self.process);
+                    self.context.process = Some(process);
+                    println!("{:?}", self.context.process);
                 }
                 Err(_err) => (),
             }
@@ -66,49 +72,43 @@ impl State {
     }
 
     pub fn register_module(&mut self) {
-        if self.module.is_none() {
-            if let Some(ref mut process) = &mut self.process {
+        if self.context.module.is_none() {
+            if let Some(ref mut process) = &mut self.context.process {
                 println!("- Loading Module");
                 // Attach to GameAssembly.dll
-                self.module = Module::attach(process);
-                println!("{:?}", self.module);
+                self.context.module = Module::attach(process);
+                println!("{:?}", self.context.module);
             }
         }
     }
     pub fn register_image(&mut self) {
         // If the module attached, set the default image (usually Assembly-Csharp)
-        if self.image.is_none() {
-            if let Some(process) = &self.process {
-                if let Some(module) = &self.module {
+        if self.context.image.is_none() {
+            if let Some(process) = &self.context.process {
+                if let Some(module) = &self.context.module {
                     println!("- Loading Image");
-                    self.image = module.get_default_image(process);
-                    println!("{:?}", self.image);
+                    self.context.image = module.get_default_image(process);
+                    println!("{:?}", self.context.image);
                 }
             }
         }
     }
 
     pub fn register_managers(&mut self) {
-        if self.process.is_some() && self.image.is_some() && self.memory_managers.is_empty() {
+        if self.context.process.is_some() && self.context.image.is_some() && self.memory_managers.is_empty() {
             println!("- Pushing Managers");
             self.memory_managers.push(TitleSequenceManager::new());
         }
     }
 
     pub fn update_managers(&mut self) {
-            let now = Instant::now();
-            // Update managers at 100 fps >> 10ms
-            if now.duration_since(self.debug.last_memory_update).as_millis() >= 10 {
-                self.debug.last_memory_update = now;
-                if let Some(process) = &self.process {
-                    if let Some(module) = &self.module {
-                        if let Some(image) = &self.image {
-                            for m in self.memory_managers.iter_mut() {
-                                m.update(process, module, image)
-                            }
-                        }
-                    }
-                }
+        let now = Instant::now();
+        // Update managers at 100 fps >> 10ms
+        if now.duration_since(self.debug.last_memory_update).as_millis() >= 10 {
+            self.debug.last_memory_update = now;
+            for m in self.memory_managers.iter_mut() {
+                m.update(&self.context);
+            }
         }
     }
 }
