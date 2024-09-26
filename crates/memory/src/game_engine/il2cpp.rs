@@ -291,6 +291,10 @@ impl Class {
             panic!("Don't send empty fields list to follow fields")
         }
 
+        if singleton.class == 0 {
+            return Err(Error);
+        }
+
         let last = fields.last().unwrap();
 
         let mut address = Class {
@@ -314,6 +318,46 @@ impl Class {
             };
         }
         process.read_pointer::<T>(address.class)
+    }
+
+    pub fn follow_fields_without_read(
+        &self,
+        singleton: Class,
+        process: &Process,
+        module: &Module,
+        fields: &[&str],
+    ) -> Result<u64, Error> {
+        if fields.is_empty() {
+            panic!("Don't send empty fields list to follow fields")
+        }
+
+        if singleton.class == 0 {
+            return Err(Error);
+        }
+
+        let last = fields.last().unwrap();
+
+        let mut address = Class {
+            class: singleton.class,
+        };
+        let mut fields_base = Class { class: self.class };
+        for field in fields {
+            match fields_base.get_field_offset(process, module, field) {
+                Some(offset) => {
+                    if field == last {
+                        address.class += offset as u64;
+                    } else {
+                        address.class =
+                            process.read_pointer::<u64>(address.class + offset as u64)?;
+                        fields_base.class = process.read_pointer::<u64>(address.class)?;
+                    }
+                }
+                None => {
+                    panic!("THIS IS BAD: 0x{:x} {}", address.class, field)
+                }
+            };
+        }
+        Ok(address.class)
     }
 
     /// Tries to find a field with the specified name in the class. This returns

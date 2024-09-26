@@ -1,16 +1,20 @@
+pub mod player_party_manager;
 pub mod title_sequence_manager;
 
-use crate::state::StateContext;
+use crate::memory::player_party_manager::PlayerPartyManager;
 use crate::memory::title_sequence_manager::TitleSequenceManager;
+use crate::state::StateContext;
 
 #[derive(Default)]
 pub struct MemoryManagers {
     pub title_sequence_manager: TitleSequenceManager,
+    pub player_party_manager: PlayerPartyManager,
 }
 
 impl MemoryManagers {
     pub fn update(&mut self, ctx: &StateContext) {
         self.title_sequence_manager.update(ctx);
+        self.player_party_manager.update(ctx);
     }
 }
 

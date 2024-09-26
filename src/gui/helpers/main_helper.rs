@@ -3,17 +3,15 @@ use crate::memory::MemoryManagers;
 
 #[derive(Debug)]
 pub struct MainHelper {
-    name: String
+    name: String,
 }
 impl Default for MainHelper {
     fn default() -> MainHelper {
         Self {
-            name: "Main".to_string()
+            name: "Main".to_string(),
         }
     }
-
 }
-
 
 impl GuiHelper for MainHelper {
     fn name(&self) -> String {

@@ -65,7 +65,8 @@ impl TitleSequenceManagerData {
                                 module,
                                 &["titleScreen", "newGameButton", "selected"],
                             )
-                            .ok() == Some(1)
+                            .ok()
+                            == Some(1)
                         {
                             self.title_menu.selected = TitleMenuOption::NewGame;
                             return;
@@ -140,8 +141,7 @@ impl TitleSequenceManagerData {
         }
     }
 
-    pub fn update_relics(&mut self, _ctx: &StateContext, _manager: &UnityMemoryManager) {
-    }
+    pub fn update_relics(&mut self, _ctx: &StateContext, _manager: &UnityMemoryManager) {}
 }
 
 #[derive(Default, Debug)]

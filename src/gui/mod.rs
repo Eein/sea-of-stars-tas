@@ -1,11 +1,11 @@
 pub mod helpers;
 pub struct Gui;
-use super::state::State;
-use eframe::egui;
-use std::time::Instant;
-use egui_dock::{DockArea, Style};
 use super::gui::helpers::GuiHelper;
 use super::memory::MemoryManagers;
+use super::state::State;
+use eframe::egui;
+use egui_dock::{DockArea, Style};
+use std::time::Instant;
 
 pub struct TabViewer<'a> {
     helpers: &'a Vec<Box<dyn GuiHelper>>,
@@ -13,9 +13,7 @@ pub struct TabViewer<'a> {
 }
 impl TabViewer<'_> {
     fn draw(&mut self, ui: &mut egui::Ui, tab: &mut String, name: String) {
-        if let Some(helper) = self.helpers.iter().find(|x| {
-            x.name() == name
-        }) {
+        if let Some(helper) = self.helpers.iter().find(|x| x.name() == name) {
             helper.draw(self.memory_managers, ui, tab);
         }
     }
@@ -85,11 +83,16 @@ impl Gui {
         });
 
         egui::CentralPanel::default().show(ctx, |_ui| {
-
             DockArea::new(&mut state.gui.dock_state)
                 .style(Style::from_egui(ctx.style().as_ref()))
                 .show_close_buttons(false)
-                .show(ctx, &mut TabViewer {memory_managers: &state.memory_managers, helpers: &state.gui.helpers});
+                .show(
+                    ctx,
+                    &mut TabViewer {
+                        memory_managers: &state.memory_managers,
+                        helpers: &state.gui.helpers,
+                    },
+                );
         });
 
         // TODO(eein)

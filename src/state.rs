@@ -1,12 +1,15 @@
-use super::gui::Gui;
-// Move these to preludes later
 use super::memory::MemoryManagers;
+use crate::gui::Gui;
+
+use crate::gui::helpers::GuiHelper;
+use crate::gui::helpers::*;
+// Move these to preludes later
 use memory::game_engine::il2cpp::{Image, Module};
 use memory::process::Process;
 use memory::process_list::ProcessList;
-use std::time::Instant;
-use crate::gui::helpers::GuiHelper;
+
 use egui_dock::DockState;
+use std::time::Instant;
 
 pub struct StateDebug {
     pub last_update: Instant,
@@ -15,7 +18,7 @@ pub struct StateDebug {
 
 pub struct StateGui {
     pub helpers: Vec<Box<dyn GuiHelper>>,
-    pub dock_state: DockState<String>
+    pub dock_state: DockState<String>,
 }
 
 pub struct State {
@@ -23,7 +26,7 @@ pub struct State {
     pub process_list: ProcessList,
     pub memory_managers: MemoryManagers,
     pub debug: StateDebug,
-    pub gui: StateGui
+    pub gui: StateGui,
 }
 
 pub struct StateContext {
@@ -36,16 +39,17 @@ impl State {
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         // Register any GUI helpers here
         let gui_helpers: Vec<Box<dyn GuiHelper>> = vec![
-            Box::new(super::gui::helpers::title::TitleHelper::default()),
-            Box::new(super::gui::helpers::main::MainHelper::default()),
+            Box::new(NavHelper::default()),
+            Box::new(TitleHelper::default()),
+            Box::new(MainHelper::default()),
         ];
 
-        let mut tree_names: Vec<String> = vec![]; 
+        let mut tree_names: Vec<String> = vec![];
 
         for h in gui_helpers.iter() {
             tree_names.push(h.name());
         }
-            
+
         Self {
             context: StateContext {
                 process: None,
@@ -56,7 +60,7 @@ impl State {
             memory_managers: MemoryManagers::default(),
             gui: StateGui {
                 helpers: gui_helpers,
-                dock_state: DockState::new(tree_names)
+                dock_state: DockState::new(tree_names),
             },
             debug: StateDebug {
                 last_update: Instant::now(),
