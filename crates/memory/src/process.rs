@@ -9,7 +9,6 @@ use core::{
     slice,
 };
 
-use crate::memory_manager::unity::UnityMemoryManager;
 use crate::process_list::ProcessList;
 use proc_maps::{MapRange, Pid};
 use read_process_memory::{CopyAddress, ProcessHandle};

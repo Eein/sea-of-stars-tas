@@ -1,7 +1,6 @@
 use super::gui::Gui;
 // Move these to preludes later
-use super::memory::memory_manager::MemoryManager;
-use super::memory::title_sequence_manager::*;
+use super::memory::MemoryManagers;
 use memory::game_engine::il2cpp::{Image, Module};
 use memory::process::Process;
 use memory::process_list::ProcessList;
@@ -22,7 +21,7 @@ pub struct StateGui {
 pub struct State {
     pub context: StateContext,
     pub process_list: ProcessList,
-    pub memory_managers: Vec<Box<dyn MemoryManager>>,
+    pub memory_managers: MemoryManagers,
     pub debug: StateDebug,
     pub gui: StateGui
 }
@@ -35,11 +34,6 @@ pub struct StateContext {
 
 impl State {
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
-        // Customize egui here with cc.egui_ctx.set_fonts and cc.egui_ctx.set_visuals.
-        // Restore app state using cc.storage (requires the "persistence" feature).
-        // Use the cc.gl (a glow::Context) to create graphics shaders and buffers that you can use
-        // for e.g. egui::PaintCallback.
-
         // Register any GUI helpers here
         let gui_helpers: Vec<Box<dyn GuiHelper>> = vec![
             Box::new(super::gui::helpers::main::MainHelper::default()),
@@ -59,7 +53,7 @@ impl State {
                 image: None,
             },
             process_list: ProcessList::new(),
-            memory_managers: Vec::new(),
+            memory_managers: MemoryManagers::default(),
             gui: StateGui {
                 helpers: gui_helpers,
                 dock_state: DockState::new(tree_names)
@@ -121,16 +115,6 @@ impl State {
         }
     }
 
-    pub fn register_managers(&mut self) {
-        if self.context.process.is_some()
-            && self.context.image.is_some()
-            && self.memory_managers.is_empty()
-        {
-            println!("- Pushing Managers");
-            self.memory_managers.push(TitleSequenceManager::new());
-        }
-    }
-
     pub fn update_managers(&mut self) {
         let now = Instant::now();
         // Update managers at 100 fps >> 10ms
@@ -139,10 +123,8 @@ impl State {
             .as_millis()
             >= 10
         {
+            self.memory_managers.update(&self.context);
             self.debug.last_memory_update = now;
-            for m in self.memory_managers.iter_mut() {
-                m.update(&self.context);
-            }
         }
     }
 }
@@ -165,7 +147,6 @@ impl eframe::App for State {
         let _ = &self.register_process();
         let _ = &self.register_module();
         let _ = &self.register_image();
-        let _ = &self.register_managers();
 
         // Run self.update() on each manager
         let _ = &self.update_managers();

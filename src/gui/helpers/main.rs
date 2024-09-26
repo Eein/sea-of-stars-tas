@@ -1,4 +1,5 @@
 use super::GuiHelper;
+use crate::memory::MemoryManagers;
 
 #[derive(Debug)]
 pub struct MainHelper {
@@ -17,5 +18,8 @@ impl Default for MainHelper {
 impl GuiHelper for MainHelper {
     fn name(&self) -> String {
         self.name.clone()
+    }
+    fn draw(&self, _ctx: &MemoryManagers, ui: &mut egui::Ui, _tab: &mut String) {
+        ui.label("Drawing inside".to_string());
     }
 }

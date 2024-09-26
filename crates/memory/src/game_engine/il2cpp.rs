@@ -382,7 +382,7 @@ impl Class {
 }
 
 #[derive(Copy, Clone, Debug)]
-struct Field {
+pub struct Field {
     field: u64,
 }
 

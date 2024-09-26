@@ -1,17 +1,16 @@
-use crate::memory::memory_manager::MemoryManager;
+use crate::memory::MemoryManager;
 use crate::state::StateContext;
 use memory::memory_manager::unity::*;
 use memory::process::{Error, Process};
 
-#[derive(Default)]
 pub struct TitleSequenceManager {
     pub name: String,
     pub manager: UnityMemoryManager,
     pub data: TitleSequenceManagerData,
 }
 
-impl TitleSequenceManager {
-    pub fn new() -> Box<Self> {
+impl Default for TitleSequenceManager {
+    fn default() -> Self {
         let manager = Self {
             name: "TitleSequenceManager".to_string(),
             data: TitleSequenceManagerData::default(),
@@ -20,7 +19,7 @@ impl TitleSequenceManager {
             },
         };
         println!("{} Loaded", manager.name);
-        Box::new(manager)
+        manager
     }
 }
 
@@ -42,23 +41,6 @@ impl MemoryManager for TitleSequenceManager {
     }
 }
 
-// self._read_relics()
-// self._read_load_save_done()
-// self._read_new_game_characters()
-// self._read_pressed_start()
-// self._read_continue_selected()
-// self._read_new_game_selected()
-// self._read_new_game_plus_selected()
-// self._read_load_game_selected()
-// self._read_options_selected()
-// self._read_quit_selected()
-// self.title_screen = self.memory.get_field(self.fields_base, "titleScreen")
-// self.character_selection_screen = self.memory.get_field(
-//     self.fields_base, "characterSelectionScreen"
-// )
-// self.relic_selection_screen = self.memory.get_field(
-//     self.fields_base, "relicSelectionScreen"
-// )
 #[derive(Default, Debug)]
 pub struct TitleSequenceManagerData {
     pub relics: Vec<Relic>,
@@ -160,17 +142,6 @@ impl TitleSequenceManagerData {
     }
 
     pub fn update_relics(&mut self, _ctx: &StateContext, _manager: &UnityMemoryManager) {
-        // if let Some(class) = manager.manager.class {
-        //     if let Some(process) = &ctx.process {
-        //         if let Some(module) = &ctx.module {
-        //             let items_ptr_base = class.follow_fields(process, module, &["relicSelectionScreen".to_string(), "relicButtons".to_string()]).ok();
-        //             println!("0x{:x}", items_ptr_base.unwrap());
-        //         }
-        //     }
-        // }
-        // items_ptr_base = self.manager.claslass.follow_fields(self, ["relicSelectionScreen", "relicButtons"])
-        // items_ptr = self.memory.follow_pointer(items_ptr_base, [0x0, 0x10, 0x0])
-        // relics = []
     }
 }
 
