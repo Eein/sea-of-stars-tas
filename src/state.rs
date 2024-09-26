@@ -1,6 +1,7 @@
 use super::gui::GUI;
 // Move these to preludes later
-use super::memory::title_sequence_manager::MemoryManager;
+use super::memory::title_sequence_manager::*;
+use super::memory::memory_manager::MemoryManager;
 use memory::game_engine::il2cpp::{Image, Module};
 use memory::memory_manager::unity::*;
 use memory::process::Process;
@@ -9,6 +10,7 @@ use std::time::Instant;
 
 pub struct StateDebug {
     pub last_update: Option<Instant>,
+    pub last_memory_update: Option<Instant>,
 }
 
 pub struct State {
@@ -16,7 +18,7 @@ pub struct State {
     pub module: Option<Module>,
     pub image: Option<Image>,
     pub process_list: ProcessList,
-    pub memory_managers: Vec<MemoryManager>,
+    pub memory_managers: Vec<Box<dyn MemoryManager>>,
     pub debug: StateDebug,
 }
 
@@ -32,8 +34,8 @@ impl State {
             module: None,
             image: None,
             process_list: ProcessList::new(),
-            memory_managers: vec![],
-            debug: StateDebug { last_update: None },
+            memory_managers: Vec::new(),
+            debug: StateDebug { last_update: None, last_memory_update: None },
         }
     }
 
@@ -90,28 +92,23 @@ impl State {
     pub fn register_managers(&mut self) {
         if self.process.is_some() && self.image.is_some() && self.memory_managers.is_empty() {
             println!("- Pushing Managers");
-            self.memory_managers = Vec::new();
-            self.memory_managers.push(
-                MemoryManager{
-                    name: "TitleSequenceManager".to_string(),
-                    manager: UnityMemoryManager{..UnityMemoryManager::default()}
-                }
-            );
-            self.memory_managers.push(
-                MemoryManager{
-                    name: "CombatManager".to_string(),
-                    manager: UnityMemoryManager{..UnityMemoryManager::default()}
-                }
-            );
+            self.memory_managers.push(TitleSequenceManager::new());
         }
     }
 
     pub fn update_managers(&mut self) {
-        if let Some(process) = &self.process {
-            if let Some(module) = &self.module {
-                if let Some(image) = &self.image {
-                    for m in self.memory_managers.iter_mut() {
-                        m.update(process, module, image)
+        if let Some(last_memory_update) = self.debug.last_memory_update {
+            let now = Instant::now();
+            // Update managers at 100 fps >> 10ms
+            if now.duration_since(last_memory_update).as_millis() > 10 {
+                self.debug.last_memory_update = Some(Instant::now());
+                if let Some(process) = &self.process {
+                    if let Some(module) = &self.module {
+                        if let Some(image) = &self.image {
+                            for m in self.memory_managers.iter_mut() {
+                                m.update(process, module, image)
+                            }
+                        }
                     }
                 }
             }

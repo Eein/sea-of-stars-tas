@@ -27,6 +27,7 @@ impl UnityMemoryManagement for UnityMemoryManager {
         }
     }
 }
+
 pub trait UnityMemoryManagement {
     fn update(&mut self, process: &Process, module: &Module, image: &Image, name: String);
 }
