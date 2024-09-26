@@ -1,0 +1,146 @@
+//! Support for string types that can be read from a process's memory.
+
+use core::{ops, slice, str};
+
+use bytemuck::{Pod, Zeroable};
+
+pub use arrayvec::ArrayString;
+
+/// A nul-terminated string that is stored in an array of a fixed size `N`. This
+/// can be read from a process's memory.
+#[derive(Copy, Clone)]
+#[repr(transparent)]
+pub struct ArrayCString<const N: usize>([u8; N]);
+
+impl<const N: usize> ArrayCString<N> {
+    /// Creates a new empty nul-terminated string.
+    pub const fn new() -> Self {
+        Self([0; N])
+    }
+
+    /// Returns the bytes of the string up until (but excluding) the
+    /// nul-terminator. If there is no nul-terminator, all bytes are returned.
+    pub fn as_bytes(&self) -> &[u8] {
+        let len = self.0.iter().position(|&b| b == 0).unwrap_or(N);
+        &self.0[..len]
+    }
+
+    /// Returns the string as a string slice if it is valid UTF-8.
+    pub fn validate_utf8(&self) -> Result<&str, str::Utf8Error> {
+        str::from_utf8(self.as_bytes())
+    }
+
+    /// Checks whether the string matches the given text. This is faster than
+    /// calling [`as_bytes`](Self::as_bytes) and then comparing, because it can
+    /// use the length information of the parameter.
+    pub fn matches(&self, text: impl AsRef<[u8]>) -> bool {
+        let bytes = text.as_ref();
+        !self.0.get(bytes.len()).is_some_and(|&b| b != 0)
+            && self.0.get(..bytes.len()).is_some_and(|s| s == bytes)
+    }
+
+    /// Reduces the size of the string contained inside the ArrayString
+    /// to the value provided by `len`. If a value higher than the size of the ArrayString
+    /// is provided, no action is performed.
+    /// This function might be useful for dealing with strings devoid of the null terminator byte.
+    pub fn set_len(&mut self, len: usize) {
+        if self.len() > len {
+            // SAFETY: We checked the length of the u8 array beforehand
+            unsafe {
+                let ptr = slice::from_raw_parts_mut(self.as_ptr() as *mut u8, self.len());
+                ptr[len] = 0;
+            }
+        }
+    }
+}
+
+impl<const N: usize> Default for ArrayCString<N> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<const N: usize> ops::Deref for ArrayCString<N> {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        self.as_bytes()
+    }
+}
+
+impl<const N: usize> PartialEq for ArrayCString<N> {
+    fn eq(&self, other: &Self) -> bool {
+        self.matches(&**other)
+    }
+}
+
+impl<const N: usize> Eq for ArrayCString<N> {}
+
+/// SAFETY: The type is transparent over an array of `N` bytes, which is `Pod`.
+unsafe impl<const N: usize> Pod for ArrayCString<N> {}
+/// SAFETY: The type is transparent over an array of `N` bytes, which is `Zeroable`.
+unsafe impl<const N: usize> Zeroable for ArrayCString<N> {}
+
+/// A nul-terminated wide string (16-bit characters) that is stored in an array
+/// of a fixed size of `N` characters. This can be read from a process's memory.
+#[derive(Copy, Clone)]
+#[repr(transparent)]
+pub struct ArrayWString<const N: usize>([u16; N]);
+
+impl<const N: usize> ArrayWString<N> {
+    /// Creates a new empty nul-terminated wide string.
+    pub const fn new() -> Self {
+        Self([0; N])
+    }
+
+    /// Returns the 16-bit characters of the string up until (but excluding) the
+    /// nul-terminator. If there is no nul-terminator, all characters are
+    /// returned.
+    pub fn as_slice(&self) -> &[u16] {
+        let len = self.0.iter().position(|&b| b == 0).unwrap_or(N);
+        &self.0[..len]
+    }
+
+    /// Checks whether the string matches the given text. This is faster than
+    /// calling [`as_slice`](Self::as_slice) and then comparing, because it can
+    /// use the length information of the parameter.
+    pub fn matches(&self, text: impl AsRef<[u16]>) -> bool {
+        let chars = text.as_ref();
+        !self.0.get(chars.len()).is_some_and(|&b| b != 0)
+            && self.0.get(..chars.len()).is_some_and(|s| s == chars)
+    }
+
+    /// Checks whether the string matches the given text. This dynamically
+    /// re-encodes the passed in text to UTF-16, which is not as fast as
+    /// [`matches`](Self::matches).
+    pub fn matches_str(&self, text: &str) -> bool {
+        self.as_slice().iter().copied().eq(text.encode_utf16())
+    }
+}
+
+impl<const N: usize> Default for ArrayWString<N> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<const N: usize> ops::Deref for ArrayWString<N> {
+    type Target = [u16];
+
+    fn deref(&self) -> &Self::Target {
+        self.as_slice()
+    }
+}
+
+impl<const N: usize> PartialEq for ArrayWString<N> {
+    fn eq(&self, other: &Self) -> bool {
+        self.matches(&**other)
+    }
+}
+
+impl<const N: usize> Eq for ArrayWString<N> {}
+
+/// SAFETY: The type is transparent over an array of `N` u16s, which is `Pod`.
+unsafe impl<const N: usize> Pod for ArrayWString<N> {}
+/// SAFETY: The type is transparent over an array of `N` u16s, which is `Zeroable`.
+unsafe impl<const N: usize> Zeroable for ArrayWString<N> {}

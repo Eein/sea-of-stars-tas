@@ -9,7 +9,6 @@ pub trait Node {
     }
 }
 
-
 pub struct SeqLog {
     text: String,
     // TODO: More log info, like log level?
@@ -18,7 +17,7 @@ pub struct SeqLog {
 impl SeqLog {
     pub fn create(text: &str) -> Box<Self> {
         Box::new(SeqLog {
-            text: text.to_owned()
+            text: text.to_owned(),
         })
     }
 }
@@ -56,7 +55,13 @@ impl SeqList {
 
 impl Display for SeqList {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}({}/{})", self.name, self.step + 1, self.children.len())
+        write!(
+            f,
+            "{}({}/{})",
+            self.name,
+            self.step + 1,
+            self.children.len()
+        )
     }
 }
 
@@ -86,7 +91,6 @@ impl Node for SeqList {
     }
 }
 
-
 #[derive(Default)]
 pub struct SeqCheckpoint {
     pub checkpoint_name: String,
@@ -95,7 +99,7 @@ pub struct SeqCheckpoint {
 impl SeqCheckpoint {
     pub fn create(name: &str) -> Box<Self> {
         Box::new(SeqCheckpoint {
-            checkpoint_name: name.to_owned()
+            checkpoint_name: name.to_owned(),
         })
     }
 }
@@ -106,16 +110,13 @@ impl Node for SeqCheckpoint {
     }
 }
 
-
 pub struct Sequencer {
     root: Box<dyn Node>,
 }
 
 impl Sequencer {
     pub fn create(root: Box<dyn Node>) -> Self {
-        Sequencer {
-            root
-        }
+        Sequencer { root }
     }
 }
 

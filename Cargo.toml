@@ -7,13 +7,14 @@ edition = "2021"
 # joystick = { path = "crates/joystick", version = "0.1.0" }
 memory = { path = "crates/memory", version = "0.1.0" }
 seq = { path = "crates/seq", version = "0.1.0" }
-sysinfo = { version = "0.31.2", default-features = false, features = ["system"] }
+sysinfo = { version = "0.31.2", default-features = false, features = ["system", "multithread"] }
 egui = "0.28"
 eframe = { version = "0.28", default-features = false, features = [
     "default_fonts", # Embed the default egui fonts.
     "glow",          # Use the glow rendering backend. Alternative: "wgpu".
     # "persistence",   # Enable restoring app state when restarting the app.
 ] }
+egui_dock = "0.13.0"
 
 [dependencies.winit]
 # version = "*"
@@ -25,3 +26,14 @@ members = [
   "crates/joystick", 
   "crates/memory"
 ]
+
+[profile.dev]
+opt-level = 1
+
+[profile.release]
+opt-level = 3
+lto = true
+panic = "abort"
+codegen-units = 1
+strip = true
+

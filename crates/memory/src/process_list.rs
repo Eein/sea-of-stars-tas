@@ -2,11 +2,11 @@ use std::{
     str,
     time::{Duration, Instant},
 };
-use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, RefreshKind, System};
+use sysinfo::{ProcessRefreshKind, ProcessesToUpdate, RefreshKind, System, UpdateKind};
 
 pub struct ProcessList {
     system: System,
-    last_check: Instant,
+    next_check: Instant,
 }
 
 impl ProcessList {
@@ -15,16 +15,32 @@ impl ProcessList {
             system: System::new_with_specifics(
                 RefreshKind::new().with_processes(ProcessRefreshKind::new()),
             ),
-            last_check: Instant::now() - Duration::from_secs(1),
+            next_check: Instant::now() + Duration::from_secs(1),
         }
     }
 
     pub fn refresh(&mut self) {
         let now = Instant::now();
-        if now - self.last_check >= Duration::from_secs(1) {
+        if now >= self.next_check {
             self.system
-                .refresh_processes_specifics(ProcessesToUpdate::All, ProcessRefreshKind::new());
-            self.last_check = now;
+                .refresh_processes_specifics(ProcessesToUpdate::All, multiple_processes());
+            self.next_check = now + Duration::from_secs(1);
+        }
+    }
+
+    pub fn refresh_single_process(&mut self, pid: sysinfo::Pid) {
+        if self
+            .system
+            .refresh_processes_specifics(ProcessesToUpdate::Some(&[pid]), single_process())
+            == 0
+        {
+            // FIXME: Unfortunately `refresh_process_specifics` doesn't remove
+            // the process if it doesn't exist anymore. There also doesn't seem
+            // to be a way to manually remove it. So we have to do a full
+            // refresh of all processes.
+            self.system
+                .refresh_processes_specifics(ProcessesToUpdate::All, multiple_processes());
+            self.next_check = Instant::now() + Duration::from_secs(1);
         }
     }
 
@@ -49,8 +65,21 @@ impl ProcessList {
             .filter(move |p| p.name().as_encoded_bytes() == name)
     }
 
-    pub fn is_open(&mut self, pid: Pid) -> bool {
-        self.refresh();
-        self.system.process(pid).is_some()
+    pub fn is_open(&self, pid: sysinfo::Pid) -> bool {
+        self.get(pid).is_some()
     }
+
+    pub fn get(&self, pid: sysinfo::Pid) -> Option<&sysinfo::Process> {
+        self.system.process(pid)
+    }
+}
+
+#[inline]
+fn multiple_processes() -> ProcessRefreshKind {
+    ProcessRefreshKind::new().with_exe(UpdateKind::OnlyIfNotSet)
+}
+
+#[inline]
+fn single_process() -> ProcessRefreshKind {
+    ProcessRefreshKind::new()
 }

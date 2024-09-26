@@ -1,4 +1,4 @@
-use bytemuck::Pod;
+use bytemuck::{CheckedBitPattern, Pod};
 use std::{
     io,
     time::{Duration, Instant},
@@ -28,10 +28,10 @@ pub enum ModuleError {
 pub struct Error;
 
 pub struct Process {
-    handle: ProcessHandle,
+    pub handle: ProcessHandle,
     pub pid: Pid,
-    modules: Vec<MapRange>,
-    last_check: Instant,
+    pub modules: Vec<MapRange>,
+    pub last_check: Instant,
 }
 
 impl std::fmt::Debug for Process {
@@ -44,11 +44,6 @@ impl Process {
     pub fn with_name(name: &str, process_list: &mut ProcessList) -> Result<Self, OpenError> {
         process_list.refresh();
         let processes = process_list.processes_by_name(name);
-
-        // Sorts the processes (asc) by numeric pid, to allow max_by_key to
-        // select the higher pid in case all records are equally maximum; otherwise
-        // use the process that was started the most recently, it's more
-        // predictable for the user.
 
         match &processes.max_by_key(|p| (p.start_time(), p.pid().as_u32())) {
             Some(process) => {
@@ -105,11 +100,39 @@ impl Process {
         }
     }
 
-    pub fn read_pointer_path64<T: Pod>(&self, mut address: u64, path: &[u64]) -> Result<T, Error> {
+    pub fn read_pointer<T: Pod>(&self, address: u64) -> Result<T, Error> {
+        self.read::<T>(address)
+    }
+
+    pub fn read_into_uninit_buf<'buf>(
+        &self,
+        address: u64,
+        buf: &'buf mut [u8],
+    ) -> Result<&'buf mut [u8], Error> {
+        // SAFETY: The process handle is guaranteed to be valid. We provide a
+        // valid pointer and length to the buffer. We also do proper error
+        // handling afterwards. The buffer is guaranteed to be initialized
+        // afterwards, so we can safely return an u8 slice of it.
+        unsafe {
+            let buf_len = buf.len();
+            if self.read_mem(address, buf).is_ok() {
+                Ok(slice::from_raw_parts_mut(buf.as_mut_ptr().cast(), buf_len))
+            } else {
+                Err(Error {})
+            }
+        }
+    }
+
+    pub fn read_pointer_path<T: CheckedBitPattern + Pod>(
+        &self,
+        mut address: u64,
+        path: &[u64],
+    ) -> Result<T, Error> {
         let (&last, path) = path.split_last().ok_or(Error)?;
         for &offset in path {
-            address = self.read(address.wrapping_add(offset))?;
+            address = self.read_pointer::<u64>(address + offset)?;
         }
-        self.read(address.wrapping_add(last))
+
+        self.read::<T>(address + last)
     }
 }
