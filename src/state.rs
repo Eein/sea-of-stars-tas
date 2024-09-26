@@ -1,7 +1,7 @@
 use super::gui::GUI;
 // Move these to preludes later
-use super::memory::title_sequence_manager::*;
 use super::memory::memory_manager::MemoryManager;
+use super::memory::title_sequence_manager::*;
 use memory::game_engine::il2cpp::{Image, Module};
 use memory::process::Process;
 use memory::process_list::ProcessList;
@@ -40,7 +40,10 @@ impl State {
             },
             process_list: ProcessList::new(),
             memory_managers: Vec::new(),
-            debug: StateDebug { last_update: Instant::now(), last_memory_update: Instant::now() },
+            debug: StateDebug {
+                last_update: Instant::now(),
+                last_memory_update: Instant::now(),
+            },
         }
     }
 
@@ -95,7 +98,10 @@ impl State {
     }
 
     pub fn register_managers(&mut self) {
-        if self.context.process.is_some() && self.context.image.is_some() && self.memory_managers.is_empty() {
+        if self.context.process.is_some()
+            && self.context.image.is_some()
+            && self.memory_managers.is_empty()
+        {
             println!("- Pushing Managers");
             self.memory_managers.push(TitleSequenceManager::new());
         }
@@ -104,10 +110,14 @@ impl State {
     pub fn update_managers(&mut self) {
         let now = Instant::now();
         // Update managers at 100 fps >> 10ms
-        if now.duration_since(self.debug.last_memory_update).as_millis() >= 10 {
+        if now
+            .duration_since(self.debug.last_memory_update)
+            .as_millis()
+            >= 10
+        {
             self.debug.last_memory_update = now;
             for m in self.memory_managers.iter_mut() {
-                m.update(&self.context);
+                m.update(&mut self.context);
             }
         }
     }

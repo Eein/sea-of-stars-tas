@@ -1,4 +1,4 @@
-use bytemuck::{Pod, CheckedBitPattern};
+use bytemuck::{CheckedBitPattern, Pod};
 use std::{
     io,
     time::{Duration, Instant},
@@ -9,6 +9,7 @@ use core::{
     slice,
 };
 
+use crate::memory_manager::unity::UnityMemoryManager;
 use crate::process_list::ProcessList;
 use proc_maps::{MapRange, Pid};
 use read_process_memory::{CopyAddress, ProcessHandle};
@@ -123,11 +124,16 @@ impl Process {
         }
     }
 
-    pub fn read_pointer_path<T: CheckedBitPattern + Pod>(&self, mut address: u64, path: &[u64]) -> Result<T, Error> {
+    pub fn read_pointer_path<T: CheckedBitPattern + Pod>(
+        &self,
+        mut address: u64,
+        path: &[u64],
+    ) -> Result<T, Error> {
         let (&last, path) = path.split_last().ok_or(Error)?;
         for &offset in path {
             address = self.read_pointer::<u64>(address + offset)?;
         }
+
         self.read::<T>(address + last)
     }
 }

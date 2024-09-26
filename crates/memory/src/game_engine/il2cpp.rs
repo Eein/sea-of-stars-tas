@@ -163,9 +163,8 @@ impl Image {
             process.read::<u32>(self.image + module.offsets.monoimage_typecount as u64);
 
         let metadata_ptr = match type_count {
-            Ok(_) => {
-                process.read_pointer::<u32>(self.image + module.offsets.monoimage_metadatahandle as u64)
-            }
+            Ok(_) => process
+                .read_pointer::<u32>(self.image + module.offsets.monoimage_metadatahandle as u64),
             _ => Err(Error {}),
         };
 
@@ -178,8 +177,8 @@ impl Image {
             _ => None,
         };
 
-        let ptr = 
-            module.type_info_definition_table + (metadata_handle.unwrap() as u64 * module.size_of_ptr());
+        let ptr = module.type_info_definition_table
+            + (metadata_handle.unwrap() as u64 * module.size_of_ptr());
 
         let range = 0..type_count.unwrap_or_default() as u64;
         (range).filter_map(move |i| {
@@ -187,9 +186,7 @@ impl Image {
             let class = process
                 .read_pointer::<u64>(ptr)
                 .ok()
-                .filter(|val| {
-                    *val != 0x0
-                })?;
+                .filter(|val| *val != 0x0)?;
 
             Some(Class { class })
         })
@@ -200,9 +197,7 @@ impl Image {
         self.classes(process, module).find(|class| {
             class
                 .get_name::<CSTR>(process, module)
-                .is_ok_and(|name| {
-                    name.matches(class_name)
-                })
+                .is_ok_and(|name| name.matches(class_name))
         })
     }
 }
@@ -232,7 +227,7 @@ impl Class {
         )
     }
 
-    fn fields<'a>(
+    pub fn fields<'a>(
         &'a self,
         process: &'a Process,
         module: &'a Module,
@@ -251,16 +246,15 @@ impl Class {
                     .get_name_space::<CSTR>(process, module)
                     .is_ok_and(|name| !name.matches("UnityEngine"))
             {
-                let field_count = process.read::<u16>(
-                    (this_class.class) + module.offsets.monoclass_field_count as u64,
-                );
+                let field_count = process
+                    .read::<u16>((this_class.class) + module.offsets.monoclass_field_count as u64);
 
                 let fields = match field_count {
-                    Ok(_) => {
-                        process
-                        .read_pointer::<u32>(this_class.class + module.offsets.monoclass_fields as u64)
-                        .ok()
-                    },
+                    Ok(_) => process
+                        .read_pointer::<u32>(
+                            this_class.class + module.offsets.monoclass_fields as u64,
+                        )
+                        .ok(),
                     _ => None,
                 };
 
@@ -272,13 +266,11 @@ impl Class {
                     iter_break = true;
                 }
 
-                Some(
-                    (0..field_count.unwrap_or_default()).filter_map(move |i| {
-                        Some(Field {
-                            field: fields? as u64 + (i as u64 * monoclassfield_structsize),
-                        })
-                    }),
-                )
+                Some((0..field_count.unwrap_or_default()).filter_map(move |i| {
+                    Some(Field {
+                        field: fields? as u64 + (i as u64 * monoclassfield_structsize),
+                    })
+                }))
             } else {
                 iter_break = true;
                 None
@@ -286,6 +278,88 @@ impl Class {
         })
         .flatten()
     }
+
+    pub fn follow_fields(
+        &self,
+        singleton: Class,
+        process: &Process,
+        module: &Module,
+        fields: &[String],
+    ) -> Result<u64, Error> {
+        if fields.is_empty() {
+            panic!("Don't send empty fields list to follow fields")
+        }
+
+        let last = fields.last().unwrap();
+
+        let mut address = Class {
+            class: singleton.class,
+        };
+        let mut fields_base = Class { class: self.class };
+        // println!("-----------------");
+        // println!("::: BASE ");
+        // println!("::: 0x{:x}", address.class);
+        // println!("-----------------");
+        for field in fields {
+            // println!("-----------------");
+            // println!("::: FIELD {}", field);
+            match fields_base.get_field_offset(process, module, field) {
+                Some(offset) => {
+                    // println!("::: offset: 0x{:x}", offset);
+                    if field == last {
+                        // println!("field == last");
+                        address.class += offset as u64;
+                    } else {
+                        // println!("::: old base address: 0x{:x}", address.class);
+                        // println!("::: read address at: 0x{:x}", address.class + offset as u64);
+
+                        address.class =
+                            process.read_pointer::<u64>(address.class + offset as u64)?;
+                        fields_base.class = process.read_pointer::<u64>(address.class)?;
+
+                        // println!("::: new base address: 0x{:x}", address.class);
+                        // println!("-----------------");
+                    }
+                }
+                None => {
+                    panic!("THIS IS BAD: 0x{:x} {}", address.class, field)
+                }
+            };
+        }
+        Ok(address.class)
+    }
+
+    // def follow_fields(self: Self, manager: any, fields: list[str], debug: bool = False) -> int:
+    //     last = fields[-1]
+
+    //     if manager.fields_base is None:
+    //         raise Exception("follow_fields", "must has a manager that has `fields_base` set.")
+
+    //     if manager.base is None:
+    //         raise Exception("follow_fields", "must has a manager that has `base` set.")
+
+    //     base = manager.fields_base
+    //     addr = manager.base
+    //     if debug:
+    //         logger.debug("")
+    //         logger.debug("::: BASE ")
+    //         logger.debug(f"::: {hex(base)}")
+    //         logger.debug(f"addr: {hex(addr)}")
+    //         logger.debug("-----------------")
+
+    //     for field in fields:
+    //         base = self.get_class_base(addr)
+    //         offset = self.get_field(base, field)
+    //         if debug:
+    //             logger.debug(f"::: {field}")
+    //             logger.debug(f"base: {hex(base)}")
+    //             logger.debug(f"offset: {hex(offset)}")
+    //         addr = addr + offset if field == last else self.follow_pointer(addr, [offset, 0])
+    //         if debug:
+    //             logger.debug(f"addr: {hex(addr)}")
+    //             logger.debug("-----------------")
+
+    //     return addr
 
     /// Tries to find a field with the specified name in the class. This returns
     /// the offset of the field from the start of an instance of the class. If
