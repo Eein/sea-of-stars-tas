@@ -3,7 +3,6 @@ pub struct Gui;
 use super::gui::helpers::{GuiHelper, GuiHelpers};
 use super::memory::MemoryManagers;
 use super::state::State;
-use eframe::egui;
 use egui_dock::{DockArea, Style};
 use std::time::Instant;
 

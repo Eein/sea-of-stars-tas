@@ -50,7 +50,6 @@ impl State {
         {
             tree_names.push(h.to_string());
         }
-        println!("{:?}", tree_names);
 
         Self {
             context: StateContext {
@@ -84,14 +83,13 @@ impl State {
 
     pub fn register_process(&mut self) {
         if self.context.process.is_none() {
-            println!("- Attaching Process");
             let process_name = "SeaOfStars.exe";
             // Find the Process
             match Process::with_name(process_name, &mut self.process_list) {
                 Ok(process) => {
+                    println!("- Attaching Process");
                     println!("Found {} at pid {}", process_name, process.pid);
                     self.context.process = Some(process);
-                    println!("{:?}", self.context.process);
                 }
                 Err(_err) => (),
             }
@@ -104,7 +102,6 @@ impl State {
                 println!("- Loading Module");
                 // Attach to GameAssembly.dll
                 self.context.module = Module::attach(process);
-                println!("{:?}", self.context.module);
             }
         }
     }
@@ -115,7 +112,6 @@ impl State {
                 if let Some(module) = &self.context.module {
                     println!("- Loading Image");
                     self.context.image = module.get_default_image(process);
-                    println!("{:?}", self.context.image);
                 }
             }
         }

@@ -29,6 +29,7 @@ impl MemoryManager for TitleSequenceManager {
             if class.class == 0 {
                 return false;
             }
+
             return true;
         }
         false
@@ -45,10 +46,11 @@ impl MemoryManager for TitleSequenceManager {
     }
 
     fn update_memory(&mut self, ctx: &StateContext) {
-        if self.ready_for_updates(ctx) {
-            match self.data.update(ctx, &mut self.manager) {
-                Ok(_) => (),
-                Err(_error) => self.manager.reset(),
+        match self.data.update(ctx, &mut self.manager) {
+            Ok(_) => (),
+            Err(_error) => {
+                println!("RESETTING");
+                self.manager.reset()
             }
         }
     }

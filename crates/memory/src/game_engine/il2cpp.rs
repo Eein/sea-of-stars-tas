@@ -24,7 +24,7 @@ impl Module {
     /// correct for this function to work. If you don't know the version in
     /// advance, use [`attach_auto_detect`](Self::attach_auto_detect) instead.
     pub fn attach(process: &mut Process) -> Option<Self> {
-        let _ = process.module_address("GameAssembly.dll");
+        // let _ = process.module_address("GameAssembly.dll");
 
         let mono_module = {
             let address = process.module_address("GameAssembly.dll").ok()?;
@@ -161,18 +161,16 @@ impl Image {
         module: &'a Module,
     ) -> impl DoubleEndedIterator<Item = Class> + 'a {
         let type_count =
-            process.read::<u32>(self.image + module.offsets.monoimage_typecount as u64);
-
+            process.read_pointer::<u32>(self.image + module.offsets.monoimage_typecount as u64);
         let metadata_ptr = match type_count {
             Ok(_) => process
-                .read_pointer::<u32>(self.image + module.offsets.monoimage_metadatahandle as u64),
+                .read_pointer::<u64>(self.image + module.offsets.monoimage_metadatahandle as u64),
             _ => Err(Error {}),
         };
-
         let metadata_handle = match type_count {
             Ok(0) => None,
             Ok(_) => match metadata_ptr {
-                Ok(x) => process.read::<u32>(x.into()).ok(),
+                Ok(x) => process.read::<u32>(x).ok(),
                 _ => None,
             },
             _ => None,
@@ -188,7 +186,6 @@ impl Image {
                 .read_pointer::<u64>(ptr)
                 .ok()
                 .filter(|val| *val != 0x0)?;
-
             Some(Class { class })
         })
     }
@@ -203,7 +200,7 @@ impl Image {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Class {
     pub class: u64,
 }
@@ -252,7 +249,7 @@ impl Class {
 
                 let fields = match field_count {
                     Ok(_) => process
-                        .read_pointer::<u32>(
+                        .read_pointer::<u64>(
                             this_class.class + module.offsets.monoclass_fields as u64,
                         )
                         .ok(),
@@ -269,7 +266,7 @@ impl Class {
 
                 Some((0..field_count.unwrap_or_default()).filter_map(move |i| {
                     Some(Field {
-                        field: fields? as u64 + (i as u64 * monoclassfield_structsize),
+                        field: fields? + (i as u64 * monoclassfield_structsize),
                     })
                 }))
             } else {
@@ -431,7 +428,7 @@ impl Field {
         process: &Process,
         module: &Module,
     ) -> Result<ArrayCString<N>, Error> {
-        process.read_pointer_path(
+        process.read_pointer_path::<ArrayCString<N>>(
             self.field,
             &[module.offsets.monoclassfield_name.into(), 0x0],
         )

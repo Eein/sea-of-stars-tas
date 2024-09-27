@@ -46,11 +46,9 @@ impl MemoryManager for PlayerPartyManager {
     }
 
     fn update_memory(&mut self, ctx: &StateContext) {
-        if self.ready_for_updates(ctx) {
-            match self.data.update(ctx, &mut self.manager) {
-                Ok(_) => (),
-                Err(_error) => self.manager.reset(),
-            }
+        match self.data.update(ctx, &mut self.manager) {
+            Ok(_) => (),
+            Err(_error) => self.manager.reset(),
         }
     }
 }
