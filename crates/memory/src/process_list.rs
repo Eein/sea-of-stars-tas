@@ -9,6 +9,12 @@ pub struct ProcessList {
     next_check: Instant,
 }
 
+impl Default for ProcessList {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ProcessList {
     pub fn new() -> Self {
         Self {

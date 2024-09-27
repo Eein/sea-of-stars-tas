@@ -1,7 +1,7 @@
 use crate::memory::MemoryManager;
 use crate::state::StateContext;
 use memory::memory_manager::unity::*;
-use memory::process::{Error, Process};
+use memory::process::Error;
 
 pub struct TitleSequenceManager {
     pub name: String,
@@ -56,7 +56,6 @@ impl MemoryManager for TitleSequenceManager {
 
 #[derive(Default, Debug)]
 pub struct TitleSequenceManagerData {
-    pub relics: Vec<Relic>,
     pub title_menu: TitleMenu,
 }
 
@@ -67,8 +66,8 @@ impl TitleSequenceManagerData {
         manager: &mut UnityMemoryManager,
     ) -> Result<(), Error> {
         match self.update_title_menu(ctx, manager) {
-          Ok(_) => Ok(()),
-          Err(error) => Err(error)
+            Ok(_) => Ok(()),
+            Err(error) => Err(error),
         }
     }
 
@@ -181,19 +180,4 @@ pub enum TitleMenuOption {
 #[derive(Default, Debug)]
 pub struct TitleMenu {
     pub selected: TitleMenuOption,
-}
-
-#[derive(Default, Debug)]
-pub struct Relic {
-    pub name: String,
-    pub enabled: bool,
-    pub selected: bool,
-}
-
-#[derive(Default, Debug)]
-pub struct UnityItems;
-impl UnityItems {
-    pub fn count(process: &Process, items_ptr: u64) -> Result<u32, Error> {
-        process.read::<u32>(items_ptr + 0x18)
-    }
 }

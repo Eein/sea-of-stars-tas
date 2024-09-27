@@ -131,7 +131,6 @@ impl Process {
         let (&last, path) = path.split_last().ok_or(Error)?;
         for &offset in path {
             address = self.read_pointer::<u64>(address + offset)?;
-
         }
 
         self.read::<T>(address + last)
@@ -145,7 +144,6 @@ impl Process {
         let (&last, path) = path.split_last().ok_or(Error)?;
         for &offset in path {
             address = self.read_pointer::<u64>(address + offset)?;
-
         }
 
         Ok(address + last)

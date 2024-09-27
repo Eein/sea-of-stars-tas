@@ -29,7 +29,7 @@ impl MemoryManager for PlayerPartyManager {
         if let Some(class) = self.manager.singleton {
             if class.class == 0 {
                 return false;
-            } 
+            }
             return true;
         }
         true
@@ -49,7 +49,7 @@ impl MemoryManager for PlayerPartyManager {
         if self.ready_for_updates(ctx) {
             match self.data.update(ctx, &mut self.manager) {
                 Ok(_) => (),
-                Err(_error) => self.manager.reset()
+                Err(_error) => self.manager.reset(),
             }
         }
     }
@@ -68,7 +68,7 @@ impl PlayerPartyManagerData {
     ) -> Result<(), Error> {
         match self.update_position(ctx, manager) {
             Ok(_) => Ok(()),
-            Err(error) => Err(error)
+            Err(error) => Err(error),
         }
     }
 
@@ -86,9 +86,12 @@ impl PlayerPartyManagerData {
                 if let Some(module) = &ctx.module {
                     if let Some(singleton) = manager.singleton {
                         if let Some(leader) = class.get_field_offset(process, module, "leader") {
-                            let current_position_ptr = process.read_pointer_path_without_read(singleton.class, &[leader.into(), 0x90, 0x84])?;
+                            let current_position_ptr = process.read_pointer_path_without_read(
+                                singleton.class,
+                                &[leader.into(), 0x90, 0x84],
+                            )?;
                             let x = process.read_pointer::<f32>(current_position_ptr)?;
-                            let y = process.read_pointer::<f32>(current_position_ptr + 0x4)?; 
+                            let y = process.read_pointer::<f32>(current_position_ptr + 0x4)?;
                             let z = process.read_pointer::<f32>(current_position_ptr + 0x8)?;
                             self.position = Vector3::new(x, y, z);
                         }

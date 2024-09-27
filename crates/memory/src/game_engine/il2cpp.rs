@@ -312,9 +312,7 @@ impl Class {
                         fields_base.class = process.read_pointer::<u64>(address.class)?;
                     }
                 }
-                None => {
-                    return Err(Error)
-                }
+                None => return Err(Error),
             };
         }
         process.read_pointer::<T>(address.class)
@@ -352,9 +350,7 @@ impl Class {
                         fields_base.class = process.read_pointer::<u64>(address.class)?;
                     }
                 }
-                None => {
-                    return Err(Error)
-                }
+                None => return Err(Error),
             };
         }
         Ok(address.class)
@@ -370,15 +366,12 @@ impl Class {
         module: &Module,
         field_name: &str,
     ) -> Option<u32> {
-        let fields = self.fields(process, module)
-            .find(|field| {
-                field
-                    .get_name::<CSTR>(process, module)
-                    .is_ok_and(|name| name.matches(field_name))
-            })?;
-         let offset = fields.get_offset(process, module);
-        offset
-
+        let fields = self.fields(process, module).find(|field| {
+            field
+                .get_name::<CSTR>(process, module)
+                .is_ok_and(|name| name.matches(field_name))
+        })?;
+        fields.get_offset(process, module)
     }
 
     /// Tries to find the address of a static instance of the class based on its
@@ -445,10 +438,9 @@ impl Field {
     }
 
     fn get_offset(&self, process: &Process, module: &Module) -> Option<u32> {
-        match process
-            .read(self.field + module.offsets.monoclassfield_offset as u64) {
+        match process.read(self.field + module.offsets.monoclassfield_offset as u64) {
             Ok(value) => Some(value),
-            Err(_error) => None
+            Err(_error) => None,
         }
     }
 }

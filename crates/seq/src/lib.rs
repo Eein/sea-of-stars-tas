@@ -71,7 +71,7 @@ impl Node for SeqList {
             true
         } else {
             if self.children[self.step].execute(delta) {
-                self.step = self.step + 1;
+                self.step += 1;
             }
             false
         }
@@ -85,7 +85,7 @@ impl Node for SeqList {
             if self.children[self.step].advance_to_checkpoint(checkpoint) {
                 return true;
             } else {
-                self.step = self.step + 1;
+                self.step += 1;
             }
         }
     }

@@ -8,11 +8,11 @@ use crate::process::Process;
 
 type Offset = u8;
 
-/// A signature that can be used to find a pattern in a process. It is
-/// recommended to store this in a `static` or `const` variable to ensure that
+/// A signature that can be used to find a pattern in a process.
+///
+/// It is recommended to store this in a `static` or `const` variable to ensure that
 /// the signature is parsed at compile time, which enables the code to be
-/// optimized a lot more. Additionally it is recommend to compile the code with
-/// the `simd128` target feature to enable the use of SIMD instructions.
+/// optimized a lot more.
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
 pub enum Signature<const N: usize> {
