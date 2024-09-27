@@ -102,7 +102,6 @@ impl State {
                 println!("- Loading Module");
                 // Attach to GameAssembly.dll
                 self.context.module = Module::attach(process);
-                println!("{:?}", self.context.module);
             }
         }
     }
