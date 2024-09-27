@@ -162,13 +162,11 @@ impl Image {
     ) -> impl DoubleEndedIterator<Item = Class> + 'a {
         let type_count =
             process.read_pointer::<u32>(self.image + module.offsets.monoimage_typecount as u64);
-        // above changed to read_pointer on windows
         let metadata_ptr = match type_count {
             Ok(_) => process
                 .read_pointer::<u64>(self.image + module.offsets.monoimage_metadatahandle as u64),
             _ => Err(Error {}),
         };
-        // read_pointer above changed to u64 on windows
         let metadata_handle = match type_count {
             Ok(0) => None,
             Ok(_) => match metadata_ptr {
@@ -251,7 +249,6 @@ impl Class {
 
                 let fields = match field_count {
                     Ok(_) => process
-                        // changed on windows
                         .read_pointer::<u64>(
                             this_class.class + module.offsets.monoclass_fields as u64,
                         )
