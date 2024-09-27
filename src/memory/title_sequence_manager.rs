@@ -24,6 +24,16 @@ impl Default for TitleSequenceManager {
 }
 
 impl MemoryManager for TitleSequenceManager {
+    fn ready_for_updates(&mut self, _ctx: &StateContext) -> bool {
+        if let Some(class) = self.manager.singleton {
+            if class.class == 0 {
+                return false;
+            }
+            return true;
+        }
+        false
+    }
+
     fn update_manager(&mut self, ctx: &StateContext) {
         if let Some(process) = &ctx.process {
             if let Some(module) = &ctx.module {
@@ -35,8 +45,11 @@ impl MemoryManager for TitleSequenceManager {
     }
 
     fn update_memory(&mut self, ctx: &StateContext) {
-        if self.manager.instance.is_some() {
-            self.data.update(ctx, &mut self.manager)
+        if self.ready_for_updates(ctx) {
+            match self.data.update(ctx, &mut self.manager) {
+                Ok(_) => (),
+                Err(_error) => self.manager.reset(),
+            }
         }
     }
 }
@@ -48,12 +61,22 @@ pub struct TitleSequenceManagerData {
 }
 
 impl TitleSequenceManagerData {
-    pub fn update(&mut self, ctx: &StateContext, manager: &mut UnityMemoryManager) {
-        self.update_title_menu(ctx, manager);
-        self.update_relics(ctx, manager);
+    pub fn update(
+        &mut self,
+        ctx: &StateContext,
+        manager: &mut UnityMemoryManager,
+    ) -> Result<(), Error> {
+        match self.update_title_menu(ctx, manager) {
+          Ok(_) => Ok(()),
+          Err(error) => Err(error)
+        }
     }
 
-    pub fn update_title_menu(&mut self, ctx: &StateContext, manager: &mut UnityMemoryManager) {
+    pub fn update_title_menu(
+        &mut self,
+        ctx: &StateContext,
+        manager: &mut UnityMemoryManager,
+    ) -> Result<(), Error> {
         if let Some(class) = manager.class {
             if let Some(process) = &ctx.process {
                 if let Some(module) = &ctx.module {
@@ -69,7 +92,7 @@ impl TitleSequenceManagerData {
                             == Some(1)
                         {
                             self.title_menu.selected = TitleMenuOption::NewGame;
-                            return;
+                            return Ok(());
                         }
                         if class
                             .follow_fields::<u8>(
@@ -82,7 +105,7 @@ impl TitleSequenceManagerData {
                             == Some(1)
                         {
                             self.title_menu.selected = TitleMenuOption::NewGamePlus;
-                            return;
+                            return Ok(());
                         }
                         if class
                             .follow_fields::<u8>(
@@ -95,7 +118,7 @@ impl TitleSequenceManagerData {
                             == Some(1)
                         {
                             self.title_menu.selected = TitleMenuOption::Continue;
-                            return;
+                            return Ok(());
                         }
                         if class
                             .follow_fields::<u8>(
@@ -108,7 +131,7 @@ impl TitleSequenceManagerData {
                             == Some(1)
                         {
                             self.title_menu.selected = TitleMenuOption::LoadGame;
-                            return;
+                            return Ok(());
                         }
                         if class
                             .follow_fields::<u8>(
@@ -121,7 +144,7 @@ impl TitleSequenceManagerData {
                             == Some(1)
                         {
                             self.title_menu.selected = TitleMenuOption::Options;
-                            return;
+                            return Ok(());
                         }
                         if class
                             .follow_fields::<u8>(
@@ -139,9 +162,8 @@ impl TitleSequenceManagerData {
                 }
             }
         }
+        Ok(())
     }
-
-    pub fn update_relics(&mut self, _ctx: &StateContext, _manager: &UnityMemoryManager) {}
 }
 
 #[derive(Default, Debug)]

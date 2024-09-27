@@ -288,7 +288,7 @@ impl Class {
         fields: &[&str],
     ) -> Result<T, Error> {
         if fields.is_empty() {
-            panic!("Don't send empty fields list to follow fields")
+            return Err(Error);
         }
 
         if singleton.class == 0 {
@@ -313,7 +313,7 @@ impl Class {
                     }
                 }
                 None => {
-                    panic!("THIS IS BAD: 0x{:x} {}", address.class, field)
+                    return Err(Error)
                 }
             };
         }
@@ -328,7 +328,7 @@ impl Class {
         fields: &[&str],
     ) -> Result<u64, Error> {
         if fields.is_empty() {
-            panic!("Don't send empty fields list to follow fields")
+            return Err(Error);
         }
 
         if singleton.class == 0 {
@@ -353,7 +353,7 @@ impl Class {
                     }
                 }
                 None => {
-                    panic!("THIS IS BAD: 0x{:x} {}", address.class, field)
+                    return Err(Error)
                 }
             };
         }
@@ -370,13 +370,15 @@ impl Class {
         module: &Module,
         field_name: &str,
     ) -> Option<u32> {
-        self.fields(process, module)
+        let fields = self.fields(process, module)
             .find(|field| {
                 field
                     .get_name::<CSTR>(process, module)
                     .is_ok_and(|name| name.matches(field_name))
-            })?
-            .get_offset(process, module)
+            })?;
+         let offset = fields.get_offset(process, module);
+        offset
+
     }
 
     /// Tries to find the address of a static instance of the class based on its
@@ -443,9 +445,11 @@ impl Field {
     }
 
     fn get_offset(&self, process: &Process, module: &Module) -> Option<u32> {
-        process
-            .read(self.field + module.offsets.monoclassfield_offset as u64)
-            .ok()
+        match process
+            .read(self.field + module.offsets.monoclassfield_offset as u64) {
+            Ok(value) => Some(value),
+            Err(_error) => None
+        }
     }
 }
 

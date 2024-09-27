@@ -13,15 +13,26 @@ pub struct MemoryManagers {
 
 impl MemoryManagers {
     pub fn update(&mut self, ctx: &StateContext) {
-        self.title_sequence_manager.update(ctx);
-        self.player_party_manager.update(ctx);
+        if self.ready_for_updates(ctx) {
+            self.title_sequence_manager.update(ctx);
+            self.player_party_manager.update(ctx);
+        }
+    }
+    pub fn ready_for_updates(&mut self, ctx: &StateContext) -> bool {
+        ctx.process.is_some() && ctx.module.is_some() && ctx.image.is_some()
     }
 }
 
 pub trait MemoryManager {
     fn update(&mut self, ctx: &StateContext) {
         self.update_manager(ctx);
-        self.update_memory(ctx);
+        if self.ready_for_updates(ctx) {
+            self.update_memory(ctx);
+        }
+    }
+
+    fn ready_for_updates(&mut self, _state: &StateContext) -> bool {
+        true
     }
 
     fn update_manager(&mut self, state: &StateContext);

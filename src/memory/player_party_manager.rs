@@ -1,7 +1,7 @@
 use crate::memory::MemoryManager;
 use crate::state::StateContext;
 use memory::memory_manager::unity::*;
-use memory::process::{Error, Process};
+use memory::process::Error;
 use vec3_rs::Vector3;
 
 pub struct PlayerPartyManager {
@@ -25,6 +25,16 @@ impl Default for PlayerPartyManager {
 }
 
 impl MemoryManager for PlayerPartyManager {
+    fn ready_for_updates(&mut self, _ctx: &StateContext) -> bool {
+        if let Some(class) = self.manager.singleton {
+            if class.class == 0 {
+                return false;
+            } 
+            return true;
+        }
+        true
+    }
+
     fn update_manager(&mut self, ctx: &StateContext) {
         if let Some(process) = &ctx.process {
             if let Some(module) = &ctx.module {
@@ -36,8 +46,11 @@ impl MemoryManager for PlayerPartyManager {
     }
 
     fn update_memory(&mut self, ctx: &StateContext) {
-        if self.manager.instance.is_some() {
-            self.data.update(ctx, &mut self.manager)
+        if self.ready_for_updates(ctx) {
+            match self.data.update(ctx, &mut self.manager) {
+                Ok(_) => (),
+                Err(_error) => self.manager.reset()
+            }
         }
     }
 }
@@ -48,39 +61,35 @@ pub struct PlayerPartyManagerData {
 }
 
 impl PlayerPartyManagerData {
-    pub fn update(&mut self, ctx: &StateContext, manager: &mut UnityMemoryManager) {
-        self.update_position(ctx, manager);
+    pub fn update(
+        &mut self,
+        ctx: &StateContext,
+        manager: &mut UnityMemoryManager,
+    ) -> Result<(), Error> {
+        match self.update_position(ctx, manager) {
+            Ok(_) => Ok(()),
+            Err(error) => Err(error)
+        }
     }
 
-    pub fn update_position(&mut self, ctx: &StateContext, manager: &mut UnityMemoryManager) {
-        if let Some(class) = manager.class {
-            if let Some(process) = &ctx.process {
-                if let Some(module) = &ctx.module {
-                    if let Some(singleton) = manager.singleton {
-                        if let Ok(current_position_ptr) = class.follow_fields_without_read(
-                            singleton,
-                            process,
-                            module,
-                            &["leader", "controller", "currentTargetPosition"],
-                        ) {
-                            let x = process
-                                .read_pointer::<f32>(current_position_ptr)
-                                .ok()
-                                .unwrap();
-                            let y = process
-                                .read_pointer::<f32>(current_position_ptr + 0x4)
-                                .ok()
-                                .unwrap();
-                            let z = process
-                                .read_pointer::<f32>(current_position_ptr + 0x8)
-                                .ok()
-                                .unwrap();
-
-                            self.position = Vector3::new(x, y, z);
-                        }
-                    }
-                }
+    // This function updates the users position for nav helper
+    // Unfortunately because some classes here dont have true objects
+    // this by using follow_fields since while we are going up the chain
+    // we may be unable to query an object without a fields_base
+    pub fn update_position(
+        &mut self,
+        ctx: &StateContext,
+        manager: &mut UnityMemoryManager,
+    ) -> Result<(), Error> {
+        if let Some(process) = &ctx.process {
+            if let Some(singleton) = manager.singleton {
+                let current_position_ptr = process.read_pointer_path_without_read(singleton.class, &[0xD0, 0x90, 0x84])?;
+                let x = process.read_pointer::<f32>(current_position_ptr)?;
+                let y = process.read_pointer::<f32>(current_position_ptr + 0x4)?; 
+                let z = process.read_pointer::<f32>(current_position_ptr + 0x8)?;
+                self.position = Vector3::new(x, y, z);
             }
         }
+        Ok(())
     }
 }
