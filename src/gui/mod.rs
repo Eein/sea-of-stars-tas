@@ -16,7 +16,10 @@ impl TabViewer<'_> {
         match tab.as_str() {
             "Nav Helper" => self.helpers.nav_helper.draw(self.memory_managers, ui, tab),
             "Main Helper" => self.helpers.main_helper.draw(self.memory_managers, ui, tab),
-            "Title Helper" => self.helpers.title_helper.draw(self.memory_managers, ui, tab),
+            "Title Helper" => self
+                .helpers
+                .title_helper
+                .draw(self.memory_managers, ui, tab),
             _ => {
                 let label = format!("Tab: {} has not been initialized. Check gui/mod.rs and state.rs to initialize this tab.", tab.as_str());
                 ui.label(label);

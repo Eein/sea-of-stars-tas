@@ -45,10 +45,12 @@ impl State {
             gui_helpers.nav_helper.name(),
             gui_helpers.main_helper.name(),
             gui_helpers.title_helper.name(),
-        ].iter() {
+        ]
+        .iter()
+        {
             tree_names.push(h.to_string());
         }
-        println!("{:?}",tree_names);
+        println!("{:?}", tree_names);
 
         Self {
             context: StateContext {
