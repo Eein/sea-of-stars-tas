@@ -50,7 +50,6 @@ impl State {
         {
             tree_names.push(h.to_string());
         }
-        println!("{:?}", tree_names);
 
         Self {
             context: StateContext {
@@ -115,7 +114,6 @@ impl State {
                 if let Some(module) = &self.context.module {
                     println!("- Loading Image");
                     self.context.image = module.get_default_image(process);
-                    println!("{:?}", self.context.image);
                 }
             }
         }

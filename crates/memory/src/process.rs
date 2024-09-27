@@ -74,6 +74,7 @@ impl Process {
             };
             self.last_check = now;
         }
+
         match self
             .modules
             .iter()
