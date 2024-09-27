@@ -27,7 +27,7 @@ pub struct State {
     pub debug: StateDebug,
     pub gui: StateGui,
 }
-
+#[derive(Default)]
 pub struct StateContext {
     pub process: Option<Process>,
     pub module: Option<Module>,
@@ -82,18 +82,23 @@ impl State {
     }
 
     pub fn register_process(&mut self) {
-        if self.context.process.is_none() {
             let process_name = "SeaOfStars.exe";
             // Find the Process
             match Process::with_name(process_name, &mut self.process_list) {
                 Ok(process) => {
-                    println!("- Attaching Process");
-                    println!("Found {} at pid {}", process_name, process.pid);
-                    self.context.process = Some(process);
+                        if self.context.process.is_none() {
+                            println!("- Attaching Process");
+                            println!("Found {} at pid {}", process_name, process.pid);
+                        }
+                        self.context.process = Some(process);
+
                 }
-                Err(_err) => (),
+                Err(_err) => {
+                    self.context = StateContext::default();
+                    ()
+                }
             }
-        }
+
     }
 
     pub fn register_module(&mut self) {
