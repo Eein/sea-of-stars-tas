@@ -1,17 +1,20 @@
 use super::GuiHelper;
 use crate::memory::MemoryManagers;
+use vec3_rs::Vector3;
 
 #[derive(Debug)]
 pub struct NavHelper {
     pub name: String,
     pub precision: f32,
     pub run_enabled: bool,
+    pub target_coordinates: Vector3<f32>,
 }
 impl Default for NavHelper {
     fn default() -> NavHelper {
         Self {
             name: "Nav Helper".to_string(),
             precision: 0.200,
+            target_coordinates: Vector3::new(0.0, 0.0, 0.0),
             run_enabled: true,
         }
     }
@@ -38,7 +41,7 @@ impl GuiHelper for NavHelper {
                 ui.label(format!("z: {}", pos_z));
 
                 if ui.button("Set as target").clicked() {
-                    // nothing yet
+                    self.target_coordinates = Vector3::new(position.get_x(), position.get_y(), position.get_z())
                 };
                 if ui.button("Copy to clipboard").clicked() {
                     // nothing yet
@@ -48,11 +51,22 @@ impl GuiHelper for NavHelper {
         egui::CollapsingHeader::new("Target Coordinates NOT IMPLEMENTED")
             .default_open(true)
             .show(ui, |ui| {
+                let position = self.target_coordinates;
+                let player_position = managers.player_party_manager.data.position;
+                let pos_x = format!("{:.3}", position.get_x());
+                let pos_y = format!("{:.3}", position.get_y());
+                let pos_z = format!("{:.3}", position.get_z());
+                ui.label(format!("x: {}", pos_x));
+                ui.label(format!("y: {}", pos_y));
+                ui.label(format!("z: {}", pos_z));
                 ui.add(egui::TextEdit::singleline(&mut "0.00"));
                 ui.add(egui::TextEdit::singleline(&mut "0.00"));
                 ui.add(egui::TextEdit::singleline(&mut "0.00"));
 
-                ui.label("Distance to target: 0.000");
+                let diff = position - player_position;
+                let distance_to_target = Vector3::magnitude(&diff);
+                let distance_to_target_string = format!("Distance to target {:.3}", distance_to_target);
+                ui.label(distance_to_target_string);
 
                 if ui.button("Copy to clipboard").clicked() {
                     // nothing yet
