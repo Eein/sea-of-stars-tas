@@ -16,6 +16,7 @@ eframe = { version = "0.28", default-features = false, features = [
 ] }
 egui_dock = "0.13.0"
 vec3-rs = "0.1.6"
+struct-field-names-as-array = "0.3.0"
 
 [dependencies.winit]
 # version = "*"

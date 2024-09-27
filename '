@@ -13,14 +13,11 @@ pub struct TabViewer<'a> {
 }
 impl TabViewer<'_> {
     fn draw(&mut self, ui: &mut egui::Ui, tab: &mut String) {
-        match tab.as_str() {
-            "Nav Helper" => self.helpers.nav_helper.draw(self.memory_managers, ui, tab),
-            "Main Helper" => self.helpers.main_helper.draw(self.memory_managers, ui, tab),
-            "Title Helper" => self.helpers.title_helper.draw(self.memory_managers, ui, tab),
-            _ => {
-                let label = format!("Tab: {} has not been initialized. Check gui/mod.rs and state.rs to initialize this tab.", tab.as_str());
-                ui.label(label);
-            }
+
+        match tab.clone() {
+            "Nav Helper".to_string() => self.helpers.nav_helper.draw(self.memory_managers, ui, &mut tab),
+            "Main Helper".to_string() => self.helpers.nav_helper.draw(self.memory_managers, ui, &mut tab),
+            "Title Helper".to_string() => self.helpers.nav_helper.draw(self.memory_managers, ui, &mut tab),
         }
     }
 }

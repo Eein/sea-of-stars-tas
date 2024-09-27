@@ -17,7 +17,7 @@ impl GuiHelper for TitleHelper {
     fn name(&self) -> String {
         self.name.clone()
     }
-    fn draw(&self, managers: &MemoryManagers, ui: &mut egui::Ui, _tab: &mut String) {
+    fn draw(&mut self, managers: &MemoryManagers, ui: &mut egui::Ui, _tab: &mut String) {
         ui.label(format!(
             "Menu Item Selected {:?}",
             managers.title_sequence_manager.data.title_menu.selected

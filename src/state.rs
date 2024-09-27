@@ -1,7 +1,6 @@
 use super::memory::MemoryManagers;
 use crate::gui::Gui;
 
-use crate::gui::helpers::GuiHelper;
 use crate::gui::helpers::*;
 // Move these to preludes later
 use memory::game_engine::il2cpp::{Image, Module};
@@ -17,7 +16,7 @@ pub struct StateDebug {
 }
 
 pub struct StateGui {
-    pub helpers: Vec<Box<dyn GuiHelper>>,
+    pub helpers: GuiHelpers,
     pub dock_state: DockState<String>,
 }
 
@@ -38,17 +37,18 @@ pub struct StateContext {
 impl State {
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         // Register any GUI helpers here
-        let gui_helpers: Vec<Box<dyn GuiHelper>> = vec![
-            Box::new(NavHelper::default()),
-            Box::new(TitleHelper::default()),
-            Box::new(MainHelper::default()),
-        ];
+        let gui_helpers = GuiHelpers::default();
 
         let mut tree_names: Vec<String> = vec![];
 
-        for h in gui_helpers.iter() {
-            tree_names.push(h.name());
+        for h in [
+            gui_helpers.nav_helper.name(),
+            gui_helpers.main_helper.name(),
+            gui_helpers.title_helper.name(),
+        ].iter() {
+            tree_names.push(h.to_string());
         }
+        println!("{:?}",tree_names);
 
         Self {
             context: StateContext {
@@ -56,7 +56,7 @@ impl State {
                 module: None,
                 image: None,
             },
-            process_list: ProcessList::new(),
+            process_list: ProcessList::default(),
             memory_managers: MemoryManagers::default(),
             gui: StateGui {
                 helpers: gui_helpers,
