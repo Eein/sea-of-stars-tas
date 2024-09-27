@@ -41,9 +41,12 @@ impl GuiHelper for NavHelper {
                 ui.label(format!("z: {}", pos_z));
 
                 if ui.button("Set as target").clicked() {
-                    self.target_coordinates = Vector3::new(position.get_x(), position.get_y(), position.get_z())
+                    self.target_coordinates =
+                        Vector3::new(position.get_x(), position.get_y(), position.get_z())
                 };
                 if ui.button("Copy to clipboard").clicked() {
+                    let text = "YOU COPIED THIS TEXT FROM THE CLIPBOARD";
+                    ui.output_mut(|o| o.copied_text = String::from(text));
                     // nothing yet
                 };
             });
@@ -59,17 +62,16 @@ impl GuiHelper for NavHelper {
                 ui.label(format!("x: {}", pos_x));
                 ui.label(format!("y: {}", pos_y));
                 ui.label(format!("z: {}", pos_z));
-                ui.add(egui::TextEdit::singleline(&mut "0.00"));
-                ui.add(egui::TextEdit::singleline(&mut "0.00"));
-                ui.add(egui::TextEdit::singleline(&mut "0.00"));
 
                 let diff = position - player_position;
                 let distance_to_target = Vector3::magnitude(&diff);
-                let distance_to_target_string = format!("Distance to target {:.3}", distance_to_target);
+                let distance_to_target_string =
+                    format!("Distance to target {:.3}", distance_to_target);
                 ui.label(distance_to_target_string);
 
                 if ui.button("Copy to clipboard").clicked() {
-                    // nothing yet
+                    let text = "YOU COPIED THIS TEXT FROM THE CLIPBOARD";
+                    ui.output_mut(|o| o.copied_text = String::from(text));
                 };
             });
         ui.separator();
