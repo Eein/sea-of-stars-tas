@@ -172,7 +172,7 @@ impl Image {
         let metadata_handle = match type_count {
             Ok(0) => None,
             Ok(_) => match metadata_ptr {
-                Ok(x) => process.read::<u32>(x.into()).ok(),
+                Ok(x) => process.read::<u32>(x).ok(),
                 _ => None,
             },
             _ => None,
@@ -202,7 +202,7 @@ impl Image {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Class {
     pub class: u64,
 }
@@ -269,7 +269,7 @@ impl Class {
 
                 Some((0..field_count.unwrap_or_default()).filter_map(move |i| {
                     Some(Field {
-                        field: fields? as u64 + (i as u64 * monoclassfield_structsize),
+                        field: fields? + (i as u64 * monoclassfield_structsize),
                     })
                 }))
             } else {
@@ -431,12 +431,10 @@ impl Field {
         process: &Process,
         module: &Module,
     ) -> Result<ArrayCString<N>, Error> {
-        let name = process.read_pointer_path::<ArrayCString<N>>(
+        process.read_pointer_path::<ArrayCString<N>>(
             self.field,
             &[module.offsets.monoclassfield_name.into(), 0x0],
-        );
-
-        name
+        )
     }
 
     fn get_offset(&self, process: &Process, module: &Module) -> Option<u32> {

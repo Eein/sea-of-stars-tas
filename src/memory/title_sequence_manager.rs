@@ -48,7 +48,10 @@ impl MemoryManager for TitleSequenceManager {
     fn update_memory(&mut self, ctx: &StateContext) {
         match self.data.update(ctx, &mut self.manager) {
             Ok(_) => (),
-            Err(_error) => self.manager.reset(),
+            Err(_error) => {
+                println!("RESETTING");
+                self.manager.reset()
+            }
         }
     }
 }
