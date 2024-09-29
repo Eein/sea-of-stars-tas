@@ -30,20 +30,17 @@ jobs:
 
   clippy:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v4
-
-    # selecting a toolchain either by action or manual `rustup` calls should happen
-    # before the plugin, as the cache uses the current rustc version as its cache key
-    - run: rustup toolchain install nightly 
-
-    - uses: Swatinem/rust-cache@v2
-      with:
-        prefix-key: "clippy"
-
-    - name: Run Clippy
-      run: cargo clippy --all-targets --all-features
+      - uses: actions/checkout@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+            toolchain: nightly
+            components: clippy
+            override: true
+      - uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-features
 
   format:
     name: format
