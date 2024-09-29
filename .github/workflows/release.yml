@@ -56,18 +56,20 @@ jobs:
         run: |
           src=$(pwd)
           stage=
+          filename
           case $RUNNER_OS in
+          Windows)
+          filename=sea-of-stars-tas.exe
+          ;;
           Linux)
+          filename=sea-of-stars-tas
           stage=$(mktemp -d)
           ;;
-          macOS)
-          stage=$(mktemp -d -t tmp)
-          ;;
           esac
-          cp target/${{ matrix.target }}/release/sysit $stage/
+          cp target/${{ matrix.target }}/release/$filename $stage/
           cd $stage
           RELEASE_VERSION=${GITHUB_REF#refs/tags/}
-          ASSET_NAME="sysit-$RELEASE_VERSION-${{ matrix.target }}.tar.gz"
+          ASSET_NAME="sea-of-stars-tas-$RELEASE_VERSION-${{ matrix.target }}.tar.gz"
           ASSET_PATH="$src/$ASSET_NAME"
           echo "ASSET_PATH=$ASSET_PATH" >> $GITHUB_ENV
           tar czf $ASSET_PATH *
