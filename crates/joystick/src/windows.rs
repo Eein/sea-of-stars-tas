@@ -113,7 +113,7 @@ impl Joystick {
         self.gamepad.buttons = vigem_client::XButtons!();
     }
 
-    pub fn tap(&mut self, button: u16) {
+    fn tap(&mut self, button: u16) {
         // send in press and release
         let time = self.instant.elapsed();
         let release_duration = Duration::from_millis(TAP_DURATION);
