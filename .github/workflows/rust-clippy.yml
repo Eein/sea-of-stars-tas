@@ -22,7 +22,8 @@ jobs:
     - run: rustup toolchain install nightly 
 
     - uses: Swatinem/rust-cache@v2
-      prefix-key: "clippy"
+      with:
+        prefix-key: "clippy"
 
     - name: Run Clippy
       run: cargo clippy --all-targets --all-features

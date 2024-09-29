@@ -12,11 +12,16 @@ env:
   # The project name specified in your Cargo.toml
   PROJECT_NAME: "sea-of-stars-tas"
 jobs:
+<<<<<<< Updated upstream
   build:
     # Set the job to run on the platform specified by the matrix below
     runs-on: ${{ matrix.runner }}
  
     # Define the build matrix for cross-compilation
+=======
+  release:
+    name: Release - ${{ matrix.platform.os }}
+>>>>>>> Stashed changes
     strategy:
       matrix:
         include:
