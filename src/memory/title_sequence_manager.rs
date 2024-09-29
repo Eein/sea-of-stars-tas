@@ -1,7 +1,7 @@
 use crate::memory::MemoryManager;
 use crate::state::StateContext;
 use memory::memory_manager::unity::*;
-use memory::process::{Error, Process};
+use memory::process::Error;
 
 pub struct TitleSequenceManager {
     pub name: String,
@@ -24,6 +24,17 @@ impl Default for TitleSequenceManager {
 }
 
 impl MemoryManager for TitleSequenceManager {
+    fn ready_for_updates(&mut self, _ctx: &StateContext) -> bool {
+        if let Some(class) = self.manager.singleton {
+            if class.class == 0 {
+                return false;
+            }
+
+            return true;
+        }
+        false
+    }
+
     fn update_manager(&mut self, ctx: &StateContext) {
         if let Some(process) = &ctx.process {
             if let Some(module) = &ctx.module {
@@ -35,25 +46,38 @@ impl MemoryManager for TitleSequenceManager {
     }
 
     fn update_memory(&mut self, ctx: &StateContext) {
-        if self.manager.instance.is_some() {
-            self.data.update(ctx, &mut self.manager)
+        match self.data.update(ctx, &mut self.manager) {
+            Ok(_) => (),
+            Err(_error) => {
+                println!("RESETTING");
+                self.manager.reset()
+            }
         }
     }
 }
 
 #[derive(Default, Debug)]
 pub struct TitleSequenceManagerData {
-    pub relics: Vec<Relic>,
     pub title_menu: TitleMenu,
 }
 
 impl TitleSequenceManagerData {
-    pub fn update(&mut self, ctx: &StateContext, manager: &mut UnityMemoryManager) {
-        self.update_title_menu(ctx, manager);
-        self.update_relics(ctx, manager);
+    pub fn update(
+        &mut self,
+        ctx: &StateContext,
+        manager: &mut UnityMemoryManager,
+    ) -> Result<(), Error> {
+        match self.update_title_menu(ctx, manager) {
+            Ok(_) => Ok(()),
+            Err(error) => Err(error),
+        }
     }
 
-    pub fn update_title_menu(&mut self, ctx: &StateContext, manager: &mut UnityMemoryManager) {
+    pub fn update_title_menu(
+        &mut self,
+        ctx: &StateContext,
+        manager: &mut UnityMemoryManager,
+    ) -> Result<(), Error> {
         if let Some(class) = manager.class {
             if let Some(process) = &ctx.process {
                 if let Some(module) = &ctx.module {
@@ -65,10 +89,11 @@ impl TitleSequenceManagerData {
                                 module,
                                 &["titleScreen", "newGameButton", "selected"],
                             )
-                            .ok() == Some(1)
+                            .ok()
+                            == Some(1)
                         {
                             self.title_menu.selected = TitleMenuOption::NewGame;
-                            return;
+                            return Ok(());
                         }
                         if class
                             .follow_fields::<u8>(
@@ -81,7 +106,7 @@ impl TitleSequenceManagerData {
                             == Some(1)
                         {
                             self.title_menu.selected = TitleMenuOption::NewGamePlus;
-                            return;
+                            return Ok(());
                         }
                         if class
                             .follow_fields::<u8>(
@@ -94,7 +119,7 @@ impl TitleSequenceManagerData {
                             == Some(1)
                         {
                             self.title_menu.selected = TitleMenuOption::Continue;
-                            return;
+                            return Ok(());
                         }
                         if class
                             .follow_fields::<u8>(
@@ -107,7 +132,7 @@ impl TitleSequenceManagerData {
                             == Some(1)
                         {
                             self.title_menu.selected = TitleMenuOption::LoadGame;
-                            return;
+                            return Ok(());
                         }
                         if class
                             .follow_fields::<u8>(
@@ -120,7 +145,7 @@ impl TitleSequenceManagerData {
                             == Some(1)
                         {
                             self.title_menu.selected = TitleMenuOption::Options;
-                            return;
+                            return Ok(());
                         }
                         if class
                             .follow_fields::<u8>(
@@ -138,9 +163,7 @@ impl TitleSequenceManagerData {
                 }
             }
         }
-    }
-
-    pub fn update_relics(&mut self, _ctx: &StateContext, _manager: &UnityMemoryManager) {
+        Ok(())
     }
 }
 
@@ -159,19 +182,4 @@ pub enum TitleMenuOption {
 #[derive(Default, Debug)]
 pub struct TitleMenu {
     pub selected: TitleMenuOption,
-}
-
-#[derive(Default, Debug)]
-pub struct Relic {
-    pub name: String,
-    pub enabled: bool,
-    pub selected: bool,
-}
-
-#[derive(Default, Debug)]
-pub struct UnityItems;
-impl UnityItems {
-    pub fn count(process: &Process, items_ptr: u64) -> Result<u32, Error> {
-        process.read::<u32>(items_ptr + 0x18)
-    }
 }

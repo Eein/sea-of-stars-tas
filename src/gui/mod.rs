@@ -1,22 +1,28 @@
 pub mod helpers;
 pub struct Gui;
-use super::state::State;
-use eframe::egui;
-use std::time::Instant;
-use egui_dock::{DockArea, Style};
-use super::gui::helpers::GuiHelper;
+use super::gui::helpers::{GuiHelper, GuiHelpers};
 use super::memory::MemoryManagers;
+use super::state::State;
+use egui_dock::{DockArea, Style};
+use std::time::Instant;
 
 pub struct TabViewer<'a> {
-    helpers: &'a Vec<Box<dyn GuiHelper>>,
+    helpers: &'a mut GuiHelpers,
     memory_managers: &'a MemoryManagers,
 }
 impl TabViewer<'_> {
-    fn draw(&mut self, ui: &mut egui::Ui, tab: &mut String, name: String) {
-        if let Some(helper) = self.helpers.iter().find(|x| {
-            x.name() == name
-        }) {
-            helper.draw(self.memory_managers, ui, tab);
+    fn draw(&mut self, ui: &mut egui::Ui, tab: &mut String) {
+        match tab.as_str() {
+            "Nav Helper" => self.helpers.nav_helper.draw(self.memory_managers, ui, tab),
+            "Main Helper" => self.helpers.main_helper.draw(self.memory_managers, ui, tab),
+            "Title Helper" => self
+                .helpers
+                .title_helper
+                .draw(self.memory_managers, ui, tab),
+            _ => {
+                let label = format!("Tab: {} has not been initialized. Check gui/mod.rs and state.rs to initialize this tab.", tab.as_str());
+                ui.label(label);
+            }
         }
     }
 }
@@ -29,7 +35,7 @@ impl egui_dock::TabViewer for TabViewer<'_> {
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, tab: &mut Self::Tab) {
-        self.draw(ui, tab, tab.to_string());
+        self.draw(ui, tab);
     }
 }
 
@@ -85,11 +91,16 @@ impl Gui {
         });
 
         egui::CentralPanel::default().show(ctx, |_ui| {
-
             DockArea::new(&mut state.gui.dock_state)
                 .style(Style::from_egui(ctx.style().as_ref()))
                 .show_close_buttons(false)
-                .show(ctx, &mut TabViewer {memory_managers: &state.memory_managers, helpers: &state.gui.helpers});
+                .show(
+                    ctx,
+                    &mut TabViewer {
+                        memory_managers: &state.memory_managers,
+                        helpers: &mut state.gui.helpers,
+                    },
+                );
         });
 
         // TODO(eein)

@@ -74,6 +74,7 @@ impl Process {
             };
             self.last_check = now;
         }
+
         match self
             .modules
             .iter()
@@ -134,5 +135,18 @@ impl Process {
         }
 
         self.read::<T>(address + last)
+    }
+
+    pub fn read_pointer_path_without_read(
+        &self,
+        mut address: u64,
+        path: &[u64],
+    ) -> Result<u64, Error> {
+        let (&last, path) = path.split_last().ok_or(Error)?;
+        for &offset in path {
+            address = self.read_pointer::<u64>(address + offset)?;
+        }
+
+        Ok(address + last)
     }
 }

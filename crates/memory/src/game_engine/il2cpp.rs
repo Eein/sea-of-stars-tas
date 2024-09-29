@@ -24,7 +24,7 @@ impl Module {
     /// correct for this function to work. If you don't know the version in
     /// advance, use [`attach_auto_detect`](Self::attach_auto_detect) instead.
     pub fn attach(process: &mut Process) -> Option<Self> {
-        let _ = process.module_address("GameAssembly.dll");
+        // let _ = process.module_address("GameAssembly.dll");
 
         let mono_module = {
             let address = process.module_address("GameAssembly.dll").ok()?;
@@ -161,18 +161,16 @@ impl Image {
         module: &'a Module,
     ) -> impl DoubleEndedIterator<Item = Class> + 'a {
         let type_count =
-            process.read::<u32>(self.image + module.offsets.monoimage_typecount as u64);
-
+            process.read_pointer::<u32>(self.image + module.offsets.monoimage_typecount as u64);
         let metadata_ptr = match type_count {
             Ok(_) => process
-                .read_pointer::<u32>(self.image + module.offsets.monoimage_metadatahandle as u64),
+                .read_pointer::<u64>(self.image + module.offsets.monoimage_metadatahandle as u64),
             _ => Err(Error {}),
         };
-
         let metadata_handle = match type_count {
             Ok(0) => None,
             Ok(_) => match metadata_ptr {
-                Ok(x) => process.read::<u32>(x.into()).ok(),
+                Ok(x) => process.read::<u32>(x).ok(),
                 _ => None,
             },
             _ => None,
@@ -188,7 +186,6 @@ impl Image {
                 .read_pointer::<u64>(ptr)
                 .ok()
                 .filter(|val| *val != 0x0)?;
-
             Some(Class { class })
         })
     }
@@ -203,7 +200,7 @@ impl Image {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Class {
     pub class: u64,
 }
@@ -252,7 +249,7 @@ impl Class {
 
                 let fields = match field_count {
                     Ok(_) => process
-                        .read_pointer::<u32>(
+                        .read_pointer::<u64>(
                             this_class.class + module.offsets.monoclass_fields as u64,
                         )
                         .ok(),
@@ -269,7 +266,7 @@ impl Class {
 
                 Some((0..field_count.unwrap_or_default()).filter_map(move |i| {
                     Some(Field {
-                        field: fields? as u64 + (i as u64 * monoclassfield_structsize),
+                        field: fields? + (i as u64 * monoclassfield_structsize),
                     })
                 }))
             } else {
@@ -288,7 +285,11 @@ impl Class {
         fields: &[&str],
     ) -> Result<T, Error> {
         if fields.is_empty() {
-            panic!("Don't send empty fields list to follow fields")
+            return Err(Error);
+        }
+
+        if singleton.class == 0 {
+            return Err(Error);
         }
 
         let last = fields.last().unwrap();
@@ -308,12 +309,48 @@ impl Class {
                         fields_base.class = process.read_pointer::<u64>(address.class)?;
                     }
                 }
-                None => {
-                    panic!("THIS IS BAD: 0x{:x} {}", address.class, field)
-                }
+                None => return Err(Error),
             };
         }
         process.read_pointer::<T>(address.class)
+    }
+
+    pub fn follow_fields_without_read(
+        &self,
+        singleton: Class,
+        process: &Process,
+        module: &Module,
+        fields: &[&str],
+    ) -> Result<u64, Error> {
+        if fields.is_empty() {
+            return Err(Error);
+        }
+
+        if singleton.class == 0 {
+            return Err(Error);
+        }
+
+        let last = fields.last().unwrap();
+
+        let mut address = Class {
+            class: singleton.class,
+        };
+        let mut fields_base = Class { class: self.class };
+        for field in fields {
+            match fields_base.get_field_offset(process, module, field) {
+                Some(offset) => {
+                    if field == last {
+                        address.class += offset as u64;
+                    } else {
+                        address.class =
+                            process.read_pointer::<u64>(address.class + offset as u64)?;
+                        fields_base.class = process.read_pointer::<u64>(address.class)?;
+                    }
+                }
+                None => return Err(Error),
+            };
+        }
+        Ok(address.class)
     }
 
     /// Tries to find a field with the specified name in the class. This returns
@@ -326,13 +363,12 @@ impl Class {
         module: &Module,
         field_name: &str,
     ) -> Option<u32> {
-        self.fields(process, module)
-            .find(|field| {
-                field
-                    .get_name::<CSTR>(process, module)
-                    .is_ok_and(|name| name.matches(field_name))
-            })?
-            .get_offset(process, module)
+        let fields = self.fields(process, module).find(|field| {
+            field
+                .get_name::<CSTR>(process, module)
+                .is_ok_and(|name| name.matches(field_name))
+        })?;
+        fields.get_offset(process, module)
     }
 
     /// Tries to find the address of a static instance of the class based on its
@@ -392,16 +428,17 @@ impl Field {
         process: &Process,
         module: &Module,
     ) -> Result<ArrayCString<N>, Error> {
-        process.read_pointer_path(
+        process.read_pointer_path::<ArrayCString<N>>(
             self.field,
             &[module.offsets.monoclassfield_name.into(), 0x0],
         )
     }
 
     fn get_offset(&self, process: &Process, module: &Module) -> Option<u32> {
-        process
-            .read(self.field + module.offsets.monoclassfield_offset as u64)
-            .ok()
+        match process.read(self.field + module.offsets.monoclassfield_offset as u64) {
+            Ok(value) => Some(value),
+            Err(_error) => None,
+        }
     }
 }
 
