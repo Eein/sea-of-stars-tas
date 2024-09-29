@@ -1,4 +1,3 @@
-#[cfg_attr(target_os = "linux")]
 use evdev::{
     uinput::{VirtualDevice, VirtualDeviceBuilder},
     AbsInfo, AbsoluteAxisCode, AttributeSet, EventType, InputEvent, KeyCode, UinputAbsSetup,

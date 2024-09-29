@@ -1,5 +1,5 @@
 use std::time::{Duration, Instant};
-use vigem_client::{Client, XButtons, Xbox360Wired};
+use vigem_client::{Client, XButtons, Xbox360Wired, TargetId, XGamepad};
 
 static TAP_DURATION: u64 = 50;
 
@@ -12,7 +12,7 @@ pub struct Joystick {
     device: Xbox360Wired<Client>, // may need to be Arc<Mutex>>
     gamepad: vigem_client::XGamepad,
     events: Vec<JoystickEvent>,
-    mask: u16, // current mask for the joystick
+    button_mask: u16, // current mask for the joystick
     pub instant: Instant,
 }
 
@@ -25,12 +25,12 @@ struct JoystickEvent {
 impl Default for Joystick {
     fn default() -> Self {
         let client = Client::connect().unwrap();
-        let id = vigem_client::TargetId::XBOX360_WIRED;
+        let id = TargetId::XBOX360_WIRED;
         let mut device = Xbox360Wired::new(client, id);
 
         device.plugin().unwrap();
 
-        let gamepad = vigem_client::XGamepad {
+        let gamepad = XGamepad {
             buttons: vigem_client::XButtons!(
                 UP | DOWN | LEFT | RIGHT | LTHUMB | RTHUMB | LB | RB | GUIDE | A | B | X | Y
             ),
@@ -40,7 +40,7 @@ impl Default for Joystick {
         Joystick {
             device,
             events: vec![],
-            mask: 0x0,
+            button_mask: 0x0,
             instant: Instant::now(),
             gamepad,
         }
@@ -139,14 +139,14 @@ impl Joystick {
                     match event.action {
                         KeyAction::Release => {
                             // bitwise AND NOT (removes the button from the bitflags)
-                            self.mask = self.mask & !event.key
+                            self.button_mask = self.button_mask & !event.key
                         }
                         KeyAction::Press => {
                             // bitwise OR (adds the button to the bitflags)
-                            self.mask = self.mask | event.key
+                            self.button_mask = self.button_mask | event.key
                         }
                     };
-                    self.gamepad.buttons.raw = self.mask;
+                    self.gamepad.buttons.raw = self.button_mask;
                     let _ = self.device.update(&self.gamepad);
                 }
             }
