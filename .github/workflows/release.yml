@@ -52,35 +52,14 @@ jobs:
       - name: Build Binary
         run: cargo build --verbose --locked --release --target ${{ matrix.target }}
 
-      - name: Package Artifacts
-        run: |
-          src=$(pwd)
-          stage=
-          matrix_target=${{matrix.target}}
-          target=
-          case $RUNNER_OS in
-          Windows)
-          stage=$(mktemp -d)
-          target=$(target/$matrix_target/release/sea-of-stars-tas.exe)
-          ;;
-          Linux)
-          stage=$(mktemp -d)
-          target=$(target/$matrix_target/release/sea-of-stars-tas)
-          ;;
-          esac
-          cd $stage
-          cp $target $stage/
-          RELEASE_VERSION=${GITHUB_REF#refs/tags/}
-          ASSET_NAME="sea-of-stars-tas-$RELEASE_VERSION-${{ matrix.target }}.tar.gz"
-          ASSET_PATH="$src/$ASSET_NAME"
-          echo "ASSET_PATH=$ASSET_PATH" >> $GITHUB_ENV
-          tar czf $ASSET_PATH *
-          cd $src   
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+          tag_name: release-${{ github.sha }}
+          release_name: Release ${{ github.sha }}
           files: |
-            ${{ env.ASSET_PATH }}
-            ${{ env.CHECKSUM_PATH }}       
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            ./target/x86_64-unknown-linux-gnu/release/sea-of-stars-tas
+            ./target/x86_64-pc-windows-msvc/release/sea-of-stars-tas.exe
