@@ -2,13 +2,7 @@ use std::time::{Duration, Instant};
 use vigem_client::{Client, TargetId, XButtons, XGamepad, Xbox360Wired};
 
 use crate::common::JoystickInterface;
-
-static TAP_DURATION: u64 = 50;
-
-enum KeyAction {
-    Press,
-    Release,
-}
+use crate::common::{JoystickInterface, KeyAction, TAP_DURATION};
 
 pub struct Joystick {
     device: Xbox360Wired<Client>, // may need to be Arc<Mutex>>
@@ -289,25 +283,6 @@ impl JoystickInterface for Joystick {
         let release_duration = Duration::from_millis(TAP_DURATION);
         self.press(button);
         self.release_later(button, release_duration);
-    }
-}
-
-impl Joystick {
-    fn tap(&mut self, button: u16) {
-        // send in press and release
-        let time = self.instant.elapsed();
-        let release_duration = Duration::from_millis(TAP_DURATION);
-
-        self.events.push(JoystickEvent {
-            key: button,
-            duration: time,
-            action: KeyAction::Press,
-        });
-        self.events.push(JoystickEvent {
-            key: button,
-            duration: time + release_duration,
-            action: KeyAction::Release,
-        });
     }
 }
 

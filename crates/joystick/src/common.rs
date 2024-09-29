@@ -1,6 +1,13 @@
 use evdev::KeyCode;
 use std::time::Duration;
 
+pub static TAP_DURATION: u64 = 50;
+
+pub enum KeyAction {
+    Press,
+    Release,
+}
+
 pub trait JoystickInterface {
     fn press_a(&mut self);
     fn press_b(&mut self);

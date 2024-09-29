@@ -7,13 +7,7 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
-use crate::common::JoystickInterface;
-static TAP_DURATION: u64 = 50;
-
-enum KeyAction {
-    Press,
-    Release,
-}
+use crate::common::{JoystickInterface, KeyAction, TAP_DURATION};
 
 struct JoystickEvent {
     key: KeyCode,
