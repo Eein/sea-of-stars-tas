@@ -1,3 +1,4 @@
+#[cfg_attr(target_os = "linux")]
 use evdev::{
     uinput::{VirtualDevice, VirtualDeviceBuilder},
     AbsInfo, AbsoluteAxisCode, AttributeSet, EventType, InputEvent, KeyCode, UinputAbsSetup,
@@ -23,7 +24,6 @@ struct JoystickEvent {
 
 pub struct Joystick {
     device: Arc<Mutex<VirtualDevice>>,
-    name: String,
     keys: AttributeSet<KeyCode>,
     events: Vec<JoystickEvent>,
     instant: Instant,
@@ -67,7 +67,6 @@ impl Default for Joystick {
         Joystick {
             events: vec![],
             device: Arc::new(Mutex::new(device)),
-            name: name.to_string(),
             instant: Instant::now(),
             keys,
         }
@@ -77,10 +76,6 @@ impl Default for Joystick {
 impl Joystick {
     pub fn new(&self) -> Self {
         Joystick::default()
-    }
-
-    pub fn name(&self) -> &str {
-        &self.name
     }
 
     pub fn tap_a(&mut self) {

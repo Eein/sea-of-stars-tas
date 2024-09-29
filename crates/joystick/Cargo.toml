@@ -4,5 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+
+[target.'cfg(windows)'.dependencies]
+vigem-client = "0.1.4"
+
+[target.'cfg(unix)'.dependencies]
 evdev = { git = "https://github.com/emberian/evdev", rev = "150df0d055290ea7db5e4e1ec9889d629232e9d8", features = ["tokio"]}
-tokio = { version = "1.37.0", features = ["full"] }

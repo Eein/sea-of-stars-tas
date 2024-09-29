@@ -1,13 +1,5 @@
-// THIS WILL NOT WORK UNTIL ITS IMPLEMENTED FOR WINDOWS
-
-use evdev::{
-    uinput::{VirtualDevice, VirtualDeviceBuilder},
-    AbsInfo, AbsoluteAxisCode, AttributeSet, EventType, InputEvent, KeyCode, UinputAbsSetup,
-};
-
-use std::sync::Arc;
-use std::sync::Mutex;
 use std::time::{Duration, Instant};
+use vigem_client::{Client, XButtons, Xbox360Wired};
 
 static TAP_DURATION: u64 = 50;
 
@@ -16,62 +8,41 @@ enum KeyAction {
     Release,
 }
 
+pub struct Joystick {
+    device: Xbox360Wired<Client>, // may need to be Arc<Mutex>>
+    gamepad: vigem_client::XGamepad,
+    events: Vec<JoystickEvent>,
+    mask: u16, // current mask for the joystick
+    pub instant: Instant,
+}
+
 struct JoystickEvent {
-    key: KeyCode,
-    event_type: EventType,
+    key: u16,
     duration: Duration,
     action: KeyAction,
 }
 
-pub struct Joystick {
-    device: Arc<Mutex<VirtualDevice>>,
-    name: String,
-    keys: AttributeSet<KeyCode>,
-    events: Vec<JoystickEvent>,
-    instant: Instant,
-}
-
 impl Default for Joystick {
     fn default() -> Self {
-        let name = "Future TAS Joystick Linux";
-        let abs_setup = AbsInfo::new(256, 0, 512, 20, 20, 1);
-        let abs_x = UinputAbsSetup::new(AbsoluteAxisCode::ABS_X, abs_setup);
-        let abs_y = UinputAbsSetup::new(AbsoluteAxisCode::ABS_Y, abs_setup);
-        let mut keys = AttributeSet::<KeyCode>::new();
+        let client = Client::connect().unwrap();
+        let id = vigem_client::TargetId::XBOX360_WIRED;
+        let mut device = Xbox360Wired::new(client, id);
 
-        keys.insert(KeyCode::BTN_DPAD_DOWN);
-        keys.insert(KeyCode::BTN_DPAD_LEFT);
-        keys.insert(KeyCode::BTN_DPAD_RIGHT);
-        keys.insert(KeyCode::BTN_DPAD_UP);
-        keys.insert(KeyCode::BTN_NORTH);
-        keys.insert(KeyCode::BTN_SOUTH);
-        keys.insert(KeyCode::BTN_EAST);
-        keys.insert(KeyCode::BTN_WEST);
-        keys.insert(KeyCode::BTN_START);
-        keys.insert(KeyCode::BTN_SELECT);
-        keys.insert(KeyCode::BTN_TR);
-        keys.insert(KeyCode::BTN_TL);
-        keys.insert(KeyCode::BTN_TR2);
-        keys.insert(KeyCode::BTN_TL2);
+        device.plugin().unwrap();
 
-        let device = VirtualDeviceBuilder::new()
-            .unwrap()
-            .name(name)
-            .with_keys(&keys)
-            .unwrap()
-            .with_absolute_axis(&abs_x)
-            .unwrap()
-            .with_absolute_axis(&abs_y)
-            .unwrap()
-            .build()
-            .unwrap();
+        let gamepad = vigem_client::XGamepad {
+            buttons: vigem_client::XButtons!(
+                UP | DOWN | LEFT | RIGHT | LTHUMB | RTHUMB | LB | RB | GUIDE | A | B | X | Y
+            ),
+            ..Default::default()
+        };
 
         Joystick {
+            device,
             events: vec![],
-            device: Arc::new(Mutex::new(device)),
-            name: name.to_string(),
+            mask: 0x0,
             instant: Instant::now(),
-            keys,
+            gamepad,
         }
     }
 }
@@ -81,88 +52,79 @@ impl Joystick {
         Joystick::default()
     }
 
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
     pub fn tap_a(&mut self) {
-        self.tap(KeyCode::BTN_EAST)
+        self.tap(XButtons::A)
     }
 
     pub fn tap_b(&mut self) {
-        self.tap(KeyCode::BTN_SOUTH)
+        self.tap(XButtons::B)
     }
 
     pub fn tap_x(&mut self) {
-        self.tap(KeyCode::BTN_NORTH)
+        self.tap(XButtons::X)
     }
 
     pub fn tap_y(&mut self) {
-        self.tap(KeyCode::BTN_WEST)
+        self.tap(XButtons::Y)
     }
 
     pub fn tap_lt(&mut self) {
-        self.tap(KeyCode::BTN_TL)
+        self.tap(XButtons::LB)
     }
 
     pub fn tap_rt(&mut self) {
-        self.tap(KeyCode::BTN_TR)
+        self.tap(XButtons::RB)
     }
 
+    // TODO(eein): We dont rear triggers yet
     pub fn tap_lt2(&mut self) {
-        self.tap(KeyCode::BTN_TL2)
+        // self.tap(XButtons::LB)
     }
 
     pub fn tap_rt2(&mut self) {
-        self.tap(KeyCode::BTN_TR2)
+        // self.tap(XButtons::RB)
     }
 
     pub fn tap_select(&mut self) {
-        self.tap(KeyCode::BTN_SELECT)
+        self.tap(XButtons::BACK)
     }
 
     pub fn tap_start(&mut self) {
-        self.tap(KeyCode::BTN_START)
+        self.tap(XButtons::START)
     }
 
     pub fn tap_dpad_up(&mut self) {
-        self.tap(KeyCode::BTN_DPAD_UP)
+        self.tap(XButtons::UP)
     }
 
     pub fn tap_dpad_down(&mut self) {
-        self.tap(KeyCode::BTN_DPAD_DOWN)
+        self.tap(XButtons::DOWN)
     }
 
     pub fn tap_dpad_left(&mut self) {
-        self.tap(KeyCode::BTN_DPAD_LEFT)
+        self.tap(XButtons::LEFT)
     }
 
     pub fn tap_dpad_right(&mut self) {
-        self.tap(KeyCode::BTN_DPAD_RIGHT)
+        self.tap(XButtons::RIGHT)
     }
 
     pub fn release_all(&mut self) {
-        let mut keys = vec![];
-        for key in &self.keys {
-            keys.push(InputEvent::new(EventType::KEY.0, key.code(), 0));
-        }
-        self.device.lock().unwrap().emit(&keys).unwrap();
+        self.gamepad.buttons = vigem_client::XButtons!();
     }
 
-    pub fn tap(&mut self, button: KeyCode) {
+    pub fn tap(&mut self, button: u16) {
         // send in press and release
         let time = self.instant.elapsed();
         let release_duration = Duration::from_millis(TAP_DURATION);
 
         self.events.push(JoystickEvent {
             key: button,
-            event_type: EventType::KEY,
             duration: time,
             action: KeyAction::Press,
         });
         self.events.push(JoystickEvent {
             key: button,
-            event_type: EventType::KEY,
             duration: time + release_duration,
             action: KeyAction::Release,
         });
@@ -174,62 +136,23 @@ impl Joystick {
 
             for event in &self.events {
                 if event.duration <= timer_time {
-                    let action = match event.action {
-                        KeyAction::Release => 0,
-                        KeyAction::Press => 1,
+                    match event.action {
+                        KeyAction::Release => {
+                            // bitwise AND NOT (removes the button from the bitflags)
+                            self.mask = self.mask & !event.key
+                        }
+                        KeyAction::Press => {
+                            // bitwise OR (adds the button to the bitflags)
+                            self.mask = self.mask | event.key
+                        }
                     };
-                    let event = InputEvent::new(event.event_type.0, event.key.code(), action);
-
-                    self.device.lock().unwrap().emit(&[event]).unwrap();
+                    self.gamepad.buttons.raw = self.mask;
+                    let _ = self.device.update(&self.gamepad);
                 }
             }
             self.events.retain(|event| event.duration > timer_time);
         } else {
             self.instant = Instant::now();
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::Joystick;
-    use std::thread::sleep;
-    use std::time::{Duration, Instant};
-
-    #[test]
-    fn test_event_system() -> std::io::Result<()> {
-        let mut joystick: Joystick = Joystick::default();
-        joystick.tap_a();
-        sleep(Duration::from_millis(200));
-        joystick.tap_b();
-        sleep(Duration::from_millis(200));
-        joystick.tap_x();
-        sleep(Duration::from_millis(200));
-        joystick.tap_y();
-        sleep(Duration::from_millis(200));
-        joystick.instant = Instant::now();
-        assert!(!joystick.events.is_empty());
-
-        while !joystick.events.is_empty() {
-            joystick.run();
-        }
-
-        assert!(joystick.events.is_empty());
-        Result::Ok(())
-    }
-
-    #[test]
-    fn ensure_instants_reset() -> std::io::Result<()> {
-        let mut joystick: Joystick = Joystick::default();
-        joystick.tap_a();
-        assert!(!joystick.events.is_empty());
-
-        while !joystick.events.is_empty() {
-            joystick.run();
-        }
-
-        assert!(joystick.instant < Instant::now() + Duration::from_secs(1));
-        assert!(joystick.events.is_empty());
-        Result::Ok(())
     }
 }
