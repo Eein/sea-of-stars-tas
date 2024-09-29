@@ -286,63 +286,105 @@ impl JoystickInterface for Joystick {
     }
 }
 
+// To visually run these tests, use:
+// `cargo test -- --test-threads 1`
+// then focus https://hardwaretester.com/gamepad 
 #[cfg(test)]
 mod tests {
+    use crate::common::{JoystickInterface, Button};
     use crate::joystick::Joystick;
     use std::thread::sleep;
-    use std::time::{Duration, Instant};
+    use std::time::Duration;
 
     #[test]
     fn test_event_system() -> std::io::Result<()> {
-        sleep(Duration::from_millis(1000));
+        sleep(Duration::from_millis(2000));
         let mut joystick: Joystick = Joystick::default();
-        joystick.tap_dpad_up();
         sleep(Duration::from_millis(500));
-        joystick.tap_dpad_down();
+        joystick.press(Button::UP);
         sleep(Duration::from_millis(500));
-        joystick.tap_dpad_left();
+        joystick.press(Button::DOWN);
         sleep(Duration::from_millis(500));
-        joystick.tap_dpad_right();
+        joystick.press(Button::LEFT);
         sleep(Duration::from_millis(500));
-        joystick.tap_a();
+        joystick.press(Button::RIGHT);
         sleep(Duration::from_millis(500));
-        joystick.tap_b();
+        joystick.press(Button::A);
         sleep(Duration::from_millis(500));
-        joystick.tap_x();
+        joystick.press(Button::B);
         sleep(Duration::from_millis(500));
-        joystick.tap_y();
+        joystick.press(Button::X);
         sleep(Duration::from_millis(500));
-        joystick.tap_lt();
+        joystick.press(Button::Y);
         sleep(Duration::from_millis(500));
-        joystick.tap_rt();
+        joystick.press(Button::LT);
         sleep(Duration::from_millis(500));
-        joystick.tap_lt2();
+        joystick.press(Button::RT);
         sleep(Duration::from_millis(500));
-        joystick.tap_rt2();
+        joystick.press(Button::LT2);
         sleep(Duration::from_millis(500));
-        joystick.instant = Instant::now();
-        assert!(!joystick.events.is_empty());
+        joystick.press(Button::RT2);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::SELECT);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::START);
+        sleep(Duration::from_millis(500));
 
-        while !joystick.events.is_empty() {
-            joystick.run();
-        }
+        joystick.release(Button::UP);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::DOWN);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::LEFT);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::RIGHT);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::A);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::B);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::X);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::Y);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::LT);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::RT);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::LT2);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::RT2);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::SELECT);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::START);
+        sleep(Duration::from_millis(500));
 
-        assert!(joystick.events.is_empty());
         Result::Ok(())
     }
 
     #[test]
-    fn ensure_instants_reset() -> std::io::Result<()> {
+    fn test_release_all() -> std::io::Result<()> {
+        sleep(Duration::from_millis(2000));
         let mut joystick: Joystick = Joystick::default();
-        joystick.tap_a();
-        assert!(!joystick.events.is_empty());
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::UP);
+        joystick.press(Button::DOWN);
+        joystick.press(Button::LEFT);
+        joystick.press(Button::RIGHT);
+        joystick.press(Button::A);
+        joystick.press(Button::B);
+        joystick.press(Button::X);
+        joystick.press(Button::Y);
+        joystick.press(Button::LT);
+        joystick.press(Button::RT);
+        joystick.press(Button::LT2);
+        joystick.press(Button::RT2);
+        joystick.press(Button::START);
+        joystick.press(Button::SELECT);
+        sleep(Duration::from_millis(1000));
+        joystick.release_all();
+        sleep(Duration::from_millis(500));
 
-        while !joystick.events.is_empty() {
-            joystick.run();
-        }
-
-        assert!(joystick.instant < Instant::now() + Duration::from_secs(1));
-        assert!(joystick.events.is_empty());
         Result::Ok(())
     }
 }
