@@ -156,3 +156,56 @@ impl Joystick {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::joystick::Joystick;
+    use std::thread::sleep;
+    use std::time::{Duration, Instant};
+
+    #[test]
+    fn test_event_system() -> std::io::Result<()> {
+        sleep(Duration::from_millis(1000));
+        let mut joystick: Joystick = Joystick::default();
+        joystick.tap_dpad_up();
+        sleep(Duration::from_millis(500));
+        joystick.tap_dpad_down();
+        sleep(Duration::from_millis(500));
+        joystick.tap_dpad_left();
+        sleep(Duration::from_millis(500));
+        joystick.tap_dpad_right();
+        sleep(Duration::from_millis(500));
+        joystick.tap_a();
+        sleep(Duration::from_millis(500));
+        joystick.tap_b();
+        sleep(Duration::from_millis(500));
+        joystick.tap_x();
+        sleep(Duration::from_millis(500));
+        joystick.tap_y();
+        sleep(Duration::from_millis(500));
+        joystick.instant = Instant::now();
+        assert!(!joystick.events.is_empty());
+
+        while !joystick.events.is_empty() {
+            joystick.run();
+        }
+
+        assert!(joystick.events.is_empty());
+        Result::Ok(())
+    }
+
+    #[test]
+    fn ensure_instants_reset() -> std::io::Result<()> {
+        let mut joystick: Joystick = Joystick::default();
+        joystick.tap_a();
+        assert!(!joystick.events.is_empty());
+
+        while !joystick.events.is_empty() {
+            joystick.run();
+        }
+
+        assert!(joystick.instant < Instant::now() + Duration::from_secs(1));
+        assert!(joystick.events.is_empty());
+        Result::Ok(())
+    }
+}
