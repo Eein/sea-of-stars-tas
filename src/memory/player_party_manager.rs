@@ -1,16 +1,10 @@
-use crate::memory::MemoryManager;
+use crate::memory::{MemoryManager, MemoryManagerUpdate};
 use crate::state::StateContext;
-use memory::memory_manager::unity::*;
+use memory::memory_manager::unity::UnityMemoryManager;
 use memory::process::Error;
 use vec3_rs::Vector3;
 
-pub struct PlayerPartyManager {
-    pub name: String,
-    pub manager: UnityMemoryManager,
-    pub data: PlayerPartyManagerData,
-}
-
-impl Default for PlayerPartyManager {
+impl Default for MemoryManager<PlayerPartyManagerData> {
     fn default() -> Self {
         let manager = Self {
             name: "PlayerPartyManager".to_string(),
@@ -24,42 +18,13 @@ impl Default for PlayerPartyManager {
     }
 }
 
-impl MemoryManager for PlayerPartyManager {
-    fn ready_for_updates(&mut self, _ctx: &StateContext) -> bool {
-        if let Some(class) = self.manager.singleton {
-            if class.class == 0 {
-                return false;
-            }
-            return true;
-        }
-        true
-    }
-
-    fn update_manager(&mut self, ctx: &StateContext) {
-        if let Some(process) = &ctx.process {
-            if let Some(module) = &ctx.module {
-                if let Some(image) = &ctx.image {
-                    self.manager.update(process, module, image, &self.name);
-                }
-            }
-        }
-    }
-
-    fn update_memory(&mut self, ctx: &StateContext) {
-        match self.data.update(ctx, &mut self.manager) {
-            Ok(_) => (),
-            Err(_error) => self.manager.reset(),
-        }
-    }
-}
-
 #[derive(Default, Debug)]
 pub struct PlayerPartyManagerData {
     pub position: Vector3<f32>,
 }
 
-impl PlayerPartyManagerData {
-    pub fn update(
+impl MemoryManagerUpdate for PlayerPartyManagerData {
+    fn update(
         &mut self,
         ctx: &StateContext,
         manager: &mut UnityMemoryManager,
@@ -69,7 +34,9 @@ impl PlayerPartyManagerData {
             Err(error) => Err(error),
         }
     }
+}
 
+impl PlayerPartyManagerData {
     // This function updates the users position for nav helper
     // Unfortunately because some classes here dont have true objects
     // this by using follow_fields since while we are going up the chain
