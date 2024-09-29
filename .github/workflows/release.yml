@@ -15,7 +15,8 @@ jobs:
   build:
     # Set the job to run on the platform specified by the matrix below
     runs-on: ${{ matrix.runner }}
- 
+    permissions:
+      contents: write
     # Define the build matrix for cross-compilation
     strategy:
       matrix:
