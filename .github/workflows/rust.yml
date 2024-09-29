@@ -27,3 +27,31 @@ jobs:
       run: cargo build --verbose
     - name: Run tests
       run: cargo test --verbose
+
+  clippy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    # selecting a toolchain either by action or manual `rustup` calls should happen
+    # before the plugin, as the cache uses the current rustc version as its cache key
+    - run: rustup toolchain install nightly 
+
+    - uses: Swatinem/rust-cache@v2
+      with:
+        prefix-key: "clippy"
+
+    - name: Run Clippy
+      run: cargo clippy --all-targets --all-features
+
+  format:
+    name: format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Commit
+        uses: actions/checkout@v4
+
+      - name: Check formatting of Rust code with rustfmt
+        uses: actions-rust-lang/rustfmt@v1.1.0
+            
