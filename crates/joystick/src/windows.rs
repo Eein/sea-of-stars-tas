@@ -312,6 +312,14 @@ mod tests {
         sleep(Duration::from_millis(500));
         joystick.tap_y();
         sleep(Duration::from_millis(500));
+        joystick.tap_lt();
+        sleep(Duration::from_millis(500));
+        joystick.tap_rt();
+        sleep(Duration::from_millis(500));
+        joystick.tap_lt2();
+        sleep(Duration::from_millis(500));
+        joystick.tap_rt2();
+        sleep(Duration::from_millis(500));
         joystick.instant = Instant::now();
         assert!(!joystick.events.is_empty());
 
