@@ -23,7 +23,6 @@ struct JoystickEvent {
 
 pub struct Joystick {
     device: Arc<Mutex<VirtualDevice>>,
-    name: String,
     keys: AttributeSet<KeyCode>,
     events: Vec<JoystickEvent>,
     instant: Instant,
@@ -67,7 +66,6 @@ impl Default for Joystick {
         Joystick {
             events: vec![],
             device: Arc::new(Mutex::new(device)),
-            name: name.to_string(),
             instant: Instant::now(),
             keys,
         }
@@ -77,10 +75,6 @@ impl Default for Joystick {
 impl Joystick {
     pub fn new(&self) -> Self {
         Joystick::default()
-    }
-
-    pub fn name(&self) -> &str {
-        &self.name
     }
 
     pub fn tap_a(&mut self) {
@@ -147,7 +141,7 @@ impl Joystick {
         self.device.lock().unwrap().emit(&keys).unwrap();
     }
 
-    pub fn tap(&mut self, button: KeyCode) {
+    fn tap(&mut self, button: KeyCode) {
         // send in press and release
         let time = self.instant.elapsed();
         let release_duration = Duration::from_millis(TAP_DURATION);
@@ -190,21 +184,30 @@ impl Joystick {
 
 #[cfg(test)]
 mod tests {
-    use crate::Joystick;
+    use crate::joystick::Joystick;
     use std::thread::sleep;
     use std::time::{Duration, Instant};
 
     #[test]
     fn test_event_system() -> std::io::Result<()> {
+        sleep(Duration::from_millis(1000));
         let mut joystick: Joystick = Joystick::default();
+        joystick.tap_dpad_up();
+        sleep(Duration::from_millis(500));
+        joystick.tap_dpad_down();
+        sleep(Duration::from_millis(500));
+        joystick.tap_dpad_left();
+        sleep(Duration::from_millis(500));
+        joystick.tap_dpad_right();
+        sleep(Duration::from_millis(500));
         joystick.tap_a();
-        sleep(Duration::from_millis(200));
+        sleep(Duration::from_millis(500));
         joystick.tap_b();
-        sleep(Duration::from_millis(200));
+        sleep(Duration::from_millis(500));
         joystick.tap_x();
-        sleep(Duration::from_millis(200));
+        sleep(Duration::from_millis(500));
         joystick.tap_y();
-        sleep(Duration::from_millis(200));
+        sleep(Duration::from_millis(500));
         joystick.instant = Instant::now();
         assert!(!joystick.events.is_empty());
 
