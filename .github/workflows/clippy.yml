@@ -1,4 +1,4 @@
-name: Rust
+name: Rust - Clippy
 
 on:
   workflow_dispatch:
@@ -8,7 +8,6 @@ on:
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: "-Dwarnings"
-
 
 jobs:
   build:
@@ -23,9 +22,8 @@ jobs:
     - run: rustup toolchain install nightly 
 
     - uses: Swatinem/rust-cache@v2
+      prefix-key: "clippy"
 
-    - name: Build
-      run: cargo build --verbose
     - name: Run Clippy
       run: cargo clippy --all-targets --all-features
     - name: Run tests

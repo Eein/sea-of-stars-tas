@@ -95,7 +95,6 @@ impl State {
                 }
                 Err(_err) => {
                     self.context = StateContext::default();
-                    ()
                 }
             }
 
