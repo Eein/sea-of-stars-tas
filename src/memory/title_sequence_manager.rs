@@ -1,15 +1,9 @@
-use crate::memory::MemoryManager;
+use crate::memory::{MemoryManager, MemoryManagerUpdate};
 use crate::state::StateContext;
-use memory::memory_manager::unity::*;
+use memory::memory_manager::unity::UnityMemoryManager;
 use memory::process::Error;
 
-pub struct TitleSequenceManager {
-    pub name: String,
-    pub manager: UnityMemoryManager,
-    pub data: TitleSequenceManagerData,
-}
-
-impl Default for TitleSequenceManager {
+impl Default for MemoryManager<TitleSequenceManagerData> {
     fn default() -> Self {
         let manager = Self {
             name: "TitleSequenceManager".to_string(),
@@ -23,46 +17,13 @@ impl Default for TitleSequenceManager {
     }
 }
 
-impl MemoryManager for TitleSequenceManager {
-    fn ready_for_updates(&mut self, _ctx: &StateContext) -> bool {
-        if let Some(class) = self.manager.singleton {
-            if class.class == 0 {
-                return false;
-            }
-
-            return true;
-        }
-        false
-    }
-
-    fn update_manager(&mut self, ctx: &StateContext) {
-        if let Some(process) = &ctx.process {
-            if let Some(module) = &ctx.module {
-                if let Some(image) = &ctx.image {
-                    self.manager.update(process, module, image, &self.name);
-                }
-            }
-        }
-    }
-
-    fn update_memory(&mut self, ctx: &StateContext) {
-        match self.data.update(ctx, &mut self.manager) {
-            Ok(_) => (),
-            Err(_error) => {
-                println!("RESETTING");
-                self.manager.reset()
-            }
-        }
-    }
-}
-
 #[derive(Default, Debug)]
 pub struct TitleSequenceManagerData {
     pub title_menu: TitleMenu,
 }
 
-impl TitleSequenceManagerData {
-    pub fn update(
+impl MemoryManagerUpdate for TitleSequenceManagerData {
+    fn update(
         &mut self,
         ctx: &StateContext,
         manager: &mut UnityMemoryManager,
@@ -72,7 +33,9 @@ impl TitleSequenceManagerData {
             Err(error) => Err(error),
         }
     }
+}
 
+impl TitleSequenceManagerData {
     pub fn update_title_menu(
         &mut self,
         ctx: &StateContext,
