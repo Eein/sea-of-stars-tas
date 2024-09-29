@@ -1,6 +1,8 @@
 use std::time::{Duration, Instant};
 use vigem_client::{Client, TargetId, XButtons, XGamepad, Xbox360Wired};
 
+use crate::common::JoystickInterface;
+
 static TAP_DURATION: u64 = 50;
 
 enum KeyAction {
@@ -47,90 +49,183 @@ impl Default for Joystick {
     }
 }
 
-impl Joystick {
-    pub fn new(&self) -> Self {
-        Joystick::default()
+impl JoystickInterface for Joystick {
+    fn press_a(&mut self) {
+        self.press(XButtons::A)
     }
 
-    pub fn tap_a(&mut self) {
+    fn press_b(&mut self) {
+        self.press(XButtons::B)
+    }
+
+    fn press_x(&mut self) {
+        self.press(XButtons::X)
+    }
+
+    fn press_y(&mut self) {
+        self.press(XButtons::Y)
+    }
+
+    fn press_lt(&mut self) {
+        self.press(XButtons::LB)
+    }
+
+    fn press_rt(&mut self) {
+        self.press(XButtons::RB)
+    }
+
+    // TODO(eein): We dont rear triggers yet
+    fn press_lt2(&mut self) {
+        // self.press(XButtons::LB)
+    }
+
+    fn press_rt2(&mut self) {
+        // self.press(XButtons::RB)
+    }
+
+    fn press_select(&mut self) {
+        self.press(XButtons::BACK)
+    }
+
+    fn press_start(&mut self) {
+        self.press(XButtons::START)
+    }
+
+    fn press_dpad_up(&mut self) {
+        self.press(XButtons::UP)
+    }
+
+    fn press_dpad_down(&mut self) {
+        self.press(XButtons::DOWN)
+    }
+
+    fn press_dpad_left(&mut self) {
+        self.press(XButtons::LEFT)
+    }
+
+    fn press_dpad_right(&mut self) {
+        self.press(XButtons::RIGHT)
+    }
+
+    fn release_a(&mut self) {
+        self.release(XButtons::A)
+    }
+
+    fn release_b(&mut self) {
+        self.release(XButtons::B)
+    }
+
+    fn release_x(&mut self) {
+        self.release(XButtons::X)
+    }
+
+    fn release_y(&mut self) {
+        self.release(XButtons::Y)
+    }
+
+    fn release_lt(&mut self) {
+        self.release(XButtons::LB)
+    }
+
+    fn release_rt(&mut self) {
+        self.release(XButtons::RB)
+    }
+
+    // TODO(eein): We dont rear triggers yet
+    fn release_lt2(&mut self) {
+        // self.release(XButtons::LB)
+    }
+
+    fn release_rt2(&mut self) {
+        // self.release(XButtons::RB)
+    }
+
+    fn release_select(&mut self) {
+        self.release(XButtons::BACK)
+    }
+
+    fn release_start(&mut self) {
+        self.release(XButtons::START)
+    }
+
+    fn release_dpad_up(&mut self) {
+        self.release(XButtons::UP)
+    }
+
+    fn release_dpad_down(&mut self) {
+        self.release(XButtons::DOWN)
+    }
+
+    fn release_dpad_left(&mut self) {
+        self.release(XButtons::LEFT)
+    }
+
+    fn release_dpad_right(&mut self) {
+        self.release(XButtons::RIGHT)
+    }
+
+    fn tap_a(&mut self) {
         self.tap(XButtons::A)
     }
 
-    pub fn tap_b(&mut self) {
+    fn tap_b(&mut self) {
         self.tap(XButtons::B)
     }
 
-    pub fn tap_x(&mut self) {
+    fn tap_x(&mut self) {
         self.tap(XButtons::X)
     }
 
-    pub fn tap_y(&mut self) {
+    fn tap_y(&mut self) {
         self.tap(XButtons::Y)
     }
 
-    pub fn tap_lt(&mut self) {
+    fn tap_lt(&mut self) {
         self.tap(XButtons::LB)
     }
 
-    pub fn tap_rt(&mut self) {
+    fn tap_rt(&mut self) {
         self.tap(XButtons::RB)
     }
 
     // TODO(eein): We dont rear triggers yet
-    pub fn tap_lt2(&mut self) {
+    fn tap_lt2(&mut self) {
         // self.tap(XButtons::LB)
     }
 
-    pub fn tap_rt2(&mut self) {
+    fn tap_rt2(&mut self) {
         // self.tap(XButtons::RB)
     }
 
-    pub fn tap_select(&mut self) {
+    fn tap_select(&mut self) {
         self.tap(XButtons::BACK)
     }
 
-    pub fn tap_start(&mut self) {
+    fn tap_start(&mut self) {
         self.tap(XButtons::START)
     }
 
-    pub fn tap_dpad_up(&mut self) {
+    fn tap_dpad_up(&mut self) {
         self.tap(XButtons::UP)
     }
 
-    pub fn tap_dpad_down(&mut self) {
+    fn tap_dpad_down(&mut self) {
         self.tap(XButtons::DOWN)
     }
 
-    pub fn tap_dpad_left(&mut self) {
+    fn tap_dpad_left(&mut self) {
         self.tap(XButtons::LEFT)
     }
 
-    pub fn tap_dpad_right(&mut self) {
+    fn tap_dpad_right(&mut self) {
         self.tap(XButtons::RIGHT)
     }
 
-    pub fn release_all(&mut self) {
+    fn release_all(&mut self) {
         self.gamepad.buttons = vigem_client::XButtons!();
     }
 
-    fn tap(&mut self, button: u16) {
-        // send in press and release
-        let time = self.instant.elapsed();
-        let release_duration = Duration::from_millis(TAP_DURATION);
-
-        self.events.push(JoystickEvent {
-            key: button,
-            duration: time,
-            action: KeyAction::Press,
-        });
-        self.events.push(JoystickEvent {
-            key: button,
-            duration: time + release_duration,
-            action: KeyAction::Release,
-        });
-    }
-
-    pub fn run(&mut self) {
+    fn run(&mut self) {
         if !self.events.is_empty() {
             let timer_time = self.instant.elapsed();
 
@@ -154,6 +249,65 @@ impl Joystick {
         } else {
             self.instant = Instant::now();
         }
+    }
+
+    fn press(&mut self, button: u16) {
+        let time = self.instant.elapsed();
+
+        self.events.push(JoystickEvent {
+            key: button,
+            event_type: EventType::KEY,
+            duration: time,
+            action: KeyAction::Press,
+        });
+    }
+
+    fn release(&mut self, button: u16) {
+        let time = self.instant.elapsed();
+
+        self.events.push(JoystickEvent {
+            key: button,
+            event_type: EventType::KEY,
+            duration: time,
+            action: KeyAction::Release,
+        });
+    }
+
+    fn release_later(&mut self, button: u16, duration: Duration) {
+        let time = self.instant.elapsed();
+
+        self.events.push(JoystickEvent {
+            key: button,
+            event_type: EventType::KEY,
+            duration: time + duration,
+            action: KeyAction::Release,
+        });
+    }
+
+    fn tap(&mut self, button: u16) {
+        // send in press and release
+        let release_duration = Duration::from_millis(TAP_DURATION);
+        self.press(button);
+        self.release_later(button, release_duration);
+    }
+}
+
+impl Joystick {
+    fn tap(&mut self, button: u16) {
+        // send in press and release
+        let time = self.instant.elapsed();
+        let release_duration = Duration::from_millis(TAP_DURATION);
+
+        self.events.push(JoystickEvent {
+            key: button,
+            duration: time,
+            action: KeyAction::Press,
+        });
+        self.events.push(JoystickEvent {
+            key: button,
+            duration: time + release_duration,
+            action: KeyAction::Release,
+        });
     }
 }
 

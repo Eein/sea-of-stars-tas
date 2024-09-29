@@ -7,6 +7,7 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
 
+use crate::common::JoystickInterface;
 static TAP_DURATION: u64 = 50;
 
 enum KeyAction {
@@ -26,6 +27,245 @@ pub struct Joystick {
     keys: AttributeSet<KeyCode>,
     events: Vec<JoystickEvent>,
     instant: Instant,
+}
+
+impl JoystickInterface for Joystick {
+    fn press_a(&mut self) {
+        self.press(KeyCode::BTN_EAST)
+    }
+
+    fn press_b(&mut self) {
+        self.press(KeyCode::BTN_SOUTH)
+    }
+
+    fn press_x(&mut self) {
+        self.press(KeyCode::BTN_NORTH)
+    }
+
+    fn press_y(&mut self) {
+        self.press(KeyCode::BTN_WEST)
+    }
+
+    fn press_lt(&mut self) {
+        self.press(KeyCode::BTN_TL)
+    }
+
+    fn press_rt(&mut self) {
+        self.press(KeyCode::BTN_TR)
+    }
+
+    fn press_lt2(&mut self) {
+        self.press(KeyCode::BTN_TL2)
+    }
+
+    fn press_rt2(&mut self) {
+        self.press(KeyCode::BTN_TR2)
+    }
+
+    fn press_select(&mut self) {
+        self.press(KeyCode::BTN_SELECT)
+    }
+
+    fn press_start(&mut self) {
+        self.press(KeyCode::BTN_START)
+    }
+
+    fn press_dpad_up(&mut self) {
+        self.press(KeyCode::BTN_DPAD_UP)
+    }
+
+    fn press_dpad_down(&mut self) {
+        self.press(KeyCode::BTN_DPAD_DOWN)
+    }
+
+    fn press_dpad_left(&mut self) {
+        self.press(KeyCode::BTN_DPAD_LEFT)
+    }
+
+    fn press_dpad_right(&mut self) {
+        self.press(KeyCode::BTN_DPAD_RIGHT)
+    }
+
+    fn release_a(&mut self) {
+        self.release(KeyCode::BTN_EAST)
+    }
+
+    fn release_b(&mut self) {
+        self.release(KeyCode::BTN_SOUTH)
+    }
+
+    fn release_x(&mut self) {
+        self.release(KeyCode::BTN_NORTH)
+    }
+
+    fn release_y(&mut self) {
+        self.release(KeyCode::BTN_WEST)
+    }
+
+    fn release_lt(&mut self) {
+        self.release(KeyCode::BTN_TL)
+    }
+
+    fn release_rt(&mut self) {
+        self.release(KeyCode::BTN_TR)
+    }
+
+    fn release_lt2(&mut self) {
+        self.release(KeyCode::BTN_TL2)
+    }
+
+    fn release_rt2(&mut self) {
+        self.release(KeyCode::BTN_TR2)
+    }
+
+    fn release_select(&mut self) {
+        self.release(KeyCode::BTN_SELECT)
+    }
+
+    fn release_start(&mut self) {
+        self.release(KeyCode::BTN_START)
+    }
+
+    fn release_dpad_up(&mut self) {
+        self.release(KeyCode::BTN_DPAD_UP)
+    }
+
+    fn release_dpad_down(&mut self) {
+        self.release(KeyCode::BTN_DPAD_DOWN)
+    }
+
+    fn release_dpad_left(&mut self) {
+        self.release(KeyCode::BTN_DPAD_LEFT)
+    }
+
+    fn release_dpad_right(&mut self) {
+        self.release(KeyCode::BTN_DPAD_RIGHT)
+    }
+
+    fn tap_a(&mut self) {
+        self.tap(KeyCode::BTN_EAST)
+    }
+
+    fn tap_b(&mut self) {
+        self.tap(KeyCode::BTN_SOUTH)
+    }
+
+    fn tap_x(&mut self) {
+        self.tap(KeyCode::BTN_NORTH)
+    }
+
+    fn tap_y(&mut self) {
+        self.tap(KeyCode::BTN_WEST)
+    }
+
+    fn tap_lt(&mut self) {
+        self.tap(KeyCode::BTN_TL)
+    }
+
+    fn tap_rt(&mut self) {
+        self.tap(KeyCode::BTN_TR)
+    }
+
+    fn tap_lt2(&mut self) {
+        self.tap(KeyCode::BTN_TL2)
+    }
+
+    fn tap_rt2(&mut self) {
+        self.tap(KeyCode::BTN_TR2)
+    }
+
+    fn tap_select(&mut self) {
+        self.tap(KeyCode::BTN_SELECT)
+    }
+
+    fn tap_start(&mut self) {
+        self.tap(KeyCode::BTN_START)
+    }
+
+    fn tap_dpad_up(&mut self) {
+        self.tap(KeyCode::BTN_DPAD_UP)
+    }
+
+    fn tap_dpad_down(&mut self) {
+        self.tap(KeyCode::BTN_DPAD_DOWN)
+    }
+
+    fn tap_dpad_left(&mut self) {
+        self.tap(KeyCode::BTN_DPAD_LEFT)
+    }
+
+    fn tap_dpad_right(&mut self) {
+        self.tap(KeyCode::BTN_DPAD_RIGHT)
+    }
+
+    fn release_all(&mut self) {
+        let mut keys = vec![];
+        for key in &self.keys {
+            keys.push(InputEvent::new(EventType::KEY.0, key.code(), 0));
+        }
+        self.device.lock().unwrap().emit(&keys).unwrap();
+    }
+
+    fn run(&mut self) {
+        if !self.events.is_empty() {
+            let timer_time = self.instant.elapsed();
+
+            for event in &self.events {
+                if event.duration <= timer_time {
+                    let action = match event.action {
+                        KeyAction::Release => 0,
+                        KeyAction::Press => 1,
+                    };
+                    let event = InputEvent::new(event.event_type.0, event.key.code(), action);
+
+                    self.device.lock().unwrap().emit(&[event]).unwrap();
+                }
+            }
+            self.events.retain(|event| event.duration > timer_time);
+        } else {
+            self.instant = Instant::now();
+        }
+    }
+
+    fn press(&mut self, button: KeyCode) {
+        let time = self.instant.elapsed();
+
+        self.events.push(JoystickEvent {
+            key: button,
+            event_type: EventType::KEY,
+            duration: time,
+            action: KeyAction::Press,
+        });
+    }
+
+    fn release(&mut self, button: KeyCode) {
+        let time = self.instant.elapsed();
+
+        self.events.push(JoystickEvent {
+            key: button,
+            event_type: EventType::KEY,
+            duration: time,
+            action: KeyAction::Release,
+        });
+    }
+
+    fn release_later(&mut self, button: KeyCode, duration: Duration) {
+        let time = self.instant.elapsed();
+
+        self.events.push(JoystickEvent {
+            key: button,
+            event_type: EventType::KEY,
+            duration: time + duration,
+            action: KeyAction::Release,
+        });
+    }
+
+    fn tap(&mut self, button: KeyCode) {
+        // send in press and release
+        let release_duration = Duration::from_millis(TAP_DURATION);
+        self.press(button);
+        self.release_later(button, release_duration);
+    }
 }
 
 impl Default for Joystick {
@@ -72,118 +312,9 @@ impl Default for Joystick {
     }
 }
 
-impl Joystick {
-    pub fn new(&self) -> Self {
-        Joystick::default()
-    }
-
-    pub fn tap_a(&mut self) {
-        self.tap(KeyCode::BTN_EAST)
-    }
-
-    pub fn tap_b(&mut self) {
-        self.tap(KeyCode::BTN_SOUTH)
-    }
-
-    pub fn tap_x(&mut self) {
-        self.tap(KeyCode::BTN_NORTH)
-    }
-
-    pub fn tap_y(&mut self) {
-        self.tap(KeyCode::BTN_WEST)
-    }
-
-    pub fn tap_lt(&mut self) {
-        self.tap(KeyCode::BTN_TL)
-    }
-
-    pub fn tap_rt(&mut self) {
-        self.tap(KeyCode::BTN_TR)
-    }
-
-    pub fn tap_lt2(&mut self) {
-        self.tap(KeyCode::BTN_TL2)
-    }
-
-    pub fn tap_rt2(&mut self) {
-        self.tap(KeyCode::BTN_TR2)
-    }
-
-    pub fn tap_select(&mut self) {
-        self.tap(KeyCode::BTN_SELECT)
-    }
-
-    pub fn tap_start(&mut self) {
-        self.tap(KeyCode::BTN_START)
-    }
-
-    pub fn tap_dpad_up(&mut self) {
-        self.tap(KeyCode::BTN_DPAD_UP)
-    }
-
-    pub fn tap_dpad_down(&mut self) {
-        self.tap(KeyCode::BTN_DPAD_DOWN)
-    }
-
-    pub fn tap_dpad_left(&mut self) {
-        self.tap(KeyCode::BTN_DPAD_LEFT)
-    }
-
-    pub fn tap_dpad_right(&mut self) {
-        self.tap(KeyCode::BTN_DPAD_RIGHT)
-    }
-
-    pub fn release_all(&mut self) {
-        let mut keys = vec![];
-        for key in &self.keys {
-            keys.push(InputEvent::new(EventType::KEY.0, key.code(), 0));
-        }
-        self.device.lock().unwrap().emit(&keys).unwrap();
-    }
-
-    fn tap(&mut self, button: KeyCode) {
-        // send in press and release
-        let time = self.instant.elapsed();
-        let release_duration = Duration::from_millis(TAP_DURATION);
-
-        self.events.push(JoystickEvent {
-            key: button,
-            event_type: EventType::KEY,
-            duration: time,
-            action: KeyAction::Press,
-        });
-        self.events.push(JoystickEvent {
-            key: button,
-            event_type: EventType::KEY,
-            duration: time + release_duration,
-            action: KeyAction::Release,
-        });
-    }
-
-    pub fn run(&mut self) {
-        if !self.events.is_empty() {
-            let timer_time = self.instant.elapsed();
-
-            for event in &self.events {
-                if event.duration <= timer_time {
-                    let action = match event.action {
-                        KeyAction::Release => 0,
-                        KeyAction::Press => 1,
-                    };
-                    let event = InputEvent::new(event.event_type.0, event.key.code(), action);
-
-                    self.device.lock().unwrap().emit(&[event]).unwrap();
-                }
-            }
-            self.events.retain(|event| event.duration > timer_time);
-        } else {
-            self.instant = Instant::now();
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
+    use crate::common::JoystickInterface;
     use crate::joystick::Joystick;
     use std::thread::sleep;
     use std::time::{Duration, Instant};
@@ -207,6 +338,14 @@ mod tests {
         joystick.tap_x();
         sleep(Duration::from_millis(500));
         joystick.tap_y();
+        sleep(Duration::from_millis(500));
+        joystick.tap_lt();
+        sleep(Duration::from_millis(500));
+        joystick.tap_rt();
+        sleep(Duration::from_millis(500));
+        joystick.tap_lt2();
+        sleep(Duration::from_millis(500));
+        joystick.tap_rt2();
         sleep(Duration::from_millis(500));
         joystick.instant = Instant::now();
         assert!(!joystick.events.is_empty());
