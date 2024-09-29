@@ -1,5 +1,5 @@
 use std::time::{Duration, Instant};
-use vigem_client::{Client, XButtons, Xbox360Wired, TargetId, XGamepad};
+use vigem_client::{Client, TargetId, XButtons, XGamepad, Xbox360Wired};
 
 static TAP_DURATION: u64 = 50;
 
@@ -139,11 +139,11 @@ impl Joystick {
                     match event.action {
                         KeyAction::Release => {
                             // bitwise AND NOT (removes the button from the bitflags)
-                            self.button_mask = self.button_mask & !event.key
+                            self.button_mask &= !event.key
                         }
                         KeyAction::Press => {
                             // bitwise OR (adds the button to the bitflags)
-                            self.button_mask = self.button_mask | event.key
+                            self.button_mask |= event.key
                         }
                     };
                     self.gamepad.buttons.raw = self.button_mask;

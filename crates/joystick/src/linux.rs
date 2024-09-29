@@ -141,7 +141,7 @@ impl Joystick {
         self.device.lock().unwrap().emit(&keys).unwrap();
     }
 
-    pub fn tap(&mut self, button: KeyCode) {
+    fn tap(&mut self, button: KeyCode) {
         // send in press and release
         let time = self.instant.elapsed();
         let release_duration = Duration::from_millis(TAP_DURATION);
