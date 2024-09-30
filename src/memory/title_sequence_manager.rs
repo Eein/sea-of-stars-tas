@@ -24,7 +24,11 @@ impl Default for MemoryManager<TitleSequenceManagerData> {
 
 #[derive(Default, Debug)]
 pub struct TitleSequenceManagerData {
+    /// Title Menu Object Data.
     pub title_menu: TitleMenu,
+    /// If saves are loaded and continue shows up on the title screen.
+    pub load_save_done: bool,
+    /// If the player has pressed start on the intro screen.
     pub pressed_start: bool,
 }
 
@@ -40,6 +44,7 @@ impl MemoryManagerUpdate for TitleSequenceManagerData {
                     if let Some(singleton) = manager.singleton {
                         self.update_title_menu(class, process, module, singleton)?;
                         self.update_pressed_start(class, process, module, singleton)?;
+                        self.update_load_save_done(class, process, module, singleton)?;
                     }
                 }
             }
@@ -49,6 +54,26 @@ impl MemoryManagerUpdate for TitleSequenceManagerData {
 }
 
 impl TitleSequenceManagerData {
+    pub fn update_load_save_done(
+        &mut self,
+        class: Class,
+        process: &Process,
+        module: &Module,
+        singleton: Class,
+    ) -> Result<(), Error> {
+        if let Ok(load_save_done) =
+            class.follow_fields::<u8>(singleton, process, module, &["loadSaveDone"])
+        {
+            self.load_save_done = match load_save_done {
+                1 => true,
+                0 => false,
+                _ => false,
+            };
+        }
+
+        Ok(())
+    }
+    
     pub fn update_pressed_start(
         &mut self,
         class: Class,

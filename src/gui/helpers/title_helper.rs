@@ -22,5 +22,9 @@ impl GuiHelper for TitleHelper {
             "Pressed Start: {:?}",
             managers.title_sequence_manager.data.pressed_start
         ));
+        ui.label(format!(
+            "Load Save Done: {:?}",
+            managers.title_sequence_manager.data.load_save_done
+        ));
     }
 }
