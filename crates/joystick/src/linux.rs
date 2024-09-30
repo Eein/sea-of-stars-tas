@@ -1,31 +1,92 @@
 use evdev::{
     uinput::{VirtualDevice, VirtualDeviceBuilder},
-    AbsInfo, AbsoluteAxisCode, AttributeSet, EventType, InputEvent, KeyCode, UinputAbsSetup,
+    AbsInfo, AbsoluteAxisCode, AbsoluteAxisEvent, AttributeSet, EventType, InputEvent, KeyCode,
+    UinputAbsSetup,
 };
+use vec2::clamp;
 
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::time::{Duration, Instant};
 
-static TAP_DURATION: u64 = 50;
-
-enum KeyAction {
-    Press,
-    Release,
-}
-
-struct JoystickEvent {
-    key: KeyCode,
-    event_type: EventType,
-    duration: Duration,
-    action: KeyAction,
-}
+use crate::common::{Button, JoystickInterface};
 
 pub struct Joystick {
     device: Arc<Mutex<VirtualDevice>>,
     keys: AttributeSet<KeyCode>,
-    events: Vec<JoystickEvent>,
-    instant: Instant,
+}
+
+impl JoystickInterface for Joystick {
+    fn release_all(&mut self) {
+        self.set_joy([0.0, 0.0]);
+        let mut keys = vec![];
+        for key in &self.keys {
+            keys.push(InputEvent::new(EventType::KEY.0, key.code(), 0));
+        }
+        match self.device.lock().unwrap().emit(&keys) {
+            Ok(_) => (),
+            Err(e) => println!("Joystick error: {e:?}"),
+        }
+    }
+
+    fn press(&mut self, button: Button) {
+        let button = Joystick::get_button(button);
+        let event = InputEvent::new(EventType::KEY.0, button.code(), 1);
+
+        match self.device.lock().unwrap().emit(&[event]) {
+            Ok(_) => (),
+            Err(e) => println!("Joystick error: {e:?}"),
+        }
+    }
+
+    fn release(&mut self, button: Button) {
+        let button = Joystick::get_button(button);
+        let event = InputEvent::new(EventType::KEY.0, button.code(), 0);
+
+        match self.device.lock().unwrap().emit(&[event]) {
+            Ok(_) => (),
+            Err(e) => println!("Joystick error: {e:?}"),
+        }
+    }
+
+    fn set_joy(&mut self, dir: [f32; 2]) {
+        let mut clamped_dir = dir;
+        clamp(&mut clamped_dir, &[-1.0, -1.0], &[1.0, 1.0]);
+        // Convert from range -1..1 to -32768..32767
+        // Negative values are down/left, positive are up/right
+        let x_code = AbsoluteAxisCode::ABS_X.0;
+        let y_code = AbsoluteAxisCode::ABS_Y.0;
+        let abs_x = (clamped_dir[0] * i16::MAX as f32) as i16;
+        let abs_y = -(clamped_dir[1] * i16::MAX as f32) as i16;
+
+        let x_event = *AbsoluteAxisEvent::new(AbsoluteAxisCode(x_code), abs_x.into());
+        let y_event = *AbsoluteAxisEvent::new(AbsoluteAxisCode(y_code), abs_y.into());
+
+        match self.device.lock().unwrap().emit(&[x_event, y_event]) {
+            Ok(_) => (),
+            Err(e) => println!("Joystick error: {e:?}"),
+        }
+    }
+}
+
+impl Joystick {
+    fn get_button(button: Button) -> KeyCode {
+        match button {
+            Button::A => KeyCode::BTN_EAST,
+            Button::B => KeyCode::BTN_SOUTH,
+            Button::X => KeyCode::BTN_NORTH,
+            Button::Y => KeyCode::BTN_WEST,
+            Button::LT => KeyCode::BTN_TL,
+            Button::RT => KeyCode::BTN_TR,
+            Button::LT2 => KeyCode::BTN_TL2,
+            Button::RT2 => KeyCode::BTN_TR2,
+            Button::SELECT => KeyCode::BTN_SELECT,
+            Button::START => KeyCode::BTN_START,
+            Button::UP => KeyCode::BTN_DPAD_UP,
+            Button::DOWN => KeyCode::BTN_DPAD_DOWN,
+            Button::LEFT => KeyCode::BTN_DPAD_LEFT,
+            Button::RIGHT => KeyCode::BTN_DPAD_RIGHT,
+        }
+    }
 }
 
 impl Default for Joystick {
@@ -64,173 +125,127 @@ impl Default for Joystick {
             .unwrap();
 
         Joystick {
-            events: vec![],
             device: Arc::new(Mutex::new(device)),
-            instant: Instant::now(),
             keys,
         }
     }
 }
 
-impl Joystick {
-    pub fn new(&self) -> Self {
-        Joystick::default()
-    }
-
-    pub fn tap_a(&mut self) {
-        self.tap(KeyCode::BTN_EAST)
-    }
-
-    pub fn tap_b(&mut self) {
-        self.tap(KeyCode::BTN_SOUTH)
-    }
-
-    pub fn tap_x(&mut self) {
-        self.tap(KeyCode::BTN_NORTH)
-    }
-
-    pub fn tap_y(&mut self) {
-        self.tap(KeyCode::BTN_WEST)
-    }
-
-    pub fn tap_lt(&mut self) {
-        self.tap(KeyCode::BTN_TL)
-    }
-
-    pub fn tap_rt(&mut self) {
-        self.tap(KeyCode::BTN_TR)
-    }
-
-    pub fn tap_lt2(&mut self) {
-        self.tap(KeyCode::BTN_TL2)
-    }
-
-    pub fn tap_rt2(&mut self) {
-        self.tap(KeyCode::BTN_TR2)
-    }
-
-    pub fn tap_select(&mut self) {
-        self.tap(KeyCode::BTN_SELECT)
-    }
-
-    pub fn tap_start(&mut self) {
-        self.tap(KeyCode::BTN_START)
-    }
-
-    pub fn tap_dpad_up(&mut self) {
-        self.tap(KeyCode::BTN_DPAD_UP)
-    }
-
-    pub fn tap_dpad_down(&mut self) {
-        self.tap(KeyCode::BTN_DPAD_DOWN)
-    }
-
-    pub fn tap_dpad_left(&mut self) {
-        self.tap(KeyCode::BTN_DPAD_LEFT)
-    }
-
-    pub fn tap_dpad_right(&mut self) {
-        self.tap(KeyCode::BTN_DPAD_RIGHT)
-    }
-
-    pub fn release_all(&mut self) {
-        let mut keys = vec![];
-        for key in &self.keys {
-            keys.push(InputEvent::new(EventType::KEY.0, key.code(), 0));
-        }
-        self.device.lock().unwrap().emit(&keys).unwrap();
-    }
-
-    fn tap(&mut self, button: KeyCode) {
-        // send in press and release
-        let time = self.instant.elapsed();
-        let release_duration = Duration::from_millis(TAP_DURATION);
-
-        self.events.push(JoystickEvent {
-            key: button,
-            event_type: EventType::KEY,
-            duration: time,
-            action: KeyAction::Press,
-        });
-        self.events.push(JoystickEvent {
-            key: button,
-            event_type: EventType::KEY,
-            duration: time + release_duration,
-            action: KeyAction::Release,
-        });
-    }
-
-    pub fn run(&mut self) {
-        if !self.events.is_empty() {
-            let timer_time = self.instant.elapsed();
-
-            for event in &self.events {
-                if event.duration <= timer_time {
-                    let action = match event.action {
-                        KeyAction::Release => 0,
-                        KeyAction::Press => 1,
-                    };
-                    let event = InputEvent::new(event.event_type.0, event.key.code(), action);
-
-                    self.device.lock().unwrap().emit(&[event]).unwrap();
-                }
-            }
-            self.events.retain(|event| event.duration > timer_time);
-        } else {
-            self.instant = Instant::now();
-        }
-    }
-}
-
+// To visually run these tests, use:
+// `cargo test -- --test-threads 1`
+// then focus https://hardwaretester.com/gamepad
 #[cfg(test)]
 mod tests {
+    use crate::common::{Button, JoystickInterface};
     use crate::joystick::Joystick;
     use std::thread::sleep;
-    use std::time::{Duration, Instant};
+    use std::time::Duration;
 
     #[test]
-    fn test_event_system() -> std::io::Result<()> {
-        sleep(Duration::from_millis(1000));
+    fn test_joystick() -> std::io::Result<()> {
+        sleep(Duration::from_millis(2000));
+        let speed = 1000 / 360; // One rotation in 1s, CCW from -> to ->
         let mut joystick: Joystick = Joystick::default();
-        joystick.tap_dpad_up();
-        sleep(Duration::from_millis(500));
-        joystick.tap_dpad_down();
-        sleep(Duration::from_millis(500));
-        joystick.tap_dpad_left();
-        sleep(Duration::from_millis(500));
-        joystick.tap_dpad_right();
-        sleep(Duration::from_millis(500));
-        joystick.tap_a();
-        sleep(Duration::from_millis(500));
-        joystick.tap_b();
-        sleep(Duration::from_millis(500));
-        joystick.tap_x();
-        sleep(Duration::from_millis(500));
-        joystick.tap_y();
-        sleep(Duration::from_millis(500));
-        joystick.instant = Instant::now();
-        assert!(!joystick.events.is_empty());
-
-        while !joystick.events.is_empty() {
-            joystick.run();
+        for _ in 0..4 {
+            for deg in 0..360 {
+                let rad = f32::to_radians(deg as f32);
+                let dir: [f32; 2] = [f32::cos(rad), f32::sin(rad)];
+                joystick.set_joy(dir);
+                sleep(Duration::from_millis(speed));
+            }
         }
-
-        assert!(joystick.events.is_empty());
         Result::Ok(())
     }
 
     #[test]
-    fn ensure_instants_reset() -> std::io::Result<()> {
+    fn test_event_system() -> std::io::Result<()> {
+        sleep(Duration::from_millis(2000));
         let mut joystick: Joystick = Joystick::default();
-        joystick.tap_a();
-        assert!(!joystick.events.is_empty());
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::UP);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::DOWN);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::LEFT);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::RIGHT);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::A);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::B);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::X);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::Y);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::LT);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::RT);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::LT2);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::RT2);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::SELECT);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::START);
+        sleep(Duration::from_millis(500));
 
-        while !joystick.events.is_empty() {
-            joystick.run();
-        }
+        joystick.release(Button::UP);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::DOWN);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::LEFT);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::RIGHT);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::A);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::B);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::X);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::Y);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::LT);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::RT);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::LT2);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::RT2);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::SELECT);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::START);
+        sleep(Duration::from_millis(500));
 
-        assert!(joystick.instant < Instant::now() + Duration::from_secs(1));
-        assert!(joystick.events.is_empty());
+        Result::Ok(())
+    }
+
+    #[test]
+    fn test_release_all() -> std::io::Result<()> {
+        sleep(Duration::from_millis(2000));
+        let mut joystick: Joystick = Joystick::default();
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::UP);
+        joystick.press(Button::DOWN);
+        joystick.press(Button::LEFT);
+        joystick.press(Button::RIGHT);
+        joystick.press(Button::A);
+        joystick.press(Button::B);
+        joystick.press(Button::X);
+        joystick.press(Button::Y);
+        joystick.press(Button::LT);
+        joystick.press(Button::RT);
+        joystick.press(Button::LT2);
+        joystick.press(Button::RT2);
+        joystick.press(Button::START);
+        joystick.press(Button::SELECT);
+        sleep(Duration::from_millis(1000));
+        joystick.release_all();
+        sleep(Duration::from_millis(500));
+
         Result::Ok(())
     }
 }

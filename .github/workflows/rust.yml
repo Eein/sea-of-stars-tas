@@ -43,7 +43,7 @@ jobs:
         prefix-key: "clippy"
 
     - name: Run Clippy
-      run: cargo clippy --all-targets --all-features
+      run: cargo clippy --all-targets --all-features -- -D warnings
 
   format:
     name: format
