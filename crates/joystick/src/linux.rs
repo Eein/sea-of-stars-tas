@@ -1,12 +1,14 @@
 use evdev::{
     uinput::{VirtualDevice, VirtualDeviceBuilder},
-    AbsInfo, AbsoluteAxisCode, AttributeSet, EventType, InputEvent, KeyCode, UinputAbsSetup,
+    AbsInfo, AbsoluteAxisCode, AbsoluteAxisEvent, AttributeSet, EventType, InputEvent, KeyCode,
+    UinputAbsSetup,
 };
+use vec2::clamp;
 
 use std::sync::Arc;
 use std::sync::Mutex;
 
-use crate::common::{Button, JoystickInterface, KeyAction};
+use crate::common::{Button, JoystickInterface};
 
 pub struct Joystick {
     device: Arc<Mutex<VirtualDevice>>,
@@ -15,27 +17,54 @@ pub struct Joystick {
 
 impl JoystickInterface for Joystick {
     fn release_all(&mut self) {
+        self.set_joy([0.0, 0.0]);
         let mut keys = vec![];
         for key in &self.keys {
             keys.push(InputEvent::new(EventType::KEY.0, key.code(), 0));
         }
-        self.device.lock().unwrap().emit(&keys).unwrap();
+        match self.device.lock().unwrap().emit(&keys) {
+            Ok(_) => (),
+            Err(e) => println!("Joystick error: {e:?}"),
+        }
     }
 
     fn press(&mut self, button: Button) {
         let button = Joystick::get_button(button);
         let event = InputEvent::new(EventType::KEY.0, button.code(), 1);
 
-        // TODO(eein): test if theres a safer way to do this
-        self.device.lock().unwrap().emit(&[event]).unwrap();
+        match self.device.lock().unwrap().emit(&[event]) {
+            Ok(_) => (),
+            Err(e) => println!("Joystick error: {e:?}"),
+        }
     }
 
     fn release(&mut self, button: Button) {
         let button = Joystick::get_button(button);
         let event = InputEvent::new(EventType::KEY.0, button.code(), 0);
 
-        // TODO(eein): test if theres a safer way to do this
-        self.device.lock().unwrap().emit(&[event]).unwrap();
+        match self.device.lock().unwrap().emit(&[event]) {
+            Ok(_) => (),
+            Err(e) => println!("Joystick error: {e:?}"),
+        }
+    }
+
+    fn set_joy(&mut self, dir: [f32; 2]) {
+        let mut clamped_dir = dir;
+        clamp(&mut clamped_dir, &[-1.0, -1.0], &[1.0, 1.0]);
+        // Convert from range -1..1 to -32768..32767
+        // Negative values are down/left, positive are up/right
+        let x_code = AbsoluteAxisCode::ABS_X.0;
+        let y_code = AbsoluteAxisCode::ABS_Y.0;
+        let abs_x = (clamped_dir[0] * i16::MAX as f32) as i16;
+        let abs_y = (clamped_dir[1] * i16::MAX as f32) as i16;
+
+        let x_event = *AbsoluteAxisEvent::new(AbsoluteAxisCode(x_code), abs_x.into());
+        let y_event = *AbsoluteAxisEvent::new(AbsoluteAxisCode(y_code), abs_y.into());
+
+        match self.device.lock().unwrap().emit(&[x_event, y_event]) {
+            Ok(_) => (),
+            Err(e) => println!("Joystick error: {e:?}"),
+        }
     }
 }
 
@@ -111,6 +140,22 @@ mod tests {
     use crate::joystick::Joystick;
     use std::thread::sleep;
     use std::time::Duration;
+
+    #[test]
+    fn test_joystick() -> std::io::Result<()> {
+        sleep(Duration::from_millis(2000));
+        let speed = 1000 / 360; // One rotation in 1s, CCW from -> to ->
+        let mut joystick: Joystick = Joystick::default();
+        for _ in 0..4 {
+            for deg in 0..360 {
+                let rad = f32::to_radians(deg as f32);
+                let dir: [f32; 2] = [f32::cos(rad), f32::sin(rad)];
+                joystick.set_joy(dir);
+                sleep(Duration::from_millis(speed));
+            }
+        }
+        Result::Ok(())
+    }
 
     #[test]
     fn test_event_system() -> std::io::Result<()> {
