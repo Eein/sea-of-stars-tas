@@ -1,6 +1,7 @@
+use num::clamp;
 use vigem_client::{Client, TargetId, XButtons, XGamepad, Xbox360Wired};
 
-use crate::common::{JoystickInterface, Button};
+use crate::common::{Button, JoystickInterface};
 
 pub struct Joystick {
     device: Xbox360Wired<Client>, // may need to be Arc<Mutex>>
@@ -22,24 +23,22 @@ impl Default for Joystick {
             ..Default::default()
         };
 
-        Joystick {
-            device,
-            gamepad,
-        }
+        Joystick { device, gamepad }
     }
 }
 
 impl Joystick {
     fn map_button(button: Button) -> u16 {
+        // TODO: Note, the left/right triggers are handled differently in XINPUT, they are u8 values.
         match button {
             Button::A => XButtons::A,
             Button::B => XButtons::B,
             Button::X => XButtons::X,
             Button::Y => XButtons::Y,
             Button::LT => XButtons::LB,
-            Button::LT2 => XButtons::LB, // TODO: Unsure which counts as "Left Shoulder"
+            Button::LT2 => XButtons::LB,
             Button::RT => XButtons::RB,
-            Button::RT2 => XButtons::RB, // TODO: Unsure which counts as "Right Shoulder"
+            Button::RT2 => XButtons::RB,
             Button::SELECT => XButtons::BACK,
             Button::START => XButtons::START,
             Button::UP => XButtons::UP,
@@ -52,18 +51,39 @@ impl Joystick {
 
 impl JoystickInterface for Joystick {
     fn release_all(&mut self) {
+        self.set_joy([0.0, 0.0]);
         self.gamepad.buttons = vigem_client::XButtons!();
-        let _ = self.device.update(&self.gamepad);
+        match self.device.update(&self.gamepad) {
+            Ok(_) => (),
+            Err(e) => println!("Joystick error: {e:?}"),
+        }
     }
     fn press(&mut self, button: Button) {
         let code = Joystick::map_button(button);
         self.gamepad.buttons.raw |= code;
-        let _ = self.device.update(&self.gamepad);
+        match self.device.update(&self.gamepad) {
+            Ok(_) => (),
+            Err(e) => println!("Joystick error: {e:?}"),
+        }
     }
     fn release(&mut self, button: Button) {
         let code = Joystick::map_button(button);
         self.gamepad.buttons.raw &= !code;
-        let _ = self.device.update(&self.gamepad);
+        match self.device.update(&self.gamepad) {
+            Ok(_) => (),
+            Err(e) => println!("Joystick error: {e:?}"),
+        }
+    }
+    fn set_joy(&mut self, dir: [f32; 2]) {
+        let clamped_dir: [f32; 2] = [clamp(dir[0], -1.0, 1.0), clamp(dir[1], -1.0, 1.0)];
+        // Convert from range -1..1 to -32768..32767
+        // Negative values are down/left, positive are up/right
+        self.gamepad.thumb_lx = (clamped_dir[0] * i16::MAX as f32) as i16;
+        self.gamepad.thumb_ly = (clamped_dir[1] * i16::MAX as f32) as i16;
+        match self.device.update(&self.gamepad) {
+            Ok(_) => (),
+            Err(e) => println!("Joystick error: {e:?}"),
+        }
     }
 }
 
@@ -72,16 +92,32 @@ impl JoystickInterface for Joystick {
 // then focus https://hardwaretester.com/gamepad
 #[cfg(test)]
 mod tests {
-    use crate::common::{JoystickInterface, Button};
+    use crate::common::{Button, JoystickInterface};
     use crate::joystick::Joystick;
     use std::thread::sleep;
     use std::time::Duration;
 
     #[test]
-    // TODO(orkaboy): A slight misnomer, since there isn't an event system anymore
-    fn test_event_system() -> std::io::Result<()> {
+    fn test_joystick() -> std::io::Result<()> {
+        sleep(Duration::from_millis(2000));
+        let speed = 1000 / 360; // One rotation in 1s, CCW from -> to ->
+        let mut joystick: Joystick = Joystick::default();
+        for _ in 0..4 {
+            for deg in 0..360 {
+                let rad = f32::to_radians(deg as f32);
+                let dir: [f32; 2] = [f32::cos(rad), f32::sin(rad)];
+                joystick.set_joy(dir);
+                sleep(Duration::from_millis(speed));
+            }
+        }
+        Result::Ok(())
+    }
+
+    #[test]
+    fn test_buttons() -> std::io::Result<()> {
         sleep(Duration::from_millis(2000));
         let mut joystick: Joystick = Joystick::default();
+        joystick.release_all();
         sleep(Duration::from_millis(500));
         joystick.press(Button::UP);
         sleep(Duration::from_millis(500));

@@ -6,7 +6,7 @@ use evdev::{
 use std::sync::Arc;
 use std::sync::Mutex;
 
-use crate::common::{JoystickInterface, Button, KeyAction};
+use crate::common::{Button, JoystickInterface, KeyAction};
 
 pub struct Joystick {
     device: Arc<Mutex<VirtualDevice>>,
@@ -104,10 +104,10 @@ impl Default for Joystick {
 
 // To visually run these tests, use:
 // `cargo test -- --test-threads 1`
-// then focus https://hardwaretester.com/gamepad 
+// then focus https://hardwaretester.com/gamepad
 #[cfg(test)]
 mod tests {
-    use crate::common::{JoystickInterface, Button};
+    use crate::common::{Button, JoystickInterface};
     use crate::joystick::Joystick;
     use std::thread::sleep;
     use std::time::Duration;
