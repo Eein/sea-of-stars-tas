@@ -1,25 +1,11 @@
-use std::time::{Duration, Instant};
+use vec2::clamp;
 use vigem_client::{Client, TargetId, XButtons, XGamepad, Xbox360Wired};
 
-static TAP_DURATION: u64 = 50;
-
-enum KeyAction {
-    Press,
-    Release,
-}
+use crate::common::{Button, JoystickInterface};
 
 pub struct Joystick {
     device: Xbox360Wired<Client>, // may need to be Arc<Mutex>>
     gamepad: vigem_client::XGamepad,
-    events: Vec<JoystickEvent>,
-    button_mask: u16, // current mask for the joystick
-    pub instant: Instant,
-}
-
-struct JoystickEvent {
-    key: u16,
-    duration: Duration,
-    action: KeyAction,
 }
 
 impl Default for Joystick {
@@ -37,175 +23,187 @@ impl Default for Joystick {
             ..Default::default()
         };
 
-        Joystick {
-            device,
-            events: vec![],
-            button_mask: 0x0,
-            instant: Instant::now(),
-            gamepad,
-        }
+        Joystick { device, gamepad }
     }
 }
 
 impl Joystick {
-    pub fn new(&self) -> Self {
-        Joystick::default()
-    }
-
-    pub fn tap_a(&mut self) {
-        self.tap(XButtons::A)
-    }
-
-    pub fn tap_b(&mut self) {
-        self.tap(XButtons::B)
-    }
-
-    pub fn tap_x(&mut self) {
-        self.tap(XButtons::X)
-    }
-
-    pub fn tap_y(&mut self) {
-        self.tap(XButtons::Y)
-    }
-
-    pub fn tap_lt(&mut self) {
-        self.tap(XButtons::LB)
-    }
-
-    pub fn tap_rt(&mut self) {
-        self.tap(XButtons::RB)
-    }
-
-    // TODO(eein): We dont rear triggers yet
-    pub fn tap_lt2(&mut self) {
-        // self.tap(XButtons::LB)
-    }
-
-    pub fn tap_rt2(&mut self) {
-        // self.tap(XButtons::RB)
-    }
-
-    pub fn tap_select(&mut self) {
-        self.tap(XButtons::BACK)
-    }
-
-    pub fn tap_start(&mut self) {
-        self.tap(XButtons::START)
-    }
-
-    pub fn tap_dpad_up(&mut self) {
-        self.tap(XButtons::UP)
-    }
-
-    pub fn tap_dpad_down(&mut self) {
-        self.tap(XButtons::DOWN)
-    }
-
-    pub fn tap_dpad_left(&mut self) {
-        self.tap(XButtons::LEFT)
-    }
-
-    pub fn tap_dpad_right(&mut self) {
-        self.tap(XButtons::RIGHT)
-    }
-
-    pub fn release_all(&mut self) {
-        self.gamepad.buttons = vigem_client::XButtons!();
-    }
-
-    fn tap(&mut self, button: u16) {
-        // send in press and release
-        let time = self.instant.elapsed();
-        let release_duration = Duration::from_millis(TAP_DURATION);
-
-        self.events.push(JoystickEvent {
-            key: button,
-            duration: time,
-            action: KeyAction::Press,
-        });
-        self.events.push(JoystickEvent {
-            key: button,
-            duration: time + release_duration,
-            action: KeyAction::Release,
-        });
-    }
-
-    pub fn run(&mut self) {
-        if !self.events.is_empty() {
-            let timer_time = self.instant.elapsed();
-
-            for event in &self.events {
-                if event.duration <= timer_time {
-                    match event.action {
-                        KeyAction::Release => {
-                            // bitwise AND NOT (removes the button from the bitflags)
-                            self.button_mask &= !event.key
-                        }
-                        KeyAction::Press => {
-                            // bitwise OR (adds the button to the bitflags)
-                            self.button_mask |= event.key
-                        }
-                    };
-                    self.gamepad.buttons.raw = self.button_mask;
-                    let _ = self.device.update(&self.gamepad);
-                }
-            }
-            self.events.retain(|event| event.duration > timer_time);
-        } else {
-            self.instant = Instant::now();
+    fn map_button(button: Button) -> u16 {
+        // TODO: Note, the left/right triggers are handled differently in XINPUT, they are u8 values.
+        match button {
+            Button::A => XButtons::A,
+            Button::B => XButtons::B,
+            Button::X => XButtons::X,
+            Button::Y => XButtons::Y,
+            Button::LT => XButtons::LB,
+            Button::LT2 => XButtons::LTHUMB,
+            Button::RT => XButtons::RB,
+            Button::RT2 => XButtons::RTHUMB,
+            Button::SELECT => XButtons::BACK,
+            Button::START => XButtons::START,
+            Button::UP => XButtons::UP,
+            Button::DOWN => XButtons::DOWN,
+            Button::LEFT => XButtons::LEFT,
+            Button::RIGHT => XButtons::RIGHT,
         }
     }
 }
 
+impl JoystickInterface for Joystick {
+    fn release_all(&mut self) {
+        self.set_joy([0.0, 0.0]);
+        self.gamepad.buttons = vigem_client::XButtons!();
+        match self.device.update(&self.gamepad) {
+            Ok(_) => (),
+            Err(e) => println!("Joystick error: {e:?}"),
+        }
+    }
+    fn press(&mut self, button: Button) {
+        let code = Joystick::map_button(button);
+        self.gamepad.buttons.raw |= code;
+        match self.device.update(&self.gamepad) {
+            Ok(_) => (),
+            Err(e) => println!("Joystick error: {e:?}"),
+        }
+    }
+    fn release(&mut self, button: Button) {
+        let code = Joystick::map_button(button);
+        self.gamepad.buttons.raw &= !code;
+        match self.device.update(&self.gamepad) {
+            Ok(_) => (),
+            Err(e) => println!("Joystick error: {e:?}"),
+        }
+    }
+    fn set_joy(&mut self, dir: [f32; 2]) {
+        let mut clamped_dir = dir;
+        clamp(&mut clamped_dir, &[-1.0, -1.0], &[1.0, 1.0]);
+        // Convert from range -1..1 to -32768..32767
+        // Negative values are down/left, positive are up/right
+        self.gamepad.thumb_lx = (clamped_dir[0] * i16::MAX as f32) as i16;
+        self.gamepad.thumb_ly = (clamped_dir[1] * i16::MAX as f32) as i16;
+        match self.device.update(&self.gamepad) {
+            Ok(_) => (),
+            Err(e) => println!("Joystick error: {e:?}"),
+        }
+    }
+}
+
+// To visually run these tests, use:
+// `cargo test -- --test-threads 1`
+// then focus https://hardwaretester.com/gamepad
 #[cfg(test)]
 mod tests {
+    use crate::common::{Button, JoystickInterface};
     use crate::joystick::Joystick;
     use std::thread::sleep;
-    use std::time::{Duration, Instant};
+    use std::time::Duration;
 
     #[test]
-    fn test_event_system() -> std::io::Result<()> {
-        sleep(Duration::from_millis(1000));
+    fn test_joystick() -> std::io::Result<()> {
+        sleep(Duration::from_millis(2000));
+        let speed = 1000 / 360; // One rotation in 1s, CCW from -> to ->
         let mut joystick: Joystick = Joystick::default();
-        joystick.tap_dpad_up();
-        sleep(Duration::from_millis(500));
-        joystick.tap_dpad_down();
-        sleep(Duration::from_millis(500));
-        joystick.tap_dpad_left();
-        sleep(Duration::from_millis(500));
-        joystick.tap_dpad_right();
-        sleep(Duration::from_millis(500));
-        joystick.tap_a();
-        sleep(Duration::from_millis(500));
-        joystick.tap_b();
-        sleep(Duration::from_millis(500));
-        joystick.tap_x();
-        sleep(Duration::from_millis(500));
-        joystick.tap_y();
-        sleep(Duration::from_millis(500));
-        joystick.instant = Instant::now();
-        assert!(!joystick.events.is_empty());
-
-        while !joystick.events.is_empty() {
-            joystick.run();
+        for _ in 0..4 {
+            for deg in 0..360 {
+                let rad = f32::to_radians(deg as f32);
+                let dir: [f32; 2] = [f32::cos(rad), f32::sin(rad)];
+                joystick.set_joy(dir);
+                sleep(Duration::from_millis(speed));
+            }
         }
-
-        assert!(joystick.events.is_empty());
         Result::Ok(())
     }
 
     #[test]
-    fn ensure_instants_reset() -> std::io::Result<()> {
+    fn test_buttons() -> std::io::Result<()> {
+        sleep(Duration::from_millis(2000));
         let mut joystick: Joystick = Joystick::default();
-        joystick.tap_a();
-        assert!(!joystick.events.is_empty());
+        joystick.release_all();
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::UP);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::DOWN);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::LEFT);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::RIGHT);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::A);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::B);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::X);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::Y);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::LT);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::RT);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::LT2);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::RT2);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::SELECT);
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::START);
+        sleep(Duration::from_millis(500));
 
-        while !joystick.events.is_empty() {
-            joystick.run();
-        }
+        joystick.release(Button::UP);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::DOWN);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::LEFT);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::RIGHT);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::A);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::B);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::X);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::Y);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::LT);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::RT);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::LT2);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::RT2);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::SELECT);
+        sleep(Duration::from_millis(500));
+        joystick.release(Button::START);
+        sleep(Duration::from_millis(500));
 
-        assert!(joystick.instant < Instant::now() + Duration::from_secs(1));
-        assert!(joystick.events.is_empty());
+        Result::Ok(())
+    }
+
+    #[test]
+    fn test_release_all() -> std::io::Result<()> {
+        sleep(Duration::from_millis(2000));
+        let mut joystick: Joystick = Joystick::default();
+        sleep(Duration::from_millis(500));
+        joystick.press(Button::UP);
+        joystick.press(Button::DOWN);
+        joystick.press(Button::LEFT);
+        joystick.press(Button::RIGHT);
+        joystick.press(Button::A);
+        joystick.press(Button::B);
+        joystick.press(Button::X);
+        joystick.press(Button::Y);
+        joystick.press(Button::LT);
+        joystick.press(Button::RT);
+        joystick.press(Button::LT2);
+        joystick.press(Button::RT2);
+        joystick.press(Button::START);
+        joystick.press(Button::SELECT);
+        sleep(Duration::from_millis(1000));
+        joystick.release_all();
+        sleep(Duration::from_millis(500));
+
         Result::Ok(())
     }
 }
