@@ -1,9 +1,3 @@
-pub static TAP_DURATION: u64 = 50;
-
-pub enum KeyAction {
-    Press,
-    Release,
-}
 
 pub enum Button {
     A,
