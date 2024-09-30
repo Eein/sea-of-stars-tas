@@ -15,8 +15,12 @@ impl TitleHelper {
 impl GuiHelper for TitleHelper {
     fn draw(&mut self, managers: &MemoryManagers, ui: &mut egui::Ui, _tab: &mut String) {
         ui.label(format!(
-            "Menu Item Selected {:?}",
+            "Menu Item Selected: {:?}",
             managers.title_sequence_manager.data.title_menu.selected
+        ));
+        ui.label(format!(
+            "Pressed Start: {:?}",
+            managers.title_sequence_manager.data.pressed_start
         ));
     }
 }

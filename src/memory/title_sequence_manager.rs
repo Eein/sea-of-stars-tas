@@ -1,8 +1,12 @@
 use crate::memory::{MemoryManager, MemoryManagerUpdate};
 use crate::state::StateContext;
+
 use log::info;
+
+use memory::game_engine::il2cpp::{Class, Module};
 use memory::memory_manager::unity::UnityMemoryManager;
 use memory::process::Error;
+use memory::process::Process;
 
 impl Default for MemoryManager<TitleSequenceManagerData> {
     fn default() -> Self {
@@ -21,6 +25,7 @@ impl Default for MemoryManager<TitleSequenceManagerData> {
 #[derive(Default, Debug)]
 pub struct TitleSequenceManagerData {
     pub title_menu: TitleMenu,
+    pub pressed_start: bool,
 }
 
 impl MemoryManagerUpdate for TitleSequenceManagerData {
@@ -29,103 +34,124 @@ impl MemoryManagerUpdate for TitleSequenceManagerData {
         ctx: &StateContext,
         manager: &mut UnityMemoryManager,
     ) -> Result<(), Error> {
-        match self.update_title_menu(ctx, manager) {
-            Ok(_) => Ok(()),
-            Err(error) => Err(error),
-        }
-    }
-}
-
-impl TitleSequenceManagerData {
-    pub fn update_title_menu(
-        &mut self,
-        ctx: &StateContext,
-        manager: &mut UnityMemoryManager,
-    ) -> Result<(), Error> {
         if let Some(class) = manager.class {
             if let Some(process) = &ctx.process {
                 if let Some(module) = &ctx.module {
                     if let Some(singleton) = manager.singleton {
-                        if class
-                            .follow_fields::<u8>(
-                                singleton,
-                                process,
-                                module,
-                                &["titleScreen", "newGameButton", "selected"],
-                            )
-                            .ok()
-                            == Some(1)
-                        {
-                            self.title_menu.selected = TitleMenuOption::NewGame;
-                            return Ok(());
-                        }
-                        if class
-                            .follow_fields::<u8>(
-                                singleton,
-                                process,
-                                module,
-                                &["titleScreen", "newGamePlusButton", "selected"],
-                            )
-                            .ok()
-                            == Some(1)
-                        {
-                            self.title_menu.selected = TitleMenuOption::NewGamePlus;
-                            return Ok(());
-                        }
-                        if class
-                            .follow_fields::<u8>(
-                                singleton,
-                                process,
-                                module,
-                                &["titleScreen", "continueButton", "selected"],
-                            )
-                            .ok()
-                            == Some(1)
-                        {
-                            self.title_menu.selected = TitleMenuOption::Continue;
-                            return Ok(());
-                        }
-                        if class
-                            .follow_fields::<u8>(
-                                singleton,
-                                process,
-                                module,
-                                &["titleScreen", "loadGameButton", "selected"],
-                            )
-                            .ok()
-                            == Some(1)
-                        {
-                            self.title_menu.selected = TitleMenuOption::LoadGame;
-                            return Ok(());
-                        }
-                        if class
-                            .follow_fields::<u8>(
-                                singleton,
-                                process,
-                                module,
-                                &["titleScreen", "optionsButton", "selected"],
-                            )
-                            .ok()
-                            == Some(1)
-                        {
-                            self.title_menu.selected = TitleMenuOption::Options;
-                            return Ok(());
-                        }
-                        if class
-                            .follow_fields::<u8>(
-                                singleton,
-                                process,
-                                module,
-                                &["titleScreen", "quitGameButton", "selected"],
-                            )
-                            .ok()
-                            == Some(1)
-                        {
-                            self.title_menu.selected = TitleMenuOption::QuitGame
-                        }
+                        self.update_title_menu(class, process, module, singleton)?;
+                        self.update_pressed_start(class, process, module, singleton)?;
                     }
                 }
             }
+        }
+        Ok(())
+    }
+}
+
+impl TitleSequenceManagerData {
+    pub fn update_pressed_start(
+        &mut self,
+        class: Class,
+        process: &Process,
+        module: &Module,
+        singleton: Class,
+    ) -> Result<(), Error> {
+        if let Ok(pressed_start) =
+            class.follow_fields::<u8>(singleton, process, module, &["titleScreen", "startPressed"])
+        {
+            self.pressed_start = match pressed_start {
+                1 => true,
+                0 => false,
+                _ => false,
+            };
+        }
+
+        Ok(())
+    }
+
+    pub fn update_title_menu(
+        &mut self,
+        class: Class,
+        process: &Process,
+        module: &Module,
+        singleton: Class,
+    ) -> Result<(), Error> {
+        if class
+            .follow_fields::<u8>(
+                singleton,
+                process,
+                module,
+                &["titleScreen", "newGameButton", "selected"],
+            )
+            .ok()
+            == Some(1)
+        {
+            self.title_menu.selected = TitleMenuOption::NewGame;
+            return Ok(());
+        }
+        if class
+            .follow_fields::<u8>(
+                singleton,
+                process,
+                module,
+                &["titleScreen", "newGamePlusButton", "selected"],
+            )
+            .ok()
+            == Some(1)
+        {
+            self.title_menu.selected = TitleMenuOption::NewGamePlus;
+            return Ok(());
+        }
+        if class
+            .follow_fields::<u8>(
+                singleton,
+                process,
+                module,
+                &["titleScreen", "continueButton", "selected"],
+            )
+            .ok()
+            == Some(1)
+        {
+            self.title_menu.selected = TitleMenuOption::Continue;
+            return Ok(());
+        }
+        if class
+            .follow_fields::<u8>(
+                singleton,
+                process,
+                module,
+                &["titleScreen", "loadGameButton", "selected"],
+            )
+            .ok()
+            == Some(1)
+        {
+            self.title_menu.selected = TitleMenuOption::LoadGame;
+            return Ok(());
+        }
+        if class
+            .follow_fields::<u8>(
+                singleton,
+                process,
+                module,
+                &["titleScreen", "optionsButton", "selected"],
+            )
+            .ok()
+            == Some(1)
+        {
+            self.title_menu.selected = TitleMenuOption::Options;
+            return Ok(());
+        }
+        if class
+            .follow_fields::<u8>(
+                singleton,
+                process,
+                module,
+                &["titleScreen", "quitGameButton", "selected"],
+            )
+            .ok()
+            == Some(1)
+        {
+            self.title_menu.selected = TitleMenuOption::QuitGame
         }
         Ok(())
     }
