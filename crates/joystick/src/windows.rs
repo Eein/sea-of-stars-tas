@@ -1,4 +1,4 @@
-use num::clamp;
+use vec2::clamp;
 use vigem_client::{Client, TargetId, XButtons, XGamepad, Xbox360Wired};
 
 use crate::common::{Button, JoystickInterface};
@@ -36,9 +36,9 @@ impl Joystick {
             Button::X => XButtons::X,
             Button::Y => XButtons::Y,
             Button::LT => XButtons::LB,
-            Button::LT2 => XButtons::LB,
+            Button::LT2 => XButtons::LTHUMB,
             Button::RT => XButtons::RB,
-            Button::RT2 => XButtons::RB,
+            Button::RT2 => XButtons::RTHUMB,
             Button::SELECT => XButtons::BACK,
             Button::START => XButtons::START,
             Button::UP => XButtons::UP,
@@ -75,7 +75,8 @@ impl JoystickInterface for Joystick {
         }
     }
     fn set_joy(&mut self, dir: [f32; 2]) {
-        let clamped_dir: [f32; 2] = [clamp(dir[0], -1.0, 1.0), clamp(dir[1], -1.0, 1.0)];
+        let mut clamped_dir = dir;
+        clamp(&mut clamped_dir, &[-1.0, -1.0], &[1.0, 1.0]);
         // Convert from range -1..1 to -32768..32767
         // Negative values are down/left, positive are up/right
         self.gamepad.thumb_lx = (clamped_dir[0] * i16::MAX as f32) as i16;
