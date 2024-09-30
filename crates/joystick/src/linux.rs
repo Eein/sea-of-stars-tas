@@ -56,7 +56,7 @@ impl JoystickInterface for Joystick {
         let x_code = AbsoluteAxisCode::ABS_X.0;
         let y_code = AbsoluteAxisCode::ABS_Y.0;
         let abs_x = (clamped_dir[0] * i16::MAX as f32) as i16;
-        let abs_y = (clamped_dir[1] * i16::MAX as f32) as i16;
+        let abs_y = -(clamped_dir[1] * i16::MAX as f32) as i16;
 
         let x_event = *AbsoluteAxisEvent::new(AbsoluteAxisCode(x_code), abs_x.into());
         let y_event = *AbsoluteAxisEvent::new(AbsoluteAxisCode(y_code), abs_y.into());
