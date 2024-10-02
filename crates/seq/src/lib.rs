@@ -1,5 +1,5 @@
-use std::fmt::Display;
 use log::{debug, info};
+use std::fmt::Display;
 
 pub trait Node {
     fn execute(&mut self, _delta: f64) -> bool {

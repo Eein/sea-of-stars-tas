@@ -5,6 +5,7 @@ use evdev::{
 };
 use vec2::clamp;
 
+use log::error;
 use std::sync::Arc;
 use std::sync::Mutex;
 
@@ -24,7 +25,7 @@ impl JoystickInterface for Joystick {
         }
         match self.device.lock().unwrap().emit(&keys) {
             Ok(_) => (),
-            Err(e) => println!("Joystick error: {e:?}"),
+            Err(e) => error!("Joystick error: {e:?}"),
         }
     }
 
@@ -34,7 +35,7 @@ impl JoystickInterface for Joystick {
 
         match self.device.lock().unwrap().emit(&[event]) {
             Ok(_) => (),
-            Err(e) => println!("Joystick error: {e:?}"),
+            Err(e) => error!("Joystick error: {e:?}"),
         }
     }
 
@@ -44,7 +45,7 @@ impl JoystickInterface for Joystick {
 
         match self.device.lock().unwrap().emit(&[event]) {
             Ok(_) => (),
-            Err(e) => println!("Joystick error: {e:?}"),
+            Err(e) => error!("Joystick error: {e:?}"),
         }
     }
 
@@ -63,7 +64,7 @@ impl JoystickInterface for Joystick {
 
         match self.device.lock().unwrap().emit(&[x_event, y_event]) {
             Ok(_) => (),
-            Err(e) => println!("Joystick error: {e:?}"),
+            Err(e) => error!("Joystick error: {e:?}"),
         }
     }
 }

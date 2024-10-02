@@ -1,9 +1,9 @@
 use crate::memory::{MemoryManager, MemoryManagerUpdate};
 use crate::state::StateContext;
+use log::info;
 use memory::memory_manager::unity::UnityMemoryManager;
 use memory::process::Error;
 use vec3_rs::Vector3;
-use log::info;
 
 impl Default for MemoryManager<PlayerPartyManagerData> {
     fn default() -> Self {

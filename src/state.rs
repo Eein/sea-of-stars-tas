@@ -8,6 +8,7 @@ use memory::process::Process;
 use memory::process_list::ProcessList;
 
 use egui_dock::DockState;
+use log::info;
 use std::time::Instant;
 
 pub struct StateDebug {
@@ -87,8 +88,10 @@ impl State {
         match Process::with_name(process_name, &mut self.process_list) {
             Ok(process) => {
                 if self.context.process.is_none() {
-                    println!("- Attaching Process");
-                    println!("Found {} at pid {}", process_name, process.pid);
+                    info!(
+                        "- Attaching Process\nFound {} at pid {}",
+                        process_name, process.pid
+                    );
                 }
                 self.context.process = Some(process);
             }
@@ -101,7 +104,7 @@ impl State {
     pub fn register_module(&mut self) {
         if self.context.module.is_none() {
             if let Some(ref mut process) = &mut self.context.process {
-                println!("- Loading Module");
+                info!("- Loading Module");
                 // Attach to GameAssembly.dll
                 self.context.module = Module::attach(process);
             }
@@ -112,7 +115,7 @@ impl State {
         if self.context.image.is_none() {
             if let Some(process) = &self.context.process {
                 if let Some(module) = &self.context.module {
-                    println!("- Loading Image");
+                    info!("- Loading Image");
                     self.context.image = module.get_default_image(process);
                 }
             }
