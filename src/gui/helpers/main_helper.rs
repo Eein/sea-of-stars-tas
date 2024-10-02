@@ -1,6 +1,8 @@
 use super::GuiHelper;
 use crate::memory::MemoryManagers;
 
+pub const NAME: &str = "Main Helper";
+
 #[derive(Debug)]
 pub struct MainHelper {
     name: String,
@@ -8,7 +10,7 @@ pub struct MainHelper {
 impl Default for MainHelper {
     fn default() -> MainHelper {
         Self {
-            name: "Main Helper".to_string(),
+            name: NAME.to_string(),
         }
     }
 }

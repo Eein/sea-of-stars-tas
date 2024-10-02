@@ -2,6 +2,8 @@ use super::GuiHelper;
 use crate::memory::MemoryManagers;
 use vec3_rs::Vector3;
 
+pub const NAME: &str = "Nav Helper";
+
 #[derive(Debug)]
 pub struct NavHelper {
     pub name: String,
@@ -12,7 +14,7 @@ pub struct NavHelper {
 impl Default for NavHelper {
     fn default() -> NavHelper {
         Self {
-            name: "Nav Helper".to_string(),
+            name: NAME.to_string(),
             precision: 0.200,
             target_coordinates: Vector3::new(0.0, 0.0, 0.0),
             run_enabled: true,

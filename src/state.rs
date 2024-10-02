@@ -40,17 +40,7 @@ impl State {
         // Register any GUI helpers here
         let gui_helpers = GuiHelpers::default();
 
-        let mut tree_names: Vec<String> = vec![];
-
-        for h in [
-            gui_helpers.nav_helper.name(),
-            gui_helpers.main_helper.name(),
-            gui_helpers.title_helper.name(),
-        ]
-        .iter()
-        {
-            tree_names.push(h.to_string());
-        }
+        let tree_names = gui_helpers.tree_names();
 
         Self {
             context: StateContext {
