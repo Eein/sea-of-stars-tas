@@ -18,7 +18,6 @@ pub trait Node {
 
 pub struct SeqLog {
     text: String,
-    // TODO: More log info, like log level?
 }
 
 impl SeqLog {
