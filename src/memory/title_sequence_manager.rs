@@ -229,6 +229,8 @@ impl TitleSequenceManagerData {
 
                 let enabled = !matches!(enabled_str.trim(), "relic-switch-off");
 
+                // TODO(eein): perf - is it wise to allocate specifically sized array here on
+                // earlier in creation? maybe this can be added to the UnityItems implementation
                 buttons.push(RelicButton {
                     name: name.to_string(),
                     enabled
