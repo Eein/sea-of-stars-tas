@@ -15,7 +15,7 @@ impl TitleHelper {
 fn relic_button_decorator(enabled: bool, name: &str) -> String {
     let enabled_string = match enabled {
         true => "[x]",
-        false => "[ ]"
+        false => "[  ]"
     };
     format!("{} {}", enabled_string, name)
 }
