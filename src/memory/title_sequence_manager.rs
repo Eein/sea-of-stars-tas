@@ -2,6 +2,7 @@ use crate::memory::{MemoryManager, MemoryManagerUpdate};
 use crate::state::StateContext;
 use memory::memory_manager::unity::UnityMemoryManager;
 use memory::process::Error;
+use log::info;
 
 impl Default for MemoryManager<TitleSequenceManagerData> {
     fn default() -> Self {
@@ -12,7 +13,7 @@ impl Default for MemoryManager<TitleSequenceManagerData> {
                 ..UnityMemoryManager::default()
             },
         };
-        println!("{} Loaded", manager.name);
+        info!("Memory: {} Loaded", manager.name);
         manager
     }
 }

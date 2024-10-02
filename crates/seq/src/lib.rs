@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use log::{debug, info};
 
 pub trait Node {
     fn execute(&mut self, _delta: f64) -> bool {
@@ -36,8 +37,7 @@ impl Display for SeqLog {
 
 impl Node for SeqLog {
     fn enter(&self) {
-        // TODO: better logging lib?
-        println!("SeqLog: {}", self);
+        info!("SeqLog: {}", self);
     }
 }
 
@@ -79,7 +79,7 @@ impl SeqList {
 impl Node for SeqList {
     fn enter(&self) {
         // Run enter for the first child
-        println!(
+        debug!(
             "Enter SeqList({}), {} children",
             self.name,
             self.children.len()
@@ -90,7 +90,7 @@ impl Node for SeqList {
     }
 
     fn exit(&self) {
-        println!("Leaving SeqList({})", self.name);
+        debug!("Leaving SeqList({})", self.name);
     }
 
     fn execute(&mut self, delta: f64) -> bool {
@@ -137,8 +137,7 @@ impl SeqCheckpoint {
 
 impl Node for SeqCheckpoint {
     fn enter(&self) {
-        // TODO: better logging lib?
-        println!("Checkpoint: {}", self.checkpoint_name);
+        info!("Checkpoint: {}", self.checkpoint_name);
     }
 
     fn advance_to_checkpoint(&mut self, checkpoint: &str) -> bool {

@@ -16,6 +16,8 @@ eframe = { version = "0.28", default-features = false, features = [
 ] }
 egui_dock = "0.13.0"
 vec3-rs = "0.1.6"
+colog = "1.3.0"
+log = "0.4.22"
 
 [dependencies.winit]
 # version = "*"
