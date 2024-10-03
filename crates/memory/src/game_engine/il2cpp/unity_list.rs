@@ -1,4 +1,4 @@
-use crate::process::{Error, Process};
+use crate::process::{MemoryError, Process};
 
 #[derive(Default, Debug)]
 pub struct UnityList<T: UnityItem> {
@@ -22,7 +22,7 @@ const COUNT_OFFSET: u64 = 0x18;
 ///  ```
 
 impl<T: UnityItem> UnityList<T> {
-    pub fn read(process: &Process, addr: u64) -> Result<Self, Error> {
+    pub fn read(process: &Process, addr: u64) -> Result<Self, MemoryError> {
         let mut items = vec![];
         let mut fields_base = ITEMS_0_INDEX_BASE;
 
@@ -62,7 +62,7 @@ impl<T: UnityItem> UnityList<T> {
 
 /// Trait provided
 pub trait UnityItem {
-    fn read(process: &Process, item_ptr: u64) -> Result<Self, Error>
+    fn read(process: &Process, item_ptr: u64) -> Result<Self, MemoryError>
     where
         Self: Sized;
 }

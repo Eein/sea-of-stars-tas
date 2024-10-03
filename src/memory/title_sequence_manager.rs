@@ -7,7 +7,7 @@ use log::info;
 use memory::game_engine::il2cpp::unity_list::{UnityItem, UnityList};
 use memory::game_engine::il2cpp::{Class, Module};
 use memory::memory_manager::unity::UnityMemoryManager;
-use memory::process::Error;
+use memory::process::MemoryError;
 use memory::process::Process;
 use memory::string::{ArrayCString, ArrayWString};
 
@@ -46,7 +46,7 @@ impl MemoryManagerUpdate for TitleSequenceManagerData {
         &mut self,
         ctx: &StateContext,
         manager: &mut UnityMemoryManager,
-    ) -> Result<(), Error> {
+    ) -> Result<(), MemoryError> {
         if let Some(class) = manager.class {
             if let Some(process) = &ctx.process {
                 if let Some(module) = &ctx.module {
@@ -72,7 +72,7 @@ impl TitleSequenceManagerData {
         process: &Process,
         module: &Module,
         singleton: Class,
-    ) -> Result<(), Error> {
+    ) -> Result<(), MemoryError> {
         if let Ok(load_save_done) =
             class.follow_fields::<u8>(singleton, process, module, &["loadSaveDone"])
         {
@@ -92,7 +92,7 @@ impl TitleSequenceManagerData {
         process: &Process,
         module: &Module,
         singleton: Class,
-    ) -> Result<(), Error> {
+    ) -> Result<(), MemoryError> {
         if let Ok(pressed_start) =
             class.follow_fields::<u8>(singleton, process, module, &["titleScreen", "startPressed"])
         {
@@ -112,7 +112,7 @@ impl TitleSequenceManagerData {
         process: &Process,
         module: &Module,
         singleton: Class,
-    ) -> Result<(), Error> {
+    ) -> Result<(), MemoryError> {
         if class
             .follow_fields::<u8>(
                 singleton,
@@ -199,7 +199,7 @@ impl TitleSequenceManagerData {
         process: &Process,
         module: &Module,
         singleton: Class,
-    ) -> Result<(), Error> {
+    ) -> Result<(), MemoryError> {
         if let Ok(relic_buttons) = class.follow_fields::<u64>(
             singleton,
             process,
@@ -219,7 +219,7 @@ impl TitleSequenceManagerData {
         process: &Process,
         module: &Module,
         singleton: Class,
-    ) -> Result<(), Error> {
+    ) -> Result<(), MemoryError> {
         if let Ok(addr) =
             class.follow_fields::<u64>(singleton, process, module, &["currentScreenName"])
         {
@@ -243,7 +243,7 @@ impl TitleSequenceManagerData {
         process: &Process,
         module: &Module,
         singleton: Class,
-    ) -> Result<(), Error> {
+    ) -> Result<(), MemoryError> {
         // Sanity check for escaping a missing dangling address
         match class.follow_fields::<u64>(
             singleton,
@@ -441,18 +441,19 @@ pub struct RelicButton {
 }
 
 impl UnityItem for RelicButton {
-    fn read(process: &Process, item_ptr: u64) -> Result<Self, Error> {
+    fn read(process: &Process, item_ptr: u64) -> Result<Self, MemoryError> {
         let name_str =
             process.read_pointer_path::<ArrayWString<128>>(item_ptr, &[0x188, 0xD8, 0x14])?;
-        let name = match String::from_utf16(name_str.as_slice()) {
-            Ok(value) => Ok(value),
-            Err(_) => Err(Error),
-        }?;
 
-        let enabled_str = process
-            .read_pointer_path::<ArrayCString<16>>(item_ptr, &[0x1B0, 0xD8, 0x10, 0x30, 0x0])?;
+        if let Ok(name) = String::from_utf16(name_str.as_slice()) {
+            let enabled_str = process
+                .read_pointer_path::<ArrayCString<16>>(item_ptr, &[0x1B0, 0xD8, 0x10, 0x30, 0x0])?;
 
-        let enabled = !matches!(enabled_str.validate_utf8().unwrap(), "relic-switch-off");
-        Ok(RelicButton { name, enabled })
+            let enabled = !matches!(enabled_str.validate_utf8().unwrap(), "relic-switch-off");
+
+            Ok(RelicButton { name, enabled })
+        } else {
+            Err(MemoryError::ReadError)
+        }
     }
 }

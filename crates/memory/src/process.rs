@@ -25,6 +25,13 @@ pub enum ModuleError {
     ListModules,
 }
 
+#[derive(Debug)]
+pub enum MemoryError {
+    NullPointer, // When a ptr is 0
+    Unset,       // When a value is unset (ie None)
+    ReadError,   // when memory cant be read
+}
+
 pub struct Error;
 
 pub struct Process {
@@ -90,7 +97,7 @@ impl Process {
         self.handle.copy_address(address as usize, buf)
     }
 
-    pub fn read<T: Pod>(&self, address: u64) -> Result<T, Error> {
+    pub fn read<T: Pod>(&self, address: u64) -> Result<T, MemoryError> {
         unsafe {
             let mut value = MaybeUninit::<T>::uninit();
             let _result = self.read_mem(
@@ -101,7 +108,7 @@ impl Process {
         }
     }
 
-    pub fn read_pointer<T: Pod>(&self, address: u64) -> Result<T, Error> {
+    pub fn read_pointer<T: Pod>(&self, address: u64) -> Result<T, MemoryError> {
         self.read::<T>(address)
     }
 
@@ -109,7 +116,7 @@ impl Process {
         &self,
         address: u64,
         buf: &'buf mut [u8],
-    ) -> Result<&'buf mut [u8], Error> {
+    ) -> Result<&'buf mut [u8], MemoryError> {
         // SAFETY: The process handle is guaranteed to be valid. We provide a
         // valid pointer and length to the buffer. We also do proper error
         // handling afterwards. The buffer is guaranteed to be initialized
@@ -119,7 +126,7 @@ impl Process {
             if self.read_mem(address, buf).is_ok() {
                 Ok(slice::from_raw_parts_mut(buf.as_mut_ptr().cast(), buf_len))
             } else {
-                Err(Error {})
+                Err(MemoryError::ReadError)
             }
         }
     }
@@ -128,8 +135,8 @@ impl Process {
         &self,
         mut address: u64,
         path: &[u64],
-    ) -> Result<T, Error> {
-        let (&last, path) = path.split_last().ok_or(Error)?;
+    ) -> Result<T, MemoryError> {
+        let (&last, path) = path.split_last().ok_or(MemoryError::Unset)?;
         for &offset in path {
             address = self.read_pointer::<u64>(address + offset)?;
         }
@@ -141,8 +148,8 @@ impl Process {
         &self,
         mut address: u64,
         path: &[u64],
-    ) -> Result<u64, Error> {
-        let (&last, path) = path.split_last().ok_or(Error)?;
+    ) -> Result<u64, MemoryError> {
+        let (&last, path) = path.split_last().ok_or(MemoryError::Unset)?;
         for &offset in path {
             address = self.read_pointer::<u64>(address + offset)?;
         }

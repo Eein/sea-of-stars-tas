@@ -2,7 +2,7 @@ use crate::memory::{MemoryManager, MemoryManagerUpdate};
 use crate::state::StateContext;
 use log::info;
 use memory::memory_manager::unity::UnityMemoryManager;
-use memory::process::Error;
+use memory::process::MemoryError;
 use vec3_rs::Vector3;
 
 impl Default for MemoryManager<PlayerPartyManagerData> {
@@ -29,7 +29,7 @@ impl MemoryManagerUpdate for PlayerPartyManagerData {
         &mut self,
         ctx: &StateContext,
         manager: &mut UnityMemoryManager,
-    ) -> Result<(), Error> {
+    ) -> Result<(), MemoryError> {
         match self.update_position(ctx, manager) {
             Ok(_) => Ok(()),
             Err(error) => Err(error),
@@ -46,7 +46,7 @@ impl PlayerPartyManagerData {
         &mut self,
         ctx: &StateContext,
         manager: &mut UnityMemoryManager,
-    ) -> Result<(), Error> {
+    ) -> Result<(), MemoryError> {
         if let Some(class) = manager.class {
             if let Some(process) = &ctx.process {
                 if let Some(module) = &ctx.module {

@@ -2,7 +2,7 @@
 
 use core::{fmt, mem};
 
-use crate::process::{Error, Process};
+use crate::process::{MemoryError, Process};
 use bytemuck::{Pod, Zeroable};
 
 use crate::string::ArrayCString;
@@ -285,7 +285,7 @@ impl Symbol {
     pub fn get_name<const CAP: usize>(
         &self,
         process: &Process,
-    ) -> Result<ArrayCString<CAP>, Error> {
+    ) -> Result<ArrayCString<CAP>, MemoryError> {
         process.read(self.name_addr)
     }
 }
