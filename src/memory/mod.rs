@@ -2,6 +2,8 @@ pub mod objects;
 pub mod player_party_manager;
 pub mod title_sequence_manager;
 
+use log::error;
+
 use crate::state::StateContext;
 
 use memory::memory_manager::unity::{UnityMemoryManagement, UnityMemoryManager};
@@ -63,7 +65,10 @@ impl<T: MemoryManagerUpdate> MemoryManager<T> {
     fn update_memory(&mut self, ctx: &StateContext) {
         match self.data.update(ctx, &mut self.manager) {
             Ok(_) => (),
-            Err(_error) => self.manager.reset(),
+            Err(_error) => {
+                error!("Memory Update Error: Find the offending memory address and return a safe result.");
+                self.manager.reset()
+            },
         }
     }
 
