@@ -1,5 +1,5 @@
 //! Support for attaching to Unity games that are using the IL2CPP backend.
-pub mod unity_items;
+pub mod unity_list;
 
 use crate::pe;
 use crate::process::Error;

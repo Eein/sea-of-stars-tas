@@ -4,7 +4,7 @@ use crate::state::StateContext;
 
 use log::info;
 
-use memory::game_engine::il2cpp::unity_items::{UnityItem, UnityItems};
+use memory::game_engine::il2cpp::unity_list::{UnityList, UnityListItem};
 use memory::game_engine::il2cpp::{Class, Module};
 use memory::memory_manager::unity::UnityMemoryManager;
 use memory::process::Error;
@@ -34,7 +34,7 @@ pub struct TitleSequenceManagerData {
     /// Information on new game character selection
     pub new_game_characters: NewGameCharacters,
     // relicSelectionScreen -> relicButtons
-    pub relic_buttons: UnityItems<RelicButton>,
+    pub relic_buttons: UnityList<RelicButton>,
     /// If saves are loaded and continue shows up on the title screen.
     pub load_save_done: bool,
     /// If the player has pressed start on the intro screen.
@@ -206,7 +206,7 @@ impl TitleSequenceManagerData {
             module,
             &["relicSelectionScreen", "relicButtons"],
         ) {
-            let buttons = UnityItems::<RelicButton>::read(process, relic_buttons)?;
+            let buttons = UnityList::<RelicButton>::read(process, relic_buttons)?;
             self.relic_buttons = buttons;
         }
 
@@ -440,7 +440,7 @@ pub struct RelicButton {
     pub enabled: bool,
 }
 
-impl UnityItem for RelicButton {
+impl UnityListItem for RelicButton {
     fn read(process: &Process, item_ptr: u64) -> Result<Self, Error> {
         let name_str =
             process.read_pointer_path::<ArrayWString<128>>(item_ptr, &[0x188, 0xD8, 0x14])?;
