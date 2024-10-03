@@ -18,11 +18,11 @@ impl<T: UnityItem> UnityItems<T> {
         let count = process.read_pointer::<u32>(items_ptr + 0x18)?;
 
         if items_ptr == 0 {
-            return Err(Error);
+            return Ok(Self {count: 0, items});
         }
 
         if count == 0 {
-            return Err(Error);
+            return Ok(Self {count: 0, items});
         }
 
         for _index in 0..count {

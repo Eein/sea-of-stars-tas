@@ -45,7 +45,7 @@ impl<T: MemoryManagerUpdate> MemoryManager<T> {
             }
 
             return true;
-        }
+        } 
         false
     }
 
