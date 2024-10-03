@@ -1,3 +1,4 @@
+use crate::memory::objects::character::PlayerPartyCharacter;
 use crate::memory::{MemoryManager, MemoryManagerUpdate};
 use crate::state::StateContext;
 
@@ -26,8 +27,11 @@ impl Default for MemoryManager<TitleSequenceManagerData> {
 
 #[derive(Default, Debug)]
 pub struct TitleSequenceManagerData {
-    /// Title Menu Object Data.
-    pub title_menu: TitleMenu,
+    /// Title Menu Option data
+    pub title_menu_option_selected: TitleMenuOption,
+    pub current_screen_name: String,
+    /// Information on new game character selection
+    pub new_game_characters: NewGameCharacters,
     // relicSelectionScreen -> relicButtons
     pub relic_buttons: UnityItems<RelicButton>,
     /// If saves are loaded and continue shows up on the title screen.
@@ -46,10 +50,12 @@ impl MemoryManagerUpdate for TitleSequenceManagerData {
             if let Some(process) = &ctx.process {
                 if let Some(module) = &ctx.module {
                     if let Some(singleton) = manager.singleton {
+                        self.update_current_screen_name(class, process, module, singleton)?;
                         self.update_title_menu(class, process, module, singleton)?;
                         self.update_pressed_start(class, process, module, singleton)?;
                         self.update_load_save_done(class, process, module, singleton)?;
                         self.update_relics(class, process, module, singleton)?;
+                        self.update_new_game_characters(class, process, module, singleton)?;
                     }
                 }
             }
@@ -116,7 +122,7 @@ impl TitleSequenceManagerData {
             .ok()
             == Some(1)
         {
-            self.title_menu.selected = TitleMenuOption::NewGame;
+            self.title_menu_option_selected = TitleMenuOption::NewGame;
             return Ok(());
         }
         if class
@@ -129,7 +135,7 @@ impl TitleSequenceManagerData {
             .ok()
             == Some(1)
         {
-            self.title_menu.selected = TitleMenuOption::NewGamePlus;
+            self.title_menu_option_selected = TitleMenuOption::NewGamePlus;
             return Ok(());
         }
         if class
@@ -142,7 +148,7 @@ impl TitleSequenceManagerData {
             .ok()
             == Some(1)
         {
-            self.title_menu.selected = TitleMenuOption::Continue;
+            self.title_menu_option_selected = TitleMenuOption::Continue;
             return Ok(());
         }
         if class
@@ -155,7 +161,7 @@ impl TitleSequenceManagerData {
             .ok()
             == Some(1)
         {
-            self.title_menu.selected = TitleMenuOption::LoadGame;
+            self.title_menu_option_selected = TitleMenuOption::LoadGame;
             return Ok(());
         }
         if class
@@ -168,7 +174,7 @@ impl TitleSequenceManagerData {
             .ok()
             == Some(1)
         {
-            self.title_menu.selected = TitleMenuOption::Options;
+            self.title_menu_option_selected = TitleMenuOption::Options;
             return Ok(());
         }
         if class
@@ -181,7 +187,7 @@ impl TitleSequenceManagerData {
             .ok()
             == Some(1)
         {
-            self.title_menu.selected = TitleMenuOption::QuitGame
+            self.title_menu_option_selected = TitleMenuOption::QuitGame
         }
         Ok(())
     }
@@ -205,6 +211,118 @@ impl TitleSequenceManagerData {
 
         Ok(())
     }
+
+    pub fn update_current_screen_name(
+        &mut self,
+        class: Class,
+        process: &Process,
+        module: &Module,
+        singleton: Class,
+    ) -> Result<(), Error> {
+        if let Ok(addr) =
+            class.follow_fields::<u64>(singleton, process, module, &["currentScreenName"])
+        {
+            let name_str = process.read_pointer::<ArrayWString<128>>(addr + 0x14)?;
+            match String::from_utf16(name_str.as_slice()) {
+                Ok(value) => {
+                    self.current_screen_name = value.clone();
+                    Ok(value)
+                }
+                Err(_) => Err(Error),
+            }?;
+        }
+
+        Ok(())
+    }
+
+    pub fn update_new_game_characters(
+        &mut self,
+        class: Class,
+        process: &Process,
+        module: &Module,
+        singleton: Class,
+    ) -> Result<(), Error> {
+        let left_name_addr = class.follow_fields::<u64>(
+            singleton,
+            process,
+            module,
+            &[
+                "characterSelectionScreen",
+                "leftButton",
+                "characterDefinitionId",
+            ],
+        )?;
+
+        let left_name_str = process.read_pointer::<ArrayWString<16>>(left_name_addr + 0x14)?;
+        let left_name = match String::from_utf16(left_name_str.as_slice()) {
+            Ok(value) => Ok(value),
+            Err(_) => Err(Error),
+        }?;
+
+        let left_selected = match class.follow_fields::<u8>(
+            singleton,
+            process,
+            module,
+            &["characterSelectionScreen", "leftButton", "selected"],
+        )? {
+            0 => false,
+            1 => true,
+            _ => false,
+        };
+
+        let right_name_addr = class.follow_fields::<u64>(
+            singleton,
+            process,
+            module,
+            &[
+                "characterSelectionScreen",
+                "rightButton",
+                "characterDefinitionId",
+            ],
+        )?;
+
+        let right_name_str = process.read_pointer::<ArrayWString<16>>(right_name_addr + 0x14)?;
+        let right_name = match String::from_utf16(right_name_str.as_slice()) {
+            Ok(value) => Ok(value),
+            Err(_) => Err(Error),
+        }?;
+
+        let right_selected = match class.follow_fields::<u8>(
+            singleton,
+            process,
+            module,
+            &["characterSelectionScreen", "rightButton", "selected"],
+        )? {
+            0 => false,
+            1 => true,
+            _ => false,
+        };
+
+        let left = NewGameCharacter {
+            character: PlayerPartyCharacter::parse(&left_name),
+            selected: left_selected,
+        };
+        let right = NewGameCharacter {
+            character: PlayerPartyCharacter::parse(&right_name),
+            selected: right_selected,
+        };
+
+        let mut selected = PlayerPartyCharacter::None;
+        if left.selected {
+            selected = left.character.clone();
+        }
+        if right.selected {
+            selected = right.character.clone();
+        }
+
+        self.new_game_characters = NewGameCharacters {
+            left,
+            right,
+            selected,
+        };
+
+        Ok(())
+    }
 }
 
 #[derive(Default, Debug)]
@@ -220,8 +338,20 @@ pub enum TitleMenuOption {
 }
 
 #[derive(Default, Debug)]
-pub struct TitleMenu {
-    pub selected: TitleMenuOption,
+pub struct NewGameCharacters {
+    //  characterSelectionScreen -> leftButton -> characterDefinitionId
+    pub left: NewGameCharacter,
+    //  characterSelectionScreen -> rightButton -> characterDefinitionId
+    pub right: NewGameCharacter,
+    //  characterSelectionScreen -> selectedCharacter -> selected (by definition id == right or
+    //  left)
+    pub selected: PlayerPartyCharacter,
+}
+
+#[derive(Default, Debug)]
+pub struct NewGameCharacter {
+    pub character: PlayerPartyCharacter,
+    pub selected: bool,
 }
 
 #[derive(Default, Debug)]

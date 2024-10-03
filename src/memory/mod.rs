@@ -1,3 +1,4 @@
+pub mod objects;
 pub mod player_party_manager;
 pub mod title_sequence_manager;
 
@@ -45,7 +46,7 @@ impl<T: MemoryManagerUpdate> MemoryManager<T> {
             }
 
             return true;
-        } 
+        }
         false
     }
 
@@ -62,9 +63,7 @@ impl<T: MemoryManagerUpdate> MemoryManager<T> {
     fn update_memory(&mut self, ctx: &StateContext) {
         match self.data.update(ctx, &mut self.manager) {
             Ok(_) => (),
-            Err(_error) => {
-                self.manager.reset()
-            }
+            Err(_error) => self.manager.reset(),
         }
     }
 
