@@ -15,7 +15,7 @@ impl TitleHelper {
 fn relic_button_decorator(enabled: bool, name: &str) -> String {
     let enabled_string = match enabled {
         true => "[x]",
-        false => "[  ]"
+        false => "[  ]",
     };
     format!("{} {}", enabled_string, name)
 }
@@ -37,10 +37,18 @@ impl GuiHelper for TitleHelper {
 
         ui.separator();
 
-        ui.label(format!("Relics (Total: {})", managers.title_sequence_manager.data.relic_buttons.count));
-        for relic in managers.title_sequence_manager.data.relic_buttons.buttons.iter() {
+        ui.label(format!(
+            "Relics (Total: {})",
+            managers.title_sequence_manager.data.relic_buttons.count
+        ));
+        for relic in managers
+            .title_sequence_manager
+            .data
+            .relic_buttons
+            .items
+            .iter()
+        {
             ui.label(relic_button_decorator(relic.enabled, &relic.name));
         }
-
     }
 }
