@@ -3,7 +3,6 @@ pub mod title_sequence_manager;
 
 use crate::state::StateContext;
 
-use log::error;
 use memory::memory_manager::unity::{UnityMemoryManagement, UnityMemoryManager};
 use memory::process::Error;
 use player_party_manager::PlayerPartyManagerData;
