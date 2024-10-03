@@ -3,8 +3,8 @@ use crate::state::StateContext;
 
 use log::info;
 
-use memory::game_engine::il2cpp::{Class, Module};
 use memory::game_engine::il2cpp::unity_items::{UnityItem, UnityItems};
+use memory::game_engine::il2cpp::{Class, Module};
 use memory::memory_manager::unity::UnityMemoryManager;
 use memory::process::Error;
 use memory::process::Process;
@@ -234,12 +234,7 @@ pub struct RelicButton {
 }
 
 impl UnityItem for RelicButton {
-    fn read(process: &Process, fields_base: u64, items_ptr: u64) -> Result<Self, Error> {
-        let item_ptr = process.read_pointer::<u64>(items_ptr + fields_base)?;
-        if item_ptr == 0 {
-            return Err(Error);
-        }
-
+    fn read(process: &Process, item_ptr: u64) -> Result<Self, Error> {
         let name_str =
             process.read_pointer_path::<ArrayWString<128>>(item_ptr, &[0x188, 0xD8, 0x14])?;
         let name = match String::from_utf16(name_str.as_slice()) {

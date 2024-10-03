@@ -22,9 +22,13 @@ impl<T: UnityItem> UnityItems<T> {
         }
 
         for _index in 0..count {
-            let relic_button = T::read(process, fields_base, items_ptr);
-            if relic_button.is_ok() {
-                items.push(relic_button?);
+            let item_ptr = process.read_pointer::<u64>(items_ptr + fields_base)?;
+            if item_ptr == 0 {
+                return Err(Error);
+            }
+            let item = T::read(process, item_ptr);
+            if item.is_ok() {
+                items.push(item?);
             }
 
             fields_base += OFFSET;
@@ -36,7 +40,7 @@ impl<T: UnityItem> UnityItems<T> {
 
 /// Trait provided
 pub trait UnityItem {
-    fn read(process: &Process, fields_base: u64, items_ptr: u64) -> Result<Self, Error>
+    fn read(process: &Process, item_ptr: u64) -> Result<Self, Error>
     where
         Self: Sized;
 }
