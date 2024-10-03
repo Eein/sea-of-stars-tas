@@ -27,6 +27,7 @@ pub enum ModuleError {
 
 #[derive(Debug)]
 pub enum MemoryError {
+    InvalidParameters, // When some parameters are invalid
     NullPointer, // When a ptr is 0
     Unset,       // When a value is unset (ie None)
     ReadError,   // when memory cant be read
@@ -136,7 +137,7 @@ impl Process {
         mut address: u64,
         path: &[u64],
     ) -> Result<T, MemoryError> {
-        let (&last, path) = path.split_last().ok_or(MemoryError::Unset)?;
+        let (&last, path) = path.split_last().ok_or(MemoryError::InvalidParameters)?;
         for &offset in path {
             address = self.read_pointer::<u64>(address + offset)?;
         }
@@ -149,7 +150,7 @@ impl Process {
         mut address: u64,
         path: &[u64],
     ) -> Result<u64, MemoryError> {
-        let (&last, path) = path.split_last().ok_or(MemoryError::Unset)?;
+        let (&last, path) = path.split_last().ok_or(MemoryError::InvalidParameters)?;
         for &offset in path {
             address = self.read_pointer::<u64>(address + offset)?;
         }

@@ -45,14 +45,7 @@ impl MemoryManagers {
 
 impl<T: MemoryManagerUpdate> MemoryManager<T> {
     fn ready_for_updates(&mut self, _ctx: &StateContext) -> bool {
-        if let Some(class) = self.manager.singleton {
-            if class.class == 0 {
-                return false;
-            }
-
-            return true;
-        }
-        false
+        matches!(self.manager.singleton, Some(_val))
     }
 
     fn update_manager(&mut self, ctx: &StateContext) {
@@ -75,8 +68,9 @@ impl<T: MemoryManagerUpdate> MemoryManager<T> {
                 );
                 match error {
                     MemoryError::ReadError => self.manager.reset(),
-                    MemoryError::NullPointer => {}
-                    MemoryError::Unset => {}
+                    MemoryError::NullPointer => {},
+                    MemoryError::Unset => self.manager.reset(),
+                    MemoryError::InvalidParameters => {}
                 }
             }
         }

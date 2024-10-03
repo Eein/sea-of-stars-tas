@@ -51,16 +51,27 @@ impl MemoryManagerUpdate for TitleSequenceManagerData {
             if let Some(process) = &ctx.process {
                 if let Some(module) = &ctx.module {
                     if let Some(singleton) = manager.singleton {
-                        self.update_current_screen_name(class, process, module, singleton)?;
-                        self.update_title_menu(class, process, module, singleton)?;
+                        // Only update title menu if pressed start
                         self.update_pressed_start(class, process, module, singleton)?;
-                        self.update_load_save_done(class, process, module, singleton)?;
-                        self.update_relics(class, process, module, singleton)?;
-                        self.update_new_game_characters(class, process, module, singleton)?;
-                    }
-                }
-            }
-        }
+                        self.update_current_screen_name(class, process, module, singleton)?;
+
+                        if self.pressed_start && self.current_screen_name == "TitleScreen" {
+                            self.update_load_save_done(class, process, module, singleton)?;
+                            self.update_title_menu(class, process, module, singleton)?;
+                        }
+
+                        if self.current_screen_name == "UpdateRelics" {
+                            self.update_relics(class, process, module, singleton)?;
+                        }
+
+                        if self.current_screen_name == "CharacterSelection" {
+                            self.update_new_game_characters(class, process, module, singleton)?;
+                        }
+
+                    } else { return Err(MemoryError::Unset) }
+                } else { return Err(MemoryError::Unset) }
+            } else { return Err(MemoryError::Unset) }
+        } else { return Err(MemoryError::Unset) }
         Ok(())
     }
 }

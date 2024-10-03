@@ -286,7 +286,7 @@ impl Class {
         fields: &[&str],
     ) -> Result<T, MemoryError> {
         if fields.is_empty() {
-            return Err(MemoryError::Unset);
+            return Err(MemoryError::InvalidParameters);
         }
 
         if singleton.class == 0 {
@@ -324,7 +324,7 @@ impl Class {
         fields: &[&str],
     ) -> Result<u64, MemoryError> {
         if fields.is_empty() {
-            return Err(MemoryError::Unset);
+            return Err(MemoryError::InvalidParameters);
         }
 
         if singleton.class == 0 {

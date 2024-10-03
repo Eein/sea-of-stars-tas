@@ -31,7 +31,9 @@
             pkg-config
             openssl
             xorg.libxcb
+            linuxPackages_latest.perf
             # wasm-pack
+            cargo-flamegraph
             rust-analyzer
             rustfmt
             # wasm-bindgen-cli
