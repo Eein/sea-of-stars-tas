@@ -12,14 +12,6 @@ impl TitleHelper {
     }
 }
 
-fn relic_button_decorator(enabled: bool, name: &str) -> String {
-    let enabled_string = match enabled {
-        true => "[x]",
-        false => "[  ]",
-    };
-    format!("{} {}", enabled_string, name)
-}
-
 impl GuiHelper for TitleHelper {
     fn draw(&mut self, managers: &MemoryManagers, ui: &mut egui::Ui, _tab: &mut String) {
         ui.label(format!(
@@ -91,7 +83,7 @@ impl GuiHelper for TitleHelper {
             .items
             .iter()
         {
-            ui.label(relic_button_decorator(relic.enabled, &relic.name));
+            ui.checkbox(&mut relic.enabled.clone(), &relic.name);
         }
     }
 }
