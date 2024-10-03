@@ -17,6 +17,10 @@ impl<T: UnityItem> UnityItems<T> {
         let items_ptr = process.read_pointer::<u64>(addr + 0x10)?;
         let count = process.read_pointer::<u32>(items_ptr + 0x18)?;
 
+        if items_ptr == 0 {
+            return Err(Error);
+        }
+
         if count == 0 {
             return Err(Error);
         }

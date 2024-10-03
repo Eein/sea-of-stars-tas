@@ -64,7 +64,6 @@ impl<T: MemoryManagerUpdate> MemoryManager<T> {
         match self.data.update(ctx, &mut self.manager) {
             Ok(_) => (),
             Err(_error) => {
-                error!("RESETTING");
                 self.manager.reset()
             }
         }
