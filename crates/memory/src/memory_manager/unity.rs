@@ -11,11 +11,7 @@ pub struct UnityMemoryManager {
 }
 impl UnityMemoryManager {
     pub fn reset(&mut self) {
-        self.class = None;
-        self.parent = None;
-        self.instance = None;
-        self.singleton = None;
-        self.static_table = None;
+        *self = Self::default();
     }
 }
 

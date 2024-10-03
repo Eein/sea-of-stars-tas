@@ -1,9 +1,11 @@
+pub mod objects;
 pub mod player_party_manager;
 pub mod title_sequence_manager;
 
+use log::error;
+
 use crate::state::StateContext;
 
-use log::error;
 use memory::memory_manager::unity::{UnityMemoryManagement, UnityMemoryManager};
 use memory::process::Error;
 use player_party_manager::PlayerPartyManagerData;
@@ -64,7 +66,7 @@ impl<T: MemoryManagerUpdate> MemoryManager<T> {
         match self.data.update(ctx, &mut self.manager) {
             Ok(_) => (),
             Err(_error) => {
-                error!("RESETTING");
+                error!("Memory Update Error in {}", self.name);
                 self.manager.reset()
             }
         }
