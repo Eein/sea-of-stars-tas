@@ -4,7 +4,7 @@ use crate::state::StateContext;
 
 use log::info;
 
-use memory::game_engine::il2cpp::unity_list::{UnityList, UnityListItem};
+use memory::game_engine::il2cpp::unity_list::{UnityItem, UnityList};
 use memory::game_engine::il2cpp::{Class, Module};
 use memory::memory_manager::unity::UnityMemoryManager;
 use memory::process::Error;
@@ -440,7 +440,7 @@ pub struct RelicButton {
     pub enabled: bool,
 }
 
-impl UnityListItem for RelicButton {
+impl UnityItem for RelicButton {
     fn read(process: &Process, item_ptr: u64) -> Result<Self, Error> {
         let name_str =
             process.read_pointer_path::<ArrayWString<128>>(item_ptr, &[0x188, 0xD8, 0x14])?;
