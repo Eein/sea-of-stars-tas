@@ -27,6 +27,14 @@ impl PlayerPartyCharacter {
     //     }
     // }
 
+    /// Parses the name provided to the enum
+    ///
+    /// In game code this can be:
+    /// - normally cased with special characters
+    /// - normally cased without special characters
+    /// - capitalized with no special characters
+    ///
+    /// This handles all cases gracefully.
     pub fn parse(value: &str) -> Self {
         match value.to_lowercase().as_ref() {
             "none" => Self::None,
@@ -34,8 +42,11 @@ impl PlayerPartyCharacter {
             "valere" => Self::Valere,
             "garl" => Self::Garl,
             "seraï" => Self::Serai,
+            "serai" => Self::Serai,
             "resh'an" => Self::Reshan,
+            "reshan" => Self::Reshan,
             "b'st" => Self::Bst,
+            "bst" => Self::Bst,
             "moraine" => Self::Moraine,
             _ => Self::Unknown,
         }
