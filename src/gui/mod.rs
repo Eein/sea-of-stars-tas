@@ -67,11 +67,11 @@ impl Gui {
                 let tlastpinned = state.debug.last_pinned_update;
 
                 let fps_string = {
-                    let dt = (tnow - tprev).as_secs_f64();
-                    let fps = 1.0 / dt;
-                    let out = fps.round();
                     let since = tnow.duration_since(tlastpinned);
-                    if since > Duration::from_millis(100) {
+                    if since >= Duration::from_millis(100) {
+                        let dt = (tnow - tprev).as_secs_f64();
+                        let fps = 1.0 / dt;
+                        let out = fps.round();
                         state.debug.last_pinned_update = tnow;
                         state.debug.pinned_fps = out;
                     }
