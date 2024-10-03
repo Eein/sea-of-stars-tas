@@ -372,19 +372,24 @@ impl TitleSequenceManagerData {
             selected: right_selected,
         };
 
-        if !character_selected && (right.selected && !left.selected)
-            || (!right.selected && left.selected)
-        {
+        // character_selected means a character has been selected on the character
+        // select screen and is looking at relics, in this case None
+        //
+        // if character_selected is true in any case, it should be None
+        //
+        // check if left is 1 and right is 0: return left
+        // check if left is 0 and right is 1: return right
+        if character_selected {
+            selected = PlayerPartyCharacter::None;
+        } else {
+            // left selected but not right
             if left.selected && !right.selected {
                 selected = left.character.clone()
             }
+            // right selected but not left
             if right.selected && !left.selected {
                 selected = right.character.clone()
             }
-        }
-
-        if character_selected {
-            selected = PlayerPartyCharacter::None;
         }
 
         self.new_game_characters = NewGameCharacters {
