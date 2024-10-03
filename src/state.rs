@@ -12,6 +12,8 @@ use log::info;
 use std::time::Instant;
 
 pub struct StateDebug {
+    pub pinned_fps: f64,
+    pub last_pinned_update: Instant,
     pub last_update: Instant,
     pub last_memory_update: Instant,
 }
@@ -55,6 +57,8 @@ impl State {
                 dock_state: DockState::new(tree_names),
             },
             debug: StateDebug {
+                pinned_fps: 0.0,
+                last_pinned_update: Instant::now(),
                 last_update: Instant::now(),
                 last_memory_update: Instant::now(),
             },
