@@ -8,6 +8,7 @@ use memory::process::Process;
 use memory::process_list::ProcessList;
 
 use egui_dock::DockState;
+use log::info;
 use std::time::Instant;
 
 pub struct StateDebug {
@@ -39,17 +40,7 @@ impl State {
         // Register any GUI helpers here
         let gui_helpers = GuiHelpers::default();
 
-        let mut tree_names: Vec<String> = vec![];
-
-        for h in [
-            gui_helpers.nav_helper.name(),
-            gui_helpers.main_helper.name(),
-            gui_helpers.title_helper.name(),
-        ]
-        .iter()
-        {
-            tree_names.push(h.to_string());
-        }
+        let tree_names = gui_helpers.tree_names();
 
         Self {
             context: StateContext {
@@ -87,8 +78,10 @@ impl State {
         match Process::with_name(process_name, &mut self.process_list) {
             Ok(process) => {
                 if self.context.process.is_none() {
-                    println!("- Attaching Process");
-                    println!("Found {} at pid {}", process_name, process.pid);
+                    info!(
+                        "- Attaching Process\nFound {} at pid {}",
+                        process_name, process.pid
+                    );
                 }
                 self.context.process = Some(process);
             }
@@ -101,7 +94,7 @@ impl State {
     pub fn register_module(&mut self) {
         if self.context.module.is_none() {
             if let Some(ref mut process) = &mut self.context.process {
-                println!("- Loading Module");
+                info!("- Loading Module");
                 // Attach to GameAssembly.dll
                 self.context.module = Module::attach(process);
             }
@@ -112,7 +105,7 @@ impl State {
         if self.context.image.is_none() {
             if let Some(process) = &self.context.process {
                 if let Some(module) = &self.context.module {
-                    println!("- Loading Image");
+                    info!("- Loading Image");
                     self.context.image = module.get_default_image(process);
                 }
             }

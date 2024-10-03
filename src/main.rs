@@ -43,6 +43,7 @@ fn seq_test() {
 }
 
 fn main() {
+    colog::init();
     seq_test();
     Gui::run();
 }

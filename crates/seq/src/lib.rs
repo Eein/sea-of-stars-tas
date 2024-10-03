@@ -1,3 +1,4 @@
+use log::{debug, info};
 use std::fmt::Display;
 
 pub trait Node {
@@ -7,11 +8,16 @@ pub trait Node {
     fn advance_to_checkpoint(&mut self, _checkpoint: &str) -> bool {
         false
     }
+    fn enter(&self) {
+        // Override
+    }
+    fn exit(&self) {
+        // Override
+    }
 }
 
 pub struct SeqLog {
     text: String,
-    // TODO: More log info, like log level?
 }
 
 impl SeqLog {
@@ -29,10 +35,8 @@ impl Display for SeqLog {
 }
 
 impl Node for SeqLog {
-    fn execute(&mut self, _delta: f64) -> bool {
-        // TODO: better logging lib?
-        println!("SeqLog: {}", self);
-        true
+    fn enter(&self) {
+        info!("SeqLog: {}", self);
     }
 }
 
@@ -65,13 +69,39 @@ impl Display for SeqList {
     }
 }
 
+impl SeqList {
+    fn in_bounds(&self) -> bool {
+        self.step < self.children.len()
+    }
+}
+
 impl Node for SeqList {
+    fn enter(&self) {
+        // Run enter for the first child
+        debug!(
+            "Enter SeqList({}), {} children",
+            self.name,
+            self.children.len()
+        );
+        if self.in_bounds() {
+            self.children[self.step].enter();
+        }
+    }
+
+    fn exit(&self) {
+        debug!("Leaving SeqList({})", self.name);
+    }
+
     fn execute(&mut self, delta: f64) -> bool {
-        if self.step >= self.children.len() {
+        if !self.in_bounds() {
             true
         } else {
             if self.children[self.step].execute(delta) {
+                self.children[self.step].exit();
                 self.step += 1;
+                if self.in_bounds() {
+                    self.children[self.step].enter();
+                }
             }
             false
         }
@@ -79,7 +109,7 @@ impl Node for SeqList {
 
     fn advance_to_checkpoint(&mut self, checkpoint: &str) -> bool {
         loop {
-            if self.step >= self.children.len() {
+            if !self.in_bounds() {
                 return false;
             }
             if self.children[self.step].advance_to_checkpoint(checkpoint) {
@@ -105,6 +135,10 @@ impl SeqCheckpoint {
 }
 
 impl Node for SeqCheckpoint {
+    fn enter(&self) {
+        info!("Checkpoint: {}", self.checkpoint_name);
+    }
+
     fn advance_to_checkpoint(&mut self, checkpoint: &str) -> bool {
         self.checkpoint_name == checkpoint
     }
@@ -123,12 +157,14 @@ impl Sequencer {
 impl Sequencer {
     pub fn run(&mut self) {
         let mut timer = delta::Timer::new();
+        self.root.enter();
         loop {
             let deltatime = timer.mark_secs();
             if self.root.execute(deltatime) {
                 break;
             }
         }
+        self.root.exit();
     }
 
     pub fn advance_to_checkpoint(&mut self, checkpoint: &str) -> bool {

@@ -1,3 +1,4 @@
+use log::error;
 use vec2::clamp;
 use vigem_client::{Client, TargetId, XButtons, XGamepad, Xbox360Wired};
 
@@ -55,7 +56,7 @@ impl JoystickInterface for Joystick {
         self.gamepad.buttons = vigem_client::XButtons!();
         match self.device.update(&self.gamepad) {
             Ok(_) => (),
-            Err(e) => println!("Joystick error: {e:?}"),
+            Err(e) => error!("Joystick error: {e:?}"),
         }
     }
     fn press(&mut self, button: Button) {
@@ -63,7 +64,7 @@ impl JoystickInterface for Joystick {
         self.gamepad.buttons.raw |= code;
         match self.device.update(&self.gamepad) {
             Ok(_) => (),
-            Err(e) => println!("Joystick error: {e:?}"),
+            Err(e) => error!("Joystick error: {e:?}"),
         }
     }
     fn release(&mut self, button: Button) {
@@ -71,7 +72,7 @@ impl JoystickInterface for Joystick {
         self.gamepad.buttons.raw &= !code;
         match self.device.update(&self.gamepad) {
             Ok(_) => (),
-            Err(e) => println!("Joystick error: {e:?}"),
+            Err(e) => error!("Joystick error: {e:?}"),
         }
     }
     fn set_joy(&mut self, dir: [f32; 2]) {
@@ -83,7 +84,7 @@ impl JoystickInterface for Joystick {
         self.gamepad.thumb_ly = (clamped_dir[1] * i16::MAX as f32) as i16;
         match self.device.update(&self.gamepad) {
             Ok(_) => (),
-            Err(e) => println!("Joystick error: {e:?}"),
+            Err(e) => error!("Joystick error: {e:?}"),
         }
     }
 }

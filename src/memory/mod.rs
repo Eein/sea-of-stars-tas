@@ -3,6 +3,7 @@ pub mod title_sequence_manager;
 
 use crate::state::StateContext;
 
+use log::error;
 use memory::memory_manager::unity::{UnityMemoryManagement, UnityMemoryManager};
 use memory::process::Error;
 use player_party_manager::PlayerPartyManagerData;
@@ -63,7 +64,7 @@ impl<T: MemoryManagerUpdate> MemoryManager<T> {
         match self.data.update(ctx, &mut self.manager) {
             Ok(_) => (),
             Err(_error) => {
-                println!("RESETTING");
+                error!("RESETTING");
                 self.manager.reset()
             }
         }

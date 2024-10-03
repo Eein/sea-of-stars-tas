@@ -1,6 +1,6 @@
 pub mod helpers;
 pub struct Gui;
-use super::gui::helpers::{GuiHelper, GuiHelpers};
+use super::gui::helpers::GuiHelpers;
 use super::memory::MemoryManagers;
 use super::state::State;
 use egui_dock::{DockArea, Style};
@@ -12,18 +12,7 @@ pub struct TabViewer<'a> {
 }
 impl TabViewer<'_> {
     fn draw(&mut self, ui: &mut egui::Ui, tab: &mut String) {
-        match tab.as_str() {
-            "Nav Helper" => self.helpers.nav_helper.draw(self.memory_managers, ui, tab),
-            "Main Helper" => self.helpers.main_helper.draw(self.memory_managers, ui, tab),
-            "Title Helper" => self
-                .helpers
-                .title_helper
-                .draw(self.memory_managers, ui, tab),
-            _ => {
-                let label = format!("Tab: {} has not been initialized. Check gui/mod.rs and state.rs to initialize this tab.", tab.as_str());
-                ui.label(label);
-            }
-        }
+        self.helpers.draw(self.memory_managers, ui, tab);
     }
 }
 

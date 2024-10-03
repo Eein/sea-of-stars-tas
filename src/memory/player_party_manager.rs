@@ -1,5 +1,6 @@
 use crate::memory::{MemoryManager, MemoryManagerUpdate};
 use crate::state::StateContext;
+use log::info;
 use memory::memory_manager::unity::UnityMemoryManager;
 use memory::process::Error;
 use vec3_rs::Vector3;
@@ -13,7 +14,7 @@ impl Default for MemoryManager<PlayerPartyManagerData> {
                 ..UnityMemoryManager::default()
             },
         };
-        println!("{} Loaded", manager.name);
+        info!("Memory: {} Loaded", manager.name);
         manager
     }
 }

@@ -2,29 +2,26 @@ use super::GuiHelper;
 use crate::memory::MemoryManagers;
 use vec3_rs::Vector3;
 
+pub const NAME: &str = "Nav Helper";
+
 #[derive(Debug)]
 pub struct NavHelper {
-    pub name: String,
     pub precision: f32,
     pub run_enabled: bool,
     pub target_coordinates: Vector3<f32>,
 }
-impl Default for NavHelper {
-    fn default() -> NavHelper {
-        Self {
-            name: "Nav Helper".to_string(),
+
+impl NavHelper {
+    pub fn create() -> Box<Self> {
+        Box::new(Self {
             precision: 0.200,
             target_coordinates: Vector3::new(0.0, 0.0, 0.0),
             run_enabled: true,
-        }
+        })
     }
 }
 
 impl GuiHelper for NavHelper {
-    fn name(&self) -> String {
-        self.name.clone()
-    }
-
     fn draw(&mut self, managers: &MemoryManagers, ui: &mut egui::Ui, _tab: &mut String) {
         ui.label(format!("Movement State: {}", "Not Implemented!"));
         ui.separator();
