@@ -29,6 +29,7 @@ impl Default for MemoryManager<TitleSequenceManagerData> {
 pub struct TitleSequenceManagerData {
     /// Title Menu Option data
     pub title_menu_option_selected: TitleMenuOption,
+    /// Current Screen Name field
     pub current_screen_name: String,
     /// Information on new game character selection
     pub new_game_characters: NewGameCharacters,
@@ -226,10 +227,11 @@ impl TitleSequenceManagerData {
             match String::from_utf16(name_str.as_slice()) {
                 Ok(value) => {
                     self.current_screen_name = value.clone();
-                    Ok(value)
                 }
-                Err(_) => Err(Error),
-            }?;
+                Err(_) => {
+                    self.current_screen_name = "None".to_string();
+                }
+            };
         }
 
         Ok(())
@@ -242,6 +244,20 @@ impl TitleSequenceManagerData {
         module: &Module,
         singleton: Class,
     ) -> Result<(), Error> {
+        // Sanity check for escaping a missing dangling address
+        match class.follow_fields::<u64>(
+            singleton,
+            process,
+            module,
+            &["characterSelectionScreen", "leftButton"],
+        ) {
+            Ok(value) => {
+                if value == 0 {
+                    return Ok(());
+                };
+            }
+            Err(_) => return Ok(()),
+        }
         let left_name_addr = class.follow_fields::<u64>(
             singleton,
             process,
@@ -255,9 +271,9 @@ impl TitleSequenceManagerData {
 
         let left_name_str = process.read_pointer::<ArrayWString<16>>(left_name_addr + 0x14)?;
         let left_name = match String::from_utf16(left_name_str.as_slice()) {
-            Ok(value) => Ok(value),
-            Err(_) => Err(Error),
-        }?;
+            Ok(value) => value,
+            Err(_) => "None".to_string(),
+        };
 
         let left_selected = match class.follow_fields::<u8>(
             singleton,
@@ -283,9 +299,11 @@ impl TitleSequenceManagerData {
 
         let right_name_str = process.read_pointer::<ArrayWString<16>>(right_name_addr + 0x14)?;
         let right_name = match String::from_utf16(right_name_str.as_slice()) {
-            Ok(value) => Ok(value),
-            Err(_) => Err(Error),
-        }?;
+            Ok(value) => value,
+            Err(_) => {
+                return Ok(());
+            }
+        };
 
         let right_selected = match class.follow_fields::<u8>(
             singleton,
@@ -298,21 +316,75 @@ impl TitleSequenceManagerData {
             _ => false,
         };
 
+        let mut selected = match class.follow_fields::<u64>(
+            singleton,
+            process,
+            module,
+            &["characterSelectionScreen", "selectedCharacter"],
+        ) {
+            Ok(value) => {
+                if value == 0 {
+                    PlayerPartyCharacter::None
+                } else {
+                    let selected_name_addr = class.follow_fields::<u64>(
+                        singleton,
+                        process,
+                        module,
+                        &[
+                            "characterSelectionScreen",
+                            "selectedCharacter",
+                            "characterDefinitionId",
+                        ],
+                    )?;
+
+                    let selected_name_str =
+                        process.read_pointer::<ArrayWString<16>>(selected_name_addr + 0x14)?;
+                    let selected_name = match String::from_utf16(selected_name_str.as_slice()) {
+                        Ok(value) => value,
+                        Err(_) => {
+                            return Ok(());
+                        }
+                    };
+                    PlayerPartyCharacter::parse(&selected_name)
+                }
+            }
+            Err(_) => PlayerPartyCharacter::None,
+        };
+
+        let character_selected = match class.follow_fields::<u8>(
+            singleton,
+            process,
+            module,
+            &["characterSelectionScreen", "characterSelected"],
+        )? {
+            0 => false,
+            1 => true,
+            _ => false,
+        };
+
         let left = NewGameCharacter {
             character: PlayerPartyCharacter::parse(&left_name),
             selected: left_selected,
         };
+
         let right = NewGameCharacter {
             character: PlayerPartyCharacter::parse(&right_name),
             selected: right_selected,
         };
 
-        let mut selected = PlayerPartyCharacter::None;
-        if left.selected {
-            selected = left.character.clone();
+        if !character_selected && (right.selected && !left.selected)
+            || (!right.selected && left.selected)
+        {
+            if left.selected && !right.selected {
+                selected = left.character.clone()
+            }
+            if right.selected && !left.selected {
+                selected = right.character.clone()
+            }
         }
-        if right.selected {
-            selected = right.character.clone();
+
+        if character_selected {
+            selected = PlayerPartyCharacter::None;
         }
 
         self.new_game_characters = NewGameCharacters {

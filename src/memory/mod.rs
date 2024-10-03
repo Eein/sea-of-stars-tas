@@ -66,9 +66,9 @@ impl<T: MemoryManagerUpdate> MemoryManager<T> {
         match self.data.update(ctx, &mut self.manager) {
             Ok(_) => (),
             Err(_error) => {
-                error!("Memory Update Error: Find the offending memory address and return a safe result.");
+                error!("Memory Update Error in {}", self.name);
                 self.manager.reset()
-            },
+            }
         }
     }
 

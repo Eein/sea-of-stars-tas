@@ -40,6 +40,13 @@ impl GuiHelper for TitleHelper {
 
         ui.separator();
 
+        ui.label(format!(
+            "Current Screen Name: {:?}",
+            managers.title_sequence_manager.data.current_screen_name
+        ));
+
+        ui.separator();
+
         ui.label("New Game Character Select");
 
         ui.label(format!(
