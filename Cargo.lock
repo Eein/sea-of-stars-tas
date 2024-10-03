@@ -1300,6 +1300,7 @@ name = "joystick"
 version = "0.1.0"
 dependencies = [
  "evdev",
+ "log",
  "vec2",
  "vigem-client",
 ]
