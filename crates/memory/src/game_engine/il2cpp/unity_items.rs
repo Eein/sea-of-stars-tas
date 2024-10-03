@@ -23,12 +23,12 @@ impl<T: UnityItem> UnityItems<T> {
 
         for _index in 0..count {
             let item_ptr = process.read_pointer::<u64>(items_ptr + fields_base)?;
-            if item_ptr == 0 {
-                return Err(Error);
-            }
-            let item = T::read(process, item_ptr);
-            if item.is_ok() {
-                items.push(item?);
+
+            if item_ptr != 0 {
+                let item = T::read(process, item_ptr);
+                if item.is_ok() {
+                    items.push(item?);
+                }
             }
 
             fields_base += OFFSET;
