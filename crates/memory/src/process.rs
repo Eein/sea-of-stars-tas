@@ -33,8 +33,6 @@ pub enum MemoryError {
     ReadError,         // when memory cant be read
 }
 
-pub struct Error;
-
 pub struct Process {
     pub handle: ProcessHandle,
     pub pid: Pid,
