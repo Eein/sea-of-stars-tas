@@ -6,10 +6,11 @@ use crate::process::MemoryError;
 use crate::process::Process;
 use crate::signature::Signature;
 use crate::string::ArrayCString;
-use bytemuck::Pod;
-use core::iter;
+use bytemuck::{Pod, CheckedBitPattern};
+use core::{iter, array, cell::RefCell};
 
-const CSTR: usize = 128;
+
+pub const CSTR: usize = 128;
 
 /// Represents access to a Unity game that is using the IL2CPP backend.
 #[derive(Debug)]
@@ -446,206 +447,206 @@ impl Field {
     }
 }
 
-///// An IL2CPP-specific implementation for automatic pointer path resolution
-//#[derive(Clone)]
-//pub struct UnityPointer<const CAP: usize> {
-//cache: RefCell<UnityPointerCache<CAP>>,
-//class_name: &'static str,
-//nr_of_parents: usize,
-//fields: [&'static str; CAP],
-//depth: usize,
-//}
+/// An IL2CPP-specific implementation for automatic pointer path resolution
+#[derive(Debug, Clone)]
+pub struct UnityPointer<const CAP: usize> {
+    cache: RefCell<UnityPointerCache<CAP>>,
+    class_name: &'static str,
+    nr_of_parents: usize,
+    fields: [&'static str; CAP],
+    depth: usize,
+}
 
-//#[derive(Clone, Copy)]
-//struct UnityPointerCache<const CAP: usize> {
-//base_address: u64,
-//offsets: [u64; CAP],
-//resolved_offsets: usize,
-//current_instance_pointer: Option<u64>,
-//starting_class: Option<Class>,
-//}
+#[derive(Clone, Debug, Copy)]
+struct UnityPointerCache<const CAP: usize> {
+    base_address: u64,
+    offsets: [u64; CAP],
+    resolved_offsets: usize,
+    current_instance_pointer: Option<u64>,
+    starting_class: Option<Class>,
+}
 
-//impl<const CAP: usize> UnityPointer<CAP> {
-///// Creates a new instance of the Pointer struct
-/////
-///// `CAP` should be higher or equal to the number of offsets defined in `fields`.
-/////
-///// If a higher number of offsets is provided, the pointer path will be truncated
-///// according to the value of `CAP`.
-//pub fn new(class_name: &'static str, nr_of_parents: usize, fields: &[&'static str]) -> Self {
-//    let this_fields: [&str; CAP] = {
-//        let mut iter = fields.iter();
-//        array::from_fn(|_| iter.next().copied().unwrap_or_default())
-//    };
+impl<const CAP: usize> UnityPointer<CAP> {
+    /// Creates a new instance of the Pointer struct
+    ///
+    /// `CAP` should be higher or equal to the number of offsets defined in `fields`.
+    ///
+    /// If a higher number of offsets is provided, the pointer path will be truncated
+    /// according to the value of `CAP`.
+    pub fn new(class_name: &'static str, nr_of_parents: usize, fields: &[&'static str]) -> Self {
+        let this_fields: [&str; CAP] = {
+            let mut iter = fields.iter();
+            array::from_fn(|_| iter.next().copied().unwrap_or_default())
+        };
 
-//    let cache = RefCell::new(UnityPointerCache {
-//        base_address: 0,
-//        offsets: [u64::default(); CAP],
-//        current_instance_pointer: None,
-//        starting_class: None,
-//        resolved_offsets: usize::default(),
-//    });
+        let cache = RefCell::new(UnityPointerCache {
+            base_address: 0,
+            offsets: [u64::default(); CAP],
+            current_instance_pointer: None,
+            starting_class: None,
+            resolved_offsets: usize::default(),
+        });
 
-//    Self {
-//        cache,
-//        class_name,
-//        nr_of_parents,
-//        fields: this_fields,
-//        depth: fields.len().min(CAP),
-//    }
-//}
+        Self {
+            cache,
+            class_name,
+            nr_of_parents,
+            fields: this_fields,
+            depth: fields.len().min(CAP),
+        }
+    }
 
-///// Tries to resolve the pointer path for the `IL2CPP` class specified
-//fn find_offsets(&self, process: &Process, module: &Module, image: &Image) -> Result<(), Error> {
-//    let mut cache = self.cache.borrow_mut();
+    /// Tries to resolve the pointer path for the `IL2CPP` class specified
+    fn find_offsets(&self, process: &Process, module: &Module, image: &Image) -> Result<(), MemoryError> {
+        let mut cache = self.cache.borrow_mut();
 
-//    // If the pointer path has already been found, there's no need to continue
-//    if cache.resolved_offsets == self.depth {
-//        return Ok(());
-//    }
+        // If the pointer path has already been found, there's no need to continue
+        if cache.resolved_offsets == self.depth {
+            return Ok(());
+        }
 
-//    // Logic: the starting class can be recovered with the get_class() function,
-//    // and parent class can be recovered if needed. However, this is a VERY
-//    // intensive process because it involves looping through all the main classes
-//    // in the game. For this reason, once the class is found, we want to store it
-//    // into the cache, where it can be recovered if this function need to be run again
-//    // (for example if a previous attempt at pointer path resolution failed)
-//    let starting_class = match cache.starting_class {
-//        Some(starting_class) => starting_class,
-//        _ => {
-//            let mut current_class = image
-//                .get_class(process, module, self.class_name)
-//                .ok_or(Error {})?;
+        // Logic: the starting class can be recovered with the get_class() function,
+        // and parent class can be recovered if needed. However, this is a VERY
+        // intensive process because it involves looping through all the main classes
+        // in the game. For this reason, once the class is found, we want to store it
+        // into the cache, where it can be recovered if this function need to be run again
+        // (for example if a previous attempt at pointer path resolution failed)
+        let starting_class = match cache.starting_class {
+            Some(starting_class) => starting_class,
+            _ => {
+                let mut current_class = image
+                    .get_class(process, module, self.class_name)
+                    .ok_or(MemoryError::ReadError)?;
 
-//            for _ in 0..self.nr_of_parents {
-//                current_class = current_class.get_parent(process, module).ok_or(Error {})?;
-//            }
+                for _ in 0..self.nr_of_parents {
+                    current_class = current_class.get_parent(process, module).ok_or(MemoryError::ReadError)?;
+                }
 
-//            cache.starting_class = Some(current_class);
-//            current_class
-//        }
-//    };
+                cache.starting_class = Some(current_class);
+                current_class
+            }
+        };
 
-//    // Recovering the address of the static table is not very CPU intensive,
-//    // but it might be worth caching it as well
-//    if cache.base_address == 0 {
-//        let s_table = starting_class
-//            .get_static_table(process, module)
-//            .ok_or(Error {})?;
-//        cache.base_address = s_table;
-//    };
+        // Recovering the address of the static table is not very CPU intensive,
+        // but it might be worth caching it as well
+        if cache.base_address == 0 {
+            let s_table = starting_class
+                .get_static_table(process, module)
+                .ok_or(MemoryError::ReadError)?;
+            cache.base_address = s_table;
+        };
 
-//    // As we need to be able to find instances in a more reliable way,
-//    // instead of the Class itself, we need the address pointing to an
-//    // instance of that Class. If the cache is empty, we start from the
-//    // pointer to the static table of the first class.
-//    let mut current_instance_pointer = match cache.current_instance_pointer {
-//        Some(val) => val,
-//        _ => starting_class.get_static_table_pointer(module),
-//    };
+        // As we need to be able to find instances in a more reliable way,
+        // instead of the Class itself, we need the address pointing to an
+        // instance of that Class. If the cache is empty, we start from the
+        // pointer to the static table of the first class.
+        let mut current_instance_pointer = match cache.current_instance_pointer {
+            Some(val) => val,
+            _ => starting_class.get_static_table_pointer(module),
+        };
 
-//    // We keep track of the already resolved offsets in order to skip resolving them again
-//    for i in cache.resolved_offsets..self.depth {
-//        let class_instance = process
-//            .read_pointer(current_instance_pointer)
-//            .ok()
-//            .filter(|val| *val != 0)
-//            .ok_or(Error {})?;
+        // We keep track of the already resolved offsets in order to skip resolving them again
+        for i in cache.resolved_offsets..self.depth {
+            let class_instance = process
+                .read_pointer(current_instance_pointer)
+                .ok()
+                .filter(|val| *val != 0)
+                .ok_or(MemoryError::ReadError)?;
 
-//        // Try to parse the offset, passed as a string, as an actual hex or decimal value
-//        let offset_from_string = super::value_from_string(self.fields[i]);
+            // Try to parse the offset, passed as a string, as an actual hex or decimal value
+            let offset_from_string = super::value_from_string(self.fields[i]);
 
-//        let current_offset = match offset_from_string {
-//            Some(offset) => offset as u64,
-//            _ => {
-//                let current_class = match i {
-//                    0 => starting_class,
-//                    _ => {
-//                        let class = process
-//                            .read_pointer(class_instance)
-//                            .ok()
-//                            .filter(|val| *val != 0)
-//                            .ok_or(Error {})?;
-//                        Class { class }
-//                    }
-//                };
+            let current_offset = match offset_from_string {
+                Some(offset) => offset as u64,
+                _ => {
+                    let current_class = match i {
+                        0 => starting_class,
+                        _ => {
+                            let class = process
+                                .read_pointer(class_instance)
+                                .ok()
+                                .filter(|val| *val != 0)
+                                .ok_or(MemoryError::ReadError)?;
+                            Class { class }
+                        }
+                    };
 
-//                let val = current_class
-//                    .fields(process, module)
-//                    .find(|field| {
-//                        field
-//                            .get_name::<CSTR>(process, module)
-//                            .is_ok_and(|name| name.matches(self.fields[i]))
-//                    })
-//                    .ok_or(Error {})?
-//                    .get_offset(process, module)
-//                    .ok_or(Error {})? as u64;
+                    let val = current_class
+                        .fields(process, module)
+                        .find(|field| {
+                            field
+                                .get_name::<CSTR>(process, module)
+                                .is_ok_and(|name| name.matches(self.fields[i]))
+                        })
+                        .ok_or(MemoryError::ReadError)?
+                        .get_offset(process, module)
+                        .ok_or(MemoryError::ReadError)? as u64;
 
-//                // Explicitly allowing this clippy because of borrowing rules shenanigans
-//                #[allow(clippy::let_and_return)]
-//                val
-//            }
-//        };
+                    // Explicitly allowing this clippy because of borrowing rules shenanigans
+                    #[allow(clippy::let_and_return)]
+                    val
+                }
+            };
 
-//        cache.offsets[i] = current_offset;
+            cache.offsets[i] = current_offset;
 
-//        current_instance_pointer = class_instance + current_offset;
-//        cache.current_instance_pointer = Some(current_instance_pointer);
-//        cache.resolved_offsets += 1;
-//    }
+            current_instance_pointer = class_instance + current_offset;
+            cache.current_instance_pointer = Some(current_instance_pointer);
+            cache.resolved_offsets += 1;
+        }
 
-//    Ok(())
-//}
+        Ok(())
+    }
 
-///// Dereferences the pointer path, returning the memory address of the value of interest
-//pub fn deref_offsets(
-//    &self,
-//    process: &Process,
-//    module: &Module,
-//    image: &Image,
-//) -> Result<u64, Error> {
-//    self.find_offsets(process, module, image)?;
-//    let cache = self.cache.borrow();
-//    let mut address = cache.base_address;
-//    let (&last, path) = cache.offsets[..self.depth].split_last().ok_or(Error {})?;
-//    for &offset in path {
-//        address = process.read_pointer(address + offset)?;
-//    }
-//    Ok(address + last)
-//}
+    /// Dereferences the pointer path, returning the memory address of the value of interest
+    pub fn deref_offsets(
+        &self,
+        process: &Process,
+        module: &Module,
+        image: &Image,
+    ) -> Result<u64, MemoryError> {
+        self.find_offsets(process, module, image)?;
+        let cache = self.cache.borrow();
+        let mut address = cache.base_address;
+        let (&last, path) = cache.offsets[..self.depth].split_last().ok_or(MemoryError::ReadError{})?;
+        for &offset in path {
+            address = process.read_pointer(address + offset)?;
+        }
+        Ok(address + last)
+    }
 
-///// Dereferences the pointer path, returning the value stored at the final memory address
-//pub fn deref<T: CheckedBitPattern>(
-//    &self,
-//    process: &Process,
-//    module: &Module,
-//    image: &Image,
-//) -> Result<T, Error> {
-//    self.find_offsets(process, module, image)?;
-//    let cache = self.cache.borrow();
-//    process.read_pointer_path(
-//        cache.base_address,
-//        &cache.offsets[..self.depth],
-//    )
-//}
+    /// Dereferences the pointer path, returning the value stored at the final memory address
+    pub fn deref<T: CheckedBitPattern + Pod>(
+        &self,
+        process: &Process,
+        module: &Module,
+        image: &Image,
+    ) -> Result<T, MemoryError> {
+        self.find_offsets(process, module, image)?;
+        let cache = self.cache.borrow();
+        process.read_pointer_path::<T>(
+            cache.base_address,
+            &cache.offsets[..self.depth],
+        )
+    }
 
-// /// Generates a `DeepPointer` struct based on the offsets
-// /// recovered from this `UnityPointer`.
-// // pub fn get_deep_pointer(
-// //     &self,
-// //     process: &Process,
-// //     module: &Module,
-// //     image: &Image,
-// // ) -> Option<DeepPointer<CAP>> {
-// //     self.find_offsets(process, module, image).ok()?;
-// //     let cache = self.cache.borrow();
-// //     Some(DeepPointer::<CAP>::new(
-// //         cache.base_address,
-// //         module.pointer_size,
-// //         &cache.offsets[..self.depth],
-// //     ))
-// // }
-// }
+    ///// Generates a `DeepPointer` struct based on the offsets
+    ///// recovered from this `UnityPointer`.
+    // pub fn get_deep_pointer(
+    //     &self,
+    //     process: &Process,
+    //     module: &Module,
+    //     image: &Image,
+    // ) -> Option<DeepPointer<CAP>> {
+    //     self.find_offsets(process, module, image).ok()?;
+    //     let cache = self.cache.borrow();
+    //     Some(DeepPointer::<CAP>::new(
+    //         cache.base_address,
+    //         module.pointer_size,
+    //         &cache.offsets[..self.depth],
+    //     ))
+    // }
+}
 
 #[derive(Debug)]
 struct Offsets {

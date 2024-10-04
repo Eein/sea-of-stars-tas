@@ -1,3 +1,6 @@
+use std::collections::btree_map::Values;
+use std::collections::hash_map::Values;
+
 use crate::memory::memory_context::MemoryContext;
 use crate::memory::objects::character::PlayerPartyCharacter;
 use crate::memory::{MemoryManager, MemoryManagerUpdate};
@@ -5,7 +8,7 @@ use crate::state::StateContext;
 
 use log::info;
 
-use memory::game_engine::il2cpp::unity_list::{UnityItem, UnityList};
+use memory::game_engine::il2cpp::{UnityPointer, unity_list::{UnityItem, UnityList}};
 use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
 use memory::process::Process;
@@ -25,63 +28,72 @@ impl Default for MemoryManager<TitleSequenceManagerData> {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct TitleSequenceManagerData {
     /// Title Menu Option data
-    pub title_menu_option_selected: TitleMenuOption,
-    /// Current Screen Name field
-    pub current_screen_name: String,
-    /// Information on new game character selection
-    pub new_game_characters: NewGameCharacters,
+    pub new_game_selected: UnityPointer<3>,
+    pub new_game_plus_selected: UnityPointer<3>,
+    pub continue_selected: UnityPointer<3>,
+    pub load_game_selected: UnityPointer<3>,
+    pub options_selected: UnityPointer<3>,
+    pub quit_game_selected: UnityPointer<3>,
+
+    pub current_screen_name: UnityPointer<1>,
+    pub relic_buttons: UnityPointer<2>,
+
+    pub left_character: UnityPointer<3>,
+    pub left_character_selected: UnityPointer<3>,
+    pub right_character: UnityPointer<3>,
+    pub right_character_selected: UnityPointer<3>,
+    pub selected_character: UnityPointer<3>,
     // relicSelectionScreen -> relicButtons
-    pub relic_buttons: UnityList<RelicButton>,
     /// If saves are loaded and continue shows up on the title screen.
-    pub load_save_done: bool,
+    pub load_save_done: UnityPointer<1>,
     /// If the player has pressed start on the intro screen.
-    pub pressed_start: bool,
+    pub pressed_start: UnityPointer<2>,
+}
+
+impl Default for TitleSequenceManagerData {
+    fn default() -> Self {
+        Self {
+            new_game_selected: UnityPointer::new("TitleSequenceManager", 0, &["titleScreen", "newGameButton", "selected"]),
+            new_game_plus_selected: UnityPointer::new("TitleSequenceManager", 0, &["titleScreen", "newGamePlusButton", "selected"]),
+            continue_selected: UnityPointer::new("TitleSequenceManager", 0, &["titleScreen", "continueButton", "selected"]),
+            load_game_selected: UnityPointer::new("TitleSequenceManager", 0, &["titleScreen", "loadGameButton", "selected"]),
+            options_selected: UnityPointer::new("TitleSequenceManager", 0, &["titleScreen", "optionsButton", "selected"]),
+            quit_game_selected: UnityPointer::new("TitleSequenceManager", 0, &["titleScreen", "quitGameButton", "selected"]),
+            current_screen_name: UnityPointer::new("TitleSequenceManager", 0, &["currentScreenName"]),
+            relic_buttons: UnityPointer::new("TitleSequenceManager", 0, &["relicSelectionScreen", "relicButtons"]),
+
+            left_character: UnityPointer::new("TitleSequenceManager", 0, &["characterSelectionScreen", "leftButton", "characterDefinitionId"]),
+            left_character_selected: UnityPointer::new("TitleSequenceManager", 0, &["characterSelectionScreen", "leftButton", "selected"]),
+            right_character: UnityPointer::new("TitleSequenceManager", 0, &["characterSelectionScreen", "rightButton", "characterDefinitionId"]),
+            right_character_selected: UnityPointer::new("TitleSequenceManager", 0, &["characterSelectionScreen", "rightButton", "selected"]),
+            selected_character: UnityPointer::new("TitleSequenceManager", 0, &["characterSelectionScreen", "selectedCharacter", "characterDefinitionId"]),
+
+            load_save_done: UnityPointer::new("TitleSequenceManager", 0, &["loadSaveDone"]),
+            pressed_start: UnityPointer::new("TitleSequenceManager", 0, &["titleScreen", "startPressed"])
+        }
+
+    }
+
 }
 
 impl MemoryManagerUpdate for TitleSequenceManagerData {
     fn update(
         &mut self,
-        ctx: &StateContext,
-        manager: &mut UnityMemoryManager,
+        _ctx: &StateContext,
+        _manager: &mut UnityMemoryManager,
     ) -> Result<(), MemoryError> {
-        let memory_context = MemoryContext::create(ctx, manager)?;
-
-        self.update_pressed_start(&memory_context)?;
-        self.update_current_screen_name(&memory_context)?;
-
-        if self.pressed_start && self.current_screen_name == "TitleScreen" {
-            self.update_load_save_done(&memory_context)?;
-            self.update_title_menu(&memory_context)?;
-        }
-
-        if self.current_screen_name == "RelicSelection" {
-            self.update_relics(&memory_context)?;
-        }
-
-        if self.current_screen_name == "CharacterSelection" {
-            self.update_new_game_characters(&memory_context)?;
-        }
         Ok(())
     }
 }
 
 impl TitleSequenceManagerData {
-    pub fn update_load_save_done(
+    pub fn load_save_done(
         &mut self,
-        memory_context: &MemoryContext,
-    ) -> Result<(), MemoryError> {
-        if let Ok(load_save_done) = memory_context.follow_fields::<u8>(&["loadSaveDone"]) {
-            self.load_save_done = match load_save_done {
-                1 => true,
-                0 => false,
-                _ => false,
-            };
-        }
-
-        Ok(())
+    ) -> kkk{
+        self.load_save_done
     }
 
     pub fn update_pressed_start(
@@ -102,53 +114,6 @@ impl TitleSequenceManagerData {
     }
 
     pub fn update_title_menu(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
-        if memory_context
-            .follow_fields::<u8>(&["titleScreen", "newGameButton", "selected"])
-            .ok()
-            == Some(1)
-        {
-            self.title_menu_option_selected = TitleMenuOption::NewGame;
-            return Ok(());
-        }
-        if memory_context
-            .follow_fields::<u8>(&["titleScreen", "newGamePlusButton", "selected"])
-            .ok()
-            == Some(1)
-        {
-            self.title_menu_option_selected = TitleMenuOption::NewGamePlus;
-            return Ok(());
-        }
-        if memory_context
-            .follow_fields::<u8>(&["titleScreen", "continueButton", "selected"])
-            .ok()
-            == Some(1)
-        {
-            self.title_menu_option_selected = TitleMenuOption::Continue;
-            return Ok(());
-        }
-        if memory_context
-            .follow_fields::<u8>(&["titleScreen", "loadGameButton", "selected"])
-            .ok()
-            == Some(1)
-        {
-            self.title_menu_option_selected = TitleMenuOption::LoadGame;
-            return Ok(());
-        }
-        if memory_context
-            .follow_fields::<u8>(&["titleScreen", "optionsButton", "selected"])
-            .ok()
-            == Some(1)
-        {
-            self.title_menu_option_selected = TitleMenuOption::Options;
-            return Ok(());
-        }
-        if memory_context
-            .follow_fields::<u8>(&["titleScreen", "quitGameButton", "selected"])
-            .ok()
-            == Some(1)
-        {
-            self.title_menu_option_selected = TitleMenuOption::QuitGame
-        }
         Ok(())
     }
 
