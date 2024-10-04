@@ -57,7 +57,7 @@ impl MemoryManagerUpdate for TitleSequenceManagerData {
             self.update_title_menu(&memory_context)?;
         }
 
-        if self.current_screen_name == "UpdateRelics" {
+        if self.current_screen_name == "RelicSelection" {
             self.update_relics(&memory_context)?;
         }
 
