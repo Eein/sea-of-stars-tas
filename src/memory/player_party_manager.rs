@@ -2,7 +2,7 @@ use crate::memory::memory_context::MemoryContext;
 use crate::memory::{MemoryManager, MemoryManagerUpdate};
 use crate::state::StateContext;
 use log::info;
-use memory::memory_manager::unity::UnityMemoryManager;
+use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
 use vec3_rs::Vector3;
 

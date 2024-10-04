@@ -1,6 +1,6 @@
 use bytemuck::{CheckedBitPattern, Pod};
 use memory::game_engine::il2cpp::{Class, Module};
-use memory::memory_manager::unity::UnityMemoryManager;
+use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::{MemoryError, Process};
 
 // TODO(eein): is it possible to make this more generic so it can be
