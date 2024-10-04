@@ -1,4 +1,4 @@
-use bytemuck::Pod;
+use bytemuck::{CheckedBitPattern, Pod};
 use memory::game_engine::il2cpp::{Class, Module};
 use memory::memory_manager::unity::UnityMemoryManager;
 use memory::process::{MemoryError, Process};
@@ -45,6 +45,14 @@ impl<'a> MemoryContext<'a> {
     pub fn read_pointer_path_without_read(&self, path: &[u64]) -> Result<u64, MemoryError> {
         self.process
             .read_pointer_path_without_read(self.singleton.class, path)
+    }
+
+    pub fn read_pointer_path<T: CheckedBitPattern + Pod>(
+        &self,
+        path: &[u64],
+    ) -> Result<T, MemoryError> {
+        self.process
+            .read_pointer_path::<T>(self.singleton.class, path)
     }
 
     pub fn read_pointer<T: Pod>(&self, addr: u64) -> Result<T, MemoryError> {
