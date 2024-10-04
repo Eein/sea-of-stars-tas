@@ -1,8 +1,9 @@
+use crate::memory::memory_context::MemoryContext;
 use crate::memory::{MemoryManager, MemoryManagerUpdate};
 use crate::state::StateContext;
 use log::info;
 use memory::memory_manager::unity::UnityMemoryManager;
-use memory::process::Error;
+use memory::process::MemoryError;
 use vec3_rs::Vector3;
 
 impl Default for MemoryManager<PlayerPartyManagerData> {
@@ -29,11 +30,12 @@ impl MemoryManagerUpdate for PlayerPartyManagerData {
         &mut self,
         ctx: &StateContext,
         manager: &mut UnityMemoryManager,
-    ) -> Result<(), Error> {
-        match self.update_position(ctx, manager) {
-            Ok(_) => Ok(()),
-            Err(error) => Err(error),
-        }
+    ) -> Result<(), MemoryError> {
+        let memory_context = MemoryContext::create(ctx, manager)?;
+
+        self.update_position(&memory_context)?;
+
+        Ok(())
     }
 }
 
@@ -42,28 +44,14 @@ impl PlayerPartyManagerData {
     // Unfortunately because some classes here dont have true objects
     // this by using follow_fields since while we are going up the chain
     // we may be unable to query an object without a fields_base
-    pub fn update_position(
-        &mut self,
-        ctx: &StateContext,
-        manager: &mut UnityMemoryManager,
-    ) -> Result<(), Error> {
-        if let Some(class) = manager.class {
-            if let Some(process) = &ctx.process {
-                if let Some(module) = &ctx.module {
-                    if let Some(singleton) = manager.singleton {
-                        if let Some(leader) = class.get_field_offset(process, module, "leader") {
-                            let current_position_ptr = process.read_pointer_path_without_read(
-                                singleton.class,
-                                &[leader.into(), 0x90, 0x84],
-                            )?;
-                            let x = process.read_pointer::<f32>(current_position_ptr)?;
-                            let y = process.read_pointer::<f32>(current_position_ptr + 0x4)?;
-                            let z = process.read_pointer::<f32>(current_position_ptr + 0x8)?;
-                            self.position = Vector3::new(x, y, z);
-                        }
-                    }
-                }
-            }
+    pub fn update_position(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
+        if let Some(leader) = memory_context.get_field_offset("leader") {
+            let current_position_ptr =
+                memory_context.read_pointer_path_without_read(&[leader.into(), 0x90, 0x84])?;
+            let x = memory_context.read_pointer::<f32>(current_position_ptr)?;
+            let y = memory_context.read_pointer::<f32>(current_position_ptr + 0x4)?;
+            let z = memory_context.read_pointer::<f32>(current_position_ptr + 0x8)?;
+            self.position = Vector3::new(x, y, z);
         }
         Ok(())
     }

@@ -2,7 +2,7 @@
 pub mod unity_list;
 
 use crate::pe;
-use crate::process::Error;
+use crate::process::MemoryError;
 use crate::process::Process;
 use crate::signature::Signature;
 use crate::string::ArrayCString;
@@ -129,7 +129,7 @@ impl Assembly {
         &self,
         process: &Process,
         module: &Module,
-    ) -> Result<ArrayCString<N>, Error> {
+    ) -> Result<ArrayCString<N>, MemoryError> {
         process.read(process.read_pointer(
             self.assembly
                 + module.offsets.monoassembly_aname as u64
@@ -166,7 +166,7 @@ impl Image {
         let metadata_ptr = match type_count {
             Ok(_) => process
                 .read_pointer::<u64>(self.image + module.offsets.monoimage_metadatahandle as u64),
-            _ => Err(Error {}),
+            _ => Err(MemoryError::ReadError {}),
         };
         let metadata_handle = match type_count {
             Ok(0) => None,
@@ -211,7 +211,7 @@ impl Class {
         &self,
         process: &Process,
         module: &Module,
-    ) -> Result<ArrayCString<N>, Error> {
+    ) -> Result<ArrayCString<N>, MemoryError> {
         process.read_pointer_path(self.class, &[module.offsets.monoclass_name.into(), 0x0])
     }
 
@@ -219,7 +219,7 @@ impl Class {
         &self,
         process: &Process,
         module: &Module,
-    ) -> Result<ArrayCString<N>, Error> {
+    ) -> Result<ArrayCString<N>, MemoryError> {
         process.read_pointer_path::<ArrayCString<N>>(
             self.class,
             &[module.offsets.monoclass_name_space.into(), 0x0],
@@ -284,13 +284,13 @@ impl Class {
         process: &Process,
         module: &Module,
         fields: &[&str],
-    ) -> Result<T, Error> {
+    ) -> Result<T, MemoryError> {
         if fields.is_empty() {
-            return Err(Error);
+            return Err(MemoryError::InvalidParameters);
         }
 
         if singleton.class == 0 {
-            return Err(Error);
+            return Err(MemoryError::NullPointer);
         }
 
         let last = fields.last().unwrap();
@@ -310,7 +310,7 @@ impl Class {
                         fields_base.class = process.read_pointer::<u64>(address.class)?;
                     }
                 }
-                None => return Err(Error),
+                None => return Err(MemoryError::ReadError),
             };
         }
         process.read_pointer::<T>(address.class)
@@ -322,13 +322,13 @@ impl Class {
         process: &Process,
         module: &Module,
         fields: &[&str],
-    ) -> Result<u64, Error> {
+    ) -> Result<u64, MemoryError> {
         if fields.is_empty() {
-            return Err(Error);
+            return Err(MemoryError::InvalidParameters);
         }
 
         if singleton.class == 0 {
-            return Err(Error);
+            return Err(MemoryError::NullPointer);
         }
 
         let last = fields.last().unwrap();
@@ -340,6 +340,9 @@ impl Class {
         for field in fields {
             match fields_base.get_field_offset(process, module, field) {
                 Some(offset) => {
+                    if address.class == 0 {
+                        return Err(MemoryError::NullPointer);
+                    }
                     if field == last {
                         address.class += offset as u64;
                     } else {
@@ -348,7 +351,7 @@ impl Class {
                         fields_base.class = process.read_pointer::<u64>(address.class)?;
                     }
                 }
-                None => return Err(Error),
+                None => return Err(MemoryError::ReadError),
             };
         }
         Ok(address.class)
@@ -428,7 +431,7 @@ impl Field {
         &self,
         process: &Process,
         module: &Module,
-    ) -> Result<ArrayCString<N>, Error> {
+    ) -> Result<ArrayCString<N>, MemoryError> {
         process.read_pointer_path::<ArrayCString<N>>(
             self.field,
             &[module.offsets.monoclassfield_name.into(), 0x0],

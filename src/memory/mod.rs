@@ -1,3 +1,4 @@
+pub mod memory_context;
 pub mod objects;
 pub mod player_party_manager;
 pub mod title_sequence_manager;
@@ -7,13 +8,16 @@ use log::error;
 use crate::state::StateContext;
 
 use memory::memory_manager::unity::{UnityMemoryManagement, UnityMemoryManager};
-use memory::process::Error;
+use memory::process::MemoryError;
 use player_party_manager::PlayerPartyManagerData;
 use title_sequence_manager::TitleSequenceManagerData;
 
 pub trait MemoryManagerUpdate {
-    fn update(&mut self, ctx: &StateContext, manager: &mut UnityMemoryManager)
-        -> Result<(), Error>;
+    fn update(
+        &mut self,
+        ctx: &StateContext,
+        manager: &mut UnityMemoryManager,
+    ) -> Result<(), MemoryError>;
 }
 
 pub struct MemoryManager<T: MemoryManagerUpdate> {
@@ -42,14 +46,7 @@ impl MemoryManagers {
 
 impl<T: MemoryManagerUpdate> MemoryManager<T> {
     fn ready_for_updates(&mut self, _ctx: &StateContext) -> bool {
-        if let Some(class) = self.manager.singleton {
-            if class.class == 0 {
-                return false;
-            }
-
-            return true;
-        }
-        false
+        matches!(self.manager.singleton, Some(_val))
     }
 
     fn update_manager(&mut self, ctx: &StateContext) {
@@ -65,9 +62,17 @@ impl<T: MemoryManagerUpdate> MemoryManager<T> {
     fn update_memory(&mut self, ctx: &StateContext) {
         match self.data.update(ctx, &mut self.manager) {
             Ok(_) => (),
-            Err(_error) => {
-                error!("Memory Update Error in {}", self.name);
-                self.manager.reset()
+            Err(error) => {
+                error!(
+                    "Memory Update Error in {} with error {:?}",
+                    self.name, error
+                );
+                match error {
+                    MemoryError::ReadError => self.manager.reset(),
+                    MemoryError::NullPointer => {}
+                    MemoryError::Unset => self.manager.reset(),
+                    MemoryError::InvalidParameters => {}
+                }
             }
         }
     }

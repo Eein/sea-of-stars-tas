@@ -138,6 +138,14 @@ impl eframe::App for State {
 
     /// Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+        // Uncomment for puffin profiler
+        // use puffin_egui::puffin;
+        // puffin::set_scopes_on(true);
+        // puffin_egui::profiler_window(ctx);
+        // use
+        // puffin::profile_function!();
+        // if you want to profile a function
+
         // Put your widgets into a `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
         // For inspiration and more examples, go to https://emilk.github.io/egui
 
