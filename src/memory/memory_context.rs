@@ -48,7 +48,17 @@ impl<'a> MemoryContext<'a> {
             .follow_fields::<T>(*self.singleton, self.process, self.module, fields)
     }
 
+    pub fn read_pointer_path_without_read(&self, path: &[u64]) -> Result<u64, MemoryError> {
+        self.process
+            .read_pointer_path_without_read(self.singleton.class, path)
+    }
+
     pub fn read_pointer<T: Pod>(&self, addr: u64) -> Result<T, MemoryError> {
         self.process.read_pointer::<T>(addr)
+    }
+
+    pub fn get_field_offset(&self, field: &str) -> Option<u32> {
+        self.class
+            .get_field_offset(self.process, self.module, field)
     }
 }
