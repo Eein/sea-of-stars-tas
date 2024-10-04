@@ -1,3 +1,4 @@
+pub mod memory_context;
 pub mod objects;
 pub mod player_party_manager;
 pub mod title_sequence_manager;
@@ -68,7 +69,7 @@ impl<T: MemoryManagerUpdate> MemoryManager<T> {
                 );
                 match error {
                     MemoryError::ReadError => self.manager.reset(),
-                    MemoryError::NullPointer => {},
+                    MemoryError::NullPointer => {}
                     MemoryError::Unset => self.manager.reset(),
                     MemoryError::InvalidParameters => {}
                 }

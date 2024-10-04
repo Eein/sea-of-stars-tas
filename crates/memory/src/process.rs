@@ -28,9 +28,9 @@ pub enum ModuleError {
 #[derive(Debug)]
 pub enum MemoryError {
     InvalidParameters, // When some parameters are invalid
-    NullPointer, // When a ptr is 0
-    Unset,       // When a value is unset (ie None)
-    ReadError,   // when memory cant be read
+    NullPointer,       // When a ptr is 0
+    Unset,             // When a value is unset (ie None)
+    ReadError,         // when memory cant be read
 }
 
 pub struct Error;

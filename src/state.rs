@@ -38,7 +38,7 @@ pub struct StateContext {
 }
 
 impl State {
-    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+    pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         // Register any GUI helpers here
         let gui_helpers = GuiHelpers::default();
 
@@ -142,7 +142,7 @@ impl eframe::App for State {
         // use puffin_egui::puffin;
         // puffin::set_scopes_on(true);
         // puffin_egui::profiler_window(ctx);
-        // use 
+        // use
         // `puffin::profile_function!();
         // if you want to profile a function
 
