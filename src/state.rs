@@ -143,7 +143,7 @@ impl eframe::App for State {
         // puffin::set_scopes_on(true);
         // puffin_egui::profiler_window(ctx);
         // use
-        // `puffin::profile_function!();
+        // puffin::profile_function!();
         // if you want to profile a function
 
         // Put your widgets into a `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
