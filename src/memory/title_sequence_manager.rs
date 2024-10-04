@@ -8,7 +8,10 @@ use crate::state::StateContext;
 
 use log::info;
 
-use memory::game_engine::il2cpp::{UnityPointer, unity_list::{UnityItem, UnityList}};
+use memory::game_engine::il2cpp::{
+    unity_list::{UnityItem, UnityList},
+    UnityPointer,
+};
 use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
 use memory::process::Process;
@@ -56,27 +59,93 @@ pub struct TitleSequenceManagerData {
 impl Default for TitleSequenceManagerData {
     fn default() -> Self {
         Self {
-            new_game_selected: UnityPointer::new("TitleSequenceManager", 0, &["titleScreen", "newGameButton", "selected"]),
-            new_game_plus_selected: UnityPointer::new("TitleSequenceManager", 0, &["titleScreen", "newGamePlusButton", "selected"]),
-            continue_selected: UnityPointer::new("TitleSequenceManager", 0, &["titleScreen", "continueButton", "selected"]),
-            load_game_selected: UnityPointer::new("TitleSequenceManager", 0, &["titleScreen", "loadGameButton", "selected"]),
-            options_selected: UnityPointer::new("TitleSequenceManager", 0, &["titleScreen", "optionsButton", "selected"]),
-            quit_game_selected: UnityPointer::new("TitleSequenceManager", 0, &["titleScreen", "quitGameButton", "selected"]),
-            current_screen_name: UnityPointer::new("TitleSequenceManager", 0, &["currentScreenName"]),
-            relic_buttons: UnityPointer::new("TitleSequenceManager", 0, &["relicSelectionScreen", "relicButtons"]),
+            new_game_selected: UnityPointer::new(
+                "TitleSequenceManager",
+                0,
+                &["titleScreen", "newGameButton", "selected"],
+            ),
+            new_game_plus_selected: UnityPointer::new(
+                "TitleSequenceManager",
+                0,
+                &["titleScreen", "newGamePlusButton", "selected"],
+            ),
+            continue_selected: UnityPointer::new(
+                "TitleSequenceManager",
+                0,
+                &["titleScreen", "continueButton", "selected"],
+            ),
+            load_game_selected: UnityPointer::new(
+                "TitleSequenceManager",
+                0,
+                &["titleScreen", "loadGameButton", "selected"],
+            ),
+            options_selected: UnityPointer::new(
+                "TitleSequenceManager",
+                0,
+                &["titleScreen", "optionsButton", "selected"],
+            ),
+            quit_game_selected: UnityPointer::new(
+                "TitleSequenceManager",
+                0,
+                &["titleScreen", "quitGameButton", "selected"],
+            ),
+            current_screen_name: UnityPointer::new(
+                "TitleSequenceManager",
+                0,
+                &["currentScreenName"],
+            ),
+            relic_buttons: UnityPointer::new(
+                "TitleSequenceManager",
+                0,
+                &["relicSelectionScreen", "relicButtons"],
+            ),
 
-            left_character: UnityPointer::new("TitleSequenceManager", 0, &["characterSelectionScreen", "leftButton", "characterDefinitionId"]),
-            left_character_selected: UnityPointer::new("TitleSequenceManager", 0, &["characterSelectionScreen", "leftButton", "selected"]),
-            right_character: UnityPointer::new("TitleSequenceManager", 0, &["characterSelectionScreen", "rightButton", "characterDefinitionId"]),
-            right_character_selected: UnityPointer::new("TitleSequenceManager", 0, &["characterSelectionScreen", "rightButton", "selected"]),
-            selected_character: UnityPointer::new("TitleSequenceManager", 0, &["characterSelectionScreen", "selectedCharacter", "characterDefinitionId"]),
+            left_character: UnityPointer::new(
+                "TitleSequenceManager",
+                0,
+                &[
+                    "characterSelectionScreen",
+                    "leftButton",
+                    "characterDefinitionId",
+                ],
+            ),
+            left_character_selected: UnityPointer::new(
+                "TitleSequenceManager",
+                0,
+                &["characterSelectionScreen", "leftButton", "selected"],
+            ),
+            right_character: UnityPointer::new(
+                "TitleSequenceManager",
+                0,
+                &[
+                    "characterSelectionScreen",
+                    "rightButton",
+                    "characterDefinitionId",
+                ],
+            ),
+            right_character_selected: UnityPointer::new(
+                "TitleSequenceManager",
+                0,
+                &["characterSelectionScreen", "rightButton", "selected"],
+            ),
+            selected_character: UnityPointer::new(
+                "TitleSequenceManager",
+                0,
+                &[
+                    "characterSelectionScreen",
+                    "selectedCharacter",
+                    "characterDefinitionId",
+                ],
+            ),
 
             load_save_done: UnityPointer::new("TitleSequenceManager", 0, &["loadSaveDone"]),
-            pressed_start: UnityPointer::new("TitleSequenceManager", 0, &["titleScreen", "startPressed"])
+            pressed_start: UnityPointer::new(
+                "TitleSequenceManager",
+                0,
+                &["titleScreen", "startPressed"],
+            ),
         }
-
     }
-
 }
 
 impl MemoryManagerUpdate for TitleSequenceManagerData {
@@ -90,9 +159,7 @@ impl MemoryManagerUpdate for TitleSequenceManagerData {
 }
 
 impl TitleSequenceManagerData {
-    pub fn load_save_done(
-        &mut self,
-    ) -> kkk{
+    pub fn load_save_done(&mut self) -> kkk {
         self.load_save_done
     }
 

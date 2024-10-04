@@ -6,9 +6,8 @@ use crate::process::MemoryError;
 use crate::process::Process;
 use crate::signature::Signature;
 use crate::string::ArrayCString;
-use bytemuck::{Pod, CheckedBitPattern};
-use core::{iter, array, cell::RefCell};
-
+use bytemuck::{CheckedBitPattern, Pod};
+use core::{array, cell::RefCell, iter};
 
 pub const CSTR: usize = 128;
 
@@ -497,7 +496,12 @@ impl<const CAP: usize> UnityPointer<CAP> {
     }
 
     /// Tries to resolve the pointer path for the `IL2CPP` class specified
-    fn find_offsets(&self, process: &Process, module: &Module, image: &Image) -> Result<(), MemoryError> {
+    fn find_offsets(
+        &self,
+        process: &Process,
+        module: &Module,
+        image: &Image,
+    ) -> Result<(), MemoryError> {
         let mut cache = self.cache.borrow_mut();
 
         // If the pointer path has already been found, there's no need to continue
@@ -519,7 +523,9 @@ impl<const CAP: usize> UnityPointer<CAP> {
                     .ok_or(MemoryError::ReadError)?;
 
                 for _ in 0..self.nr_of_parents {
-                    current_class = current_class.get_parent(process, module).ok_or(MemoryError::ReadError)?;
+                    current_class = current_class
+                        .get_parent(process, module)
+                        .ok_or(MemoryError::ReadError)?;
                 }
 
                 cache.starting_class = Some(current_class);
@@ -608,7 +614,9 @@ impl<const CAP: usize> UnityPointer<CAP> {
         self.find_offsets(process, module, image)?;
         let cache = self.cache.borrow();
         let mut address = cache.base_address;
-        let (&last, path) = cache.offsets[..self.depth].split_last().ok_or(MemoryError::ReadError{})?;
+        let (&last, path) = cache.offsets[..self.depth]
+            .split_last()
+            .ok_or(MemoryError::ReadError {})?;
         for &offset in path {
             address = process.read_pointer(address + offset)?;
         }
@@ -624,10 +632,7 @@ impl<const CAP: usize> UnityPointer<CAP> {
     ) -> Result<T, MemoryError> {
         self.find_offsets(process, module, image)?;
         let cache = self.cache.borrow();
-        process.read_pointer_path::<T>(
-            cache.base_address,
-            &cache.offsets[..self.depth],
-        )
+        process.read_pointer_path::<T>(cache.base_address, &cache.offsets[..self.depth])
     }
 
     ///// Generates a `DeepPointer` struct based on the offsets
