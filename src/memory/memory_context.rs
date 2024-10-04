@@ -23,24 +23,18 @@ impl<'a> MemoryContext<'a> {
             if let Some(process) = &ctx.process {
                 if let Some(module) = &ctx.module {
                     if let Some(singleton) = &manager.singleton {
-                        Ok(Self {
+                        return Ok(Self {
                             class,
                             process,
                             module,
                             singleton,
-                        })
-                    } else {
-                        Err(MemoryError::Unset)
+                        });
                     }
-                } else {
-                    Err(MemoryError::Unset)
                 }
-            } else {
-                Err(MemoryError::Unset)
             }
-        } else {
-            Err(MemoryError::Unset)
         }
+
+        Err(MemoryError::Unset)
     }
 
     pub fn follow_fields<T: Pod>(&self, fields: &[&str]) -> Result<T, MemoryError> {
