@@ -7,7 +7,7 @@ use log::error;
 
 use crate::state::StateContext;
 
-use memory::memory_manager::unity::{UnityMemoryManagement, UnityMemoryManager};
+use memory::memory_manager::il2cpp::{UnityMemoryManagement, UnityMemoryManager};
 use memory::process::MemoryError;
 use player_party_manager::PlayerPartyManagerData;
 use title_sequence_manager::TitleSequenceManagerData;

@@ -6,7 +6,7 @@ use crate::state::StateContext;
 use log::info;
 
 use memory::game_engine::il2cpp::unity_list::{UnityItem, UnityList};
-use memory::memory_manager::unity::UnityMemoryManager;
+use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
 use memory::process::Process;
 use memory::string::{ArrayCString, ArrayWString};
