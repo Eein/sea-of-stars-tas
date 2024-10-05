@@ -30,10 +30,9 @@ impl Sequencer {
 
 #[cfg(test)]
 mod tests {
-    use crate::flow::{SeqCondition, SeqIf};
+    use crate::flow::{SeqCheckpoint, SeqCondition, SeqIf, SeqList};
     use crate::logging::SeqLog;
     use crate::sequencer::Sequencer;
-    use crate::{SeqCheckpoint, SeqList};
 
     #[derive(Default)]
     struct TestCond;
