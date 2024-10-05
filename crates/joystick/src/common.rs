@@ -3,10 +3,12 @@ pub enum Button {
     B,
     X,
     Y,
-    LT,
-    RT,
-    LT2,
-    RT2,
+    LT(u8),
+    RT(u8),
+    LB,
+    RB,
+    LTHUMB,
+    RTHUMB,
     SELECT,
     START,
     UP,
@@ -20,5 +22,6 @@ pub trait JoystickInterface {
     fn press(&mut self, button: Button);
     fn release(&mut self, button: Button);
     // [x, y], where the values range from -1 to 1
-    fn set_joy(&mut self, dir: [f32; 2]);
+    fn set_ljoy(&mut self, dir: [f32; 2]);
+    fn set_rjoy(&mut self, dir: [f32; 2]);
 }
