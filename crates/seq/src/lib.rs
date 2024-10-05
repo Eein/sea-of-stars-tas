@@ -2,17 +2,17 @@ pub mod flow;
 pub mod logging;
 pub mod sequencer;
 
-pub trait Node {
-    fn execute(&mut self, _delta: f64) -> bool {
+pub trait Node<State> {
+    fn execute(&mut self, _state: &mut State, _delta: f64) -> bool {
         true
     }
-    fn advance_to_checkpoint(&mut self, _checkpoint: &str) -> bool {
+    fn advance_to_checkpoint(&mut self, _state: &mut State, _checkpoint: &str) -> bool {
         false
     }
-    fn enter(&mut self) {
+    fn enter(&mut self, _state: &mut State) {
         // Override
     }
-    fn exit(&self) {
+    fn exit(&self, _state: &mut State) {
         // Override
     }
 }

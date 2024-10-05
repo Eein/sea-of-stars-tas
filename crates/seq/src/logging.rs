@@ -21,8 +21,8 @@ impl Display for SeqLog {
     }
 }
 
-impl Node for SeqLog {
-    fn enter(&mut self) {
+impl<State> Node<State> for SeqLog {
+    fn enter(&mut self, _state: &mut State) {
         info!("SeqLog: {}", self);
     }
 }
