@@ -20,6 +20,7 @@ const CSTR: usize = 128;
 ///
 /// It can be useful to identify splitting conditions or as an alternative to
 /// the traditional class lookup in games with no useful static references.
+#[derive(Debug)]
 pub struct SceneManager {
     is_il2cpp: bool,
     address: u64,
@@ -32,8 +33,6 @@ impl SceneManager {
         const SIG_64_BIT: Signature<13> = Signature::new("48 83 EC 20 4C 8B ?5 ???????? 33 F6");
 
         let unity_player = process.module_range("UnityPlayer.dll").ok()?;
-
-
         let is_il2cpp = process.module_address("GameAssembly.dll").is_ok();
 
         // There are multiple signatures that can be used, depending on the version of Unity
@@ -61,7 +60,7 @@ impl SceneManager {
 
     #[inline]
     const fn size_of_ptr(&self) -> u64 {
-       8 
+        8
     }
 
     /// Tries to retrieve the current active scene.
@@ -113,18 +112,16 @@ impl SceneManager {
         process: &'a Process,
     ) -> impl DoubleEndedIterator<Item = Scene> + 'a {
         let (num_scenes, addr): (usize, u64) = {
-                let [first, _, third] = process
-                    .read::<[u64; 3]>(self.address + self.offsets.scene_count as u64)
-                    .unwrap_or_default();
-                (first as usize, third)
+            let [first, _, third] = process
+                .read::<[u64; 3]>(self.address + self.offsets.scene_count as u64)
+                .unwrap_or_default();
+            (first as usize, third)
         };
 
         (0..num_scenes).filter_map(move |index| {
             Some(Scene {
                 address: process
-                    .read_pointer(
-                        addr + (index as u64).wrapping_mul(self.size_of_ptr()),
-                    )
+                    .read_pointer(addr + (index as u64).wrapping_mul(self.size_of_ptr()))
                     .ok()
                     .filter(|val| *val != 0)?,
             })
@@ -145,9 +142,7 @@ impl SceneManager {
         scene: &Scene,
     ) -> impl Iterator<Item = Transform> + 'a {
         let list_first: u64 = process
-            .read_pointer(
-                scene.address + self.offsets.root_storage_container as u64,
-            )
+            .read_pointer(scene.address + self.offsets.root_storage_container as u64)
             .unwrap_or_default();
 
         let mut current_list = list_first;
@@ -157,12 +152,8 @@ impl SceneManager {
             if iter_break {
                 None
             } else {
-                let [first, _, third]: [u64; 3] = {
-                    process
-                        .read::<[u64; 3]>(current_list)
-                        .ok()?
-                        .map(|a| a.into())
-                };
+                let [first, _, third]: [u64; 3] =
+                    { process.read::<[u64; 3]>(current_list).ok()?.map(|a| a) };
 
                 if first == list_first {
                     iter_break = true;
@@ -177,7 +168,11 @@ impl SceneManager {
 
     /// Tries to find the specified root [`Transform`] from the currently
     /// active Unity scene.
-    pub fn get_root_game_object(&self, process: &Process, name: &str) -> Result<Transform, MemoryError> {
+    pub fn get_root_game_object(
+        &self,
+        process: &Process,
+        name: &str,
+    ) -> Result<Transform, MemoryError> {
         self.root_game_objects(process, &self.get_current_scene(process)?)
             .find(|obj| {
                 obj.get_name::<CSTR>(process, self)
@@ -229,17 +224,16 @@ impl Transform {
         process: &'a Process,
         scene_manager: &'a SceneManager,
     ) -> Result<impl Iterator<Item = u64> + 'a, MemoryError> {
-        let game_object: u64 = process.read_pointer(
-            self.address + scene_manager.offsets.game_object as u64
-        ).ok()
+        let game_object: u64 = process
+            .read_pointer(self.address + scene_manager.offsets.game_object as u64)
+            .ok()
             .filter(|&val| val != 0)
             .unwrap_or_default();
 
-        let (number_of_components, main_object): (usize, u64) = 
-        {
-                let array = process
-                    .read::<[u64; 3]>(game_object + scene_manager.offsets.game_object as u64)?;
-                (array[2] as usize, array[0])
+        let (number_of_components, main_object): (usize, u64) = {
+            let array =
+                process.read::<[u64; 3]>(game_object + scene_manager.offsets.game_object as u64)?;
+            (array[2] as usize, array[0])
         };
 
         if number_of_components == 0 {
@@ -249,23 +243,21 @@ impl Transform {
         const ARRAY_SIZE: usize = 128;
 
         let components: [u64; ARRAY_SIZE] = {
-                let mut buf = [MaybeUninit::<[u64; 2]>::uninit(); ARRAY_SIZE];
-                let slice = process
-                    .read_into_uninit_slice(main_object, &mut buf[..number_of_components])?;
+            let mut buf = [MaybeUninit::<[u64; 2]>::uninit(); ARRAY_SIZE];
+            let slice =
+                process.read_into_uninit_slice(main_object, &mut buf[..number_of_components])?;
 
-                let mut iter = slice.iter_mut();
-                array::from_fn(|_| {
-                    iter.next()
-                        .map(|&mut [_, second]| second)
-                        .unwrap_or_default()
-                })
+            let mut iter = slice.iter_mut();
+            array::from_fn(|_| {
+                iter.next()
+                    .map(|&mut [_, second]| second)
+                    .unwrap_or_default()
+            })
         };
 
         Ok((1..number_of_components).filter_map(move |m| {
             process
-                .read_pointer(
-                    components[m] + scene_manager.offsets.klass as u64,
-                )
+                .read_pointer(components[m] + scene_manager.offsets.klass as u64)
                 .ok()
                 .filter(|val| *val != 0)
         }))
@@ -303,9 +295,9 @@ impl Transform {
         scene_manager: &'a SceneManager,
     ) -> Result<impl Iterator<Item = Self> + 'a, MemoryError> {
         let (child_count, child_pointer): (usize, u64) = {
-                let [first, _, third] = process
-                    .read::<[u64; 3]>(self.address + scene_manager.offsets.children_pointer as u64)?;
-                (third as usize, first)
+            let [first, _, third] = process
+                .read::<[u64; 3]>(self.address + scene_manager.offsets.children_pointer as u64)?;
+            (third as usize, first)
         };
 
         // Define an empty array and fill it later with the addresses of all child classes found for the current Transform.
@@ -317,12 +309,11 @@ impl Transform {
         }
 
         let children: [u64; ARRAY_SIZE] = {
-                let mut buf = [MaybeUninit::<u64>::uninit(); ARRAY_SIZE];
-                let slice =
-                    process.read_into_uninit_slice(child_pointer, &mut buf[..child_count])?;
+            let mut buf = [MaybeUninit::<u64>::uninit(); ARRAY_SIZE];
+            let slice = process.read_into_uninit_slice(child_pointer, &mut buf[..child_count])?;
 
-                let mut iter = slice.iter_mut();
-                array::from_fn(|_| iter.next().copied().map(Into::into).unwrap_or_default())
+            let mut iter = slice.iter_mut();
+            array::from_fn(|_| iter.next().copied().map(Into::into).unwrap_or_default())
         };
 
         Ok((0..child_count).map(move |f| Self {
@@ -346,6 +337,7 @@ impl Transform {
     }
 }
 
+#[derive(Debug)]
 struct Offsets {
     scene_count: u8,
     active_scene: u8,
@@ -397,7 +389,11 @@ impl Scene {
 
     /// Returns the build index of the scene. This index is unique to each
     /// scene in the game.
-    pub fn index(&self, process: &Process, scene_manager: &SceneManager) -> Result<i32, MemoryError> {
+    pub fn index(
+        &self,
+        process: &Process,
+        scene_manager: &SceneManager,
+    ) -> Result<i32, MemoryError> {
         process.read(self.address + scene_manager.offsets.build_index as u64)
     }
 
