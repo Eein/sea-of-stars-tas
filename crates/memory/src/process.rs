@@ -68,7 +68,6 @@ impl Process {
         }
     }
 
-    #[inline]
     pub fn module_range(&mut self, name: &str) -> Result<(u64, u64), ModuleError> {
         let address = self.module_address(name)?;
         let size = self.module_size(name)?;
@@ -76,8 +75,9 @@ impl Process {
     }
 
     pub fn module_size(&self, module: &str) -> Result<u64, ModuleError> {
-        Ok(self.modules
-            .iter() 
+        Ok(self
+            .modules
+            .iter()
             .filter(|m| m.filename().is_some_and(|f| f.ends_with(module)))
             .map(|m| m.size() as u64)
             .sum())
