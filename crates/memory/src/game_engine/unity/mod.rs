@@ -49,9 +49,8 @@ impl Module {
 
         let assemblies_pointer: u64 = {
             const SIG_MONO_64: Signature<3> = Signature::new("48 8B 0D");
-            let scan_address: u64 = SIG_MONO_64
-                .scan_process_range(process, (root_domain_function_address, 0x100))?
-            + 3;
+            let scan_address: u64 =
+                SIG_MONO_64.scan_process_range(process, (root_domain_function_address, 0x100))? + 3;
             scan_address + 0x4 + process.read::<i32>(scan_address).ok()? as u64
         };
 
@@ -74,10 +73,8 @@ impl Module {
             if iter_break {
                 None
             } else {
-                let [data, next_assembly]: [u64; 2] = process
-                        .read::<[u64; 2]>(assembly)
-                        .ok()?
-                        .map(|item| item.into());
+                let [data, next_assembly]: [u64; 2] =
+                    process.read::<[u64; 2]>(assembly).ok()?.map(|item| item);
 
                 if next_assembly == 0 {
                     iter_break = true;
@@ -116,7 +113,6 @@ impl Module {
         self.get_image(process, "Assembly-CSharp")
     }
 
-
     #[inline]
     const fn size_of_ptr(&self) -> u64 {
         8
@@ -143,9 +139,7 @@ impl Assembly {
     fn get_image(&self, process: &Process, module: &Module) -> Option<Image> {
         Some(Image {
             image: process
-                .read_pointer(
-                    self.assembly + module.offsets.monoassembly_image as u64
-                )
+                .read_pointer(self.assembly + module.offsets.monoassembly_image as u64)
                 .ok()
                 .filter(|val| *val != 0)?,
         })
@@ -170,7 +164,7 @@ impl Image {
             .read::<i32>(
                 self.image
                     + module.offsets.monoimage_class_cache as u64
-                    + module.offsets.monointernalhashtable_size as u64
+                    + module.offsets.monointernalhashtable_size as u64,
             )
             .ok()
             .filter(|&val| val != 0);
@@ -179,7 +173,7 @@ impl Image {
             Some(_) => process.read_pointer::<u64>(
                 self.image
                     + module.offsets.monoimage_class_cache as u64
-                    + module.offsets.monointernalhashtable_table as u64
+                    + module.offsets.monointernalhashtable_table as u64,
             ),
             _ => Err(MemoryError::Unset {}),
         };
@@ -187,9 +181,7 @@ impl Image {
         (0..class_cache_size.unwrap_or_default()).flat_map(move |i| {
             let mut table = match table_addr {
                 Ok(table_addr) => process
-                    .read_pointer(
-                        table_addr + (i as u64).wrapping_mul(module.size_of_ptr()),
-                    )
+                    .read_pointer(table_addr + (i as u64).wrapping_mul(module.size_of_ptr()))
                     .ok(),
                 _ => None,
             };
@@ -198,9 +190,7 @@ impl Image {
                 let class = process.read_pointer(table?).ok()?;
 
                 table = process
-                    .read_pointer(
-                        table? + module.offsets.monoclassdef_next_class_cache as u64
-                    )
+                    .read_pointer(table? + module.offsets.monoclassdef_next_class_cache as u64)
                     .ok()
                     .filter(|val| *val != 0);
 
@@ -248,7 +238,8 @@ impl Class {
         process.read_pointer_path(
             self.class,
             &[
-                module.offsets.monoclassdef_klass as u64 + module.offsets.monoclass_name_space as u64,
+                module.offsets.monoclassdef_klass as u64
+                    + module.offsets.monoclass_name_space as u64,
                 0x0,
             ],
         )
@@ -283,7 +274,7 @@ impl Class {
                         .read_pointer::<u64>(
                             this_class.class
                                 + module.offsets.monoclassdef_klass as u64
-                                + module.offsets.monoclass_fields as u64
+                                + module.offsets.monoclass_fields as u64,
                         )
                         .ok(),
                     _ => None,
@@ -297,13 +288,11 @@ impl Class {
                     iter_break = true;
                 }
 
-                Some(
-                    (0..field_count.unwrap_or_default()).filter_map(move |i| {
-                        Some(Field {
-                            field: fields? + (i as u64 * monoclassfieldalignment),
-                        })
-                    }),
-                )
+                Some((0..field_count.unwrap_or_default()).filter_map(move |i| {
+                    Some(Field {
+                        field: fields? + (i as u64 * monoclassfieldalignment),
+                    })
+                }))
             } else {
                 iter_break = true;
                 None
@@ -414,7 +403,7 @@ impl Class {
             .read_pointer::<u64>(
                 self.class
                     + module.offsets.monoclassdef_klass as u64
-                    + module.offsets.monoclass_runtime_info as u64
+                    + module.offsets.monoclass_runtime_info as u64,
             )
             .ok()?;
 
@@ -428,13 +417,13 @@ impl Class {
         match module.version {
             Version::V1 => Some(vtables + module.offsets.monoclass_vtable_size as u64),
             _ => {
-                vtables = vtables + module.offsets.monovtable_vtable as u64;
+                vtables += module.offsets.monovtable_vtable as u64;
 
                 let vtable_size = process
                     .read::<u32>(
                         self.class
                             + module.offsets.monoclassdef_klass as u64
-                            + module.offsets.monoclass_vtable_size as u64
+                            + module.offsets.monoclass_vtable_size as u64,
                     )
                     .ok()?;
 
@@ -447,9 +436,7 @@ impl Class {
     /// values of all the static fields.
     pub fn get_static_table(&self, process: &Process, module: &Module) -> Option<u64> {
         process
-            .read_pointer::<u64>(
-                self.get_static_table_pointer(process, module)?
-            )
+            .read_pointer::<u64>(self.get_static_table_pointer(process, module)?)
             .ok()
             .filter(|val| *val != 0)
     }
@@ -458,7 +445,9 @@ impl Class {
     pub fn get_parent(&self, process: &Process, module: &Module) -> Option<Class> {
         let parent_addr = process
             .read_pointer::<u64>(
-                self.class + module.offsets.monoclassdef_klass as u64 + module.offsets.monoclass_parent as u64
+                self.class
+                    + module.offsets.monoclassdef_klass as u64
+                    + module.offsets.monoclass_parent as u64,
             )
             .ok()
             .filter(|val| *val != 0)?;
@@ -521,69 +510,69 @@ pub struct Offsets {
 impl Offsets {
     const fn new(version: Version) -> Option<&'static Self> {
         match version {
-                Version::V1 => Some(&Self {
-                    monoassembly_aname: 0x10,
-                    monoassembly_image: 0x58,
-                    monoimage_class_cache: 0x3D0,
-                    monointernalhashtable_table: 0x20,
-                    monointernalhashtable_size: 0x18,
-                    monoclassdef_next_class_cache: 0x100,
-                    monoclassdef_klass: 0x0,
-                    monoclass_name: 0x48,
-                    monoclass_name_space: 0x50,
-                    monoclass_fields: 0xA8,
-                    monoclassdef_field_count: 0x94,
-                    monoclass_runtime_info: 0xF8,
-                    monoclass_vtable_size: 0x18, // MonoVtable.data
-                    monoclass_parent: 0x30,
-                    monoclassfield_name: 0x8,
-                    monoclassfield_offset: 0x18,
-                    monoclassruntimeinfo_domain_vtables: 0x8,
-                    monovtable_vtable: 0x48,
-                    monoclassfieldalignment: 0x20,
-                }),
-                Version::V2 => Some(&Self {
-                    monoassembly_aname: 0x10,
-                    monoassembly_image: 0x60,
-                    monoimage_class_cache: 0x4C0,
-                    monointernalhashtable_table: 0x20,
-                    monointernalhashtable_size: 0x18,
-                    monoclassdef_next_class_cache: 0x108,
-                    monoclassdef_klass: 0x0,
-                    monoclass_name: 0x48,
-                    monoclass_name_space: 0x50,
-                    monoclass_fields: 0x98,
-                    monoclassdef_field_count: 0x100,
-                    monoclass_runtime_info: 0xD0,
-                    monoclass_vtable_size: 0x5C,
-                    monoclass_parent: 0x30,
-                    monoclassfield_name: 0x8,
-                    monoclassfield_offset: 0x18,
-                    monoclassruntimeinfo_domain_vtables: 0x8,
-                    monovtable_vtable: 0x40,
-                    monoclassfieldalignment: 0x20,
-                }),
-                Version::V3 => Some(&Self {
-                    monoassembly_aname: 0x10,
-                    monoassembly_image: 0x60,
-                    monoimage_class_cache: 0x4D0,
-                    monointernalhashtable_table: 0x20,
-                    monointernalhashtable_size: 0x18,
-                    monoclassdef_next_class_cache: 0x108,
-                    monoclassdef_klass: 0x0,
-                    monoclass_name: 0x48,
-                    monoclass_name_space: 0x50,
-                    monoclass_fields: 0x98,
-                    monoclassdef_field_count: 0x100,
-                    monoclass_runtime_info: 0xD0,
-                    monoclass_vtable_size: 0x5C,
-                    monoclass_parent: 0x30,
-                    monoclassfield_name: 0x8,
-                    monoclassfield_offset: 0x18,
-                    monoclassruntimeinfo_domain_vtables: 0x8,
-                    monovtable_vtable: 0x48,
-                    monoclassfieldalignment: 0x20,
-                }),
+            Version::V1 => Some(&Self {
+                monoassembly_aname: 0x10,
+                monoassembly_image: 0x58,
+                monoimage_class_cache: 0x3D0,
+                monointernalhashtable_table: 0x20,
+                monointernalhashtable_size: 0x18,
+                monoclassdef_next_class_cache: 0x100,
+                monoclassdef_klass: 0x0,
+                monoclass_name: 0x48,
+                monoclass_name_space: 0x50,
+                monoclass_fields: 0xA8,
+                monoclassdef_field_count: 0x94,
+                monoclass_runtime_info: 0xF8,
+                monoclass_vtable_size: 0x18, // MonoVtable.data
+                monoclass_parent: 0x30,
+                monoclassfield_name: 0x8,
+                monoclassfield_offset: 0x18,
+                monoclassruntimeinfo_domain_vtables: 0x8,
+                monovtable_vtable: 0x48,
+                monoclassfieldalignment: 0x20,
+            }),
+            Version::V2 => Some(&Self {
+                monoassembly_aname: 0x10,
+                monoassembly_image: 0x60,
+                monoimage_class_cache: 0x4C0,
+                monointernalhashtable_table: 0x20,
+                monointernalhashtable_size: 0x18,
+                monoclassdef_next_class_cache: 0x108,
+                monoclassdef_klass: 0x0,
+                monoclass_name: 0x48,
+                monoclass_name_space: 0x50,
+                monoclass_fields: 0x98,
+                monoclassdef_field_count: 0x100,
+                monoclass_runtime_info: 0xD0,
+                monoclass_vtable_size: 0x5C,
+                monoclass_parent: 0x30,
+                monoclassfield_name: 0x8,
+                monoclassfield_offset: 0x18,
+                monoclassruntimeinfo_domain_vtables: 0x8,
+                monovtable_vtable: 0x40,
+                monoclassfieldalignment: 0x20,
+            }),
+            Version::V3 => Some(&Self {
+                monoassembly_aname: 0x10,
+                monoassembly_image: 0x60,
+                monoimage_class_cache: 0x4D0,
+                monointernalhashtable_table: 0x20,
+                monointernalhashtable_size: 0x18,
+                monoclassdef_next_class_cache: 0x108,
+                monoclassdef_klass: 0x0,
+                monoclass_name: 0x48,
+                monoclass_name_space: 0x50,
+                monoclass_fields: 0x98,
+                monoclassdef_field_count: 0x100,
+                monoclass_runtime_info: 0xD0,
+                monoclass_vtable_size: 0x5C,
+                monoclass_parent: 0x30,
+                monoclassfield_name: 0x8,
+                monoclassfield_offset: 0x18,
+                monoclassruntimeinfo_domain_vtables: 0x8,
+                monovtable_vtable: 0x48,
+                monoclassfieldalignment: 0x20,
+            }),
         }
     }
 }
