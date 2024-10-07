@@ -1,24 +1,42 @@
+use delta::Timer;
+
 use crate::Node;
 
 pub struct Sequencer<T> {
     root: Box<dyn Node<T>>,
+    initialized: bool,
+    finished: bool,
+    timer: Timer,
 }
 
 impl<T> Sequencer<T> {
     pub fn create(root: Box<dyn Node<T>>) -> Self {
-        Sequencer { root }
+        Sequencer {
+            root,
+            initialized: false,
+            finished: false,
+            timer: delta::Timer::new(),
+        }
     }
 
-    pub fn run(&mut self, context: &mut T) {
-        let mut timer = delta::Timer::new();
-        self.root.enter(context);
-        loop {
-            let deltatime = timer.mark_secs();
-            if self.root.execute(context, deltatime) {
-                break;
-            }
+    pub fn run(&mut self, context: &mut T) -> bool {
+        // Return early if the sequencer already finished
+        if self.finished {
+            return true;
         }
-        self.root.exit(context);
+        // Perform initialization if needed
+        if !self.initialized {
+            self.initialized = true;
+            let _ = self.timer.mark();
+            self.root.enter(context);
+        }
+        // Update the sequencer root
+        let dt = self.timer.mark_secs();
+        if self.root.execute(context, dt) {
+            self.finished = true;
+            self.root.exit(context);
+        }
+        self.finished
     }
 
     pub fn advance_to_checkpoint(&mut self, context: &mut T, checkpoint: &str) -> bool {
@@ -165,8 +183,12 @@ mod tests {
 
         let mut state = State { value: 0 };
 
-        // Run the sequence (grabs control atm)
-        sequencer.run(&mut state);
+        // Run the sequence until it's done
+        loop {
+            if sequencer.run(&mut state) {
+                break;
+            }
+        }
 
         Ok(())
     }
