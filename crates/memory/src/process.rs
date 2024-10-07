@@ -68,6 +68,21 @@ impl Process {
         }
     }
 
+    #[inline]
+    pub fn module_range(&mut self, name: &str) -> Result<(u64, u64), ModuleError> {
+        let address = self.module_address(name)?;
+        let size = self.module_size(name)?;
+        Ok((address, size))
+    }
+
+    pub fn module_size(&self, module: &str) -> Result<u64, ModuleError> {
+        Ok(self.modules
+            .iter() 
+            .filter(|m| m.filename().is_some_and(|f| f.ends_with(module)))
+            .map(|m| m.size() as u64)
+            .sum())
+    }
+
     pub fn module_address(&mut self, module: &str) -> Result<u64, ModuleError> {
         let now = Instant::now();
         if now - self.last_check >= Duration::from_secs(1) {
@@ -154,5 +169,35 @@ impl Process {
         }
 
         Ok(address + last)
+    }
+
+    /// Reads a range of bytes from the process at the address given into the
+    /// buffer provided. This is a convenience method for reading into a slice
+    /// of a specific type. The buffer does not need to be initialized. After
+    /// the slice successfully got filled, the initialized slice is returned.
+    pub fn read_into_uninit_slice<T: CheckedBitPattern + Pod>(
+        &self,
+        address: u64,
+        slice: &mut [MaybeUninit<T>],
+    ) -> Result<&mut [T], MemoryError> {
+        // SAFETY: The process handle is guaranteed to be valid. We provide a
+        // valid pointer and length to the buffer. We also do proper error
+        // handling afterwards. The buffer is guaranteed to be initialized
+        // afterwards, we just need to check if the values are valid bit
+        // patterns. We can then safely return a slice of it.
+        unsafe {
+            let byte_len = mem::size_of_val(slice);
+            self.read_into_uninit_buf(
+                address,
+                slice::from_raw_parts_mut(slice.as_mut_ptr().cast(), byte_len),
+            )?;
+            for element in &*slice {
+                if !T::is_valid_bit_pattern(&*element.as_ptr().cast::<T::Bits>()) {
+                    return Err(MemoryError::ReadError);
+                }
+            }
+            let len = slice.len();
+            Ok(slice::from_raw_parts_mut(slice.as_mut_ptr().cast(), len))
+        }
     }
 }
