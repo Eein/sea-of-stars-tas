@@ -69,7 +69,22 @@ impl JoystickInterface for Joystick {
         }
     }
     fn set_rjoy(&mut self, dir: [f32; 2]) {
-        panic!("NOT IMPLEMENTED!");
+        let mut clamped_dir = dir;
+        clamp(&mut clamped_dir, &[-1.0, -1.0], &[1.0, 1.0]);
+        // Convert from range -1..1 to -32768..32767
+        // Negative values are down/left, positive are up/right
+        let x_code = AbsoluteAxisCode::ABS_RX.0;
+        let y_code = AbsoluteAxisCode::ABS_RY.0;
+        let abs_x = (clamped_dir[0] * i16::MAX as f32) as i16;
+        let abs_y = -(clamped_dir[1] * i16::MAX as f32) as i16;
+
+        let x_event = *AbsoluteAxisEvent::new(AbsoluteAxisCode(x_code), abs_x.into());
+        let y_event = *AbsoluteAxisEvent::new(AbsoluteAxisCode(y_code), abs_y.into());
+
+        match self.device.lock().unwrap().emit(&[x_event, y_event]) {
+            Ok(_) => (),
+            Err(e) => error!("Joystick error: {e:?}"),
+        }
     }
 }
 
@@ -102,7 +117,10 @@ impl Default for Joystick {
         let abs_setup = AbsInfo::new(256, 0, 512, 20, 20, 1);
         let abs_x = UinputAbsSetup::new(AbsoluteAxisCode::ABS_X, abs_setup);
         let abs_y = UinputAbsSetup::new(AbsoluteAxisCode::ABS_Y, abs_setup);
-        // TODO: R-joystick
+
+        let abs_r_x = UinputAbsSetup::new(AbsoluteAxisCode::ABS_RX, abs_setup);
+        let abs_r_y = UinputAbsSetup::new(AbsoluteAxisCode::ABS_RY, abs_setup);
+
         let mut keys = AttributeSet::<KeyCode>::new();
 
         keys.insert(KeyCode::BTN_DPAD_DOWN);
@@ -129,6 +147,10 @@ impl Default for Joystick {
             .with_absolute_axis(&abs_x)
             .unwrap()
             .with_absolute_axis(&abs_y)
+            .unwrap()
+            .with_absolute_axis(&abs_r_x)
+            .unwrap()
+            .with_absolute_axis(&abs_r_y)
             .unwrap()
             .build()
             .unwrap();
