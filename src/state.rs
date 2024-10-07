@@ -12,7 +12,9 @@ use log::info;
 use std::time::Instant;
 
 use crate::control::{create_gamepad, SosAction};
+use crate::seq::SeqConfirm;
 use joystick::prelude::*;
+use seq::prelude::*;
 
 pub struct StateDebug {
     pub pinned_fps: f64,
@@ -26,14 +28,21 @@ pub struct StateGui {
     pub dock_state: DockState<String>,
 }
 
+// TODO(orkaboy): Anything the sequencer needs to access has to go in here
+#[derive(Default)]
+pub struct GameState {
+    // TODO(orkaboy): Create multiple gamepads, one for each player
+    pub gamepad: GenericJoystick<SosAction>,
+}
+
 pub struct State {
     pub context: StateContext,
     pub process_list: ProcessList,
     pub memory_managers: MemoryManagers,
     pub debug: StateDebug,
     pub gui: StateGui,
-    // TODO(orkaboy): Create multiple gamepads, one for each player
-    pub gamepad: GenericJoystick<SosAction>,
+    pub game_state: GameState,
+    pub sequencer: Sequencer<GameState>,
 }
 #[derive(Default)]
 pub struct StateContext {
@@ -67,7 +76,33 @@ impl State {
                 last_update: Instant::now(),
                 last_memory_update: Instant::now(),
             },
-            gamepad: create_gamepad(),
+            game_state: GameState {
+                gamepad: create_gamepad(),
+            },
+            // TODO(orkaboy): Temp code, should not be here
+            // TODO(orkaboy): Where do we put sequencer.run()? Might need to refactor that as well.
+            sequencer: Sequencer::create(SeqList::create(
+                "TEMP",
+                vec![
+                    SeqLog::create("SEQ START"),
+                    SeqWait::create("Wait for joystick", 2.0),
+                    SeqConfirm::create(0.5),
+                    SeqLog::create("SEQ (1)"),
+                    SeqWait::create("Wait for joystick", 0.5),
+                    SeqConfirm::create(0.5),
+                    SeqLog::create("SEQ (2)"),
+                    SeqWait::create("Wait for joystick", 0.5),
+                    SeqConfirm::create(0.5),
+                    SeqLog::create("SEQ (3)"),
+                    SeqWait::create("Wait for joystick", 0.5),
+                    SeqConfirm::create(0.5),
+                    SeqLog::create("SEQ (4)"),
+                    SeqWait::create("Wait for joystick", 0.5),
+                    SeqConfirm::create(0.5),
+                    SeqLog::create("SEQ (5)"),
+                    SeqLog::create("SEQ DONE"),
+                ],
+            )),
         }
     }
 
@@ -165,6 +200,11 @@ impl eframe::App for State {
 
         // Run self.update() on each manager
         let _ = &self.update_managers();
+
+        // TODO(orkaboy): Should probably not be here
+        if self.context.process.is_some() {
+            let _ = self.sequencer.run(&mut self.game_state);
+        }
 
         Gui::update(self, ctx, frame)
     }
