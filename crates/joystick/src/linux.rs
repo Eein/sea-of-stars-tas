@@ -30,7 +30,7 @@ impl JoystickInterface for Joystick {
         }
     }
 
-    fn press(&mut self, button: Button) {
+    fn press(&mut self, button: &Button) {
         let button = Joystick::get_button(button);
         let event = InputEvent::new(EventType::KEY.0, button.code(), 1);
 
@@ -40,7 +40,7 @@ impl JoystickInterface for Joystick {
         }
     }
 
-    fn release(&mut self, button: Button) {
+    fn release(&mut self, button: &Button) {
         let button = Joystick::get_button(button);
         let event = InputEvent::new(EventType::KEY.0, button.code(), 0);
 
@@ -89,7 +89,7 @@ impl JoystickInterface for Joystick {
 }
 
 impl Joystick {
-    fn get_button(button: Button) -> KeyCode {
+    fn get_button(button: &Button) -> KeyCode {
         match button {
             Button::A => KeyCode::BTN_EAST,
             Button::B => KeyCode::BTN_SOUTH,

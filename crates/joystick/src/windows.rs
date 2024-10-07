@@ -26,7 +26,7 @@ impl Default for Joystick {
 }
 
 impl Joystick {
-    fn map_button(button: Button) -> u16 {
+    fn map_button(button: &Button) -> u16 {
         // TODO: Note, the left/right triggers are handled differently in XINPUT, they are u8 values.
         match button {
             Button::A => XButtons::A,
@@ -60,10 +60,10 @@ impl JoystickInterface for Joystick {
             Err(e) => error!("Joystick error: {e:?}"),
         }
     }
-    fn press(&mut self, button: Button) {
+    fn press(&mut self, button: &Button) {
         match button {
-            Button::LT(val) => self.gamepad.left_trigger = val,
-            Button::RT(val) => self.gamepad.right_trigger = val,
+            Button::LT(val) => self.gamepad.left_trigger = *val,
+            Button::RT(val) => self.gamepad.right_trigger = *val,
             _ => {
                 let code = Joystick::map_button(button);
                 self.gamepad.buttons.raw |= code;
@@ -74,7 +74,7 @@ impl JoystickInterface for Joystick {
             Err(e) => error!("Joystick error: {e:?}"),
         }
     }
-    fn release(&mut self, button: Button) {
+    fn release(&mut self, button: &Button) {
         match button {
             Button::LT(_) => self.gamepad.left_trigger = 0,
             Button::RT(_) => self.gamepad.right_trigger = 0,
