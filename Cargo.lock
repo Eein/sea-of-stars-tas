@@ -2494,6 +2494,7 @@ dependencies = [
  "eframe",
  "egui",
  "egui_dock",
+ "joystick",
  "log",
  "memory",
  "puffin_egui",

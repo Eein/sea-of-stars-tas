@@ -1,3 +1,4 @@
+mod control;
 mod gui;
 mod memory;
 mod state;
