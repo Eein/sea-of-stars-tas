@@ -11,6 +11,9 @@ use egui_dock::DockState;
 use log::info;
 use std::time::Instant;
 
+use crate::control::{create_gamepad, SosAction};
+use joystick::prelude::*;
+
 pub struct StateDebug {
     pub pinned_fps: f64,
     pub last_pinned_update: Instant,
@@ -29,6 +32,8 @@ pub struct State {
     pub memory_managers: MemoryManagers,
     pub debug: StateDebug,
     pub gui: StateGui,
+    // TODO(orkaboy): Create multiple gamepads, one for each player
+    pub gamepad: GenericJoystick<SosAction>,
 }
 #[derive(Default)]
 pub struct StateContext {
@@ -62,6 +67,7 @@ impl State {
                 last_update: Instant::now(),
                 last_memory_update: Instant::now(),
             },
+            gamepad: create_gamepad(),
         }
     }
 
