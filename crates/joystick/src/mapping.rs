@@ -8,6 +8,12 @@ pub struct GenericJoystick<KeyType: PartialEq + Eq + Hash> {
     mappings: HashMap<KeyType, Button>,
 }
 
+impl<KeyType: PartialEq + Eq + Hash> Default for GenericJoystick<KeyType> {
+    fn default() -> Self {
+        GenericJoystick::new(HashMap::new())
+    }
+}
+
 impl<KeyType: PartialEq + Eq + Hash> GenericJoystick<KeyType> {
     pub fn new(mappings: HashMap<KeyType, Button>) -> Self {
         Self {
