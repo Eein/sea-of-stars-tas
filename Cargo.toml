@@ -8,14 +8,14 @@ joystick = { path = "crates/joystick", version = "0.1.0" }
 memory = { path = "crates/memory", version = "0.1.0" }
 bytemuck = { version = "1.18.0", features = ["min_const_generics"] }
 seq = { path = "crates/seq", version = "0.1.0" }
-sysinfo = { version = "0.31.2", default-features = false, features = ["system", "multithread"] }
-egui = "0.28"
-eframe = { version = "0.28", default-features = false, features = [
+sysinfo = { version = "0.32.0", default-features = false, features = ["system", "multithread"] }
+egui = "0.29"
+eframe = { version = "0.29", default-features = false, features = [
     "default_fonts", # Embed the default egui fonts.
     "glow",          # Use the glow rendering backend. Alternative: "wgpu".
     # "persistence",   # Enable restoring app state when restarting the app.
 ] }
-egui_dock = "0.13.0"
+egui_dock = "0.14.0"
 vec3-rs = "0.1.6"
 colog = "1.3.0"
 log = "0.4.22"
@@ -24,12 +24,12 @@ yaml-rust2 = "0.9.0"
 
 [dependencies.winit]
 # version = "*"
-version = "=0.28.7"
+version = "=0.30.5"
 features = ["default"]
 
 [workspace]
 members = [
-  "crates/joystick", 
+  "crates/joystick",
   "crates/memory"
 ]
 

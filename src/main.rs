@@ -1,12 +1,12 @@
+mod config;
 mod control;
 mod gui;
 mod memory;
 mod seq;
 mod state;
-mod config;
 
-use crate::gui::Gui;
 use crate::config::load_config;
+use crate::gui::Gui;
 
 fn main() {
     colog::init();

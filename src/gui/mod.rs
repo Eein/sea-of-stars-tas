@@ -82,7 +82,7 @@ impl Gui {
 
                 state.debug.last_update = tnow;
 
-                egui::widgets::global_dark_light_mode_buttons(ui);
+                egui::widgets::global_theme_preference_buttons(ui);
 
                 ui.label(fps_string);
             });

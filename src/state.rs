@@ -9,8 +9,8 @@ use memory::process_list::ProcessList;
 
 use egui_dock::DockState;
 use log::info;
-use yaml_rust2::Yaml;
 use std::time::Instant;
+use yaml_rust2::Yaml;
 
 use joystick::prelude::*;
 use seq::prelude::*;
