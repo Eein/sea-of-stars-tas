@@ -4,6 +4,7 @@ mod gui;
 mod memory;
 mod seq;
 mod state;
+mod util;
 
 use crate::config::load_config;
 use crate::gui::Gui;
