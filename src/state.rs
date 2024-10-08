@@ -11,7 +11,6 @@ use egui_dock::DockState;
 use log::info;
 use std::time::Instant;
 
-use crate::seq::SeqConfirm;
 use joystick::prelude::*;
 use seq::prelude::*;
 
@@ -80,28 +79,7 @@ impl State {
             },
             // TODO(orkaboy): Temp code, should not be here
             // TODO(orkaboy): Where do we put sequencer.run()? Might need to refactor that as well.
-            sequencer: Sequencer::create(SeqList::create(
-                "TEMP",
-                vec![
-                    SeqLog::create("SEQ START"),
-                    SeqWait::create("Wait for joystick", 2.0),
-                    SeqConfirm::create(0.5),
-                    SeqLog::create("SEQ (1)"),
-                    SeqWait::create("Wait for joystick", 0.5),
-                    SeqConfirm::create(0.5),
-                    SeqLog::create("SEQ (2)"),
-                    SeqWait::create("Wait for joystick", 0.5),
-                    SeqConfirm::create(0.5),
-                    SeqLog::create("SEQ (3)"),
-                    SeqWait::create("Wait for joystick", 0.5),
-                    SeqConfirm::create(0.5),
-                    SeqLog::create("SEQ (4)"),
-                    SeqWait::create("Wait for joystick", 0.5),
-                    SeqConfirm::create(0.5),
-                    SeqLog::create("SEQ (5)"),
-                    SeqLog::create("SEQ DONE"),
-                ],
-            )),
+            sequencer: Sequencer::create(SeqLog::create("SEQ START")),
         }
     }
 
@@ -201,7 +179,7 @@ impl eframe::App for State {
         let _ = &self.update_managers();
 
         // TODO(orkaboy): Should probably not be here
-        if self.context.process.is_some() {
+        if self.sequencer.is_running() {
             let _ = self.sequencer.run(&mut self.game_state);
         }
 
