@@ -1,7 +1,8 @@
 use crate::memory::memory_context::MemoryContext;
 use crate::memory::{MemoryManager, MemoryManagerUpdate};
 use crate::state::StateContext;
-use quaternion_core::{Quaternion, Vector3};
+use vec3_rs::Vector3;
+use crate::util::quaternion::Quaternion;
 
 use log::info;
 
@@ -26,7 +27,7 @@ impl Default for MemoryManager<BoatManagerData> {
 pub struct BoatManagerData {
     backing_field: u64,
     pub position: Vector3<f32>,
-    pub rotation: Quaternion<f32>,
+    pub rotation: Quaternion,
     pub speed: f32,
     pub max_speed: f32,
 }
@@ -72,7 +73,7 @@ impl BoatManagerData {
             let y = memory_context.read_pointer::<f32>(boat_position_ptr + 0x4)?;
             let z = memory_context.read_pointer::<f32>(boat_position_ptr + 0x8)?;
 
-            self.position = [x, y, z];
+            self.position = Vector3::new(x, y, z);
         }
 
         Ok(())
@@ -89,9 +90,7 @@ impl BoatManagerData {
             let z = memory_context.read_pointer::<f32>(boat_rotation_ptr + 0x4C)?;
             let w = memory_context.read_pointer::<f32>(boat_rotation_ptr + 0x50)?;
 
-            // TODO(eein): Not sure if the instantiation order is correct here:
-            // pub type Quaternion<T> = (T, Vector3<T>);
-            self.rotation = (w, [x, y, z]);
+            self.rotation = Quaternion { x, y, z, w };
         }
 
         Ok(())

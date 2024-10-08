@@ -1,7 +1,6 @@
 use super::GuiHelper;
 use crate::state::GameState;
-use crate::util::math;
-use quaternion_core::{QuaternionOps, Vector3};
+use vec3_rs::Vector3;
 use seq::prelude::*;
 
 pub const NAME: &str = "Nav Helper";
@@ -17,7 +16,7 @@ impl NavHelper {
     pub fn create() -> Box<Self> {
         Box::new(Self {
             precision: 0.200,
-            target_coordinates: [0.0, 0.0, 0.0],
+            target_coordinates: Vector3::new(0.0, 0.0, 0.0),
             run_enabled: true,
         })
     }
@@ -41,15 +40,16 @@ impl GuiHelper for NavHelper {
             .default_open(true)
             .show(ui, |ui| {
                 let position = ppmd.position;
-                let pos_x = format!("{:.3}", position[0]);
-                let pos_y = format!("{:.3}", position[1]);
-                let pos_z = format!("{:.3}", position[2]);
+                let pos_x = format!("{:.3}", position.get_x());
+                let pos_y = format!("{:.3}", position.get_y());
+                let pos_z = format!("{:.3}", position.get_z());
                 ui.label(format!("x: {}", pos_x));
                 ui.label(format!("y: {}", pos_y));
                 ui.label(format!("z: {}", pos_z));
 
                 if ui.button("Set as target").clicked() {
-                    self.target_coordinates = [position[0], position[1], position[2]]
+                    self.target_coordinates = 
+                        Vector3::new(position.get_x(), position.get_y(), position.get_z())
                 };
                 if ui.button("Copy to clipboard NOT IMPLEMENTED").clicked() {
                     let text = "YOU COPIED THIS TEXT FROM THE CLIPBOARD";
@@ -63,15 +63,15 @@ impl GuiHelper for NavHelper {
             .show(ui, |ui| {
                 let position = self.target_coordinates;
                 let player_position = ppmd.position;
-                let pos_x = format!("{:.3}", position[0]);
-                let pos_y = format!("{:.3}", position[1]);
-                let pos_z = format!("{:.3}", position[2]);
+                let pos_x = format!("{:.3}", position.get_x());
+                let pos_y = format!("{:.3}", position.get_y());
+                let pos_z = format!("{:.3}", position.get_z());
                 ui.label(format!("x: {}", pos_x));
                 ui.label(format!("y: {}", pos_y));
                 ui.label(format!("z: {}", pos_z));
 
-                let diff = position.sub(player_position);
-                let distance_to_target = math::magnitude(&diff);
+                let diff = position - player_position;
+                let distance_to_target = Vector3::magnitude(&diff);
                 let distance_to_target_string =
                     format!("Distance to target {:.3}", distance_to_target);
                 ui.label(distance_to_target_string);
@@ -97,9 +97,9 @@ impl GuiHelper for NavHelper {
             .default_open(true)
             .show(ui, |ui| {
                 let position = ppmd.gameobject_position;
-                let pos_x = format!("{:.3}", position[0]);
-                let pos_y = format!("{:.3}", position[1]);
-                let pos_z = format!("{:.3}", position[2]);
+                let pos_x = format!("{:.3}", position.get_x());
+                let pos_y = format!("{:.3}", position.get_y());
+                let pos_z = format!("{:.3}", position.get_z());
                 ui.label(format!("x: {}", pos_x));
                 ui.label(format!("y: {}", pos_y));
                 ui.label(format!("z: {}", pos_z));
@@ -114,9 +114,9 @@ impl GuiHelper for NavHelper {
             .default_open(true)
             .show(ui, |ui| {
                 let position = boat_manager.position;
-                let pos_x = format!("{:.3}", position[0]);
-                let pos_y = format!("{:.3}", position[1]);
-                let pos_z = format!("{:.3}", position[2]);
+                let pos_x = format!("{:.3}", position.get_x());
+                let pos_y = format!("{:.3}", position.get_y());
+                let pos_z = format!("{:.3}", position.get_z());
                 ui.label(format!("x: {}", pos_x));
                 ui.label(format!("y: {}", pos_y));
                 ui.label(format!("z: {}", pos_z));
@@ -126,14 +126,8 @@ impl GuiHelper for NavHelper {
                     ui.output_mut(|o| o.copied_text = String::from(text));
                     // nothing yet
                 };
-                ui.label(format!(
-                    "Rot (yaw): {:?}",
-                    math::to_yaw(boat_manager.rotation)
-                ));
-                ui.label(format!(
-                    "speed: {:.3}/{:.3}",
-                    boat_manager.speed, boat_manager.max_speed
-                ));
+                ui.label(format!("Rot (yaw): {:?}", &boat_manager.rotation.to_yaw()));
+                ui.label(format!("speed: {:.3}/{:.3}", boat_manager.speed, boat_manager.max_speed));
             });
     }
 }

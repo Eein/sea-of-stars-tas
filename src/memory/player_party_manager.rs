@@ -4,7 +4,7 @@ use crate::state::StateContext;
 use log::info;
 use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
-use quaternion_core::Vector3;
+use vec3_rs::Vector3;
 
 impl Default for MemoryManager<PlayerPartyManagerData> {
     fn default() -> Self {
@@ -75,7 +75,7 @@ impl PlayerPartyManagerData {
         let y = memory_context.read_pointer::<f32>(current_position_ptr + 0x4)?;
         let z = memory_context.read_pointer::<f32>(current_position_ptr + 0x8)?;
 
-        self.position = [x, y, z];
+        self.position = Vector3::new(x, y, z);
 
         Ok(())
     }
@@ -97,7 +97,7 @@ impl PlayerPartyManagerData {
         let y = memory_context.read_pointer::<f32>(gameobject_ptr + 0x4)?;
         let z = memory_context.read_pointer::<f32>(gameobject_ptr + 0x8)?;
 
-        self.gameobject_position = [x, y, z];
+        self.gameobject_position = Vector3::new(x, y, z);
 
         Ok(())
     }

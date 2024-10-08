@@ -1,1 +1,2 @@
-pub mod math;
+// Math
+pub mod quaternion;
