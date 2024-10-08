@@ -1,10 +1,11 @@
 pub mod main_helper;
 pub mod nav_helper;
+pub mod seq_helper;
 pub mod title_helper;
 
 use std::collections::HashMap;
 
-pub use self::{main_helper::*, nav_helper::*, title_helper::*};
+pub use self::{main_helper::*, nav_helper::*, seq_helper::*, title_helper::*};
 use crate::state::GameState;
 use seq::prelude::*;
 
@@ -18,6 +19,7 @@ impl Default for GuiHelpers {
         helpers.insert(nav_helper::NAME.to_owned(), NavHelper::create());
         helpers.insert(main_helper::NAME.to_owned(), MainHelper::create());
         helpers.insert(title_helper::NAME.to_owned(), TitleHelper::create());
+        helpers.insert(seq_helper::NAME.to_owned(), SeqGuiHelper::create());
         Self { helpers }
     }
 }
