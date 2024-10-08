@@ -1,5 +1,6 @@
 use super::GuiHelper;
-use crate::memory::MemoryManagers;
+use crate::state::GameState;
+use seq::prelude::*;
 
 pub const NAME: &str = "Debug Menu";
 
@@ -13,11 +14,21 @@ impl DebugHelper {
 }
 
 impl GuiHelper for DebugHelper {
-    fn draw(&mut self, managers: &MemoryManagers, ui: &mut egui::Ui, _tab: &mut String) {
+    fn draw(
+        &mut self,
+        game_state: &GameState,
+        _sequencer: &mut Sequencer<GameState>,
+        ui: &mut egui::Ui,
+        _tab: &mut String,
+    ) {
         ui.label("This is where we dump everything".to_string());
         ui.label(format!(
             "Time of day: {:.3}",
-            managers.time_of_day_manager.data.current_time
+            &game_state
+                .memory_managers
+                .time_of_day_manager
+                .data
+                .current_time
         ));
     }
 }
