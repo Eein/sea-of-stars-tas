@@ -43,10 +43,6 @@ impl MemoryManagerUpdate for TimeOfDayManagerData {
 }
 
 impl TimeOfDayManagerData {
-    // This function updates the users position for nav helper
-    // Unfortunately because some classes here dont have true objects
-    // this by using follow_fields since while we are going up the chain
-    // we may be unable to query an object without a fields_base
     pub fn update_current_time(
         &mut self,
         memory_context: &MemoryContext,
