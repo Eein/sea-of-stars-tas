@@ -11,7 +11,6 @@ use egui_dock::DockState;
 use log::info;
 use std::time::Instant;
 
-use crate::control::{create_gamepad, SosAction};
 use crate::seq::SeqConfirm;
 use joystick::prelude::*;
 use seq::prelude::*;
@@ -32,7 +31,7 @@ pub struct StateGui {
 #[derive(Default)]
 pub struct GameState {
     // TODO(orkaboy): Create multiple gamepads, one for each player
-    pub gamepad: GenericJoystick<SosAction>,
+    pub gamepad: GenericJoystick,
 }
 
 pub struct State {
@@ -77,7 +76,7 @@ impl State {
                 last_memory_update: Instant::now(),
             },
             game_state: GameState {
-                gamepad: create_gamepad(),
+                gamepad: GenericJoystick::default(),
             },
             // TODO(orkaboy): Temp code, should not be here
             // TODO(orkaboy): Where do we put sequencer.run()? Might need to refactor that as well.

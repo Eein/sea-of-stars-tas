@@ -1,22 +1,28 @@
 /* Usage:
 use joystick::prelude::*;
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(Clone)]
 enum Action {
     Confirm,
     Cancel,
     Fire,
     Jump,
-    Aim,
+    Aim(u8),
 }
 
-let mut gamepad = GenericJoystick::new(HashMap::from([
-    (Action::Confirm, Button::A),
-    (Action::Cancel, Button::B),
-    (Action::Fire, Button::X),
-    (Action::Jump, Button::Y),
-    (Action::Aim, Button::RT(255)),
-]));
+impl From<Action> for Button {
+    fn from(value: Action) -> Self {
+        match value {
+            Action::Confirm => Button::A,
+            Action::Cancel => Button::B,
+            Action::Fire => Button::X,
+            Action::Jump => Button::Y,
+            Action::Aim(val) => Button::RT(val),
+        }
+    }
+}
+
+let mut gamepad = GenericJoystick::default();
 
 gamepad.press(&Action::Confirm);
 gamepad.release(&Action::Fire);
@@ -26,7 +32,7 @@ gamepad.set_rjoy([-1.0, -1.0]);
 */
 
 pub mod prelude {
-    pub use crate::common::Button;
+    pub use crate::common::{Button, JoystickBtnInterface, JoystickInterface};
     pub use crate::mapping::GenericJoystick;
     pub use std::collections::HashMap;
 }

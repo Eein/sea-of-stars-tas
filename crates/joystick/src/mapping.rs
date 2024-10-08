@@ -1,47 +1,31 @@
-use crate::common::{Button, JoystickInterface};
+use crate::common::{Button, JoystickBtnInterface, JoystickInterface};
 use crate::joystick::Joystick;
-use std::collections::HashMap;
-use std::hash::Hash;
 
-pub struct GenericJoystick<KeyType: PartialEq + Eq + Hash> {
-    joystick: Joystick,
-    mappings: HashMap<KeyType, Button>,
-}
+#[derive(Default)]
+pub struct GenericJoystick(Joystick);
 
-impl<KeyType: PartialEq + Eq + Hash> Default for GenericJoystick<KeyType> {
-    fn default() -> Self {
-        GenericJoystick::new(HashMap::new())
-    }
-}
-
-impl<KeyType: PartialEq + Eq + Hash> GenericJoystick<KeyType> {
-    pub fn new(mappings: HashMap<KeyType, Button>) -> Self {
-        Self {
-            joystick: Joystick::default(),
-            mappings,
-        }
-    }
-
-    pub fn release_all(&mut self) {
-        self.joystick.release_all();
-    }
-    pub fn press(&mut self, key: &KeyType) {
-        if let Some(button) = self.mappings.get(key) {
-            self.joystick.press(button);
-        } // Note: could panic! here on None?
-    }
-    pub fn release(&mut self, key: &KeyType) {
-        if let Some(button) = self.mappings.get(key) {
-            self.joystick.release(button);
-        } // Note: could panic! here on None?
+impl JoystickInterface for GenericJoystick {
+    fn release_all(&mut self) {
+        self.0.release_all();
     }
     // [x, y], where the values range from -1 to 1
-    pub fn set_ljoy(&mut self, dir: [f32; 2]) {
-        self.joystick.set_ljoy(dir);
+    fn set_ljoy(&mut self, dir: [f32; 2]) {
+        self.0.set_ljoy(dir);
     }
 
-    pub fn set_rjoy(&mut self, dir: [f32; 2]) {
-        self.joystick.set_rjoy(dir);
+    fn set_rjoy(&mut self, dir: [f32; 2]) {
+        self.0.set_rjoy(dir);
+    }
+}
+
+impl<KeyType: Into<Button> + Clone> JoystickBtnInterface<KeyType> for GenericJoystick {
+    fn press(&mut self, key: &KeyType) {
+        let button: Button = key.clone().into();
+        self.0.press(&button);
+    }
+    fn release(&mut self, key: &KeyType) {
+        let button: Button = key.clone().into();
+        self.0.release(&button);
     }
 }
 
@@ -58,25 +42,31 @@ mod tests {
     use crate::prelude::*;
 
     // This test doubles as an example on how to use the joystick library with custom actions
-    #[derive(PartialEq, Eq, Hash)]
+    #[derive(Clone)]
     enum Action {
         Confirm,
         Cancel,
         Fire,
         Jump,
-        Aim,
+        Aim(u8),
+    }
+
+    impl From<Action> for Button {
+        fn from(value: Action) -> Self {
+            match value {
+                Action::Confirm => Button::A,
+                Action::Cancel => Button::B,
+                Action::Fire => Button::X,
+                Action::Jump => Button::Y,
+                Action::Aim(val) => Button::RT(val),
+            }
+        }
     }
 
     #[test]
     fn test_mappings() -> std::io::Result<()> {
         sleep(Duration::from_millis(2000));
-        let mut gamepad = GenericJoystick::new(HashMap::from([
-            (Action::Confirm, Button::A),
-            (Action::Cancel, Button::B),
-            (Action::Fire, Button::X),
-            (Action::Jump, Button::Y),
-            (Action::Aim, Button::RT(255)),
-        ]));
+        let mut gamepad = GenericJoystick::default();
         sleep(Duration::from_millis(500));
         for _ in 0..3 {
             gamepad.press(&Action::Confirm);
@@ -103,9 +93,9 @@ mod tests {
             sleep(Duration::from_millis(250));
         }
         for _ in 0..3 {
-            gamepad.press(&Action::Aim);
+            gamepad.press(&Action::Aim(255));
             sleep(Duration::from_millis(250));
-            gamepad.release(&Action::Aim);
+            gamepad.release(&Action::Aim(255));
             sleep(Duration::from_millis(250));
         }
         sleep(Duration::from_millis(250));
@@ -113,7 +103,7 @@ mod tests {
         gamepad.press(&Action::Cancel);
         gamepad.press(&Action::Fire);
         gamepad.press(&Action::Jump);
-        gamepad.press(&Action::Aim);
+        gamepad.press(&Action::Aim(255));
         sleep(Duration::from_millis(1000));
         gamepad.release_all();
 

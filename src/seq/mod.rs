@@ -1,5 +1,6 @@
 use crate::control::SosAction;
 use crate::state::GameState;
+use joystick::prelude::*;
 use seq::prelude::*;
 
 // Temp, press the confirm button for x time
