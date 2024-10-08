@@ -9,7 +9,7 @@ use log::error;
 use std::sync::Arc;
 use std::sync::Mutex;
 
-use crate::common::{Button, JoystickInterface};
+use crate::common::{Button, JoystickBtnInterface, JoystickInterface};
 
 pub struct Joystick {
     device: Arc<Mutex<VirtualDevice>>,
@@ -29,27 +29,6 @@ impl JoystickInterface for Joystick {
             Err(e) => error!("Joystick error: {e:?}"),
         }
     }
-
-    fn press(&mut self, button: &Button) {
-        let button = Joystick::get_button(button);
-        let event = InputEvent::new(EventType::KEY.0, button.code(), 1);
-
-        match self.device.lock().unwrap().emit(&[event]) {
-            Ok(_) => (),
-            Err(e) => error!("Joystick error: {e:?}"),
-        }
-    }
-
-    fn release(&mut self, button: &Button) {
-        let button = Joystick::get_button(button);
-        let event = InputEvent::new(EventType::KEY.0, button.code(), 0);
-
-        match self.device.lock().unwrap().emit(&[event]) {
-            Ok(_) => (),
-            Err(e) => error!("Joystick error: {e:?}"),
-        }
-    }
-
     fn set_ljoy(&mut self, dir: [f32; 2]) {
         let mut clamped_dir = dir;
         clamp(&mut clamped_dir, &[-1.0, -1.0], &[1.0, 1.0]);
@@ -82,6 +61,28 @@ impl JoystickInterface for Joystick {
         let y_event = *AbsoluteAxisEvent::new(AbsoluteAxisCode(y_code), abs_y.into());
 
         match self.device.lock().unwrap().emit(&[x_event, y_event]) {
+            Ok(_) => (),
+            Err(e) => error!("Joystick error: {e:?}"),
+        }
+    }
+}
+
+impl JoystickBtnInterface<Button> for Joystick {
+    fn press(&mut self, button: &Button) {
+        let button = Joystick::get_button(button);
+        let event = InputEvent::new(EventType::KEY.0, button.code(), 1);
+
+        match self.device.lock().unwrap().emit(&[event]) {
+            Ok(_) => (),
+            Err(e) => error!("Joystick error: {e:?}"),
+        }
+    }
+
+    fn release(&mut self, button: &Button) {
+        let button = Joystick::get_button(button);
+        let event = InputEvent::new(EventType::KEY.0, button.code(), 0);
+
+        match self.device.lock().unwrap().emit(&[event]) {
             Ok(_) => (),
             Err(e) => error!("Joystick error: {e:?}"),
         }

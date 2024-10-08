@@ -1,6 +1,7 @@
 mod control;
 mod gui;
 mod memory;
+mod seq;
 mod state;
 
 use crate::gui::Gui;
