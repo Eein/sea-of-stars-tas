@@ -32,12 +32,12 @@ pub struct StateGui {
 pub struct GameState {
     // TODO(orkaboy): Create multiple gamepads, one for each player
     pub gamepad: GenericJoystick,
+    pub memory_managers: MemoryManagers,
 }
 
 pub struct State {
     pub context: StateContext,
     pub process_list: ProcessList,
-    pub memory_managers: MemoryManagers,
     pub debug: StateDebug,
     pub gui: StateGui,
     pub game_state: GameState,
@@ -64,7 +64,6 @@ impl State {
                 image: None,
             },
             process_list: ProcessList::default(),
-            memory_managers: MemoryManagers::default(),
             gui: StateGui {
                 helpers: gui_helpers,
                 dock_state: DockState::new(tree_names),
@@ -77,6 +76,7 @@ impl State {
             },
             game_state: GameState {
                 gamepad: GenericJoystick::default(),
+                memory_managers: MemoryManagers::default(),
             },
             // TODO(orkaboy): Temp code, should not be here
             // TODO(orkaboy): Where do we put sequencer.run()? Might need to refactor that as well.
@@ -164,7 +164,7 @@ impl State {
             .as_millis()
             >= 10
         {
-            self.memory_managers.update(&self.context);
+            self.game_state.memory_managers.update(&self.context);
             self.debug.last_memory_update = now;
         }
     }

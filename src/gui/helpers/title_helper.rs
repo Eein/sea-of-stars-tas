@@ -1,5 +1,5 @@
 use super::GuiHelper;
-use crate::memory::MemoryManagers;
+use crate::state::GameState;
 
 pub const NAME: &str = "Title Helper";
 
@@ -13,28 +13,20 @@ impl TitleHelper {
 }
 
 impl GuiHelper for TitleHelper {
-    fn draw(&mut self, managers: &MemoryManagers, ui: &mut egui::Ui, _tab: &mut String) {
+    fn draw(&mut self, game_state: &GameState, ui: &mut egui::Ui, _tab: &mut String) {
+        let tsmd = &game_state.memory_managers.title_sequence_manager.data;
         ui.label(format!(
             "Menu Item Selected: {:?}",
-            managers
-                .title_sequence_manager
-                .data
-                .title_menu_option_selected
+            tsmd.title_menu_option_selected
         ));
-        ui.label(format!(
-            "Pressed Start: {:?}",
-            managers.title_sequence_manager.data.pressed_start
-        ));
-        ui.label(format!(
-            "Load Save Done: {:?}",
-            managers.title_sequence_manager.data.load_save_done
-        ));
+        ui.label(format!("Pressed Start: {:?}", tsmd.pressed_start));
+        ui.label(format!("Load Save Done: {:?}", tsmd.load_save_done));
 
         ui.separator();
 
         ui.label(format!(
             "Current Screen Name: {:?}",
-            managers.title_sequence_manager.data.current_screen_name
+            tsmd.current_screen_name
         ));
 
         ui.separator();
@@ -43,46 +35,23 @@ impl GuiHelper for TitleHelper {
 
         ui.label(format!(
             "Left Character: {:?}",
-            managers
-                .title_sequence_manager
-                .data
-                .new_game_characters
-                .left
-                .character
+            tsmd.new_game_characters.left.character
         ));
 
         ui.label(format!(
             "Right Character: {:?}",
-            managers
-                .title_sequence_manager
-                .data
-                .new_game_characters
-                .right
-                .character
+            tsmd.new_game_characters.right.character
         ));
 
         ui.label(format!(
             "Selected Character: {:?}",
-            managers
-                .title_sequence_manager
-                .data
-                .new_game_characters
-                .selected
+            tsmd.new_game_characters.selected
         ));
 
         ui.separator();
 
-        ui.label(format!(
-            "Relics (Total: {})",
-            managers.title_sequence_manager.data.relic_buttons.count
-        ));
-        for relic in managers
-            .title_sequence_manager
-            .data
-            .relic_buttons
-            .items
-            .iter()
-        {
+        ui.label(format!("Relics (Total: {})", tsmd.relic_buttons.count));
+        for relic in tsmd.relic_buttons.items.iter() {
             ui.checkbox(&mut relic.enabled.clone(), &relic.name);
         }
     }

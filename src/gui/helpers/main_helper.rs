@@ -1,5 +1,5 @@
 use super::GuiHelper;
-use crate::memory::MemoryManagers;
+use crate::state::GameState;
 
 pub const NAME: &str = "Main Helper";
 
@@ -13,7 +13,7 @@ impl MainHelper {
 }
 
 impl GuiHelper for MainHelper {
-    fn draw(&mut self, _managers: &MemoryManagers, ui: &mut egui::Ui, _tab: &mut String) {
+    fn draw(&mut self, _game_state: &GameState, ui: &mut egui::Ui, _tab: &mut String) {
         ui.label("The Default Main Window".to_string());
     }
 }

@@ -1,18 +1,17 @@
 pub mod helpers;
 pub struct Gui;
 use super::gui::helpers::GuiHelpers;
-use super::memory::MemoryManagers;
-use super::state::State;
+use super::state::{GameState, State};
 use egui_dock::{DockArea, Style};
 use std::time::{Duration, Instant};
 
 pub struct TabViewer<'a> {
     helpers: &'a mut GuiHelpers,
-    memory_managers: &'a MemoryManagers,
+    game_state: &'a GameState,
 }
 impl TabViewer<'_> {
     fn draw(&mut self, ui: &mut egui::Ui, tab: &mut String) {
-        self.helpers.draw(self.memory_managers, ui, tab);
+        self.helpers.draw(self.game_state, ui, tab);
     }
 }
 
@@ -93,7 +92,7 @@ impl Gui {
                 .show(
                     ctx,
                     &mut TabViewer {
-                        memory_managers: &state.memory_managers,
+                        game_state: &state.game_state,
                         helpers: &mut state.gui.helpers,
                     },
                 );
