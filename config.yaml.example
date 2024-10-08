@@ -1,0 +1,4 @@
+# Example config file. Copy and rename to config.yaml
+
+# Speedrun related parameters
+konami: true

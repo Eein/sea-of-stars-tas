@@ -5,6 +5,7 @@ use super::state::{GameState, State};
 use egui_dock::{DockArea, Style};
 use seq::prelude::*;
 use std::time::{Duration, Instant};
+use yaml_rust2::Yaml;
 
 pub struct TabViewer<'a> {
     helpers: &'a mut GuiHelpers,
@@ -30,7 +31,7 @@ impl egui_dock::TabViewer for TabViewer<'_> {
 }
 
 impl Gui {
-    pub fn run() {
+    pub fn run(conf: Option<Vec<Yaml>>) {
         let options = eframe::NativeOptions {
             viewport: egui::ViewportBuilder::default()
                 .with_inner_size([800.0, 800.0])
@@ -41,7 +42,7 @@ impl Gui {
         eframe::run_native(
             "Sea of Stars TAS",
             options,
-            Box::new(|cc| Ok(Box::new(State::new(cc)))),
+            Box::new(|cc| Ok(Box::new(State::new(cc, conf)))),
         )
         .expect("Error loading application");
     }

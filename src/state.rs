@@ -9,6 +9,7 @@ use memory::process_list::ProcessList;
 
 use egui_dock::DockState;
 use log::info;
+use yaml_rust2::Yaml;
 use std::time::Instant;
 
 use joystick::prelude::*;
@@ -32,6 +33,7 @@ pub struct GameState {
     // TODO(orkaboy): Create multiple gamepads, one for each player
     pub gamepad: GenericJoystick,
     pub memory_managers: MemoryManagers,
+    pub config: Option<Vec<Yaml>>,
 }
 
 pub struct State {
@@ -50,7 +52,7 @@ pub struct StateContext {
 }
 
 impl State {
-    pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
+    pub fn new(_cc: &eframe::CreationContext<'_>, conf: Option<Vec<Yaml>>) -> Self {
         // Register any GUI helpers here
         let gui_helpers = GuiHelpers::default();
 
@@ -76,6 +78,7 @@ impl State {
             game_state: GameState {
                 gamepad: GenericJoystick::default(),
                 memory_managers: MemoryManagers::default(),
+                config: conf,
             },
             // TODO(orkaboy): Temp code, should not be here
             // TODO(orkaboy): Where do we put sequencer.run()? Might need to refactor that as well.

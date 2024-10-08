@@ -17,12 +17,19 @@ impl MainHelper {
 impl GuiHelper for MainHelper {
     fn draw(
         &mut self,
-        _game_state: &GameState,
+        game_state: &GameState,
         sequencer: &mut Sequencer<GameState>,
         ui: &mut egui::Ui,
         _tab: &mut String,
     ) {
         ui.label("The Default Main Window".to_string());
+
+        let mut konami_code = false;
+        if let Some(config) = &game_state.config {
+            let doc = &config[0];
+            konami_code = doc["konami"].as_bool().unwrap_or_default();
+        }
+        ui.label(format!("Load Konami code: {}", konami_code));
 
         let running = sequencer.is_running();
         if ui
