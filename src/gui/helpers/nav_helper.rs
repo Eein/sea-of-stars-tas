@@ -1,5 +1,6 @@
 use super::GuiHelper;
-use crate::memory::MemoryManagers;
+use crate::state::GameState;
+use seq::prelude::*;
 use vec3_rs::Vector3;
 
 pub const NAME: &str = "Nav Helper";
@@ -22,17 +23,21 @@ impl NavHelper {
 }
 
 impl GuiHelper for NavHelper {
-    fn draw(&mut self, managers: &MemoryManagers, ui: &mut egui::Ui, _tab: &mut String) {
-        ui.label(format!(
-            "Movement State: {:?}",
-            managers.player_party_manager.data.movement_state
-        ));
+    fn draw(
+        &mut self,
+        game_state: &GameState,
+        _sequencer: &mut Sequencer<GameState>,
+        ui: &mut egui::Ui,
+        _tab: &mut String,
+    ) {
+        let ppmd = &game_state.memory_managers.player_party_manager.data;
+        ui.label(format!("Movement State: {:?}", ppmd.movement_state));
         ui.separator();
 
         egui::CollapsingHeader::new("Player Coordinates")
             .default_open(true)
             .show(ui, |ui| {
-                let position = managers.player_party_manager.data.position;
+                let position = ppmd.position;
                 let pos_x = format!("{:.3}", position.get_x());
                 let pos_y = format!("{:.3}", position.get_y());
                 let pos_z = format!("{:.3}", position.get_z());
@@ -55,7 +60,7 @@ impl GuiHelper for NavHelper {
             .default_open(true)
             .show(ui, |ui| {
                 let position = self.target_coordinates;
-                let player_position = managers.player_party_manager.data.position;
+                let player_position = ppmd.position;
                 let pos_x = format!("{:.3}", position.get_x());
                 let pos_y = format!("{:.3}", position.get_y());
                 let pos_z = format!("{:.3}", position.get_z());
@@ -89,7 +94,7 @@ impl GuiHelper for NavHelper {
         egui::CollapsingHeader::new("Gameobject Coordinates")
             .default_open(true)
             .show(ui, |ui| {
-                let position = managers.player_party_manager.data.gameobject_position;
+                let position = ppmd.gameobject_position;
                 let pos_x = format!("{:.3}", position.get_x());
                 let pos_y = format!("{:.3}", position.get_y());
                 let pos_z = format!("{:.3}", position.get_z());
@@ -106,7 +111,7 @@ impl GuiHelper for NavHelper {
         egui::CollapsingHeader::new("Boat Coordinates NOT IMPLEMENTED")
             .default_open(true)
             .show(ui, |ui| {
-                let position = managers.player_party_manager.data.position;
+                let position = ppmd.position;
                 let pos_x = format!("{:.3}", position.get_x());
                 let pos_y = format!("{:.3}", position.get_y());
                 let pos_z = format!("{:.3}", position.get_z());

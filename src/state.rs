@@ -9,9 +9,9 @@ use memory::process_list::ProcessList;
 
 use egui_dock::DockState;
 use log::info;
+use yaml_rust2::Yaml;
 use std::time::Instant;
 
-use crate::seq::SeqConfirm;
 use joystick::prelude::*;
 use seq::prelude::*;
 
@@ -32,12 +32,13 @@ pub struct StateGui {
 pub struct GameState {
     // TODO(orkaboy): Create multiple gamepads, one for each player
     pub gamepad: GenericJoystick,
+    pub memory_managers: MemoryManagers,
+    pub config: Option<Vec<Yaml>>,
 }
 
 pub struct State {
     pub context: StateContext,
     pub process_list: ProcessList,
-    pub memory_managers: MemoryManagers,
     pub debug: StateDebug,
     pub gui: StateGui,
     pub game_state: GameState,
@@ -51,7 +52,7 @@ pub struct StateContext {
 }
 
 impl State {
-    pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
+    pub fn new(_cc: &eframe::CreationContext<'_>, conf: Option<Vec<Yaml>>) -> Self {
         // Register any GUI helpers here
         let gui_helpers = GuiHelpers::default();
 
@@ -64,7 +65,6 @@ impl State {
                 image: None,
             },
             process_list: ProcessList::default(),
-            memory_managers: MemoryManagers::default(),
             gui: StateGui {
                 helpers: gui_helpers,
                 dock_state: DockState::new(tree_names),
@@ -77,31 +77,12 @@ impl State {
             },
             game_state: GameState {
                 gamepad: GenericJoystick::default(),
+                memory_managers: MemoryManagers::default(),
+                config: conf,
             },
             // TODO(orkaboy): Temp code, should not be here
             // TODO(orkaboy): Where do we put sequencer.run()? Might need to refactor that as well.
-            sequencer: Sequencer::create(SeqList::create(
-                "TEMP",
-                vec![
-                    SeqLog::create("SEQ START"),
-                    SeqWait::create("Wait for joystick", 2.0),
-                    SeqConfirm::create(0.5),
-                    SeqLog::create("SEQ (1)"),
-                    SeqWait::create("Wait for joystick", 0.5),
-                    SeqConfirm::create(0.5),
-                    SeqLog::create("SEQ (2)"),
-                    SeqWait::create("Wait for joystick", 0.5),
-                    SeqConfirm::create(0.5),
-                    SeqLog::create("SEQ (3)"),
-                    SeqWait::create("Wait for joystick", 0.5),
-                    SeqConfirm::create(0.5),
-                    SeqLog::create("SEQ (4)"),
-                    SeqWait::create("Wait for joystick", 0.5),
-                    SeqConfirm::create(0.5),
-                    SeqLog::create("SEQ (5)"),
-                    SeqLog::create("SEQ DONE"),
-                ],
-            )),
+            sequencer: Sequencer::create(SeqLog::create("SEQ START")),
         }
     }
 
@@ -164,7 +145,7 @@ impl State {
             .as_millis()
             >= 10
         {
-            self.memory_managers.update(&self.context);
+            self.game_state.memory_managers.update(&self.context);
             self.debug.last_memory_update = now;
         }
     }
@@ -201,7 +182,7 @@ impl eframe::App for State {
         let _ = &self.update_managers();
 
         // TODO(orkaboy): Should probably not be here
-        if self.context.process.is_some() {
+        if self.sequencer.is_running() {
             let _ = self.sequencer.run(&mut self.game_state);
         }
 

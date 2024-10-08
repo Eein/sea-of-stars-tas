@@ -4,6 +4,7 @@ use crate::Node;
 
 pub struct Sequencer<T> {
     root: Box<dyn Node<T>>,
+    started: bool,
     initialized: bool,
     finished: bool,
     timer: Timer,
@@ -13,10 +14,19 @@ impl<T> Sequencer<T> {
     pub fn create(root: Box<dyn Node<T>>) -> Self {
         Sequencer {
             root,
+            started: false,
             initialized: false,
             finished: false,
             timer: delta::Timer::new(),
         }
+    }
+
+    pub fn is_running(&self) -> bool {
+        self.started && !self.finished
+    }
+
+    pub fn start(&mut self) {
+        self.started = true;
     }
 
     pub fn run(&mut self, context: &mut T) -> bool {
