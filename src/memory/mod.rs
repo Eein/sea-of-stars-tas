@@ -40,6 +40,7 @@ impl MemoryManagers {
         if self.ready_for_updates(ctx) {
             self.title_sequence_manager.update(ctx);
             self.player_party_manager.update(ctx);
+            self.time_of_day_manager.update(ctx);
         }
     }
     pub fn ready_for_updates(&mut self, ctx: &StateContext) -> bool {
