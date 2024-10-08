@@ -1,5 +1,6 @@
 use super::GuiHelper;
 use crate::state::GameState;
+use seq::prelude::*;
 use vec3_rs::Vector3;
 
 pub const NAME: &str = "Nav Helper";
@@ -22,7 +23,13 @@ impl NavHelper {
 }
 
 impl GuiHelper for NavHelper {
-    fn draw(&mut self, game_state: &GameState, ui: &mut egui::Ui, _tab: &mut String) {
+    fn draw(
+        &mut self,
+        game_state: &GameState,
+        _sequencer: &Sequencer<GameState>,
+        ui: &mut egui::Ui,
+        _tab: &mut String,
+    ) {
         let ppmd = &game_state.memory_managers.player_party_manager.data;
         ui.label(format!("Movement State: {:?}", ppmd.movement_state));
         ui.separator();

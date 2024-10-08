@@ -3,15 +3,17 @@ pub struct Gui;
 use super::gui::helpers::GuiHelpers;
 use super::state::{GameState, State};
 use egui_dock::{DockArea, Style};
+use seq::prelude::*;
 use std::time::{Duration, Instant};
 
 pub struct TabViewer<'a> {
     helpers: &'a mut GuiHelpers,
     game_state: &'a GameState,
+    sequencer: &'a Sequencer<GameState>,
 }
 impl TabViewer<'_> {
     fn draw(&mut self, ui: &mut egui::Ui, tab: &mut String) {
-        self.helpers.draw(self.game_state, ui, tab);
+        self.helpers.draw(self.game_state, self.sequencer, ui, tab);
     }
 }
 
@@ -93,6 +95,7 @@ impl Gui {
                     ctx,
                     &mut TabViewer {
                         game_state: &state.game_state,
+                        sequencer: &state.sequencer,
                         helpers: &mut state.gui.helpers,
                     },
                 );

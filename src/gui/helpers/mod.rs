@@ -6,6 +6,7 @@ use std::collections::HashMap;
 
 pub use self::{main_helper::*, nav_helper::*, title_helper::*};
 use crate::state::GameState;
+use seq::prelude::*;
 
 pub struct GuiHelpers {
     pub helpers: HashMap<String, Box<dyn GuiHelper>>,
@@ -27,9 +28,15 @@ impl GuiHelpers {
         self.helpers.keys().cloned().collect()
     }
 
-    pub fn draw(&mut self, game_state: &GameState, ui: &mut egui::Ui, tab: &mut String) {
+    pub fn draw(
+        &mut self,
+        game_state: &GameState,
+        sequencer: &Sequencer<GameState>,
+        ui: &mut egui::Ui,
+        tab: &mut String,
+    ) {
         match self.helpers.get_mut(tab.as_str()) {
-            Some(helper) => helper.draw(game_state, ui, tab),
+            Some(helper) => helper.draw(game_state, sequencer, ui, tab),
             None => {
                 let label = format!("Tab: {} has not been initialized. Check gui/mod.rs and state.rs to initialize this tab.", tab.as_str());
                 ui.label(label);
@@ -39,5 +46,11 @@ impl GuiHelpers {
 }
 
 pub trait GuiHelper {
-    fn draw(&mut self, game_state: &GameState, ui: &mut egui::Ui, tab: &mut String);
+    fn draw(
+        &mut self,
+        game_state: &GameState,
+        sequencer: &Sequencer<GameState>,
+        ui: &mut egui::Ui,
+        tab: &mut String,
+    );
 }

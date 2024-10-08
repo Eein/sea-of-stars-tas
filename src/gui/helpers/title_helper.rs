@@ -1,5 +1,6 @@
 use super::GuiHelper;
 use crate::state::GameState;
+use seq::prelude::*;
 
 pub const NAME: &str = "Title Helper";
 
@@ -13,7 +14,13 @@ impl TitleHelper {
 }
 
 impl GuiHelper for TitleHelper {
-    fn draw(&mut self, game_state: &GameState, ui: &mut egui::Ui, _tab: &mut String) {
+    fn draw(
+        &mut self,
+        game_state: &GameState,
+        _sequencer: &Sequencer<GameState>,
+        ui: &mut egui::Ui,
+        _tab: &mut String,
+    ) {
         let tsmd = &game_state.memory_managers.title_sequence_manager.data;
         ui.label(format!(
             "Menu Item Selected: {:?}",
