@@ -26,7 +26,7 @@ impl GuiHelper for NavHelper {
     fn draw(
         &mut self,
         game_state: &GameState,
-        _sequencer: &Sequencer<GameState>,
+        _sequencer: &mut Sequencer<GameState>,
         ui: &mut egui::Ui,
         _tab: &mut String,
     ) {

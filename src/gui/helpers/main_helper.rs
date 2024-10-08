@@ -17,7 +17,7 @@ impl GuiHelper for MainHelper {
     fn draw(
         &mut self,
         _game_state: &GameState,
-        _sequencer: &Sequencer<GameState>,
+        _sequencer: &mut Sequencer<GameState>,
         ui: &mut egui::Ui,
         _tab: &mut String,
     ) {

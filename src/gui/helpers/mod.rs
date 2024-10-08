@@ -31,7 +31,7 @@ impl GuiHelpers {
     pub fn draw(
         &mut self,
         game_state: &GameState,
-        sequencer: &Sequencer<GameState>,
+        sequencer: &mut Sequencer<GameState>,
         ui: &mut egui::Ui,
         tab: &mut String,
     ) {
@@ -49,7 +49,7 @@ pub trait GuiHelper {
     fn draw(
         &mut self,
         game_state: &GameState,
-        sequencer: &Sequencer<GameState>,
+        sequencer: &mut Sequencer<GameState>,
         ui: &mut egui::Ui,
         tab: &mut String,
     );
