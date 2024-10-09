@@ -11,7 +11,7 @@ pub struct UnityMemoryManager {
 }
 impl UnityMemoryManager {
     pub fn reset(&mut self) {
-        self.singleton = None;
+        *self = Self::default();
     }
 }
 
