@@ -31,6 +31,7 @@ impl JoystickInterface for Joystick {
     }
     fn set_ljoy(&mut self, dir: [f32; 2]) {
         let mut clamped_dir = dir;
+        println!("clamped dir: {:?}", dir);
         clamp(&mut clamped_dir, &[-1.0, -1.0], &[1.0, 1.0]);
         // Convert from range -1..1 to -32768..32767
         // Negative values are down/left, positive are up/right
@@ -38,9 +39,16 @@ impl JoystickInterface for Joystick {
         let y_code = AbsoluteAxisCode::ABS_Y.0;
         let abs_x = (clamped_dir[0] * i16::MAX as f32) as i16;
         let abs_y = -(clamped_dir[1] * i16::MAX as f32) as i16;
+        println!("abs_x: {:?}", abs_x);
+        println!("abs_y: {:?}", abs_y);
+        // then normalize
+        let n_x = 2 * abs_x / 512 - 1;
+        let n_y = 2 * abs_y / 512 - 1;
+        println!("n_x: {:?}", n_x);
+        println!("n_y: {:?}", n_y);
 
-        let x_event = *AbsoluteAxisEvent::new(AbsoluteAxisCode(x_code), abs_x.into());
-        let y_event = *AbsoluteAxisEvent::new(AbsoluteAxisCode(y_code), abs_y.into());
+        let x_event = *AbsoluteAxisEvent::new(AbsoluteAxisCode(x_code), n_x.into());
+        let y_event = *AbsoluteAxisEvent::new(AbsoluteAxisCode(y_code), n_y.into());
 
         match self.device.lock().unwrap().emit(&[x_event, y_event]) {
             Ok(_) => (),
@@ -163,5 +171,19 @@ impl Default for Joystick {
             device: Arc::new(Mutex::new(device)),
             keys,
         }
+    }
+}
+
+pub fn normalize(value: f32) -> u16 {
+    0
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::joystick::normalize;
+    #[test]
+    fn test_normalize() -> std::io::Result<()> {
+        assert_eq!(normalize(0.0), 256);
+        Ok(())
     }
 }
