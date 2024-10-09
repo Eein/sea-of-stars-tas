@@ -317,7 +317,7 @@ impl TitleSequenceManagerData {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, PartialEq)]
 pub enum TitleMenuOption {
     #[default]
     None,

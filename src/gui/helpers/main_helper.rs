@@ -1,5 +1,5 @@
 use super::GuiHelper;
-use crate::seq::SeqConfirm;
+use crate::seq::title::SeqTitleScreen;
 use crate::state::GameState;
 use seq::prelude::*;
 
@@ -38,21 +38,7 @@ impl GuiHelper for MainHelper {
                 "TEMP",
                 vec![
                     SeqLog::create("SEQ START"),
-                    SeqWait::create("Wait for focus", 5.0),
-                    SeqConfirm::create(0.5),
-                    SeqLog::create("SEQ (1)"),
-                    SeqWait::create("Wait for joystick", 0.5),
-                    SeqConfirm::create(0.5),
-                    SeqLog::create("SEQ (2)"),
-                    SeqWait::create("Wait for joystick", 0.5),
-                    SeqConfirm::create(0.5),
-                    SeqLog::create("SEQ (3)"),
-                    SeqWait::create("Wait for joystick", 0.5),
-                    SeqConfirm::create(0.5),
-                    SeqLog::create("SEQ (4)"),
-                    SeqWait::create("Wait for joystick", 0.5),
-                    SeqConfirm::create(0.5),
-                    SeqLog::create("SEQ (5)"),
+                    SeqTitleScreen::create(),
                     SeqLog::create("SEQ DONE"),
                 ],
             ));
