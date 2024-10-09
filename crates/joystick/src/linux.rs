@@ -165,7 +165,6 @@ impl Default for Joystick {
 }
 
 // Normalizing a value for linux should normalize against the abs values
-// TODO(eein): you should have removed this message and taken the magic values to const
 pub fn normalize(value: f32) -> u16 {
     let val = ((value - -1.0) / (1.0 - -1.0)) * ABS_MAX as f32;
     val.round() as u16
