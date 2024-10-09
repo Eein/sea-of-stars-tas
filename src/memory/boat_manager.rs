@@ -25,7 +25,7 @@ impl Default for MemoryManager<BoatManagerData> {
 
 #[derive(Default, Debug)]
 pub struct BoatManagerData {
-    backing_field: u64,
+    backing_field: Option<u32>,
     pub position: Vector3<f32>,
     pub rotation: Quaternion,
     pub speed: f32,
@@ -39,8 +39,10 @@ impl MemoryManagerUpdate for BoatManagerData {
         manager: &mut UnityMemoryManager,
     ) -> Result<(), MemoryError> {
         let memory_context = MemoryContext::create(ctx, manager)?;
+
         self.update_backing_field(&memory_context)?;
-        if self.backing_field != 0 {
+
+        if self.backing_field.is_some() {
             self.update_position(&memory_context)?;
             self.update_rotation(&memory_context)?;
             self.update_speed(&memory_context)?;
@@ -55,11 +57,8 @@ impl BoatManagerData {
         &mut self,
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
-        if let Ok(backing_field_ptr) =
-            memory_context.follow_fields_without_read(&["<BoatInstance>k__BackingField"])
-        {
-            self.backing_field = memory_context.read_pointer::<u64>(backing_field_ptr)?;
-        }
+        self.backing_field = memory_context.get_field_offset("<BoatInstance>k__BackingField");
+
         Ok(())
     }
 

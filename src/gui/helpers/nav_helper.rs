@@ -1,7 +1,7 @@
 use super::GuiHelper;
 use crate::state::GameState;
-use vec3_rs::Vector3;
 use seq::prelude::*;
+use vec3_rs::Vector3;
 
 pub const NAME: &str = "Nav Helper";
 
