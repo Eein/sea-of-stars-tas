@@ -16,6 +16,9 @@ pub struct Joystick {
     keys: AttributeSet<KeyCode>,
 }
 
+const ABS_MAX: i32 = 512;
+const ABS_MIN: i32 = 0;
+
 impl JoystickInterface for Joystick {
     fn release_all(&mut self) {
         self.set_ljoy([0.0, 0.0]);
@@ -29,41 +32,13 @@ impl JoystickInterface for Joystick {
             Err(e) => error!("Joystick error: {e:?}"),
         }
     }
+
     fn set_ljoy(&mut self, dir: [f32; 2]) {
-        let mut clamped_dir = dir;
-        clamp(&mut clamped_dir, &[-1.0, -1.0], &[1.0, 1.0]);
-        // Convert from range -1..1 to -32768..32767
-        // Negative values are down/left, positive are up/right
-        let x_code = AbsoluteAxisCode::ABS_X.0;
-        let y_code = AbsoluteAxisCode::ABS_Y.0;
-        let abs_x = (clamped_dir[0] * i16::MAX as f32) as i16;
-        let abs_y = -(clamped_dir[1] * i16::MAX as f32) as i16;
-
-        let x_event = *AbsoluteAxisEvent::new(AbsoluteAxisCode(x_code), abs_x.into());
-        let y_event = *AbsoluteAxisEvent::new(AbsoluteAxisCode(y_code), abs_y.into());
-
-        match self.device.lock().unwrap().emit(&[x_event, y_event]) {
-            Ok(_) => (),
-            Err(e) => error!("Joystick error: {e:?}"),
-        }
+        self.set_joy(dir, AbsoluteAxisCode::ABS_X, AbsoluteAxisCode::ABS_Y);
     }
+
     fn set_rjoy(&mut self, dir: [f32; 2]) {
-        let mut clamped_dir = dir;
-        clamp(&mut clamped_dir, &[-1.0, -1.0], &[1.0, 1.0]);
-        // Convert from range -1..1 to -32768..32767
-        // Negative values are down/left, positive are up/right
-        let x_code = AbsoluteAxisCode::ABS_RX.0;
-        let y_code = AbsoluteAxisCode::ABS_RY.0;
-        let abs_x = (clamped_dir[0] * i16::MAX as f32) as i16;
-        let abs_y = -(clamped_dir[1] * i16::MAX as f32) as i16;
-
-        let x_event = *AbsoluteAxisEvent::new(AbsoluteAxisCode(x_code), abs_x.into());
-        let y_event = *AbsoluteAxisEvent::new(AbsoluteAxisCode(y_code), abs_y.into());
-
-        match self.device.lock().unwrap().emit(&[x_event, y_event]) {
-            Ok(_) => (),
-            Err(e) => error!("Joystick error: {e:?}"),
-        }
+        self.set_joy(dir, AbsoluteAxisCode::ABS_RX, AbsoluteAxisCode::ABS_RY);
     }
 }
 
@@ -90,6 +65,28 @@ impl JoystickBtnInterface<Button> for Joystick {
 }
 
 impl Joystick {
+    fn set_joy(&mut self, dir: [f32; 2], x_code: AbsoluteAxisCode, y_code: AbsoluteAxisCode) {
+        let mut clamped_dir = dir;
+        clamp(&mut clamped_dir, &[-1.0, -1.0], &[1.0, 1.0]);
+        // Convert from range -1..1 to -32768..32767
+        // Negative values are down/left, positive are up/right
+        let x_code = x_code.0;
+        let y_code = y_code.0;
+        let abs_x = (clamped_dir[0] * i16::MAX as f32) as i16;
+        let abs_y = -(clamped_dir[1] * i16::MAX as f32) as i16;
+        
+        let n_x = normalize(abs_x.into());
+        let n_y = normalize(abs_y.into());
+
+        let x_event = *AbsoluteAxisEvent::new(AbsoluteAxisCode(x_code), n_x.into());
+        let y_event = *AbsoluteAxisEvent::new(AbsoluteAxisCode(y_code), n_y.into());
+
+        match self.device.lock().unwrap().emit(&[x_event, y_event]) {
+            Ok(_) => (),
+            Err(e) => error!("Joystick error: {e:?}"),
+        }
+    }
+
     fn get_button(button: &Button) -> KeyCode {
         match button {
             Button::A => KeyCode::BTN_EAST,
@@ -115,7 +112,8 @@ impl Joystick {
 impl Default for Joystick {
     fn default() -> Self {
         let name = "Future TAS Joystick Linux";
-        let abs_setup = AbsInfo::new(256, 0, 512, 20, 20, 1);
+        let center = ABS_MAX / 2;
+        let abs_setup = AbsInfo::new(center, ABS_MIN, ABS_MAX, 20, 20, 1);
         let abs_x = UinputAbsSetup::new(AbsoluteAxisCode::ABS_X, abs_setup);
         let abs_y = UinputAbsSetup::new(AbsoluteAxisCode::ABS_Y, abs_setup);
 
@@ -163,5 +161,23 @@ impl Default for Joystick {
             device: Arc::new(Mutex::new(device)),
             keys,
         }
+    }
+}
+
+// Normalizing a value for linux should normalize against the abs values
+pub fn normalize(value: f32) -> u16 {
+    let val = ((value - -1.0) / (1.0 - -1.0)) * ABS_MAX as f32;
+    val.round() as u16
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::joystick::normalize;
+    #[test]
+    fn test_normalize() -> std::io::Result<()> {
+        assert_eq!(normalize(-1.0), 0);
+        assert_eq!(normalize(1.0), 512);
+        assert_eq!(normalize(0.0), 256);
+        Ok(())
     }
 }
