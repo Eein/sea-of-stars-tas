@@ -1,8 +1,8 @@
 use crate::memory::memory_context::MemoryContext;
 use crate::memory::{MemoryManager, MemoryManagerUpdate};
 use crate::state::StateContext;
-use vec3_rs::Vector3;
 use crate::util::quaternion::Quaternion;
+use vec3_rs::Vector3;
 
 use log::info;
 
@@ -85,10 +85,10 @@ impl BoatManagerData {
             "boatSnapRotation",
             "pitchRollLocalRotation",
         ]) {
-            let x = memory_context.read_pointer::<f32>(boat_rotation_ptr + 0x44)?;
-            let y = memory_context.read_pointer::<f32>(boat_rotation_ptr + 0x48)?;
-            let z = memory_context.read_pointer::<f32>(boat_rotation_ptr + 0x4C)?;
-            let w = memory_context.read_pointer::<f32>(boat_rotation_ptr + 0x50)?;
+            let x = memory_context.read_pointer::<f32>(boat_rotation_ptr)?;
+            let y = memory_context.read_pointer::<f32>(boat_rotation_ptr + 0x4)?;
+            let z = memory_context.read_pointer::<f32>(boat_rotation_ptr + 0x8)?;
+            let w = memory_context.read_pointer::<f32>(boat_rotation_ptr + 0xC)?;
 
             self.rotation = Quaternion { x, y, z, w };
         }
@@ -99,11 +99,14 @@ impl BoatManagerData {
     // TODO(eein): This update is missing field information
     // Update to use follow_fields when fields are known
     pub fn update_speed(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
-        if let Ok(speed_ptr) = memory_context.read_pointer_path_without_read(&[0x40]) {
-            let max_speed = memory_context.read_pointer::<f32>(speed_ptr + 0x78)?;
-            let speed = memory_context.read_pointer::<f32>(speed_ptr + 0x134)?;
-
+        if let Ok(max_speed) =
+            memory_context.follow_fields::<f32>(&["<BoatInstance>k__BackingField", "boatSpeed"])
+        {
             self.max_speed = max_speed;
+        }
+        if let Ok(speed) =
+            memory_context.follow_fields::<f32>(&["<BoatInstance>k__BackingField", "previousSpeed"])
+        {
             self.speed = speed;
         }
         Ok(())

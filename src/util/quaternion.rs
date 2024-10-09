@@ -1,13 +1,13 @@
+use libm::Libm;
 use std::f32::consts::PI;
 use vec3_rs::Vector3;
-use libm::Libm;
 
 #[derive(Default, Debug)]
 pub struct Quaternion {
     pub x: f32,
     pub y: f32,
     pub z: f32,
-    pub w: f32
+    pub w: f32,
 }
 
 impl Quaternion {

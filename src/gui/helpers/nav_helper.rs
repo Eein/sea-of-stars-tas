@@ -48,7 +48,7 @@ impl GuiHelper for NavHelper {
                 ui.label(format!("z: {}", pos_z));
 
                 if ui.button("Set as target").clicked() {
-                    self.target_coordinates = 
+                    self.target_coordinates =
                         Vector3::new(position.get_x(), position.get_y(), position.get_z())
                 };
                 if ui.button("Copy to clipboard NOT IMPLEMENTED").clicked() {
@@ -127,7 +127,10 @@ impl GuiHelper for NavHelper {
                     // nothing yet
                 };
                 ui.label(format!("Rot (yaw): {:?}", &boat_manager.rotation.to_yaw()));
-                ui.label(format!("speed: {:.3}/{:.3}", boat_manager.speed, boat_manager.max_speed));
+                ui.label(format!(
+                    "speed: {:.3}/{:.3}",
+                    boat_manager.speed, boat_manager.max_speed
+                ));
             });
     }
 }
