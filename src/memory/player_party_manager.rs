@@ -11,9 +11,7 @@ impl Default for MemoryManager<PlayerPartyManagerData> {
         let manager = Self {
             name: "PlayerPartyManager".to_string(),
             data: PlayerPartyManagerData::default(),
-            manager: UnityMemoryManager {
-                ..UnityMemoryManager::default()
-            },
+            manager: UnityMemoryManager::default(),
         };
         info!("Memory: {} Loaded", manager.name);
         manager
@@ -24,7 +22,7 @@ impl Default for MemoryManager<PlayerPartyManagerData> {
 pub struct PlayerPartyManagerData {
     pub position: Vector3<f32>,
     pub gameobject_position: Vector3<f32>,
-    pub leader_offset: Option<u32>,
+    leader_offset: Option<u32>,
     pub movement_state: PlayerMovementState,
 }
 
@@ -68,14 +66,15 @@ impl PlayerPartyManagerData {
     pub fn update_position(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
         let leader_offset = self.leader_offset.unwrap();
 
-        let current_position_ptr =
-            memory_context.read_pointer_path_without_read(&[leader_offset.into(), 0x90, 0x84])?;
+        if let Ok(current_position_ptr) =
+            memory_context.read_pointer_path_without_read(&[leader_offset.into(), 0x90, 0x84])
+        {
+            let x = memory_context.read_pointer::<f32>(current_position_ptr)?;
+            let y = memory_context.read_pointer::<f32>(current_position_ptr + 0x4)?;
+            let z = memory_context.read_pointer::<f32>(current_position_ptr + 0x8)?;
 
-        let x = memory_context.read_pointer::<f32>(current_position_ptr)?;
-        let y = memory_context.read_pointer::<f32>(current_position_ptr + 0x4)?;
-        let z = memory_context.read_pointer::<f32>(current_position_ptr + 0x8)?;
-
-        self.position = Vector3::new(x, y, z);
+            self.position = Vector3::new(x, y, z);
+        };
 
         Ok(())
     }
@@ -86,18 +85,15 @@ impl PlayerPartyManagerData {
     ) -> Result<(), MemoryError> {
         let leader_offset = self.leader_offset.unwrap();
 
-        let gameobject_ptr = memory_context.read_pointer_path_without_read(&[
-            leader_offset.into(),
-            0x30,
-            0x48,
-            0x1C,
-        ])?;
+        if let Ok(gameobject_ptr) =
+            memory_context.read_pointer_path_without_read(&[leader_offset.into(), 0x30, 0x48, 0x1C])
+        {
+            let x = memory_context.read_pointer::<f32>(gameobject_ptr)?;
+            let y = memory_context.read_pointer::<f32>(gameobject_ptr + 0x4)?;
+            let z = memory_context.read_pointer::<f32>(gameobject_ptr + 0x8)?;
 
-        let x = memory_context.read_pointer::<f32>(gameobject_ptr)?;
-        let y = memory_context.read_pointer::<f32>(gameobject_ptr + 0x4)?;
-        let z = memory_context.read_pointer::<f32>(gameobject_ptr + 0x8)?;
-
-        self.gameobject_position = Vector3::new(x, y, z);
+            self.gameobject_position = Vector3::new(x, y, z);
+        };
 
         Ok(())
     }

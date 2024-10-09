@@ -103,6 +103,11 @@ impl State {
         match Process::with_name(process_name, &mut self.process_list) {
             Ok(process) => {
                 if self.context.process.is_none() {
+                    // In case we change processes, default all the memory
+                    // managers so addresses dont hang onto zombie processes.
+                    // NOTE(eein): it may make more sense to do the entire
+                    // game_state here
+                    self.game_state.memory_managers = MemoryManagers::default();
                     info!(
                         "- Attaching Process\nFound {} at pid {}",
                         process_name, process.pid

@@ -42,6 +42,11 @@ impl<'a> MemoryContext<'a> {
             .follow_fields::<T>(*self.singleton, self.process, self.module, fields)
     }
 
+    pub fn follow_fields_without_read(&self, fields: &[&str]) -> Result<u64, MemoryError> {
+        self.class
+            .follow_fields_without_read(*self.singleton, self.process, self.module, fields)
+    }
+
     pub fn read_pointer_path_without_read(&self, path: &[u64]) -> Result<u64, MemoryError> {
         self.process
             .read_pointer_path_without_read(self.singleton.class, path)

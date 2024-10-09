@@ -1,3 +1,4 @@
+pub mod boat_manager;
 pub mod memory_context;
 pub mod objects;
 pub mod player_party_manager;
@@ -8,6 +9,7 @@ use log::error;
 
 use crate::state::StateContext;
 
+use boat_manager::BoatManagerData;
 use memory::memory_manager::il2cpp::{UnityMemoryManagement, UnityMemoryManager};
 use memory::process::MemoryError;
 use player_party_manager::PlayerPartyManagerData;
@@ -33,6 +35,7 @@ pub struct MemoryManagers {
     pub title_sequence_manager: MemoryManager<TitleSequenceManagerData>,
     pub player_party_manager: MemoryManager<PlayerPartyManagerData>,
     pub time_of_day_manager: MemoryManager<TimeOfDayManagerData>,
+    pub boat_manager: MemoryManager<BoatManagerData>,
 }
 
 impl MemoryManagers {
@@ -41,6 +44,7 @@ impl MemoryManagers {
             self.title_sequence_manager.update(ctx);
             self.player_party_manager.update(ctx);
             self.time_of_day_manager.update(ctx);
+            self.boat_manager.update(ctx);
         }
     }
     pub fn ready_for_updates(&mut self, ctx: &StateContext) -> bool {

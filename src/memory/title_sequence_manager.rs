@@ -16,9 +16,7 @@ impl Default for MemoryManager<TitleSequenceManagerData> {
         let manager = Self {
             name: "TitleSequenceManager".to_string(),
             data: TitleSequenceManagerData::default(),
-            manager: UnityMemoryManager {
-                ..UnityMemoryManager::default()
-            },
+            manager: UnityMemoryManager::default(),
         };
         info!("Memory: {} Loaded", manager.name);
         manager

@@ -99,11 +99,17 @@ impl Process {
     pub fn read<T: Pod>(&self, address: u64) -> Result<T, MemoryError> {
         unsafe {
             let mut value = MaybeUninit::<T>::uninit();
-            let _result = self.read_mem(
-                address,
-                slice::from_raw_parts_mut(value.as_mut_ptr().cast(), mem::size_of::<T>()),
-            );
-            Ok(value.assume_init())
+            if self
+                .read_mem(
+                    address,
+                    slice::from_raw_parts_mut(value.as_mut_ptr().cast(), mem::size_of::<T>()),
+                )
+                .is_ok()
+            {
+                Ok(value.assume_init())
+            } else {
+                Err(MemoryError::ReadError)
+            }
         }
     }
 

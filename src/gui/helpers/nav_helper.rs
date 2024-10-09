@@ -31,6 +31,8 @@ impl GuiHelper for NavHelper {
         _tab: &mut String,
     ) {
         let ppmd = &game_state.memory_managers.player_party_manager.data;
+        let boat_manager = &game_state.memory_managers.boat_manager.data;
+
         ui.label(format!("Movement State: {:?}", ppmd.movement_state));
         ui.separator();
 
@@ -108,10 +110,10 @@ impl GuiHelper for NavHelper {
                     // nothing yet
                 };
             });
-        egui::CollapsingHeader::new("Boat Coordinates NOT IMPLEMENTED")
+        egui::CollapsingHeader::new("Boat Coordinates")
             .default_open(true)
             .show(ui, |ui| {
-                let position = ppmd.position;
+                let position = boat_manager.position;
                 let pos_x = format!("{:.3}", position.get_x());
                 let pos_y = format!("{:.3}", position.get_y());
                 let pos_z = format!("{:.3}", position.get_z());
@@ -124,8 +126,11 @@ impl GuiHelper for NavHelper {
                     ui.output_mut(|o| o.copied_text = String::from(text));
                     // nothing yet
                 };
-                ui.label(format!("Rot (yaw): {}", pos_z));
-                ui.label("speed: not/implemented");
+                ui.label(format!("Rot (yaw): {:?}", &boat_manager.rotation.to_yaw()));
+                ui.label(format!(
+                    "speed: {:.3}/{:.3}",
+                    boat_manager.speed, boat_manager.max_speed
+                ));
             });
     }
 }
