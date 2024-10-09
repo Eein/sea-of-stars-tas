@@ -74,7 +74,7 @@ impl Joystick {
         let y_code = y_code.0;
         let abs_x = (clamped_dir[0] * i16::MAX as f32) as i16;
         let abs_y = -(clamped_dir[1] * i16::MAX as f32) as i16;
-        
+
         let n_x = normalize(abs_x.into());
         let n_y = normalize(abs_y.into());
 
