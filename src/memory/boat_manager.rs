@@ -95,8 +95,6 @@ impl BoatManagerData {
         Ok(())
     }
 
-    // TODO(eein): This update is missing field information
-    // Update to use follow_fields when fields are known
     pub fn update_speed(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
         if let Ok(max_speed) =
             memory_context.follow_fields::<f32>(&["<BoatInstance>k__BackingField", "boatSpeed"])
