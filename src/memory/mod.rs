@@ -1,6 +1,7 @@
 pub mod memory_context;
 pub mod objects;
 pub mod player_party_manager;
+pub mod time_of_day_manager;
 pub mod title_sequence_manager;
 
 use log::error;
@@ -10,6 +11,7 @@ use crate::state::StateContext;
 use memory::memory_manager::il2cpp::{UnityMemoryManagement, UnityMemoryManager};
 use memory::process::MemoryError;
 use player_party_manager::PlayerPartyManagerData;
+use time_of_day_manager::TimeOfDayManagerData;
 use title_sequence_manager::TitleSequenceManagerData;
 
 pub trait MemoryManagerUpdate {
@@ -30,6 +32,7 @@ pub struct MemoryManager<T: MemoryManagerUpdate> {
 pub struct MemoryManagers {
     pub title_sequence_manager: MemoryManager<TitleSequenceManagerData>,
     pub player_party_manager: MemoryManager<PlayerPartyManagerData>,
+    pub time_of_day_manager: MemoryManager<TimeOfDayManagerData>,
 }
 
 impl MemoryManagers {
@@ -37,6 +40,7 @@ impl MemoryManagers {
         if self.ready_for_updates(ctx) {
             self.title_sequence_manager.update(ctx);
             self.player_party_manager.update(ctx);
+            self.time_of_day_manager.update(ctx);
         }
     }
     pub fn ready_for_updates(&mut self, ctx: &StateContext) -> bool {
