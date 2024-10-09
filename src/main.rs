@@ -17,7 +17,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let conf = match load_config("./config.toml") {
         Ok(conf) => conf,
         Err(_err) => {
-            warn!("No config.toml found; using defaults.");
+            warn!("No config.toml loaded, using defaults.");
             Config::default()
         }
     };
