@@ -3,4 +3,4 @@
 
 flamegraph.svg
 perf.data*
-config.yaml
+config.toml
