@@ -8,11 +8,6 @@ pub struct Config {
     pub konami_code: bool,
 }
 
-#[derive(Deserialize, Debug)]
-pub enum ConfigError {
-    FileOpen,
-}
-
 pub fn load_config(filename: &str) -> Result<Config, Box<dyn Error>> {
     let contents = fs::read_to_string(filename)?;
     match toml::from_str(&contents) {
