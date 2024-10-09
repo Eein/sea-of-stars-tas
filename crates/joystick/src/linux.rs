@@ -174,8 +174,16 @@ impl Default for Joystick {
     }
 }
 
+// Normalizing a value for linux should normalize against the abs values
+// TODO(eein): you should have removed this message and taken the magic values to const
 pub fn normalize(value: f32) -> u16 {
-    0
+// normalizedValue = 2.0 * (value - min) / (max - min) - 1.0
+ // const double valMin = std::numeric_limits<T>::min();
+ //    const double valMax = std::numeric_limits<T>::max();
+ //    return 2 * (x - valMin) / (valMax - valMin) - 1;
+    let val = value + 1.0 * 256.0;
+    val.round() as u16
+    
 }
 
 #[cfg(test)]
@@ -184,6 +192,8 @@ mod tests {
     #[test]
     fn test_normalize() -> std::io::Result<()> {
         assert_eq!(normalize(0.0), 256);
+        assert_eq!(normalize(1.0), 512);
+        assert_eq!(normalize(-1.0), 0);
         Ok(())
     }
 }
