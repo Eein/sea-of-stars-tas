@@ -25,10 +25,10 @@ impl Default for MemoryManager<BoatManagerData> {
 #[derive(Default, Debug)]
 pub struct BoatManagerData {
     backing_field: u64,
-    position: Vector3<f32>,
-    rotation: Quaternion<f32>,
-    speed: f32,
-    max_speed: f32,
+    pub position: Vector3<f32>,
+    pub rotation: Quaternion<f32>,
+    pub speed: f32,
+    pub max_speed: f32,
 }
 
 impl MemoryManagerUpdate for BoatManagerData {

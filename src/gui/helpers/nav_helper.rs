@@ -1,5 +1,6 @@
 use super::GuiHelper;
 use crate::state::GameState;
+use crate::util::math;
 use quaternion_core::{QuaternionOps, Vector3};
 use seq::prelude::*;
 
@@ -31,6 +32,8 @@ impl GuiHelper for NavHelper {
         _tab: &mut String,
     ) {
         let ppmd = &game_state.memory_managers.player_party_manager.data;
+        let boat_manager = &game_state.memory_managers.boat_manager.data;
+
         ui.label(format!("Movement State: {:?}", ppmd.movement_state));
         ui.separator();
 
@@ -58,7 +61,7 @@ impl GuiHelper for NavHelper {
         egui::CollapsingHeader::new("Target Coordinates")
             .default_open(true)
             .show(ui, |ui| {
-                let position: Vector3<f32> = self.target_coordinates;
+                let position = self.target_coordinates;
                 let player_position = ppmd.position;
                 let pos_x = format!("{:.3}", position[0]);
                 let pos_y = format!("{:.3}", position[1]);
@@ -68,7 +71,7 @@ impl GuiHelper for NavHelper {
                 ui.label(format!("z: {}", pos_z));
 
                 let diff = position.sub(player_position);
-                let distance_to_target = crate::util::math::magnitude(&diff);
+                let distance_to_target = math::magnitude(&diff);
                 let distance_to_target_string =
                     format!("Distance to target {:.3}", distance_to_target);
                 ui.label(distance_to_target_string);
@@ -110,7 +113,7 @@ impl GuiHelper for NavHelper {
         egui::CollapsingHeader::new("Boat Coordinates NOT IMPLEMENTED")
             .default_open(true)
             .show(ui, |ui| {
-                let position = ppmd.position;
+                let position = boat_manager.position;
                 let pos_x = format!("{:.3}", position[0]);
                 let pos_y = format!("{:.3}", position[1]);
                 let pos_z = format!("{:.3}", position[2]);
@@ -123,8 +126,14 @@ impl GuiHelper for NavHelper {
                     ui.output_mut(|o| o.copied_text = String::from(text));
                     // nothing yet
                 };
-                ui.label(format!("Rot (yaw): {}", pos_z));
-                ui.label("speed: not/implemented");
+                ui.label(format!(
+                    "Rot (yaw): {:?}",
+                    math::to_yaw(boat_manager.rotation)
+                ));
+                ui.label(format!(
+                    "speed: {:.3}/{:.3}",
+                    boat_manager.speed, boat_manager.max_speed
+                ));
             });
     }
 }
