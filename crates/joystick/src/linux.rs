@@ -1,8 +1,7 @@
 use evdev::{
     uinput::{VirtualDevice, VirtualDeviceBuilder},
-    InputId, BusType,
-    AbsInfo, AbsoluteAxisCode, AbsoluteAxisEvent, AttributeSet, EventType, InputEvent, KeyCode,
-    UinputAbsSetup,
+    AbsInfo, AbsoluteAxisCode, AbsoluteAxisEvent, AttributeSet, BusType, EventType, InputEvent,
+    InputId, KeyCode, UinputAbsSetup,
 };
 use vec2::clamp;
 
