@@ -7,10 +7,10 @@ use memory::game_engine::il2cpp::{Image, Module};
 use memory::process::Process;
 use memory::process_list::ProcessList;
 
+use crate::config::Config;
 use egui_dock::DockState;
 use log::info;
 use std::time::Instant;
-use yaml_rust2::Yaml;
 
 use joystick::prelude::*;
 use seq::prelude::*;
@@ -33,7 +33,7 @@ pub struct GameState {
     // TODO(orkaboy): Create multiple gamepads, one for each player
     pub gamepad: GenericJoystick,
     pub memory_managers: MemoryManagers,
-    pub config: Option<Vec<Yaml>>,
+    pub config: Config,
 }
 
 pub struct State {
@@ -52,7 +52,7 @@ pub struct StateContext {
 }
 
 impl State {
-    pub fn new(_cc: &eframe::CreationContext<'_>, conf: Option<Vec<Yaml>>) -> Self {
+    pub fn new(_cc: &eframe::CreationContext<'_>, conf: Config) -> Self {
         // Register any GUI helpers here
         let gui_helpers = GuiHelpers::default();
 

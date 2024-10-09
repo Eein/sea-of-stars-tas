@@ -1,0 +1,6 @@
+# Example config file. Copy and rename to config.toml
+# Examples on serialization and deserialization here:
+# https://docs.rs/toml/latest/toml/#deserialization-and-serialization
+
+# Speedrun related parameters
+konami_code = true

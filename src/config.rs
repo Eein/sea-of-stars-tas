@@ -1,9 +1,26 @@
+use log::*;
+use serde::Deserialize;
 use std::error::Error;
 use std::fs;
-use yaml_rust2::{Yaml, YamlLoader};
 
-pub fn load_config(filename: &str) -> Result<Vec<Yaml>, Box<dyn Error>> {
-    let source = fs::read_to_string(filename)?;
-    let conf = YamlLoader::load_from_str(&source)?;
-    Ok(conf)
+#[derive(Deserialize, Default, Debug)]
+pub struct Config {
+    pub konami_code: bool,
+}
+
+pub fn load_config(filename: &str) -> Result<Config, Box<dyn Error>> {
+    match fs::read_to_string(filename) {
+        Ok(contents) => match toml::from_str(&contents) {
+            Ok(config) => Ok(config),
+            Err(err) => {
+                error!("Issues parsing config.toml file:");
+                error!("{}", err.message());
+                Err(Box::new(err))
+            }
+        },
+        Err(err) => {
+            warn!("config.toml file could not be found or read.");
+            Err(Box::new(err))
+        }
+    }
 }

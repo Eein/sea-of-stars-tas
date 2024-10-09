@@ -24,12 +24,10 @@ impl GuiHelper for MainHelper {
     ) {
         ui.label("The Default Main Window".to_string());
 
-        let mut konami_code = false;
-        if let Some(config) = &game_state.config {
-            let doc = &config[0];
-            konami_code = doc["konami"].as_bool().unwrap_or_default();
-        }
-        ui.label(format!("Load Konami code: {}", konami_code));
+        ui.label(format!(
+            "Load Konami code: {}",
+            &game_state.config.konami_code
+        ));
 
         let running = sequencer.is_running();
         if ui

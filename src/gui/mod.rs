@@ -2,10 +2,10 @@ pub mod helpers;
 pub struct Gui;
 use super::gui::helpers::GuiHelpers;
 use super::state::{GameState, State};
+use crate::config::Config;
 use egui_dock::{DockArea, Style};
 use seq::prelude::*;
 use std::time::{Duration, Instant};
-use yaml_rust2::Yaml;
 
 pub struct TabViewer<'a> {
     helpers: &'a mut GuiHelpers,
@@ -31,7 +31,7 @@ impl egui_dock::TabViewer for TabViewer<'_> {
 }
 
 impl Gui {
-    pub fn run(conf: Option<Vec<Yaml>>) {
+    pub fn run(conf: Config) {
         let options = eframe::NativeOptions {
             viewport: egui::ViewportBuilder::default()
                 .with_inner_size([800.0, 800.0])
