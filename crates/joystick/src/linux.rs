@@ -1,5 +1,6 @@
 use evdev::{
     uinput::{VirtualDevice, VirtualDeviceBuilder},
+    InputId, BusType,
     AbsInfo, AbsoluteAxisCode, AbsoluteAxisEvent, AttributeSet, EventType, InputEvent, KeyCode,
     UinputAbsSetup,
 };
@@ -141,8 +142,10 @@ impl Default for Joystick {
         keys.insert(KeyCode::BTN_TR2);
         keys.insert(KeyCode::BTN_TL2);
 
+        let input_id = InputId::new(BusType::BUS_VIRTUAL, 1234, 5678, 1);
         let device = VirtualDeviceBuilder::new()
             .unwrap()
+            .input_id(input_id)
             .name(name)
             .with_keys(&keys)
             .unwrap()
