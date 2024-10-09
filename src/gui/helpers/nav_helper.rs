@@ -110,7 +110,7 @@ impl GuiHelper for NavHelper {
                     // nothing yet
                 };
             });
-        egui::CollapsingHeader::new("Boat Coordinates NOT IMPLEMENTED")
+        egui::CollapsingHeader::new("Boat Coordinates")
             .default_open(true)
             .show(ui, |ui| {
                 let position = boat_manager.position;

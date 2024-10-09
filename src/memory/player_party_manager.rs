@@ -11,9 +11,7 @@ impl Default for MemoryManager<PlayerPartyManagerData> {
         let manager = Self {
             name: "PlayerPartyManager".to_string(),
             data: PlayerPartyManagerData::default(),
-            manager: UnityMemoryManager {
-                ..UnityMemoryManager::default()
-            },
+            manager: UnityMemoryManager::default(),
         };
         info!("Memory: {} Loaded", manager.name);
         manager

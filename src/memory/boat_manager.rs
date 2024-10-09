@@ -14,9 +14,7 @@ impl Default for MemoryManager<BoatManagerData> {
         let manager = Self {
             name: "BoatManager".to_string(),
             data: BoatManagerData::default(),
-            manager: UnityMemoryManager {
-                ..UnityMemoryManager::default()
-            },
+            manager: UnityMemoryManager::default(),
         };
         info!("Memory: {} Loaded", manager.name);
         manager
