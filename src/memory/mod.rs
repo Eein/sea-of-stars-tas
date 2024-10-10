@@ -1,4 +1,6 @@
 pub mod boat_manager;
+pub mod currency_manager;
+pub mod level_manager;
 pub mod memory_context;
 pub mod objects;
 pub mod player_party_manager;
@@ -10,6 +12,8 @@ use log::error;
 use crate::state::StateContext;
 
 use boat_manager::BoatManagerData;
+use currency_manager::CurrencyManagerData;
+use level_manager::LevelManagerData;
 use memory::memory_manager::il2cpp::{UnityMemoryManagement, UnityMemoryManager};
 use memory::process::MemoryError;
 use player_party_manager::PlayerPartyManagerData;
@@ -36,6 +40,8 @@ pub struct MemoryManagers {
     pub player_party_manager: MemoryManager<PlayerPartyManagerData>,
     pub time_of_day_manager: MemoryManager<TimeOfDayManagerData>,
     pub boat_manager: MemoryManager<BoatManagerData>,
+    pub level_manager: MemoryManager<LevelManagerData>,
+    pub currency_manager: MemoryManager<CurrencyManagerData>,
 }
 
 impl MemoryManagers {
@@ -45,6 +51,8 @@ impl MemoryManagers {
             self.player_party_manager.update(ctx);
             self.time_of_day_manager.update(ctx);
             self.boat_manager.update(ctx);
+            self.level_manager.update(ctx);
+            self.currency_manager.update(ctx);
         }
     }
     pub fn ready_for_updates(&mut self, ctx: &StateContext) -> bool {
