@@ -16,7 +16,7 @@ impl DebugHelper {
 impl GuiHelper for DebugHelper {
     fn draw(
         &mut self,
-        game_state: &GameState,
+        game_state: &mut GameState,
         _sequencer: &mut Sequencer<GameState>,
         ui: &mut egui::Ui,
         _tab: &mut String,

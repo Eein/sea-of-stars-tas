@@ -1,55 +1,11 @@
 use crate::control::SosAction;
 use crate::memory::objects::character::PlayerPartyCharacter;
 use crate::memory::title_sequence_manager::TitleMenuOption;
+use crate::seq::button::ButtonPress;
 use crate::state::GameState;
 use joystick::prelude::*;
 use log::info;
 use seq::prelude::*;
-
-struct ButtonPress {
-    action: SosAction,
-    press_time: f64,
-    release_time: f64,
-    timer: f64,
-}
-
-impl Default for ButtonPress {
-    fn default() -> Self {
-        Self {
-            action: SosAction::Confirm,
-            press_time: 0.5,
-            release_time: 1.0,
-            timer: 0.0,
-        }
-    }
-}
-
-impl ButtonPress {
-    pub fn new(action: SosAction) -> Self {
-        Self {
-            action,
-            ..Default::default()
-        }
-    }
-
-    pub fn update(&mut self, gamepad: &mut GenericJoystick, delta: f64) -> bool {
-        self.timer += delta;
-        // First press the button
-        if self.timer < self.press_time {
-            gamepad.press(&self.action);
-        } else {
-            gamepad.release(&self.action);
-            if self.done() {
-                return true;
-            }
-        }
-        false
-    }
-
-    pub fn done(&self) -> bool {
-        self.timer >= self.release_time
-    }
-}
 
 struct KonamiCode {
     sequence: Vec<SosAction>,
@@ -171,6 +127,7 @@ impl Node<GameState> for SeqTitleScreen {
                     self.fsm = TitleScreenFSM::NewGame;
                     self.btn = ButtonPress::new(SosAction::MenuDown);
                     state.gamepad.release_all();
+                    info!("Entering main menu");
                 }
             }
             TitleScreenFSM::NewGame => {
@@ -178,6 +135,7 @@ impl Node<GameState> for SeqTitleScreen {
                     self.btn = ButtonPress::new(SosAction::Confirm);
                     self.fsm = TitleScreenFSM::PressNewGame;
                     state.gamepad.release_all();
+                    info!("Selecting New Game");
                 } else if self.btn.update(&mut state.gamepad, delta) {
                     self.btn = ButtonPress::new(SosAction::MenuDown);
                 }
@@ -206,6 +164,7 @@ impl Node<GameState> for SeqTitleScreen {
             }
             TitleScreenFSM::PressSelectHero => {
                 if self.btn.update(&mut state.gamepad, delta) {
+                    info!("Selected Valere");
                     return true;
                 }
             }

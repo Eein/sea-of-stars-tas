@@ -2,6 +2,7 @@ mod config;
 mod control;
 mod gui;
 mod memory;
+mod route;
 mod seq;
 mod state;
 mod util;

@@ -9,7 +9,7 @@ use std::time::{Duration, Instant};
 
 pub struct TabViewer<'a> {
     helpers: &'a mut GuiHelpers,
-    game_state: &'a GameState,
+    game_state: &'a mut GameState,
     sequencer: &'a mut Sequencer<GameState>,
 }
 impl TabViewer<'_> {
@@ -95,7 +95,7 @@ impl Gui {
                 .show(
                     ctx,
                     &mut TabViewer {
-                        game_state: &state.game_state,
+                        game_state: &mut state.game_state,
                         sequencer: &mut state.sequencer,
                         helpers: &mut state.gui.helpers,
                     },
