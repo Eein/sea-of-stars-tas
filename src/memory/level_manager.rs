@@ -42,14 +42,6 @@ impl MemoryManagerUpdate for LevelManagerData {
 }
 
 impl LevelManagerData {
-    // Updates the dangling `leader` offset for the controller
-    // TODO(eein): is this actually true? It might have been one off issue.
-    // This value does not have a true field name so can't be queried with
-    // follow fields.
-    //
-    // NOTE(eein): I believe the internal memory function captures any
-    // errors but thats also not clear. Maybe make it a little more aggressive
-    // and error
     pub fn update_loading(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
         if let Ok(loading) = memory_context.follow_fields::<u8>(&["loadingLevel"]) {
             match loading {

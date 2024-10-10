@@ -32,5 +32,6 @@ impl GuiHelper for DebugHelper {
             "Time of day: {:.3}",
             time_of_day_manager.current_time
         ));
+        ui.separator();
     }
 }
