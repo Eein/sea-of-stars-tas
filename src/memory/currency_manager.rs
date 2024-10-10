@@ -54,8 +54,10 @@ impl CurrencyManagerData {
     // TODO(eein): attempt to implement UnityDict another time.
     pub fn update_currencies(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
         if let Ok(currency_ptr) = memory_context.read_pointer_path::<u64>(&[0x28, 0x18]) {
-            let count = memory_context.read_pointer::<u64>(currency_ptr + 0x30)?;
-            self.money = count;
+            if currency_ptr != 0x0 {
+                let money = memory_context.read_pointer::<u64>(currency_ptr + 0x30)?;
+                self.money = money;
+            }
         }
         Ok(())
     }

@@ -59,7 +59,12 @@ impl GuiHelper for TitleHelper {
 
         ui.label(format!("Relics (Total: {})", tsmd.relic_buttons.count));
         for relic in tsmd.relic_buttons.items.iter() {
-            ui.checkbox(&mut relic.enabled.clone(), &relic.name);
+            let selected_char = match &relic.selected {
+                true => "<<<<",
+                false => "",
+            };
+            let name = format!("{} {}", &relic.name, selected_char);
+            ui.checkbox(&mut relic.enabled.clone(), name);
         }
     }
 }
