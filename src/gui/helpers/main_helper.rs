@@ -1,5 +1,5 @@
 use super::GuiHelper;
-use crate::seq::title::SeqTitleScreen;
+use crate::route::tas;
 use crate::state::GameState;
 use seq::prelude::*;
 
@@ -33,14 +33,7 @@ impl GuiHelper for MainHelper {
             .add_enabled(!running, egui::Button::new("Start TAS"))
             .clicked()
         {
-            *sequencer = Sequencer::create(SeqList::create(
-                "TEMP",
-                vec![
-                    SeqLog::create("SEQ START"),
-                    SeqTitleScreen::create(),
-                    SeqLog::create("SEQ DONE"),
-                ],
-            ));
+            *sequencer = tas::create_sequencer();
             sequencer.start();
         }
     }

@@ -10,6 +10,7 @@ use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
 use memory::process::Process;
 use memory::string::{ArrayCString, ArrayWString};
+use serde::Deserialize;
 
 impl Default for MemoryManager<TitleSequenceManagerData> {
     fn default() -> Self {
@@ -346,7 +347,7 @@ pub struct NewGameCharacter {
     pub selected: bool,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Deserialize)]
 pub struct RelicButton {
     // textfield -> m_Text -> Value
     pub name: String,

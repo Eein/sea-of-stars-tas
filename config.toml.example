@@ -4,3 +4,26 @@
 
 # Speedrun related parameters
 konami_code = true
+
+[relics]
+"Solstice Diploma" = false
+"Amulet of Storytelling" = true
+"Guardian Aura" = true
+"Sequent Flare" = false
+"Truestrike Pendant" = false
+"Tome of Knowledge" = false
+"Falcon-eyed Parrot" = false
+"Salient Sails" = false
+"Gold Tooth" = false
+"Sixth Sense" = false
+"Adamant Shard" = false
+"Hidden Pockets" = false
+"Mithreel Rod" = false
+"Bearing Reel" = false
+"Stereofilament Line" = false
+"Tactician's Mettle" = false
+"Artful Gambit" = false
+"Double Edge" = false
+"Dubious Dare" = false
+"Solstice Doctorate" = false
+"Mark of the Speedrunner" = true
