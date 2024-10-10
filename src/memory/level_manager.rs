@@ -55,30 +55,34 @@ impl LevelManagerData {
 
     pub fn update_scene_name(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
         if let Ok(addr) = memory_context.follow_fields::<u64>(&["levelLoader", "mainSceneName"]) {
-            let name_str = memory_context.read_pointer::<ArrayWString<128>>(addr + 0x14)?;
-            match String::from_utf16(name_str.as_slice()) {
-                Ok(value) => {
-                    self.scene_name = value.clone();
-                }
-                Err(_) => {
-                    self.scene_name = "None".to_string();
-                }
-            };
+            if addr != 0x0 {
+                let name_str = memory_context.read_pointer::<ArrayWString<128>>(addr + 0x14)?;
+                match String::from_utf16(name_str.as_slice()) {
+                    Ok(value) => {
+                        self.scene_name = value.clone();
+                    }
+                    Err(_) => {
+                        self.scene_name = "None".to_string();
+                    }
+                };
+            }
         }
         Ok(())
     }
 
     pub fn update_scene_guid(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
         if let Ok(addr) = memory_context.follow_fields::<u64>(&["currentLevel"]) {
-            let name_str = memory_context.read_pointer::<ArrayWString<128>>(addr + 0x14)?;
-            match String::from_utf16(name_str.as_slice()) {
-                Ok(value) => {
-                    self.scene_guid = value.clone();
-                }
-                Err(_) => {
-                    self.scene_guid = "None".to_string();
-                }
-            };
+            if addr != 0x0 {
+                let name_str = memory_context.read_pointer::<ArrayWString<128>>(addr + 0x14)?;
+                match String::from_utf16(name_str.as_slice()) {
+                    Ok(value) => {
+                        self.scene_guid = value.clone();
+                    }
+                    Err(_) => {
+                        self.scene_guid = "None".to_string();
+                    }
+                };
+            }
         }
         Ok(())
     }
