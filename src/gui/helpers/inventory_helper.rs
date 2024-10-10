@@ -25,5 +25,6 @@ impl GuiHelper for InventoryHelper {
 
         ui.label(format!("Money: {}", currency_manager.money));
         ui.separator();
+        ui.label("Inventory: NOT YET IMPLEMENTED");
     }
 }
