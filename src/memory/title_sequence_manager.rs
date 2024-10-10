@@ -353,10 +353,21 @@ pub struct RelicButton {
     // We check the on off switch state to determine if it is enabled or not.
     // onOffSwitchImage -> m_Sprite -> m_CachedPtr -> ptr to base -> 0x0 = string
     pub enabled: bool,
+    pub selected: bool,
 }
 
 impl UnityItem for RelicButton {
     fn read(process: &Process, item_ptr: u64) -> Result<Self, MemoryError> {
+        let selected = if let Ok(selected) = process.read_pointer::<u8>(item_ptr + 0x148) {
+            match selected {
+                0 => false,
+                1 => true,
+                _ => false,
+            }
+        } else {
+            false
+        };
+
         let name_str =
             process.read_pointer_path::<ArrayWString<128>>(item_ptr, &[0x188, 0xD8, 0x14])?;
 
@@ -366,7 +377,11 @@ impl UnityItem for RelicButton {
 
             let enabled = !matches!(enabled_str.validate_utf8().unwrap(), "relic-switch-off");
 
-            Ok(RelicButton { name, enabled })
+            Ok(RelicButton {
+                name,
+                selected,
+                enabled,
+            })
         } else {
             Err(MemoryError::ReadError)
         }
