@@ -89,10 +89,10 @@ impl Joystick {
 
     fn get_button(button: &Button) -> KeyCode {
         match button {
-            Button::A => KeyCode::BTN_EAST,
-            Button::B => KeyCode::BTN_SOUTH,
-            Button::X => KeyCode::BTN_NORTH,
-            Button::Y => KeyCode::BTN_WEST,
+            Button::A => KeyCode::BTN_SOUTH,
+            Button::B => KeyCode::BTN_EAST,
+            Button::X => KeyCode::BTN_WEST,
+            Button::Y => KeyCode::BTN_NORTH,
             Button::LT(_) => KeyCode::BTN_TL,
             Button::RT(_) => KeyCode::BTN_TR,
             Button::LB => KeyCode::BTN_TL2,
