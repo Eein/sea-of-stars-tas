@@ -10,14 +10,17 @@ use vec3_rs::Vector3;
 #[derive(Clone, Debug)]
 pub enum Move {
     To(f32, f32, f32),
+    ToWorld(f32, f32, f32),
     #[allow(dead_code)]
     Climb(f32, f32, f32),
     #[allow(dead_code)]
     Interact(f32, f32, f32),
     #[allow(dead_code)]
-    HoldFor(f64),
+    WaitFor(f64),
     #[allow(dead_code)]
-    ToWorld(f32, f32, f32),
+    HoldDir([f32; 2], [f32; 3]),
+    HoldDirWorld([f32; 2], [f32; 3]),
+    Confirm,
     ChangeTime(f32), // 0.0-24.0
                      // TODO: Scene transitions
                      // TODO: World map to scene (and back). Need HoldDir?
@@ -26,7 +29,7 @@ pub enum Move {
 pub struct SeqMove {
     coords: Vec<Move>,
     step: usize, // TODO: Refactor this to be able to go back and forth?
-    btn: ButtonPress,
+    btn: Option<ButtonPress>,
     timer: f64,
 }
 
@@ -36,7 +39,7 @@ impl SeqMove {
             coords,
             step: 0,
             timer: 0.0,
-            btn: ButtonPress::new(SosAction::Confirm),
+            btn: None,
         })
     }
 
@@ -46,16 +49,24 @@ impl SeqMove {
         diff.magnitude() < PRECISION
     }
 
-    fn mash(&mut self, gamepad: &mut GenericJoystick, delta: f64) {
+    fn setup_confirm(&mut self) {
         const PRESS_TIMEOUT: f64 = 0.1;
         const RELEASE_TIMEOUT: f64 = 0.2;
-        if self.btn.update(gamepad, delta) {
-            self.btn = ButtonPress {
-                action: SosAction::Confirm,
-                press_time: PRESS_TIMEOUT,
-                release_time: RELEASE_TIMEOUT,
-                ..Default::default()
-            };
+        self.btn = Some(ButtonPress {
+            action: SosAction::Confirm,
+            press_time: PRESS_TIMEOUT,
+            release_time: RELEASE_TIMEOUT,
+            ..Default::default()
+        });
+    }
+
+    fn mash(&mut self, gamepad: &mut GenericJoystick, delta: f64) {
+        if let Some(btn) = self.btn.as_mut() {
+            if btn.update(gamepad, delta) {
+                self.setup_confirm();
+            }
+        } else {
+            self.setup_confirm();
         }
     }
 
@@ -132,6 +143,7 @@ impl Node<GameState> for SeqMove {
                 self.mash(&mut state.gamepad, delta);
                 if SeqMove::is_close(player, &target) {
                     state.gamepad.release_all();
+                    self.btn = None;
                     self.step += 1;
                 }
             }
@@ -143,11 +155,13 @@ impl Node<GameState> for SeqMove {
                 self.mash(&mut state.gamepad, delta);
                 if SeqMove::is_close(player, &target) {
                     state.gamepad.release_all();
+                    self.btn = None;
                     self.step += 1;
                 }
             }
             // Hold still for a period of time
-            Move::HoldFor(timeout) => {
+            Move::WaitFor(timeout) => {
+                state.gamepad.set_ljoy([0.0, 0.0]); // Make sure we're standing still
                 self.timer += delta;
                 if self.timer >= timeout {
                     self.timer = 0.0;
@@ -164,8 +178,34 @@ impl Node<GameState> for SeqMove {
                     self.step += 1;
                 }
             }
+            Move::HoldDir(dir, target) => {
+                state.gamepad.set_ljoy(dir);
+                let target = Vector3::new(target[0], target[1], target[2]);
+                if SeqMove::is_close(player, &target) {
+                    self.step += 1;
+                }
+            }
+            Move::HoldDirWorld(dir, target) => {
+                state.gamepad.set_ljoy(dir);
+                let target = Vector3::new(target[0], target[1], target[2]);
+                let world_pos = &ppmd.position;
+                if SeqMove::is_close(world_pos, &target) {
+                    self.step += 1;
+                }
+            }
             // Change Time of Day
             Move::ChangeTime(target_time) => self.change_time(state, target_time),
+            // Press confirm once
+            Move::Confirm => {
+                if let Some(btn) = self.btn.as_mut() {
+                    if btn.update(&mut state.gamepad, delta) {
+                        self.btn = None;
+                        self.step += 1;
+                    }
+                } else {
+                    self.setup_confirm();
+                }
+            }
         }
 
         false
