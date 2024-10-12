@@ -2,12 +2,14 @@ pub mod debug_helper;
 pub mod inventory_helper;
 pub mod main_helper;
 pub mod nav_helper;
+pub mod shop_helper;
 pub mod title_helper;
 
 use std::collections::HashMap;
 
 pub use self::{
-    debug_helper::*, inventory_helper::*, main_helper::*, nav_helper::*, title_helper::*,
+    debug_helper::*, inventory_helper::*, main_helper::*, nav_helper::*, shop_helper::*,
+    title_helper::*,
 };
 
 use crate::state::GameState;
@@ -24,6 +26,7 @@ impl Default for GuiHelpers {
         helpers.insert(main_helper::NAME.to_owned(), MainHelper::create());
         helpers.insert(title_helper::NAME.to_owned(), TitleHelper::create());
         helpers.insert(debug_helper::NAME.to_owned(), DebugHelper::create());
+        helpers.insert(shop_helper::NAME.to_owned(), ShopHelper::create());
         helpers.insert(inventory_helper::NAME.to_owned(), InventoryHelper::create());
         Self { helpers }
     }
