@@ -10,9 +10,7 @@ impl Default for MemoryManager<NewDialogManagerData> {
         let manager = Self {
             name: "NewDialogManager".to_string(),
             data: NewDialogManagerData::default(),
-            manager: UnityMemoryManager {
-                ..UnityMemoryManager::default()
-            },
+            manager: UnityMemoryManager::default(),
         };
         info!("Memory: {} Loaded", manager.name);
         manager

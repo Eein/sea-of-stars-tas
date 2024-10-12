@@ -14,9 +14,7 @@ impl Default for MemoryManager<TimeOfDayManagerData> {
         let manager = Self {
             name: "AudioManager".to_string(),
             data: TimeOfDayManagerData::default(),
-            manager: UnityMemoryManager {
-                ..UnityMemoryManager::default()
-            },
+            manager: UnityMemoryManager::default(),
         };
         info!("Memory: {} Loaded", manager.name);
         manager

@@ -10,9 +10,7 @@ impl Default for MemoryManager<CutsceneManagerData> {
         let manager = Self {
             name: "CutsceneManager".to_string(),
             data: CutsceneManagerData::default(),
-            manager: UnityMemoryManager {
-                ..UnityMemoryManager::default()
-            },
+            manager: UnityMemoryManager::default(),
         };
         info!("Memory: {} Loaded", manager.name);
         manager
