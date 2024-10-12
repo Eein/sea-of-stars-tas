@@ -3,6 +3,7 @@ pub struct Gui;
 use super::gui::helpers::GuiHelpers;
 use super::state::{GameState, State};
 use crate::config::Config;
+use crate::util::time_formatter::TimeFormatter;
 use egui_dock::{DockArea, Style};
 use seq::prelude::*;
 use std::time::{Duration, Instant};
@@ -54,6 +55,8 @@ impl Gui {
     }
 
     pub fn active(state: &mut State, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        let speedrun_manager = &state.game_state.memory_managers.speedrun_manager.data;
+
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
@@ -83,6 +86,18 @@ impl Gui {
                 state.debug.last_update = tnow;
 
                 egui::widgets::global_theme_preference_buttons(ui);
+
+                // Speedrun Timers
+                if speedrun_manager.is_speedrunning {
+                    ui.label(format!(
+                        "Run: {}",
+                        TimeFormatter::format(speedrun_manager.speedrun_timer.timer_in_second)
+                    ));
+                    ui.label(format!(
+                        "Pause: {}",
+                        TimeFormatter::format(speedrun_manager.pause_timer.timer_in_second)
+                    ));
+                }
 
                 ui.label(fps_string);
             });
