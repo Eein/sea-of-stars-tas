@@ -129,12 +129,3 @@ impl Gui {
         });
     }
 }
-
-// fn main_tab(_state: &mut State, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-//         ui.heading("Test");
-
-//         ui.horizontal(|ui| {
-//             ui.label("Testing the Application");
-//         });
-//     });
-// }
