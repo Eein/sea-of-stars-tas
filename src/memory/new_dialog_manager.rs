@@ -5,15 +5,11 @@ use log::info;
 use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
 
-///  We are reaching into the AudioManager for Time of Day instead of using
-///  Sabotage.TODManager simply as a way to avoid having to load the other module
-///  into memory. The currentTimeOfDay field is provided on the AudioManager as well.
-///  `current_time` is a `float` from 0.0 to 23.99~.
-impl Default for MemoryManager<TimeOfDayManagerData> {
+impl Default for MemoryManager<NewDialogManagerData> {
     fn default() -> Self {
         let manager = Self {
-            name: "AudioManager".to_string(),
-            data: TimeOfDayManagerData::default(),
+            name: "NewDialogManager".to_string(),
+            data: NewDialogManagerData::default(),
             manager: UnityMemoryManager::default(),
         };
         info!("Memory: {} Loaded", manager.name);
@@ -22,11 +18,11 @@ impl Default for MemoryManager<TimeOfDayManagerData> {
 }
 
 #[derive(Default, Debug)]
-pub struct TimeOfDayManagerData {
-    pub current_time: f32,
+pub struct NewDialogManagerData {
+    pub dialog_visible: bool,
 }
 
-impl MemoryManagerUpdate for TimeOfDayManagerData {
+impl MemoryManagerUpdate for NewDialogManagerData {
     fn update(
         &mut self,
         ctx: &StateContext,
@@ -34,19 +30,20 @@ impl MemoryManagerUpdate for TimeOfDayManagerData {
     ) -> Result<(), MemoryError> {
         let memory_context = MemoryContext::create(ctx, manager)?;
 
-        self.update_current_time(&memory_context)?;
+        self.update_dialog_visible(&memory_context)?;
 
         Ok(())
     }
 }
 
-impl TimeOfDayManagerData {
-    pub fn update_current_time(
+impl NewDialogManagerData {
+    pub fn update_dialog_visible(
         &mut self,
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
-        if let Ok(current_time) = memory_context.follow_fields::<f32>(&["currentTimeOfDay"]) {
-            self.current_time = current_time;
+        if let Ok(dialog_box_pointer) = memory_context.follow_fields::<u64>(&["onDialogCompleted"])
+        {
+            self.dialog_visible = dialog_box_pointer != 0x0;
         }
 
         Ok(())
