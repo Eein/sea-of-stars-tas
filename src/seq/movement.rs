@@ -3,6 +3,7 @@ use crate::seq::button::ButtonPress;
 use crate::state::GameState;
 
 use joystick::prelude::*;
+use log::info;
 use seq::prelude::*;
 
 use vec3_rs::Vector3;
@@ -21,12 +22,14 @@ pub enum Move {
     HoldDir([f32; 2], [f32; 3]),
     HoldDirWorld([f32; 2], [f32; 3]),
     Confirm,
+    Log(&'static str),
     ChangeTime(f32), // 0.0-24.0
                      // TODO: Scene transitions
                      // TODO: World map to scene (and back). Need HoldDir?
 }
 
 pub struct SeqMove {
+    name: &'static str,
     coords: Vec<Move>,
     step: usize, // TODO: Refactor this to be able to go back and forth?
     btn: Option<ButtonPress>,
@@ -34,8 +37,9 @@ pub struct SeqMove {
 }
 
 impl SeqMove {
-    pub fn create(coords: Vec<Move>) -> Box<Self> {
+    pub fn create(name: &'static str, coords: Vec<Move>) -> Box<Self> {
         Box::new(Self {
+            name,
             coords,
             step: 0,
             timer: 0.0,
@@ -126,6 +130,11 @@ impl Node<GameState> for SeqMove {
         let player = &ppmd.gameobject_position;
 
         match coord {
+            // Put text entry in log
+            Move::Log(text) => {
+                info!("{}: {}", self.name, text);
+                self.step += 1;
+            }
             // Move towards the target coordinate until it's reached
             Move::To(x, y, z) => {
                 let target = Vector3::new(x, y, z);
