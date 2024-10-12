@@ -2,6 +2,7 @@ pub mod boat_manager;
 pub mod currency_manager;
 pub mod level_manager;
 pub mod memory_context;
+pub mod new_dialog_manager;
 pub mod objects;
 pub mod player_party_manager;
 pub mod time_of_day_manager;
@@ -16,6 +17,7 @@ use currency_manager::CurrencyManagerData;
 use level_manager::LevelManagerData;
 use memory::memory_manager::il2cpp::{UnityMemoryManagement, UnityMemoryManager};
 use memory::process::MemoryError;
+use new_dialog_manager::NewDialogManagerData;
 use player_party_manager::PlayerPartyManagerData;
 use time_of_day_manager::TimeOfDayManagerData;
 use title_sequence_manager::TitleSequenceManagerData;
@@ -42,6 +44,7 @@ pub struct MemoryManagers {
     pub boat_manager: MemoryManager<BoatManagerData>,
     pub level_manager: MemoryManager<LevelManagerData>,
     pub currency_manager: MemoryManager<CurrencyManagerData>,
+    pub new_dialog_manager: MemoryManager<NewDialogManagerData>,
 }
 
 impl MemoryManagers {
@@ -53,6 +56,7 @@ impl MemoryManagers {
             self.boat_manager.update(ctx);
             self.level_manager.update(ctx);
             self.currency_manager.update(ctx);
+            self.new_dialog_manager.update(ctx);
         }
     }
     pub fn ready_for_updates(&mut self, ctx: &StateContext) -> bool {

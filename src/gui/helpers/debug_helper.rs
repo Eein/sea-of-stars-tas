@@ -23,6 +23,7 @@ impl GuiHelper for DebugHelper {
     ) {
         let time_of_day_manager = &game_state.memory_managers.time_of_day_manager.data;
         let level_manager = &game_state.memory_managers.level_manager.data;
+        let new_dialog_manager = &game_state.memory_managers.new_dialog_manager.data;
 
         ui.label("Level Info".to_string());
         ui.label(format!("Scene Name: {}", level_manager.scene_name));
@@ -33,5 +34,9 @@ impl GuiHelper for DebugHelper {
             time_of_day_manager.current_time
         ));
         ui.separator();
+        ui.label(format!(
+            "Dialog Open: {}",
+            new_dialog_manager.dialog_visible
+        ));
     }
 }
