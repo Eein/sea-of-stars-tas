@@ -4,8 +4,7 @@ use crate::state::StateContext;
 use log::info;
 use memory::game_engine::il2cpp::unity_list::{UnityItem, UnityList};
 use memory::memory_manager::il2cpp::UnityMemoryManager;
-use memory::process::MemoryError;
-use memory::process::Process;
+use memory::process::{MemoryError, Process};
 use memory::string::ArrayWString;
 
 impl Default for MemoryManager<ShopManagerData> {
