@@ -36,5 +36,13 @@ impl GuiHelper for MainHelper {
             *sequencer = tas::create_sequencer();
             sequencer.start();
         }
+
+        if ui
+            .add_enabled(!running, egui::Button::new("Start Move Test"))
+            .clicked()
+        {
+            *sequencer = tas::create_movement_test();
+            sequencer.start();
+        }
     }
 }

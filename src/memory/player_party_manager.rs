@@ -122,7 +122,7 @@ impl PlayerPartyManagerData {
 
 // PlayerDefaultState.EState
 // #
-#[derive(Default, Debug)]
+#[derive(Default, Debug, PartialEq, Eq)]
 pub enum PlayerMovementState {
     #[default]
     None = 0,
