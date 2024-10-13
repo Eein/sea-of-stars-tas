@@ -28,7 +28,6 @@ impl GuiHelper for DebugHelper {
         let combat_manager = &game_state.memory_managers.combat_manager.data;
         let speedrun_manager = &game_state.memory_managers.speedrun_manager.data;
 
-
         ui.label("Encounter".to_string());
         ui.label(format!(
             "Encounter Active: {}",

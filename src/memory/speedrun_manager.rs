@@ -4,6 +4,11 @@ use crate::state::StateContext;
 use log::info;
 use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
+use std::fmt::Display;
+use std::time::Duration;
+
+const SECONDS_PER_MINUTE: u64 = 60;
+const SECONDS_PER_HOUR: u64 = 60 * SECONDS_PER_MINUTE;
 
 impl Default for MemoryManager<SpeedrunManagerData> {
     fn default() -> Self {
@@ -45,6 +50,27 @@ pub struct SpeedrunTimer {
 
     // The time since opening the game
     pub realtime_delta_time: f64,
+}
+
+impl Display for SpeedrunTimer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let time = self.timer_in_second;
+        let duration = Duration::from_secs_f64(time);
+        let nanoseconds = duration.subsec_millis();
+        let total_seconds = duration.as_secs();
+
+        let seconds = (total_seconds % SECONDS_PER_MINUTE) as u8;
+        let minutes = ((total_seconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE) as u8;
+        let hours = total_seconds / SECONDS_PER_HOUR;
+
+        let mut buffer = itoa::Buffer::new();
+        let hours = buffer.format(hours);
+        let out = format!(
+            "{:0>2}:{:0>2}:{:0>2}.{:0>3}",
+            hours, minutes, seconds, nanoseconds
+        );
+        write!(f, "{}", out)
+    }
 }
 
 impl MemoryManagerUpdate for SpeedrunManagerData {

@@ -3,7 +3,6 @@ pub struct Gui;
 use super::gui::helpers::GuiHelpers;
 use super::state::{GameState, State};
 use crate::config::Config;
-use crate::util::time_formatter::TimeFormatter;
 use egui_dock::{DockArea, Style};
 use seq::prelude::*;
 use std::time::{Duration, Instant};
@@ -89,14 +88,8 @@ impl Gui {
 
                 // Speedrun Timers
                 if speedrun_manager.is_speedrunning {
-                    ui.label(format!(
-                        "Run: {}",
-                        TimeFormatter::format(speedrun_manager.speedrun_timer.timer_in_second)
-                    ));
-                    ui.label(format!(
-                        "Pause: {}",
-                        TimeFormatter::format(speedrun_manager.pause_timer.timer_in_second)
-                    ));
+                    ui.label(format!("Run: {}", speedrun_manager.speedrun_timer));
+                    ui.label(format!("Pause: {}", speedrun_manager.pause_timer));
                 }
 
                 ui.label(fps_string);
