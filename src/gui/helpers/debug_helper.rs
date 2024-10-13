@@ -25,6 +25,12 @@ impl GuiHelper for DebugHelper {
         let level_manager = &game_state.memory_managers.level_manager.data;
         let new_dialog_manager = &game_state.memory_managers.new_dialog_manager.data;
         let cutscene_manager = &game_state.memory_managers.cutscene_manager.data;
+        let combat_manager = &game_state.memory_managers.combat_manager.data;
+        ui.label("Encounter".to_string());
+        ui.label(format!(
+            "Encounter Active: {}",
+            combat_manager.encounter_active
+        ));
 
         ui.label("Level Info".to_string());
         ui.label(format!("Scene Name: {}", level_manager.scene_name));

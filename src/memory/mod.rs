@@ -1,4 +1,5 @@
 pub mod boat_manager;
+pub mod combat_manager;
 pub mod currency_manager;
 pub mod cutscene_manager;
 pub mod level_manager;
@@ -15,6 +16,7 @@ use log::error;
 use crate::state::StateContext;
 
 use boat_manager::BoatManagerData;
+use combat_manager::CombatManagerData;
 use currency_manager::CurrencyManagerData;
 use cutscene_manager::CutsceneManagerData;
 use level_manager::LevelManagerData;
@@ -49,6 +51,7 @@ pub struct MemoryManagers {
     pub level_manager: MemoryManager<LevelManagerData>,
     pub currency_manager: MemoryManager<CurrencyManagerData>,
     pub new_dialog_manager: MemoryManager<NewDialogManagerData>,
+    pub combat_manager: MemoryManager<CombatManagerData>,
     pub cutscene_manager: MemoryManager<CutsceneManagerData>,
     pub shop_manager: MemoryManager<ShopManagerData>,
 }
@@ -63,6 +66,7 @@ impl MemoryManagers {
             self.level_manager.update(ctx);
             self.currency_manager.update(ctx);
             self.new_dialog_manager.update(ctx);
+            self.combat_manager.update(ctx);
             self.cutscene_manager.update(ctx);
             self.shop_manager.update(ctx);
         }
