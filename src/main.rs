@@ -1,5 +1,6 @@
 mod config;
 mod control;
+mod game_manager;
 mod gui;
 mod memory;
 mod route;

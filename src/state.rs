@@ -1,4 +1,5 @@
 use super::memory::MemoryManagers;
+use crate::game_manager::GameManager;
 use crate::gui::Gui;
 
 use crate::gui::helpers::*;
@@ -42,7 +43,7 @@ pub struct State {
     pub debug: StateDebug,
     pub gui: StateGui,
     pub game_state: GameState,
-    pub sequencer: Sequencer<GameState>,
+    pub game_manager: GameManager,
 }
 #[derive(Default)]
 pub struct StateContext {
@@ -82,7 +83,7 @@ impl State {
             },
             // TODO(orkaboy): Temp code, should not be here
             // TODO(orkaboy): Where do we put sequencer.run()? Might need to refactor that as well.
-            sequencer: Sequencer::create(SeqLog::create("SEQ START")),
+            game_manager: GameManager::create(SeqLog::create("SEQ START")),
         }
     }
 
@@ -187,8 +188,8 @@ impl eframe::App for State {
         let _ = &self.update_managers();
 
         // TODO(orkaboy): Should probably not be here
-        if self.sequencer.is_running() {
-            let _ = self.sequencer.run(&mut self.game_state);
+        if self.game_manager.is_running() {
+            let _ = self.game_manager.run(&mut self.game_state);
         }
 
         Gui::update(self, ctx, frame)
