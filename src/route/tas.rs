@@ -2,6 +2,7 @@ use seq::prelude::*;
 
 use crate::seq::relics::SeqRelicList;
 use crate::seq::title::SeqTitleScreen;
+use crate::seq::dialog::{SeqSelectOption, SeqSkipUntilIdle};
 use crate::state::GameState;
 
 use crate::seq::movement::*;
@@ -39,7 +40,22 @@ pub fn create_movement_test() -> Sequencer<GameState> {
                 Move::To(-421.597, 27.002, 175.500),
                 Move::To(-428.018, 27.002, 180.034),
             ]),
-            SeqLog::create("MOVE DONE"),
+            SeqSelectOption::create(0, false),
+            SeqSkipUntilIdle::create(),
+            // Move this stuff elsewhere (route folders)
+            SeqLog::create("X'Tol's Landing"),
+            SeqMove::create("Move to chest",
+                vec![
+                    Move::To(-456.847, 1.002, -62.006),
+                    Move::Interact(-459.978, -4.998, -65.169),
+                    Move::To(-453.412, -4.998, -70.543),
+                    Move::Interact(-453.412, -9.998, -72.458),
+                    Move::To(-450.379, -9.998, -72.458),
+                    Move::HoldDir([0.0, 1.0], [-491.448, 1.002, -219.789]),
+                    Move::To(-491.448, 3.002, -207.100),
+                    // Loot box
+                ],
+            ),
         ],
     ))
 }

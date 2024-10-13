@@ -14,11 +14,9 @@ pub enum Move {
     ToWorld(f32, f32, f32),
     #[allow(dead_code)]
     Climb(f32, f32, f32),
-    #[allow(dead_code)]
     Interact(f32, f32, f32),
     #[allow(dead_code)]
     WaitFor(f64),
-    #[allow(dead_code)]
     HoldDir([f32; 2], [f32; 3]),
     HoldDirWorld([f32; 2], [f32; 3]),
     Confirm,
