@@ -6,7 +6,6 @@ use crate::state::GameState;
 use joystick::prelude::*;
 use seq::prelude::*;
 
-
 #[derive(Default)]
 enum SelectFsm {
     #[default]

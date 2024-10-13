@@ -12,7 +12,6 @@ use vec3_rs::Vector3;
 pub enum Move {
     To(f32, f32, f32),
     ToWorld(f32, f32, f32),
-    #[allow(dead_code)]
     Climb(f32, f32, f32),
     Interact(f32, f32, f32),
     #[allow(dead_code)]
@@ -22,8 +21,6 @@ pub enum Move {
     Confirm,
     Log(&'static str),
     ChangeTime(f32), // 0.0-24.0
-                     // TODO: Scene transitions
-                     // TODO: World map to scene (and back). Need HoldDir?
 }
 
 pub struct SeqMove {
@@ -45,10 +42,10 @@ impl SeqMove {
         })
     }
 
-    fn is_close(player: &Vector3<f32>, target: &Vector3<f32>) -> bool {
-        const PRECISION: f64 = 0.1; // TODO: variable?
+    fn is_close(player: &Vector3<f32>, target: &Vector3<f32>, precision: Option<f64>) -> bool {
+        const PRECISION: f64 = 0.2;
         let diff = *target - *player;
-        diff.magnitude() < PRECISION
+        diff.magnitude() < precision.unwrap_or(PRECISION)
     }
 
     fn setup_confirm(&mut self) {
@@ -138,7 +135,7 @@ impl Node<GameState> for SeqMove {
                 let target = Vector3::new(x, y, z);
                 let joy_dir = SeqMove::get_dir(player, &target, false);
                 state.gamepad.set_ljoy(joy_dir);
-                if SeqMove::is_close(player, &target) {
+                if SeqMove::is_close(player, &target, None) {
                     self.step += 1;
                 }
             }
@@ -148,7 +145,7 @@ impl Node<GameState> for SeqMove {
                 let joy_dir = SeqMove::get_dir(player, &target, true);
                 state.gamepad.set_ljoy(joy_dir);
                 self.mash(&mut state.gamepad, delta);
-                if SeqMove::is_close(player, &target) {
+                if SeqMove::is_close(player, &target, None) {
                     state.gamepad.release_all();
                     self.btn = None;
                     self.step += 1;
@@ -160,7 +157,7 @@ impl Node<GameState> for SeqMove {
                 let joy_dir = SeqMove::get_dir(player, &target, false);
                 state.gamepad.set_ljoy(joy_dir);
                 self.mash(&mut state.gamepad, delta);
-                if SeqMove::is_close(player, &target) {
+                if SeqMove::is_close(player, &target, None) {
                     state.gamepad.release_all();
                     self.btn = None;
                     self.step += 1;
@@ -181,14 +178,14 @@ impl Node<GameState> for SeqMove {
                 let world_pos = &ppmd.position;
                 let joy_dir = SeqMove::get_dir(world_pos, &target, false);
                 state.gamepad.set_ljoy(joy_dir);
-                if SeqMove::is_close(world_pos, &target) {
+                if SeqMove::is_close(world_pos, &target, None) {
                     self.step += 1;
                 }
             }
             Move::HoldDir(dir, target) => {
                 state.gamepad.set_ljoy(dir);
                 let target = Vector3::new(target[0], target[1], target[2]);
-                if SeqMove::is_close(player, &target) {
+                if SeqMove::is_close(player, &target, Some(1.0)) {
                     self.step += 1;
                 }
             }
@@ -196,7 +193,7 @@ impl Node<GameState> for SeqMove {
                 state.gamepad.set_ljoy(dir);
                 let target = Vector3::new(target[0], target[1], target[2]);
                 let world_pos = &ppmd.position;
-                if SeqMove::is_close(world_pos, &target) {
+                if SeqMove::is_close(world_pos, &target, Some(1.0)) {
                     self.step += 1;
                 }
             }
@@ -208,9 +205,11 @@ impl Node<GameState> for SeqMove {
                     if btn.update(&mut state.gamepad, delta) {
                         self.btn = None;
                         self.step += 1;
+                        state.gamepad.release_all();
                     }
                 } else {
                     self.setup_confirm();
+                    state.gamepad.press(&SosAction::Turbo);
                 }
             }
         }
