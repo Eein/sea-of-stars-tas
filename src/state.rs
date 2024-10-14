@@ -1,4 +1,5 @@
 use super::memory::MemoryManagers;
+use crate::game_manager::GameManager;
 use crate::gui::Gui;
 
 use crate::gui::helpers::*;
@@ -13,7 +14,6 @@ use log::info;
 use std::time::Instant;
 
 use joystick::prelude::*;
-use seq::prelude::*;
 
 pub struct StateDebug {
     pub pinned_fps: f64,
@@ -42,7 +42,7 @@ pub struct State {
     pub debug: StateDebug,
     pub gui: StateGui,
     pub game_state: GameState,
-    pub sequencer: Sequencer<GameState>,
+    pub game_manager: Option<GameManager>,
 }
 #[derive(Default)]
 pub struct StateContext {
@@ -82,7 +82,7 @@ impl State {
             },
             // TODO(orkaboy): Temp code, should not be here
             // TODO(orkaboy): Where do we put sequencer.run()? Might need to refactor that as well.
-            sequencer: Sequencer::create(SeqLog::create("SEQ START")),
+            game_manager: None,
         }
     }
 
@@ -187,8 +187,10 @@ impl eframe::App for State {
         let _ = &self.update_managers();
 
         // TODO(orkaboy): Should probably not be here
-        if self.sequencer.is_running() {
-            let _ = self.sequencer.run(&mut self.game_state);
+        if let Some(gm) = self.game_manager.as_mut() {
+            if gm.is_running() {
+                let _ = gm.run(&mut self.game_state);
+            }
         }
 
         Gui::update(self, ctx, frame)

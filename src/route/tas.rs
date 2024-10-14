@@ -1,14 +1,14 @@
 use seq::prelude::*;
 
+use crate::game_manager::GameManager;
 use crate::seq::dialog::{SeqSelectOption, SeqSkipUntilIdle};
 use crate::seq::relics::SeqRelicList;
 use crate::seq::title::SeqTitleScreen;
-use crate::state::GameState;
 
 use crate::seq::movement::*;
 
-pub fn create_sequencer() -> Sequencer<GameState> {
-    Sequencer::create(SeqList::create(
+pub fn create_tas() -> GameManager {
+    GameManager::new(SeqList::create(
         "TAS",
         vec![
             SeqLog::create("SEQ START"),
@@ -19,8 +19,8 @@ pub fn create_sequencer() -> Sequencer<GameState> {
     ))
 }
 
-pub fn create_movement_test() -> Sequencer<GameState> {
-    Sequencer::create(SeqList::create(
+pub fn create_movement_test() -> GameManager {
+    GameManager::new(SeqList::create(
         "Move Test",
         vec![
             SeqSkipUntilIdle::create(),

@@ -12,8 +12,7 @@ use self::{
     title_helper::*,
 };
 
-use crate::state::GameState;
-use seq::prelude::*;
+use crate::{game_manager::GameManager, state::GameState};
 
 pub struct GuiHelpers {
     pub helpers: HashMap<String, Box<dyn GuiHelper>>,
@@ -41,12 +40,12 @@ impl GuiHelpers {
     pub fn draw(
         &mut self,
         game_state: &mut GameState,
-        sequencer: &mut Sequencer<GameState>,
+        game_manager: &mut Option<GameManager>,
         ui: &mut egui::Ui,
         tab: &mut String,
     ) {
         match self.helpers.get_mut(tab.as_str()) {
-            Some(helper) => helper.draw(game_state, sequencer, ui, tab),
+            Some(helper) => helper.draw(game_state, game_manager, ui, tab),
             None => {
                 let label = format!("Tab: {} has not been initialized. Check gui/mod.rs and state.rs to initialize this tab.", tab.as_str());
                 ui.label(label);
@@ -59,7 +58,7 @@ pub trait GuiHelper {
     fn draw(
         &mut self,
         game_state: &mut GameState,
-        sequencer: &mut Sequencer<GameState>,
+        game_manager: &mut Option<GameManager>,
         ui: &mut egui::Ui,
         tab: &mut String,
     );

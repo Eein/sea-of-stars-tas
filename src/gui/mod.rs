@@ -1,20 +1,21 @@
 pub mod helpers;
 pub struct Gui;
+use super::game_manager::GameManager;
 use super::gui::helpers::GuiHelpers;
 use super::state::{GameState, State};
 use crate::config::Config;
 use egui_dock::{DockArea, Style};
-use seq::prelude::*;
 use std::time::{Duration, Instant};
 
 pub struct TabViewer<'a> {
     helpers: &'a mut GuiHelpers,
     game_state: &'a mut GameState,
-    sequencer: &'a mut Sequencer<GameState>,
+    game_manager: &'a mut Option<GameManager>,
 }
 impl TabViewer<'_> {
     fn draw(&mut self, ui: &mut egui::Ui, tab: &mut String) {
-        self.helpers.draw(self.game_state, self.sequencer, ui, tab);
+        self.helpers
+            .draw(self.game_state, self.game_manager, ui, tab);
     }
 }
 
@@ -104,7 +105,7 @@ impl Gui {
                     ctx,
                     &mut TabViewer {
                         game_state: &mut state.game_state,
-                        sequencer: &mut state.sequencer,
+                        game_manager: &mut state.game_manager,
                         helpers: &mut state.gui.helpers,
                     },
                 );

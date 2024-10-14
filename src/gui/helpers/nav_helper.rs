@@ -1,6 +1,5 @@
 use super::GuiHelper;
-use crate::state::GameState;
-use seq::prelude::*;
+use crate::{game_manager::GameManager, state::GameState};
 use vec3_rs::Vector3;
 
 pub const NAME: &str = "Nav Helper";
@@ -26,7 +25,7 @@ impl GuiHelper for NavHelper {
     fn draw(
         &mut self,
         game_state: &mut GameState,
-        _sequencer: &mut Sequencer<GameState>,
+        _game_manager: &mut Option<GameManager>,
         ui: &mut egui::Ui,
         _tab: &mut String,
     ) {

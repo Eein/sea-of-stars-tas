@@ -4,17 +4,15 @@ use crate::Node;
 
 pub struct Sequencer<T> {
     root: Box<dyn Node<T>>,
-    started: bool,
     initialized: bool,
     finished: bool,
     timer: Timer,
 }
 
 impl<T> Sequencer<T> {
-    pub fn create(root: Box<dyn Node<T>>) -> Self {
+    pub fn new(root: Box<dyn Node<T>>) -> Self {
         Sequencer {
             root,
-            started: false,
             initialized: false,
             finished: false,
             timer: delta::Timer::new(),
@@ -22,11 +20,7 @@ impl<T> Sequencer<T> {
     }
 
     pub fn is_running(&self) -> bool {
-        self.started && !self.finished
-    }
-
-    pub fn start(&mut self) {
-        self.started = true;
+        !self.finished
     }
 
     pub fn run(&mut self, context: &mut T) -> bool {
@@ -136,7 +130,7 @@ mod tests {
     #[test]
     fn seq_test() -> std::io::Result<()> {
         // Create a sequencer object
-        let mut sequencer: Sequencer<State> = Sequencer::create(SeqList::create(
+        let mut sequencer: Sequencer<State> = Sequencer::new(SeqList::create(
             "Root",
             vec![
                 // Check that state has initialized to 0

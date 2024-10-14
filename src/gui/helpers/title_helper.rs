@@ -1,6 +1,5 @@
 use super::GuiHelper;
-use crate::state::GameState;
-use seq::prelude::*;
+use crate::{game_manager::GameManager, state::GameState};
 
 pub const NAME: &str = "Title Helper";
 
@@ -17,7 +16,7 @@ impl GuiHelper for TitleHelper {
     fn draw(
         &mut self,
         game_state: &mut GameState,
-        _sequencer: &mut Sequencer<GameState>,
+        _game_manager: &mut Option<GameManager>,
         ui: &mut egui::Ui,
         _tab: &mut String,
     ) {
