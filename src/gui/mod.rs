@@ -54,6 +54,8 @@ impl Gui {
     }
 
     pub fn active(state: &mut State, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        let speedrun_manager = &state.game_state.memory_managers.speedrun_manager.data;
+
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
                 ui.menu_button("File", |ui| {
@@ -83,6 +85,12 @@ impl Gui {
                 state.debug.last_update = tnow;
 
                 egui::widgets::global_theme_preference_buttons(ui);
+
+                // Speedrun Timers
+                if speedrun_manager.is_speedrunning {
+                    ui.label(format!("Run: {}", speedrun_manager.speedrun_timer));
+                    ui.label(format!("Pause: {}", speedrun_manager.pause_timer));
+                }
 
                 ui.label(fps_string);
             });
@@ -114,12 +122,3 @@ impl Gui {
         });
     }
 }
-
-// fn main_tab(_state: &mut State, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-//         ui.heading("Test");
-
-//         ui.horizontal(|ui| {
-//             ui.label("Testing the Application");
-//         });
-//     });
-// }

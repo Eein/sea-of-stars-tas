@@ -26,12 +26,13 @@ impl GuiHelper for DebugHelper {
         let new_dialog_manager = &game_state.memory_managers.new_dialog_manager.data;
         let cutscene_manager = &game_state.memory_managers.cutscene_manager.data;
         let combat_manager = &game_state.memory_managers.combat_manager.data;
+        let speedrun_manager = &game_state.memory_managers.speedrun_manager.data;
+
         ui.label("Encounter".to_string());
         ui.label(format!(
             "Encounter Active: {}",
             combat_manager.encounter_active
         ));
-
         ui.label("Level Info".to_string());
         ui.label(format!("Scene Name: {}", level_manager.scene_name));
         ui.label(format!("Scene GUID: {}", level_manager.scene_guid));
@@ -61,6 +62,55 @@ impl GuiHelper for DebugHelper {
         ui.label(format!(
             "Skip Cutscene Transition Screen PTR : 0x{:x}",
             cutscene_manager.skip_cutscene_transition_screen
+        ));
+        ui.separator();
+        ui.label("Speedrun Manager".to_string());
+
+        ui.label(format!(
+            "Is Speedrunning: {}",
+            speedrun_manager.is_speedrunning
+        ));
+        ui.label(format!(
+            "Speedrun Timer Pause Lock: {}",
+            speedrun_manager.speedrun_timer_pause_lock
+        ));
+        ui.label("".to_string());
+
+        ui.label("# Speedrun Timer".to_string());
+        ui.label(format!(
+            "Is Started: {}",
+            speedrun_manager.speedrun_timer.is_started
+        ));
+        ui.label(format!(
+            "Is Paused: {}",
+            speedrun_manager.speedrun_timer.is_paused
+        ));
+        ui.label(format!(
+            "Timer In Second: {}",
+            speedrun_manager.speedrun_timer.timer_in_second
+        ));
+        ui.label(format!(
+            "Realtime Delta Time: {}",
+            speedrun_manager.speedrun_timer.realtime_delta_time
+        ));
+
+        ui.label("".to_string());
+        ui.label("# PauseTimer".to_string());
+        ui.label(format!(
+            "Is Started: {}",
+            speedrun_manager.pause_timer.is_started
+        ));
+        ui.label(format!(
+            "Is Paused: {}",
+            speedrun_manager.pause_timer.is_paused
+        ));
+        ui.label(format!(
+            "Timer In Second: {}",
+            speedrun_manager.pause_timer.timer_in_second
+        ));
+        ui.label(format!(
+            "Realtime Delta Time: {}",
+            speedrun_manager.pause_timer.realtime_delta_time
         ));
     }
 }
