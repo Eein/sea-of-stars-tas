@@ -17,7 +17,7 @@ impl GuiHelper for MainHelper {
     fn draw(
         &mut self,
         game_state: &mut GameState,
-        game_manager: &mut GameManager,
+        game_manager: &mut Option<GameManager>,
         ui: &mut egui::Ui,
         _tab: &mut String,
     ) {
@@ -27,21 +27,25 @@ impl GuiHelper for MainHelper {
 
         ui.separator();
 
-        let running = game_manager.is_running();
+        let mut running = false;
+        if let Some(gm) = game_manager {
+            running = gm.is_running();
+        }
+
         if ui
             .add_enabled(!running, egui::Button::new("Start TAS"))
             .clicked()
         {
-            *game_manager = tas::create_tas();
-            game_manager.start();
+            let gm = tas::create_tas();
+            *game_manager = Some(gm);
         }
 
         if ui
             .add_enabled(!running, egui::Button::new("Start Move Test"))
             .clicked()
         {
-            *game_manager = tas::create_movement_test();
-            game_manager.start();
+            let gm = tas::create_movement_test();
+            *game_manager = Some(gm);
         }
     }
 }

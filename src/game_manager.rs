@@ -16,15 +16,11 @@ pub struct GameManager {
 }
 
 impl GameManager {
-    pub fn create(root: Box<dyn Node<GameState>>) -> Self {
+    pub fn new(root: Box<dyn Node<GameState>>) -> Self {
         Self {
-            sequencer: Sequencer::create(root),
+            sequencer: Sequencer::new(root),
             fsm: GameFsm::default(),
         }
-    }
-
-    pub fn start(&mut self) {
-        self.sequencer.start();
     }
 
     pub fn run(&mut self, context: &mut GameState) -> bool {
@@ -46,10 +42,10 @@ impl GameManager {
                     // TODO(orkaboy): Signal return to sequencer?
                     self.fsm = GameFsm::Route;
                 }
-            },
+            }
             GameFsm::Route => {
                 // Sequencer has lower prio
-                return self.sequencer.run(context)
+                return self.sequencer.run(context);
             }
         }
         false

@@ -40,7 +40,7 @@ impl GuiHelpers {
     pub fn draw(
         &mut self,
         game_state: &mut GameState,
-        game_manager: &mut GameManager,
+        game_manager: &mut Option<GameManager>,
         ui: &mut egui::Ui,
         tab: &mut String,
     ) {
@@ -58,7 +58,7 @@ pub trait GuiHelper {
     fn draw(
         &mut self,
         game_state: &mut GameState,
-        game_manager: &mut GameManager,
+        game_manager: &mut Option<GameManager>,
         ui: &mut egui::Ui,
         tab: &mut String,
     );

@@ -8,7 +8,7 @@ use crate::seq::title::SeqTitleScreen;
 use crate::seq::movement::*;
 
 pub fn create_tas() -> GameManager {
-    GameManager::create(SeqList::create(
+    GameManager::new(SeqList::create(
         "TAS",
         vec![
             SeqLog::create("SEQ START"),
@@ -20,7 +20,7 @@ pub fn create_tas() -> GameManager {
 }
 
 pub fn create_movement_test() -> GameManager {
-    GameManager::create(SeqList::create(
+    GameManager::new(SeqList::create(
         "Move Test",
         vec![
             SeqSkipUntilIdle::create(),

@@ -10,7 +10,7 @@ use std::time::{Duration, Instant};
 pub struct TabViewer<'a> {
     helpers: &'a mut GuiHelpers,
     game_state: &'a mut GameState,
-    game_manager: &'a mut GameManager,
+    game_manager: &'a mut Option<GameManager>,
 }
 impl TabViewer<'_> {
     fn draw(&mut self, ui: &mut egui::Ui, tab: &mut String) {

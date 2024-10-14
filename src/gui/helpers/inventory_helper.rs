@@ -16,7 +16,7 @@ impl GuiHelper for InventoryHelper {
     fn draw(
         &mut self,
         game_state: &mut GameState,
-        _game_manager: &mut GameManager,
+        _game_manager: &mut Option<GameManager>,
         ui: &mut egui::Ui,
         _tab: &mut String,
     ) {
