@@ -156,7 +156,14 @@ impl Node<GameState> for SeqMove {
                 let target = Vector3::new(x, y, z);
                 let joy_dir = SeqMove::get_dir(player, &target, false);
                 state.gamepad.set_ljoy(joy_dir);
-                self.mash(&mut state.gamepad, delta);
+                // If we are close to target, stop mashing to prevent unintended jumps
+                const INTERACT_PRECISION: f64 = 1.0;
+                if !SeqMove::is_close(player, &target, Some(INTERACT_PRECISION)) {
+                    self.mash(&mut state.gamepad, delta);
+                } else {
+                    state.gamepad.release(&SosAction::Confirm);
+                }
+                // If we are even closer, proceed.
                 if SeqMove::is_close(player, &target, None) {
                     state.gamepad.release_all();
                     self.btn = None;
