@@ -1,4 +1,4 @@
-use crate::seq::movement::*;
+use crate::seq::{loot::SeqLoot, movement::*};
 use crate::state::GameState;
 use seq::prelude::*;
 
@@ -18,14 +18,25 @@ pub fn create() -> Box<dyn Node<GameState>> {
                     Move::To(-450.379, -9.998, -72.458),
                     Move::HoldDir([0.0, 1.0], [-491.448, 1.002, -219.789]),
                     Move::To(-491.448, 3.002, -207.100),
-                    // TODO(orkaboy): Loot Solstice Ring + equip
-                    Move::Confirm,
+                ],
+            ),
+            // TODO(orkaboy): Loot Solstice Ring + equip
+            SeqLoot::create(),
+            SeqMove::create(
+                "Move to chest",
+                vec![
                     Move::To(-491.448, 1.010, -220.681),
                     Move::HoldDir([0.0, -1.0], [-450.196, -9.998, -72.732]),
                     Move::To(-446.604, -9.998, -72.457),
                     Move::Interact(-445.176, -14.998, -73.460),
                     Move::To(-444.577, -14.998, -73.867),
-                    // TODO(orkaboy): Loot 90 gold
+                ],
+            ),
+            // TODO(orkaboy): Loot 90 gold
+            SeqLoot::create(),
+            SeqMove::create(
+                "Return to route",
+                vec![
                     Move::Confirm,
                     Move::To(-447.621, -14.998, -76.229),
                     Move::Interact(-450.221, -14.998, -79.093),
