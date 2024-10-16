@@ -30,6 +30,9 @@ impl GuiHelper for MainHelper {
         let mut running = false;
         if let Some(gm) = game_manager {
             running = gm.is_running();
+            if running {
+                ui.label(format!("FSM: {}", gm));
+            }
         }
 
         if ui

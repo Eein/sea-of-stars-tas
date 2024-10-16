@@ -24,4 +24,7 @@ pub trait Node<State> {
     fn exit(&self, _state: &mut State) {
         // Override
     }
+    fn cutscene_control(&self) -> bool {
+        false
+    }
 }

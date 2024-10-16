@@ -1,5 +1,4 @@
 use crate::control::SosAction;
-use crate::memory::player_party_manager::PlayerMovementState;
 use crate::seq::button::ButtonPress;
 use crate::state::GameState;
 
@@ -43,6 +42,10 @@ impl Node<GameState> for SeqSelectOption {
         state.gamepad.release_all();
     }
 
+    fn cutscene_control(&self) -> bool {
+        true
+    }
+
     fn execute(&mut self, state: &mut GameState, delta: f64) -> bool {
         match self.fsm {
             SelectFsm::Approach => {
@@ -82,27 +85,6 @@ impl Node<GameState> for SeqSelectOption {
             }
         }
         false
-    }
-
-    fn exit(&self, state: &mut GameState) {
-        state.gamepad.release_all();
-    }
-}
-
-// Hold skip until we are out of any cutscene and back in control
-pub struct SeqSkipUntilIdle;
-
-impl SeqSkipUntilIdle {
-    pub fn create() -> Box<Self> {
-        Box::new(Self)
-    }
-}
-
-impl Node<GameState> for SeqSkipUntilIdle {
-    fn execute(&mut self, state: &mut GameState, _delta: f64) -> bool {
-        state.gamepad.press(&SosAction::Cancel);
-        let ppmd = &state.memory_managers.player_party_manager.data;
-        ppmd.movement_state == PlayerMovementState::Idle
     }
 
     fn exit(&self, state: &mut GameState) {

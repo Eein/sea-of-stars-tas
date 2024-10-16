@@ -84,6 +84,21 @@ impl<State, Cond: SeqCondition<State>> Node<State> for SeqIf<State, Cond> {
             }
         }
     }
+    fn cutscene_control(&self) -> bool {
+        match self.selection {
+            true => {
+                if let Some(child) = &self.on_true {
+                    return child.cutscene_control();
+                }
+            }
+            false => {
+                if let Some(child) = &self.on_false {
+                    return child.cutscene_control();
+                }
+            }
+        }
+        false
+    }
     fn exit(&self, state: &mut State) {
         match self.selection {
             true => {
@@ -171,6 +186,14 @@ impl<State> Node<State> for SeqList<State> {
                 }
             }
             false
+        }
+    }
+
+    fn cutscene_control(&self) -> bool {
+        if !self.in_bounds() {
+            false
+        } else {
+            self.children[self.step].cutscene_control()
         }
     }
 
