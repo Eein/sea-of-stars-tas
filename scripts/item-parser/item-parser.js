@@ -15,17 +15,16 @@ const getFromLocale = (name) => {
 
 const formatEquippableBy = (num) => {
   if (num == undefined ) { return "None" }
-  let bin = Number(num).toString(2)
+
   let characters = []
-  console.log(bin)
-  // These are probably incorrect, fix!
-  if (bin >> 0 & 1) { characters.push("PlayerPartyCharacter::Zale") }  
-  if (bin >> 1 & 1) { characters.push("PlayerPartyCharacter::Valere") }  
-  if (bin >> 2 & 1) { characters.push("PlayerPartyCharacter::Garl") }  
-  if (bin >> 3 & 1) { characters.push("PlayerPartyCharacter::Serai") }  
-  if (bin >> 4 & 1) { characters.push("PlayerPartyCharacter::Reshan") }  
-  if (bin >> 5 & 1) { characters.push("PlayerPartyCharacter::Bst") }  
-  if (bin >> 6 & 1) { characters.push("PlayerPartyCharacter::Moraine") }  
+
+  if (num >> 0 & 1) { characters.push("PlayerPartyCharacter::Zale") }  
+  if (num >> 1 & 1) { characters.push("PlayerPartyCharacter::Valere") }  
+  if (num >> 2 & 1) { characters.push("PlayerPartyCharacter::Garl") }  
+  if (num >> 3 & 1) { characters.push("PlayerPartyCharacter::Serai") }  
+  if (num >> 4 & 1) { characters.push("PlayerPartyCharacter::Reshan") }  
+  if (num >> 5 & 1) { characters.push("PlayerPartyCharacter::Bst") }  
+
   if (characters.length == 0) { return "None" }
 
   let out = "&[\r\n"
@@ -63,6 +62,8 @@ fs.readdir('./input/', function(err, filenames) {
       let sellPrice = json?.sellPrice
       let validCharacters = json?.validCharacters
       let isGroupTrinket = json?.isGroupTrinket
+      let physicalAttack = json?.physicalAttack || 0
+      let magicalAttack = json?.magicalAttack || 0
       // Temporary = pull in localization file
       let localeKey = json?.nameLocalizationId?.locId
       let name = getFromLocale(json?.nameLocalizationId?.locId)
@@ -79,8 +80,8 @@ m.insert("${name}", Item {
   buy_price: ${buyPrice},
   sell_price: ${sellPrice},
   equippable_by: ${formatEquippableBy(validCharacters)},
-  physical_attack: 15,
-  magical_attack: 8,
+  physical_attack: ${physicalAttack},
+  magical_attack: ${magicalAttack},
   meta: StandardItem
 }); `
 
