@@ -1,6 +1,7 @@
 use super::memory::MemoryManagers;
 use crate::game_manager::GameManager;
 use crate::gui::Gui;
+// use puffin_egui::puffin;
 
 use crate::gui::helpers::*;
 // Move these to preludes later
@@ -11,15 +12,13 @@ use memory::process_list::ProcessList;
 use crate::config::Config;
 use egui_dock::DockState;
 use log::info;
-use std::time::Instant;
 
 use joystick::prelude::*;
 
+use fps_clock::FpsClock;
+
 pub struct StateDebug {
-    pub pinned_fps: f64,
-    pub last_pinned_update: Instant,
-    pub last_update: Instant,
-    pub last_memory_update: Instant,
+    pub fps: FpsClock,
 }
 
 pub struct StateGui {
@@ -77,10 +76,7 @@ impl State {
                 dock_state: DockState::new(tree_names),
             },
             debug: StateDebug {
-                pinned_fps: 0.0,
-                last_pinned_update: Instant::now(),
-                last_update: Instant::now(),
-                last_memory_update: Instant::now(),
+                fps: FpsClock::new(100),
             },
             game_state: GameState {
                 gamepad: GenericJoystick::default(),
@@ -107,9 +103,9 @@ impl State {
     pub fn register_process(&mut self) {
         let process_name = "SeaOfStars.exe";
         // Find the Process
-        match Process::with_name(process_name, &mut self.process_list) {
-            Ok(process) => {
-                if self.context.process.is_none() {
+        if self.context.process.is_none() {
+            match Process::with_name(process_name, &mut self.process_list) {
+                Ok(process) => {
                     // In case we change processes, default all the memory
                     // managers so addresses dont hang onto zombie processes.
                     // NOTE(eein): it may make more sense to do the entire
@@ -119,11 +115,11 @@ impl State {
                         "- Attaching Process\nFound {} at pid {}",
                         process_name, process.pid
                     );
+                    self.context.process = Some(process);
                 }
-                self.context.process = Some(process);
-            }
-            Err(_err) => {
-                self.context = StateContext::default();
+                Err(_err) => {
+                    self.context = StateContext::default();
+                }
             }
         }
     }
@@ -150,16 +146,7 @@ impl State {
     }
 
     pub fn update_managers(&mut self) {
-        let now = Instant::now();
-        // Update managers at 100 fps >> 10ms
-        if now
-            .duration_since(self.debug.last_memory_update)
-            .as_millis()
-            >= 10
-        {
-            self.game_state.memory_managers.update(&self.context);
-            self.debug.last_memory_update = now;
-        }
+        self.game_state.memory_managers.update(&self.context);
     }
 }
 
@@ -172,15 +159,9 @@ impl eframe::App for State {
     /// Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         // Uncomment for puffin profiler
-        // use puffin_egui::puffin;
-        // puffin::set_scopes_on(true);
-        // puffin_egui::profiler_window(ctx);
-        // use
         // puffin::profile_function!();
-        // if you want to profile a function
-
-        // Put your widgets into a `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
-        // For inspiration and more examples, go to https://emilk.github.io/egui
+        // puffin::set_scopes_on(true);
+        // puffin_egui::show_viewport_if_enabled(ctx);
 
         // Deregister the project in state if its not running anymore
         let _ = &self.maybe_deregister_process();
@@ -199,7 +180,8 @@ impl eframe::App for State {
                 let _ = gm.run(&mut self.game_state);
             }
         }
-
-        Gui::update(self, ctx, frame)
+        // puffin::GlobalProfiler::lock().new_frame();
+        Gui::update(self, ctx, frame);
+        self.debug.fps.tick();
     }
 }

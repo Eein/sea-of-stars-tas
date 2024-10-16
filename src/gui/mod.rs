@@ -5,7 +5,6 @@ use super::gui::helpers::GuiHelpers;
 use super::state::{GameState, State};
 use crate::config::Config;
 use egui_dock::{DockArea, Style};
-use std::time::{Duration, Instant};
 
 pub struct TabViewer<'a> {
     helpers: &'a mut GuiHelpers,
@@ -64,26 +63,8 @@ impl Gui {
                         ctx.send_viewport_cmd(egui::ViewportCommand::Close);
                     }
                 });
+
                 ui.add_space(16.0);
-
-                // FPS Counter
-                let tnow = Instant::now();
-                let tprev = state.debug.last_update;
-                let tlastpinned = state.debug.last_pinned_update;
-
-                let fps_string = {
-                    let since = tnow.duration_since(tlastpinned);
-                    if since >= Duration::from_millis(100) {
-                        let dt = (tnow - tprev).as_secs_f64();
-                        let fps = 1.0 / dt;
-                        let out = fps.round();
-                        state.debug.last_pinned_update = tnow;
-                        state.debug.pinned_fps = out;
-                    }
-                    format!("FPS: {: >3}", state.debug.pinned_fps)
-                };
-
-                state.debug.last_update = tnow;
 
                 egui::widgets::global_theme_preference_buttons(ui);
 
@@ -93,7 +74,7 @@ impl Gui {
                     ui.label(format!("Pause: {}", speedrun_manager.pause_timer));
                 }
 
-                ui.label(fps_string);
+                ui.label(format!("FPS: {: >3}", state.debug.fps.fps()));
             });
         });
 

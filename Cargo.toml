@@ -20,7 +20,7 @@ eframe = { version = "0.29", default-features = false, features = [
 egui_dock = "0.14.0"
 colog = "1.3.0"
 log = "0.4.22"
-puffin_egui = "0.29.0"
+puffin_egui = { git = "https://github.com/tedsteen/puffin", branch = "upgrade-egui" }
 yaml-rust2 = "0.9.0"
 vec3-rs = "0.1.6"
 libm = "0.2.8"
@@ -29,6 +29,7 @@ toml_edit = "0.22.22"
 itoa = "1.0.11"
 delta = "0.2.1"
 itertools = "0.13.0"
+fps_clock = "2.0.0"
 
 [dependencies.winit]
 # version = "*"
