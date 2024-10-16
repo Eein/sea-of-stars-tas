@@ -1,58 +1,11 @@
-use crate::control::SosAction;
-use crate::memory::player_party_manager::PlayerMovementState;
-use crate::seq::button::ButtonPress;
+mod change_time_tutorial;
+
+use self::change_time_tutorial::SeqChangeTimeTutorial;
+
 use crate::seq::dialog::*;
 use crate::seq::movement::*;
 use crate::state::GameState;
-use joystick::common::JoystickBtnInterface;
-use joystick::common::JoystickInterface;
-use libm::fabs;
 use seq::prelude::*;
-
-struct SeqChangeTimeTutorial {
-    btn: ButtonPress,
-    right_time: bool,
-}
-
-impl SeqChangeTimeTutorial {
-    fn create() -> Box<Self> {
-        Box::new(Self {
-            btn: ButtonPress::new(SosAction::Confirm),
-            right_time: false,
-        })
-    }
-}
-
-impl Node<GameState> for SeqChangeTimeTutorial {
-    fn execute(&mut self, state: &mut GameState, delta: f64) -> bool {
-        // Hold cancel to skip cut-scenes
-        state.gamepad.press(&SosAction::Cancel);
-        // Hold time inc to pass tutorial
-        if !self.right_time {
-            let todm = &state.memory_managers.time_of_day_manager.data;
-            const TARGET_TIME: f64 = 21.0;
-            const TIME_EPSILON: f32 = 0.3;
-            let time_diff = fabs(todm.current_time as f64 - TARGET_TIME) as f32;
-            state.gamepad.press(&SosAction::TimeInc);
-            if time_diff < TIME_EPSILON {
-                self.right_time = true;
-                state.gamepad.release(&SosAction::TimeInc);
-            }
-        }
-        // Mash confirm to skip tutorial popup
-        if self.btn.update(&mut state.gamepad, delta) {
-            self.btn = ButtonPress::new(SosAction::Confirm);
-        }
-        // Done when we are back in control
-        let ppmd = &state.memory_managers.player_party_manager.data;
-        ppmd.movement_state == PlayerMovementState::Idle
-    }
-
-    fn exit(&self, state: &mut GameState) {
-        // Cleanup, release buttons
-        state.gamepad.release_all();
-    }
-}
 
 pub fn create() -> Box<dyn Node<GameState>> {
     SeqList::create(
@@ -78,11 +31,18 @@ pub fn create() -> Box<dyn Node<GameState>> {
             SeqSelectOption::create(0, false),
             SeqChangeTimeTutorial::create(),
             SeqMove::create(
-                "Get Y'eeted",
+                "Change time",
                 vec![
                     // Note, after Elder Mist time tutorial
-                    Move::Log("Cross the bridges"),
                     Move::ChangeTime(21.0),
+                ],
+            ),
+            SeqWait::create("Wait on bridge", 3.0),
+            SeqMove::create(
+                "Get Y'eeted",
+                vec![
+                    Move::ChangeTime(15.0),
+                    Move::Log("Cross the bridges"),
                     Move::To(46.352, 97.002, 170.300),
                     Move::ChangeTime(9.0),
                     Move::To(20.483, 97.000, 170.430),
@@ -97,7 +57,6 @@ pub fn create() -> Box<dyn Node<GameState>> {
                 ],
             ),
             SeqSelectOption::create(0, false),
-            SeqSkipUntilIdle::create(),
         ],
     )
 }

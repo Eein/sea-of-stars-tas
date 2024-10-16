@@ -23,6 +23,10 @@ impl<T> Sequencer<T> {
         !self.finished
     }
 
+    pub fn cutscene_control(&self) -> bool {
+        self.root.cutscene_control()
+    }
+
     pub fn run(&mut self, context: &mut T) -> bool {
         // Return early if the sequencer already finished
         if self.finished {
