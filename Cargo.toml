@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 joystick = { path = "crates/joystick", version = "0.1.0" }
 memory = { path = "crates/memory", version = "0.1.0" }
+data = { path = "crates/data", version = "0.1.0" }
 bytemuck = { version = "1.18.0", features = ["min_const_generics"] }
 seq = { path = "crates/seq", version = "0.1.0" }
 sysinfo = { version = "0.32.0", default-features = false, features = ["system", "multithread"] }
@@ -34,7 +35,7 @@ version = "=0.30.5"
 features = ["default"]
 
 [workspace]
-members = [
+members = [ "crates/data",
   "crates/joystick",
   "crates/memory"
 ]

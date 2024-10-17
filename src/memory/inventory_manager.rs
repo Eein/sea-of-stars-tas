@@ -90,7 +90,7 @@ impl UnitySerializableDictKey for InventoryItemGuid {
 }
 
 impl UnitySerializableDictValue for InventoryItemQuantity {
-    fn read(process: &Process, item_ptr: u64) -> Result<Self, MemoryError> {
+    fn read(_process: &Process, item_ptr: u64) -> Result<Self, MemoryError> {
         // For this, the value is simply stored at the pointer
         Ok(InventoryItemQuantity(item_ptr))
     }

@@ -1,7 +1,7 @@
 use crate::memory::memory_context::MemoryContext;
-use crate::memory::objects::character::PlayerPartyCharacter;
 use crate::memory::{MemoryManager, MemoryManagerUpdate};
 use crate::state::StateContext;
+use data::PlayerPartyCharacter;
 use log::info;
 use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;

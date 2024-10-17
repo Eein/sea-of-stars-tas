@@ -6,7 +6,6 @@ pub mod inventory_manager;
 pub mod level_manager;
 pub mod memory_context;
 pub mod new_dialog_manager;
-pub mod objects;
 pub mod player_party_manager;
 pub mod shop_manager;
 pub mod speedrun_manager;

@@ -606,6 +606,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "96a6ac251f4a2aca6b3f91340350eab87ae57c3f127ffeb585e92bd336717991"
 
 [[package]]
+name = "data"
+version = "0.1.0"
+
+[[package]]
 name = "delta"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2359,6 +2363,7 @@ version = "0.1.0"
 dependencies = [
  "bytemuck",
  "colog",
+ "data",
  "delta",
  "eframe",
  "egui 0.29.1",

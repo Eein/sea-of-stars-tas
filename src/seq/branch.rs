@@ -1,6 +1,6 @@
-use crate::memory::objects::character::PlayerPartyCharacter;
 use crate::state::GameState;
 
+use data::PlayerPartyCharacter;
 use seq::prelude::*;
 
 // Test condition. Checks if value is greater than

@@ -12,21 +12,6 @@ pub struct Item<'a, T> {
 }
 
 // Menu that the item belongs to.
-#[derive(Default, Debug)]
-pub enum ItemType {
-    Valuable,
-    Weapon,
-    Armor,
-    Trinket,
-    GroupTrinket,
-    Food,
-    Key,
-    Ingredient,
-    Recipe,
-    Relic,
-    #[default]
-    Unknown,
-}
 
 #[derive(Default, Debug)]
 pub struct EquippableItem {

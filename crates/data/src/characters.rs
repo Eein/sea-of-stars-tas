@@ -13,19 +13,19 @@ pub enum PlayerPartyCharacter {
 }
 
 impl PlayerPartyCharacter {
-    // pub fn as_str(&self) -> &'static str {
-    //     match self {
-    //         Self::None => "None",
-    //         Self::Zale => "Zale",
-    //         Self::Valere => "Valere",
-    //         Self::Garl => "Garl",
-    //         Self::Serai => "Seraï",
-    //         Self::Reshan => "Resh'an",
-    //         Self::Bst => "B'st",
-    //         Self::Moraine => "Moraine",
-    //         Self::Unknown => "Unknown",
-    //     }
-    // }
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::None => "None",
+            Self::Zale => "Zale",
+            Self::Valere => "Valere",
+            Self::Garl => "Garl",
+            Self::Serai => "Seraï",
+            Self::Reshan => "Resh'an",
+            Self::Bst => "B'st",
+            Self::Moraine => "Moraine",
+            Self::Unknown => "Unknown",
+        }
+    }
 
     /// Parses the name provided to the enum
     ///

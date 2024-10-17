@@ -1,8 +1,8 @@
 use crate::control::SosAction;
-use crate::memory::objects::character::PlayerPartyCharacter;
 use crate::memory::title_sequence_manager::TitleMenuOption;
 use crate::seq::button::ButtonPress;
 use crate::state::{GameEvent, GameState};
+use data::PlayerPartyCharacter;
 use joystick::prelude::*;
 use log::info;
 use seq::prelude::*;
