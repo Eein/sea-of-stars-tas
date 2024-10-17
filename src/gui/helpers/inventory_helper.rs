@@ -1,5 +1,4 @@
 use super::GuiHelper;
-use crate::memory::inventory_manager::{InventoryItemGuid, InventoryItemQuantity};
 use crate::state::GameState;
 use seq::prelude::*;
 
