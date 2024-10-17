@@ -2,10 +2,11 @@ use crate::memory::memory_context::MemoryContext;
 use crate::memory::{MemoryManager, MemoryManagerUpdate};
 use crate::state::StateContext;
 use log::info;
-use memory::game_engine::il2cpp::unity_list::{UnityItem, UnityList};
+use memory::game_engine::il2cpp::unity_serializable_dictionary::*;
 use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::{MemoryError, Process};
 use memory::string::ArrayWString;
+use std::hash::Hash;
 
 impl Default for MemoryManager<InventoryManagerData> {
     fn default() -> Self {
@@ -21,7 +22,21 @@ impl Default for MemoryManager<InventoryManagerData> {
 
 #[derive(Default, Debug)]
 pub struct InventoryManagerData {
-    pub items: UnityList<InventoryItem>,
+    // This references QuantityByInventoryItemReference which is a
+    // SerializableDictionary<InventoryItemReference, int> which is
+    // T1 = Guid
+    // T2 = Quantity
+    // In memory you may see the values packed within 0x20 Dictionary 0x18 Entries
+    // With a starting point of 0x20; from there the memory is laid out like:
+    // 0x20 Metadata (unused, for internal stuff)
+    // 0x28 InventoryItemReference
+    //   (first 20 bytes are metadata)
+    //   0x14 - beginning of utf8 GUID
+    // 0x30 Quantity
+    // ... so on until count is met or NULL pointer
+    // These types can theoretically originally have a `next` link for key collisions
+    // so be on the watch for missing items
+    pub items: UnitySerializableDictionary<InventoryItemGuid, InventoryItemQuantity>,
 }
 
 impl MemoryManagerUpdate for InventoryManagerData {
@@ -41,12 +56,13 @@ impl MemoryManagerUpdate for InventoryManagerData {
 impl InventoryManagerData {
     pub fn update_items(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
         // If currentInventory != 0x0
-        if let Ok(items_ptr) =
-            memory_context.follow_fields::<u64>(&["currentInventory", "itemsToSell"])
-        {
+        if let Ok(items_ptr) = memory_context.follow_fields::<u64>(&["ownedInventoryItems"]) {
             if items_ptr != 0x0 {
-                let items = UnityList::<InventoryItem>::read(memory_context.process, items_ptr)?;
-                self.items = items;
+                self.items =
+                    UnitySerializableDictionary::<InventoryItemGuid, InventoryItemQuantity>::read(
+                        memory_context.process,
+                        items_ptr,
+                    )?;
             }
         }
 
@@ -54,21 +70,28 @@ impl InventoryManagerData {
     }
 }
 
-#[derive(Default, Debug)]
-pub struct InventoryItem {
-    // currentInventory -> itemsToSell -> _items -> item[x] -> guid
-    pub guid: String,
-}
+#[derive(Default, Debug, Eq, PartialEq, Hash)]
+pub struct InventoryItemGuid(pub String);
 
-impl UnityItem for InventoryItem {
+#[derive(Default, Debug)]
+pub struct InventoryItemQuantity(pub u64);
+
+impl UnitySerializableDictKey for InventoryItemGuid {
     fn read(process: &Process, item_ptr: u64) -> Result<Self, MemoryError> {
-        if let Ok(guid) = process.read_pointer_path::<ArrayWString<128>>(item_ptr, &[0x14]) {
+        if let Ok(guid) = process.read::<ArrayWString<128>>(item_ptr + 0x14) {
             match String::from_utf16(guid.as_slice()) {
-                Ok(value) => Ok(InventoryItem { guid: value }),
+                Ok(value) => Ok(InventoryItemGuid(value)),
                 Err(_) => Err(MemoryError::Unset),
             }
         } else {
             Err(MemoryError::ReadError)
         }
+    }
+}
+
+impl UnitySerializableDictValue for InventoryItemQuantity {
+    fn read(process: &Process, item_ptr: u64) -> Result<Self, MemoryError> {
+        // For this, the value is simply stored at the pointer
+        Ok(InventoryItemQuantity(item_ptr))
     }
 }
