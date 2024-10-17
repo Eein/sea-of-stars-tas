@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 arrayvec = "0.7.6"
 bytemuck = { version = "1.18.0", features = ["min_const_generics"] }
+indexmap = "2.6.0"
 memchr = "2.7.4"
 proc-maps = "0.3.0"
 read-process-memory = "0.1.6"

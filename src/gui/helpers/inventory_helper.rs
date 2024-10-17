@@ -21,9 +21,13 @@ impl GuiHelper for InventoryHelper {
         _tab: &mut String,
     ) {
         let currency_manager = &game_state.memory_managers.currency_manager.data;
+        let inventory_manager = &game_state.memory_managers.inventory_manager.data;
 
         ui.label(format!("Money: {}", currency_manager.money));
         ui.separator();
-        ui.label("Inventory: NOT YET IMPLEMENTED");
+        ui.label("Inventory");
+        for (item, quantity) in &inventory_manager.items.items {
+            ui.label(format!("{} x {}", quantity.0, item.0));
+        }
     }
 }
