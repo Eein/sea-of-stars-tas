@@ -1,12 +1,9 @@
-use delta::Timer;
-
 use crate::Node;
 
 pub struct Sequencer<T> {
     root: Box<dyn Node<T>>,
     initialized: bool,
     finished: bool,
-    timer: Timer,
 }
 
 impl<T> Sequencer<T> {
@@ -15,7 +12,6 @@ impl<T> Sequencer<T> {
             root,
             initialized: false,
             finished: false,
-            timer: delta::Timer::new(),
         }
     }
 
@@ -27,7 +23,7 @@ impl<T> Sequencer<T> {
         self.root.cutscene_control()
     }
 
-    pub fn run(&mut self, context: &mut T) -> bool {
+    pub fn run(&mut self, context: &mut T, delta: f64) -> bool {
         // Return early if the sequencer already finished
         if self.finished {
             return true;
@@ -35,12 +31,10 @@ impl<T> Sequencer<T> {
         // Perform initialization if needed
         if !self.initialized {
             self.initialized = true;
-            let _ = self.timer.mark();
             self.root.enter(context);
         }
         // Update the sequencer root
-        let dt = self.timer.mark_secs();
-        if self.root.execute(context, dt) {
+        if self.root.execute(context, delta) {
             self.finished = true;
             self.root.exit(context);
         }

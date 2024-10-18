@@ -45,6 +45,8 @@ impl CombatManagerData {
             memory_context.follow_fields::<u8>(&["currentEncounter", "encounterDone"])
         {
             self.encounter_active = matches!(encounter_done, 0)
+        } else {
+            self.encounter_active = false;
         }
 
         Ok(())

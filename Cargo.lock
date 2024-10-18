@@ -2358,6 +2358,7 @@ version = "0.1.0"
 dependencies = [
  "bytemuck",
  "colog",
+ "delta",
  "eframe",
  "egui 0.29.1",
  "egui_dock",
@@ -2381,7 +2382,6 @@ dependencies = [
 name = "seq"
 version = "0.1.0"
 dependencies = [
- "delta",
  "log",
 ]
 
