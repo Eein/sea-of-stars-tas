@@ -1,4 +1,5 @@
 mod change_time_tutorial;
+mod mooncradle;
 mod mountain_trail;
 
 use self::change_time_tutorial::SeqChangeTimeTutorial;
@@ -14,6 +15,7 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
         vec![
             SeqLog::create("MOVE START"),
             mountain_trail::intro(),
+            mooncradle::flashback(),
             SeqLog::create("TODO BREAK"),
             // TODO: more stuff
             SeqMove::create(

@@ -59,7 +59,12 @@ impl GameManager {
             GameFsm::Combat => {
                 // TODO(orkaboy): actually handle combat. For now, mash!
                 if self.btn.update(&mut context.gamepad, dt) {
-                    self.btn = ButtonPress::new(SosAction::Confirm);
+                    self.btn = ButtonPress {
+                        action: SosAction::Confirm,
+                        press_time: 0.1,
+                        release_time: 0.2,
+                        ..Default::default()
+                    };
                 }
 
                 if !cmd.encounter_active {
