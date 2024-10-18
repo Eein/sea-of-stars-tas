@@ -36,7 +36,8 @@ version = "=0.30.5"
 features = ["default"]
 
 [workspace]
-members = [ "crates/data",
+members = [ 
+  "crates/data",
   "crates/joystick",
   "crates/memory"
 ]
