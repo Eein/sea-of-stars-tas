@@ -33,6 +33,12 @@ impl GuiHelper for MainHelper {
             if running {
                 ui.label(format!("FSM: {}", gm));
             }
+
+            let paused = gm.is_paused();
+            let text = if paused { "Resume" } else { "Pause" };
+            if ui.button(text).clicked() {
+                gm.pause(!paused);
+            }
         }
 
         if ui

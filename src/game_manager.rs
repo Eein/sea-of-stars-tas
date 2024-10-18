@@ -23,6 +23,7 @@ pub struct GameManager {
     fsm: GameFsm,
     btn: ButtonPress,
     timer: Timer,
+    paused: bool,
 }
 
 impl Display for GameManager {
@@ -38,14 +39,28 @@ impl GameManager {
             fsm: GameFsm::default(),
             btn: ButtonPress::default(),
             timer: delta::Timer::new(),
+            paused: false,
         }
     }
 
+    pub fn pause(&mut self, paused: bool) {
+        self.paused = paused;
+    }
+
+    pub fn is_paused(&self) -> bool {
+        self.paused
+    }
+
     pub fn run(&mut self, context: &mut GameState) -> bool {
+        let dt = self.timer.mark_secs();
+
+        if self.paused {
+            context.gamepad.release_all();
+            return false;
+        }
+
         let cmd = &context.memory_managers.combat_manager.data;
         let csmd = &context.memory_managers.cutscene_manager.data;
-
-        let dt = self.timer.mark_secs();
 
         // TODO(orkaboy): detect game over?
         // TODO(orkaboy): detect level up screen
