@@ -1,18 +1,27 @@
-use joystick::common::JoystickInterface;
+use std::fmt::Display;
+
+use joystick::common::{JoystickBtnInterface, JoystickInterface};
 use seq::prelude::*;
 
-use crate::state::GameState;
+use crate::{control::SosAction, state::GameState};
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 enum GameFsm {
     Combat,
     #[default]
     Route,
+    Cutscene,
 }
 
 pub struct GameManager {
     sequencer: Sequencer<GameState>,
     fsm: GameFsm,
+}
+
+impl Display for GameManager {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self.fsm)
+    }
 }
 
 impl GameManager {
@@ -25,6 +34,7 @@ impl GameManager {
 
     pub fn run(&mut self, context: &mut GameState) -> bool {
         let cmd = &context.memory_managers.combat_manager.data;
+        let csmd = &context.memory_managers.cutscene_manager.data;
 
         // TODO(orkaboy): detect game over?
         // TODO(orkaboy): detect level up screen
@@ -44,8 +54,21 @@ impl GameManager {
                 }
             }
             GameFsm::Route => {
-                // Sequencer has lower prio
-                return self.sequencer.run(context);
+                if csmd.is_in_cutscene && !self.sequencer.cutscene_control() {
+                    self.fsm = GameFsm::Cutscene;
+                } else {
+                    // Sequencer has lower prio
+                    return self.sequencer.run(context);
+                }
+            }
+            GameFsm::Cutscene => {
+                context.gamepad.press(&SosAction::Cancel);
+                context.gamepad.press(&SosAction::Confirm);
+                context.gamepad.press(&SosAction::Turbo);
+                if !csmd.is_in_cutscene {
+                    context.gamepad.release_all();
+                    self.fsm = GameFsm::Route;
+                }
             }
         }
         false
