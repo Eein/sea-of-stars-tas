@@ -82,8 +82,10 @@ impl UnitySerializableDictKey for InventoryItemName {
         if let Ok(guid) = process.read::<ArrayWString<128>>(item_ptr + 0x14) {
             match String::from_utf16(guid.as_slice()) {
                 Ok(value) => {
-                    let item = all_items().get(value.as_str()).unwrap();
-                    Ok(InventoryItemName(item.name.to_string()))
+                    match all_items().get(value.as_str()) {
+                        Some(item) => Ok(InventoryItemName(item.name.to_string())),
+                        None => Ok(InventoryItemName("UNKNOWN ITEM NAME".to_string()))
+                    }
                 }
                 Err(_) => Err(MemoryError::Unset),
             }
