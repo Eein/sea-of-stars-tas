@@ -12,6 +12,7 @@ use vec3_rs::Vector3;
 pub enum Move {
     To(f32, f32, f32),
     ToWorld(f32, f32, f32),
+    Towards([f32; 3], [f32; 3], bool),
     Climb(f32, f32, f32),
     Interact(f32, f32, f32),
     WaitFor(f64),
@@ -19,8 +20,8 @@ pub enum Move {
     HoldDirWorld([f32; 2], [f32; 3]),
     Confirm,
     Log(&'static str),
-    ChangeTime(f32),        // 0.0-24.0
-    AwaitCombat(Box<Move>), // Break inner Move when combat is done
+    ChangeTime(f32),          // 0.0-24.0
+    AwaitCombat(Box<Move>),   // Break inner Move when combat is done
     AwaitCutscene(Box<Move>), // Break inner Move when cutscene is done
 }
 
@@ -125,6 +126,21 @@ impl SeqMove {
             Move::Log(text) => {
                 info!("{}: {}", self.name, text);
                 self.step += 1;
+            }
+            // Move towards an anchor, until reached target. Optionally, mash
+            Move::Towards(target, anchor, mash) => {
+                let target = Vector3::new(target[0], target[1], target[2]);
+                let anchor = Vector3::new(anchor[0], anchor[1], anchor[2]);
+                let joy_dir = SeqMove::get_dir(player, &anchor, false);
+                state.gamepad.set_ljoy(joy_dir);
+                if mash {
+                    self.mash(&mut state.gamepad, delta);
+                }
+                if SeqMove::is_close(player, &target, Some(1.0)) {
+                    state.gamepad.release_all();
+                    self.btn = None;
+                    self.step += 1;
+                }
             }
             // Move towards the target coordinate until it's reached
             Move::To(x, y, z) => {

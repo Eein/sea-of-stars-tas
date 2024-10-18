@@ -16,6 +16,7 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
             SeqLog::create("MOVE START"),
             mountain_trail::intro(),
             mooncradle::flashback(),
+            SeqCheckpoint::create("forbidden_cave"),
             SeqLog::create("TODO BREAK"),
             // TODO: more stuff
             SeqMove::create(
