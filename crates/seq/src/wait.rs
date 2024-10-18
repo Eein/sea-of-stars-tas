@@ -23,7 +23,7 @@ impl Display for SeqWait {
     }
 }
 
-impl<State> Node<State> for SeqWait {
+impl<State, Event> Node<State, Event> for SeqWait {
     // Execute the selected path until it terminates
     fn execute(&mut self, _state: &mut State, delta: f64) -> bool {
         self.timer += delta;

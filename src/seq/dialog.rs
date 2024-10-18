@@ -1,6 +1,6 @@
 use crate::control::SosAction;
 use crate::seq::button::ButtonPress;
-use crate::state::GameState;
+use crate::state::{GameEvent, GameState};
 
 use joystick::prelude::*;
 use seq::prelude::*;
@@ -37,7 +37,7 @@ impl SeqSelectOption {
 
 const HOLD_TIME: f64 = 0.3;
 
-impl Node<GameState> for SeqSelectOption {
+impl Node<GameState, GameEvent> for SeqSelectOption {
     fn enter(&mut self, state: &mut GameState) {
         state.gamepad.release_all();
     }

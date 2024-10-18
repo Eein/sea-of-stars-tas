@@ -1,6 +1,6 @@
 use crate::control::SosAction;
 use crate::seq::button::ButtonPress;
-use crate::state::GameState;
+use crate::state::{GameEvent, GameState};
 
 use joystick::prelude::*;
 use log::info;
@@ -109,9 +109,13 @@ impl SeqMove {
     }
 }
 
-impl Node<GameState> for SeqMove {
+impl Node<GameState, GameEvent> for SeqMove {
     fn enter(&mut self, state: &mut GameState) {
         state.gamepad.release_all();
+    }
+
+    fn on_event(&mut self, _state: &mut GameState, _event: &GameEvent) {
+        // TODO(orkaboy): Handle events
     }
 
     fn execute(&mut self, state: &mut GameState, delta: f64) -> bool {

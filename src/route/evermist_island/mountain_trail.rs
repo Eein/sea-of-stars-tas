@@ -1,8 +1,8 @@
 use crate::seq::movement::*;
-use crate::state::GameState;
+use crate::state::{GameEvent, GameState};
 use seq::prelude::*;
 
-pub fn intro() -> Box<dyn Node<GameState>> {
+pub fn intro() -> Box<dyn Node<GameState, GameEvent>> {
     SeqList::create(
         "Evermist Island",
         vec![

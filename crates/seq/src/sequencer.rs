@@ -1,13 +1,13 @@
 use crate::Node;
 
-pub struct Sequencer<T> {
-    root: Box<dyn Node<T>>,
+pub struct Sequencer<T, E> {
+    root: Box<dyn Node<T, E>>,
     initialized: bool,
     finished: bool,
 }
 
-impl<T> Sequencer<T> {
-    pub fn new(root: Box<dyn Node<T>>) -> Self {
+impl<T, E> Sequencer<T, E> {
+    pub fn new(root: Box<dyn Node<T, E>>) -> Self {
         Sequencer {
             root,
             initialized: false,
@@ -21,6 +21,13 @@ impl<T> Sequencer<T> {
 
     pub fn cutscene_control(&self) -> bool {
         self.root.cutscene_control()
+    }
+
+    pub fn on_event(&mut self, context: &mut T, event: &E) {
+        if self.finished {
+            return;
+        }
+        self.root.on_event(context, event);
     }
 
     pub fn run(&mut self, context: &mut T, delta: f64) -> bool {
@@ -59,6 +66,10 @@ mod tests {
         value: u32,
     }
 
+    // TODO(orkaboy): test
+    #[derive(Default)]
+    struct Event;
+
     // Example node
     #[derive(Default)]
     struct SeqTest {
@@ -71,7 +82,7 @@ mod tests {
         }
     }
 
-    impl Node<State> for SeqTest {
+    impl Node<State, Event> for SeqTest {
         fn enter(&mut self, state: &mut State) {
             assert_eq!(state.value, self.value);
         }
@@ -89,7 +100,7 @@ mod tests {
         }
     }
 
-    impl Node<State> for SeqAssert {
+    impl Node<State, Event> for SeqAssert {
         fn enter(&mut self, _state: &mut State) {
             assert!(self.value);
         }
@@ -107,7 +118,7 @@ mod tests {
         }
     }
 
-    impl Node<State> for SeqSetter {
+    impl Node<State, Event> for SeqSetter {
         fn enter(&mut self, state: &mut State) {
             state.value = self.value;
         }
@@ -128,7 +139,7 @@ mod tests {
     #[test]
     fn seq_test() -> std::io::Result<()> {
         // Create a sequencer object
-        let mut sequencer: Sequencer<State> = Sequencer::new(SeqList::create(
+        let mut sequencer: Sequencer<State, Event> = Sequencer::new(SeqList::create(
             "Root",
             vec![
                 // Check that state has initialized to 0

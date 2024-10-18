@@ -1,6 +1,6 @@
 use crate::control::SosAction;
 use crate::memory::title_sequence_manager::{RelicButton, TitleSequenceManagerData};
-use crate::state::GameState;
+use crate::state::{GameEvent, GameState};
 use joystick::prelude::*;
 use log::{info, warn};
 use seq::prelude::*;
@@ -86,7 +86,7 @@ impl SeqRelicList {
     }
 }
 
-impl Node<GameState> for SeqRelicList {
+impl Node<GameState, GameEvent> for SeqRelicList {
     fn enter(&mut self, state: &mut GameState) {
         state.gamepad.release_all();
     }

@@ -1,7 +1,7 @@
 use crate::control::SosAction;
 use crate::memory::player_party_manager::PlayerMovementState;
 use crate::seq::button::ButtonPress;
-use crate::state::GameState;
+use crate::state::{GameEvent, GameState};
 use joystick::common::JoystickBtnInterface;
 use joystick::common::JoystickInterface;
 use libm::fabs;
@@ -21,7 +21,7 @@ impl SeqChangeTimeTutorial {
     }
 }
 
-impl Node<GameState> for SeqChangeTimeTutorial {
+impl Node<GameState, GameEvent> for SeqChangeTimeTutorial {
     fn execute(&mut self, state: &mut GameState, delta: f64) -> bool {
         // Hold cancel to skip cut-scenes
         state.gamepad.press(&SosAction::Cancel);

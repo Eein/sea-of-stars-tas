@@ -11,12 +11,15 @@ pub mod logging;
 pub mod sequencer;
 pub mod wait;
 
-pub trait Node<State> {
+pub trait Node<State, Event> {
     fn execute(&mut self, _state: &mut State, _delta: f64) -> bool {
         true
     }
     fn advance_to_checkpoint(&mut self, _state: &mut State, _checkpoint: &str) -> bool {
         false
+    }
+    fn on_event(&mut self, _state: &mut State, _event: &Event) {
+        // Override
     }
     fn enter(&mut self, _state: &mut State) {
         // Override

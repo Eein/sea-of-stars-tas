@@ -5,10 +5,10 @@ use self::change_time_tutorial::SeqChangeTimeTutorial;
 
 use crate::seq::dialog::*;
 use crate::seq::movement::*;
-use crate::state::GameState;
+use crate::state::{GameEvent, GameState};
 use seq::prelude::*;
 
-pub fn create() -> Box<dyn Node<GameState>> {
+pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
     SeqList::create(
         "Evermist Island",
         vec![

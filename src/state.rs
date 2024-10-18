@@ -27,13 +27,20 @@ pub struct StateGui {
     pub dock_state: DockState<String>,
 }
 
-// TODO(orkaboy): Anything the sequencer needs to access has to go in here
+// Anything the sequencer needs to access has to go in here
 #[derive(Default)]
 pub struct GameState {
     // TODO(orkaboy): Create multiple gamepads, one for each player
     pub gamepad: GenericJoystick,
     pub memory_managers: MemoryManagers,
     pub config: Config,
+}
+
+#[derive(Default)]
+pub enum GameEvent {
+    #[default]
+    Cutscene,
+    Combat,
 }
 
 pub struct State {

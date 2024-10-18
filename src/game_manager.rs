@@ -1,11 +1,14 @@
-use std::fmt::Display;
 use delta::Timer;
+use std::fmt::Display;
 
 use joystick::common::{JoystickBtnInterface, JoystickInterface};
 use seq::prelude::*;
 
-use crate::{control::SosAction, state::GameState};
 use crate::seq::button::ButtonPress;
+use crate::{
+    control::SosAction,
+    state::{GameEvent, GameState},
+};
 
 #[derive(Default, Debug)]
 enum GameFsm {
@@ -16,7 +19,7 @@ enum GameFsm {
 }
 
 pub struct GameManager {
-    sequencer: Sequencer<GameState>,
+    sequencer: Sequencer<GameState, GameEvent>,
     fsm: GameFsm,
     btn: ButtonPress,
     timer: Timer,
@@ -29,7 +32,7 @@ impl Display for GameManager {
 }
 
 impl GameManager {
-    pub fn new(root: Box<dyn Node<GameState>>) -> Self {
+    pub fn new(root: Box<dyn Node<GameState, GameEvent>>) -> Self {
         Self {
             sequencer: Sequencer::new(root),
             fsm: GameFsm::default(),
@@ -57,8 +60,9 @@ impl GameManager {
                 // TODO(orkaboy): actually handle combat. For now, handle manually
                 if !cmd.encounter_active {
                     // TODO(orkaboy): Relinquish to sequencer immediately or hold until we're sure combat isn't done
-                    // TODO(orkaboy): Signal return to sequencer?
                     self.fsm = GameFsm::Route;
+                    // Signal return to sequencer
+                    self.sequencer.on_event(context, &GameEvent::Combat);
                 }
             }
             GameFsm::Route => {

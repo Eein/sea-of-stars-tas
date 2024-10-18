@@ -2,21 +2,21 @@ use crate::Node;
 use log::{debug, info};
 use std::fmt::Display;
 
-pub struct SeqIf<State, Cond: SeqCondition<State>> {
+pub struct SeqIf<State, Event, Cond: SeqCondition<State>> {
     name: String,
-    on_true: Option<Box<dyn Node<State>>>,
-    on_false: Option<Box<dyn Node<State>>>,
+    on_true: Option<Box<dyn Node<State, Event>>>,
+    on_false: Option<Box<dyn Node<State, Event>>>,
     condition: Cond,
     selection: bool,
     default_selection: bool,
 }
 
-impl<State, Cond: SeqCondition<State>> SeqIf<State, Cond> {
+impl<State, Event, Cond: SeqCondition<State>> SeqIf<State, Event, Cond> {
     pub fn create(
         name: &str,
         condition: Cond,
-        on_true: Option<Box<dyn Node<State>>>,
-        on_false: Option<Box<dyn Node<State>>>,
+        on_true: Option<Box<dyn Node<State, Event>>>,
+        on_false: Option<Box<dyn Node<State, Event>>>,
         default_selection: bool,
     ) -> Box<Self> {
         Box::new(SeqIf {
@@ -30,7 +30,7 @@ impl<State, Cond: SeqCondition<State>> SeqIf<State, Cond> {
     }
 }
 
-impl<State, Cond: SeqCondition<State>> Node<State> for SeqIf<State, Cond> {
+impl<State, Event, Cond: SeqCondition<State>> Node<State, Event> for SeqIf<State, Event, Cond> {
     // When first entering the node, evaluate the conditional
     fn enter(&mut self, state: &mut State) {
         self.selection = self.condition.evaluate(state);
@@ -44,6 +44,20 @@ impl<State, Cond: SeqCondition<State>> Node<State> for SeqIf<State, Cond> {
             false => {
                 if let Some(child) = &mut self.on_false {
                     child.enter(state);
+                }
+            }
+        }
+    }
+    fn on_event(&mut self, state: &mut State, event: &Event) {
+        match self.selection {
+            true => {
+                if let Some(child) = &mut self.on_true {
+                    child.on_event(state, event);
+                }
+            }
+            false => {
+                if let Some(child) = &mut self.on_false {
+                    child.on_event(state, event);
                 }
             }
         }
@@ -123,15 +137,15 @@ pub trait SeqCondition<State> {
 }
 
 #[derive(Default)]
-pub struct SeqList<State> {
+pub struct SeqList<State, Event> {
     name: String,
-    children: Vec<Box<dyn Node<State>>>,
+    children: Vec<Box<dyn Node<State, Event>>>,
     step: usize,
 }
 
-impl<State: Default> SeqList<State> {
-    pub fn create(name: &str, children: Vec<Box<dyn Node<State>>>) -> Box<Self> {
-        Box::new(SeqList::<State> {
+impl<State: Default, Event: Default> SeqList<State, Event> {
+    pub fn create(name: &str, children: Vec<Box<dyn Node<State, Event>>>) -> Box<Self> {
+        Box::new(SeqList::<State, Event> {
             name: name.to_owned(),
             children,
             ..Default::default()
@@ -139,7 +153,7 @@ impl<State: Default> SeqList<State> {
     }
 }
 
-impl<State> Display for SeqList<State> {
+impl<State, Event> Display for SeqList<State, Event> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -151,13 +165,13 @@ impl<State> Display for SeqList<State> {
     }
 }
 
-impl<State> SeqList<State> {
+impl<State, Event> SeqList<State, Event> {
     fn in_bounds(&self) -> bool {
         self.step < self.children.len()
     }
 }
 
-impl<State> Node<State> for SeqList<State> {
+impl<State, Event> Node<State, Event> for SeqList<State, Event> {
     fn enter(&mut self, state: &mut State) {
         // Run enter for the first child
         debug!(
@@ -172,6 +186,12 @@ impl<State> Node<State> for SeqList<State> {
 
     fn exit(&self, _state: &mut State) {
         debug!("Leaving SeqList({})", self.name);
+    }
+
+    fn on_event(&mut self, state: &mut State, event: &Event) {
+        if self.in_bounds() {
+            self.children[self.step].on_event(state, event);
+        }
     }
 
     fn execute(&mut self, state: &mut State, delta: f64) -> bool {
@@ -224,7 +244,7 @@ impl SeqCheckpoint {
     }
 }
 
-impl<State> Node<State> for SeqCheckpoint {
+impl<State, Event> Node<State, Event> for SeqCheckpoint {
     fn enter(&mut self, _state: &mut State) {
         info!("Checkpoint: {}", self.checkpoint_name);
     }
