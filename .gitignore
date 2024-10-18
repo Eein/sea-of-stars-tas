@@ -1,5 +1,6 @@
-/target
-/crates/**/target
+target
+crates/**/target
+crates/**/release
 
 flamegraph.svg
 perf.data*
