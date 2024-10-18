@@ -33,6 +33,12 @@ impl GuiHelper for MainHelper {
             if running {
                 ui.label(format!("FSM: {}", gm));
             }
+
+            let paused = gm.is_paused();
+            let text = if paused { "Resume" } else { "Pause" };
+            if ui.button(text).clicked() {
+                gm.pause(!paused);
+            }
         }
 
         if ui
@@ -40,14 +46,6 @@ impl GuiHelper for MainHelper {
             .clicked()
         {
             let gm = tas::create_tas();
-            *game_manager = Some(gm);
-        }
-
-        if ui
-            .add_enabled(!running, egui::Button::new("Start Move Test"))
-            .clicked()
-        {
-            let gm = tas::create_movement_test();
             *game_manager = Some(gm);
         }
     }

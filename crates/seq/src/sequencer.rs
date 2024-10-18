@@ -1,21 +1,17 @@
-use delta::Timer;
-
 use crate::Node;
 
-pub struct Sequencer<T> {
-    root: Box<dyn Node<T>>,
+pub struct Sequencer<T, E> {
+    root: Box<dyn Node<T, E>>,
     initialized: bool,
     finished: bool,
-    timer: Timer,
 }
 
-impl<T> Sequencer<T> {
-    pub fn new(root: Box<dyn Node<T>>) -> Self {
+impl<T, E> Sequencer<T, E> {
+    pub fn new(root: Box<dyn Node<T, E>>) -> Self {
         Sequencer {
             root,
             initialized: false,
             finished: false,
-            timer: delta::Timer::new(),
         }
     }
 
@@ -27,7 +23,14 @@ impl<T> Sequencer<T> {
         self.root.cutscene_control()
     }
 
-    pub fn run(&mut self, context: &mut T) -> bool {
+    pub fn on_event(&mut self, context: &mut T, event: &E) {
+        if self.finished {
+            return;
+        }
+        self.root.on_event(context, event);
+    }
+
+    pub fn run(&mut self, context: &mut T, delta: f64) -> bool {
         // Return early if the sequencer already finished
         if self.finished {
             return true;
@@ -35,12 +38,10 @@ impl<T> Sequencer<T> {
         // Perform initialization if needed
         if !self.initialized {
             self.initialized = true;
-            let _ = self.timer.mark();
             self.root.enter(context);
         }
         // Update the sequencer root
-        let dt = self.timer.mark_secs();
-        if self.root.execute(context, dt) {
+        if self.root.execute(context, delta) {
             self.finished = true;
             self.root.exit(context);
         }
@@ -65,6 +66,10 @@ mod tests {
         value: u32,
     }
 
+    // TODO(orkaboy): test
+    #[derive(Default)]
+    struct Event;
+
     // Example node
     #[derive(Default)]
     struct SeqTest {
@@ -77,7 +82,7 @@ mod tests {
         }
     }
 
-    impl Node<State> for SeqTest {
+    impl Node<State, Event> for SeqTest {
         fn enter(&mut self, state: &mut State) {
             assert_eq!(state.value, self.value);
         }
@@ -95,7 +100,7 @@ mod tests {
         }
     }
 
-    impl Node<State> for SeqAssert {
+    impl Node<State, Event> for SeqAssert {
         fn enter(&mut self, _state: &mut State) {
             assert!(self.value);
         }
@@ -113,7 +118,7 @@ mod tests {
         }
     }
 
-    impl Node<State> for SeqSetter {
+    impl Node<State, Event> for SeqSetter {
         fn enter(&mut self, state: &mut State) {
             state.value = self.value;
         }
@@ -134,7 +139,7 @@ mod tests {
     #[test]
     fn seq_test() -> std::io::Result<()> {
         // Create a sequencer object
-        let mut sequencer: Sequencer<State> = Sequencer::new(SeqList::create(
+        let mut sequencer: Sequencer<State, Event> = Sequencer::new(SeqList::create(
             "Root",
             vec![
                 // Check that state has initialized to 0
@@ -193,7 +198,7 @@ mod tests {
 
         // Run the sequence until it's done
         loop {
-            if sequencer.run(&mut state) {
+            if sequencer.run(&mut state, 0.1) {
                 break;
             }
         }

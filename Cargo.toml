@@ -26,6 +26,7 @@ libm = "0.2.8"
 toml = "0.8.19"
 toml_edit = "0.22.22"
 itoa = "1.0.11"
+delta = "0.2.1"
 
 [dependencies.winit]
 # version = "*"

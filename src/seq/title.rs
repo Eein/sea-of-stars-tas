@@ -2,7 +2,7 @@ use crate::control::SosAction;
 use crate::memory::objects::character::PlayerPartyCharacter;
 use crate::memory::title_sequence_manager::TitleMenuOption;
 use crate::seq::button::ButtonPress;
-use crate::state::GameState;
+use crate::state::{GameEvent, GameState};
 use joystick::prelude::*;
 use log::info;
 use seq::prelude::*;
@@ -89,7 +89,7 @@ impl SeqTitleScreen {
     }
 }
 
-impl Node<GameState> for SeqTitleScreen {
+impl Node<GameState, GameEvent> for SeqTitleScreen {
     fn enter(&mut self, state: &mut GameState) {
         state.gamepad.release_all();
         info!("Starting TAS! Focus the Sea of Stars window before the timer expires.");

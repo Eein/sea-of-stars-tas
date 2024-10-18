@@ -1,6 +1,6 @@
 use crate::control::SosAction;
 use crate::seq::button::ButtonPress;
-use crate::state::GameState;
+use crate::state::{GameEvent, GameState};
 
 use joystick::prelude::*;
 use log::info;
@@ -12,21 +12,23 @@ use vec3_rs::Vector3;
 pub enum Move {
     To(f32, f32, f32),
     ToWorld(f32, f32, f32),
+    Towards([f32; 3], [f32; 3], bool),
     Climb(f32, f32, f32),
     Interact(f32, f32, f32),
-    #[allow(dead_code)]
     WaitFor(f64),
     HoldDir([f32; 2], [f32; 3]),
     HoldDirWorld([f32; 2], [f32; 3]),
     Confirm,
     Log(&'static str),
-    ChangeTime(f32), // 0.0-24.0
+    ChangeTime(f32),          // 0.0-24.0
+    AwaitCombat(Box<Move>),   // Break inner Move when combat is done
+    AwaitCutscene(Box<Move>), // Break inner Move when cutscene is done
 }
 
 pub struct SeqMove {
     name: &'static str,
     coords: Vec<Move>,
-    step: usize, // TODO: Refactor this to be able to go back and forth?
+    step: usize,
     btn: Option<ButtonPress>,
     timer: f64,
 }
@@ -107,28 +109,38 @@ impl SeqMove {
             }
         }
     }
-}
 
-impl Node<GameState> for SeqMove {
-    fn enter(&mut self, state: &mut GameState) {
-        state.gamepad.release_all();
-    }
-
-    fn execute(&mut self, state: &mut GameState, delta: f64) -> bool {
-        if self.step >= self.coords.len() {
-            return true;
-        }
-
-        let coord = self.coords[self.step].clone();
-
+    fn handle_coord(&mut self, state: &mut GameState, coord: Move, delta: f64) {
         let ppmd = &state.memory_managers.player_party_manager.data;
         let player = &ppmd.gameobject_position;
 
         match coord {
+            // Run the inner command
+            Move::AwaitCombat(inner) => {
+                self.handle_coord(state, *inner, delta);
+            }
+            Move::AwaitCutscene(inner) => {
+                self.handle_coord(state, *inner, delta);
+            }
             // Put text entry in log
             Move::Log(text) => {
                 info!("{}: {}", self.name, text);
                 self.step += 1;
+            }
+            // Move towards an anchor, until reached target. Optionally, mash
+            Move::Towards(target, anchor, mash) => {
+                let target = Vector3::new(target[0], target[1], target[2]);
+                let anchor = Vector3::new(anchor[0], anchor[1], anchor[2]);
+                let joy_dir = SeqMove::get_dir(player, &anchor, false);
+                state.gamepad.set_ljoy(joy_dir);
+                if mash {
+                    self.mash(&mut state.gamepad, delta);
+                }
+                if SeqMove::is_close(player, &target, Some(1.0)) {
+                    state.gamepad.release_all();
+                    self.btn = None;
+                    self.step += 1;
+                }
             }
             // Move towards the target coordinate until it's reached
             Move::To(x, y, z) => {
@@ -220,6 +232,42 @@ impl Node<GameState> for SeqMove {
                 }
             }
         }
+    }
+}
+
+impl Node<GameState, GameEvent> for SeqMove {
+    fn enter(&mut self, state: &mut GameState) {
+        state.gamepad.release_all();
+    }
+
+    fn on_event(&mut self, _state: &mut GameState, event: &GameEvent) {
+        if self.step >= self.coords.len() {
+            return;
+        }
+
+        let coord = self.coords[self.step].clone();
+
+        match event {
+            GameEvent::Combat => {
+                if let Move::AwaitCombat(_) = coord {
+                    self.step += 1;
+                }
+            }
+            GameEvent::Cutscene => {
+                if let Move::AwaitCutscene(_) = coord {
+                    self.step += 1;
+                }
+            }
+        }
+    }
+
+    fn execute(&mut self, state: &mut GameState, delta: f64) -> bool {
+        if self.step >= self.coords.len() {
+            return true;
+        }
+
+        let coord = self.coords[self.step].clone();
+        self.handle_coord(state, coord, delta);
 
         false
     }

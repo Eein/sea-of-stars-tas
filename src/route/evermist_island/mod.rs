@@ -1,17 +1,23 @@
 mod change_time_tutorial;
+mod mooncradle;
+mod mountain_trail;
 
 use self::change_time_tutorial::SeqChangeTimeTutorial;
 
 use crate::seq::dialog::*;
 use crate::seq::movement::*;
-use crate::state::GameState;
+use crate::state::{GameEvent, GameState};
 use seq::prelude::*;
 
-pub fn create() -> Box<dyn Node<GameState>> {
+pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
     SeqList::create(
-        "Sleeper Island",
+        "Evermist Island",
         vec![
             SeqLog::create("MOVE START"),
+            mountain_trail::intro(),
+            mooncradle::flashback(),
+            SeqCheckpoint::create("forbidden_cave"),
+            SeqLog::create("TODO BREAK"),
             // TODO: more stuff
             SeqMove::create(
                 "Leave dream world",
@@ -28,19 +34,14 @@ pub fn create() -> Box<dyn Node<GameState>> {
                     Move::To(49.572, 1.002, -10.738),
                 ],
             ),
-            SeqSelectOption::create(0, false),
+            SeqSelectOption::create(vec![0], false),
             SeqChangeTimeTutorial::create(),
             SeqMove::create(
                 "Change time",
                 vec![
                     // Note, after Elder Mist time tutorial
                     Move::ChangeTime(21.0),
-                ],
-            ),
-            SeqWait::create("Wait on bridge", 3.0),
-            SeqMove::create(
-                "Get Y'eeted",
-                vec![
+                    Move::WaitFor(3.0),
                     Move::ChangeTime(15.0),
                     Move::Log("Cross the bridges"),
                     Move::To(46.352, 97.002, 170.300),
@@ -56,7 +57,7 @@ pub fn create() -> Box<dyn Node<GameState>> {
                     Move::To(-428.018, 27.002, 180.034),
                 ],
             ),
-            SeqSelectOption::create(0, false),
+            SeqSelectOption::create(vec![0], false),
         ],
     )
 }
