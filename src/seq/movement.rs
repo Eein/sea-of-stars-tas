@@ -21,14 +21,13 @@ pub enum Move {
     Log(&'static str),
     ChangeTime(f32),        // 0.0-24.0
     AwaitCombat(Box<Move>), // Break inner Move when combat is done
-    #[allow(dead_code)]
     AwaitCutscene(Box<Move>), // Break inner Move when cutscene is done
 }
 
 pub struct SeqMove {
     name: &'static str,
     coords: Vec<Move>,
-    step: usize, // TODO: Refactor this to be able to go back and forth?
+    step: usize,
     btn: Option<ButtonPress>,
     timer: f64,
 }
