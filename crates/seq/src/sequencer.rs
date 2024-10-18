@@ -187,7 +187,7 @@ mod tests {
 
         // Run the sequence until it's done
         loop {
-            if sequencer.run(&mut state) {
+            if sequencer.run(&mut state, 0.1) {
                 break;
             }
         }
