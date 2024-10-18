@@ -230,6 +230,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "base64"
+version = "0.21.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
+
+[[package]]
 name = "bincode"
 version = "1.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -290,6 +296,9 @@ name = "bitflags"
 version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b048fb63fd8b5923fc5aa7b340d8e156aec7ec02f0c78fa8a6ddc2613f6f71de"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "bitvec"
@@ -700,6 +709,7 @@ dependencies = [
  "glow",
  "glutin",
  "glutin-winit",
+ "home",
  "image",
  "js-sys",
  "log",
@@ -709,6 +719,8 @@ dependencies = [
  "parking_lot",
  "percent-encoding",
  "raw-window-handle",
+ "ron",
+ "serde",
  "static_assertions",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -731,6 +743,7 @@ dependencies = [
  "epaint",
  "log",
  "nohash-hasher",
+ "ron",
  "serde",
 ]
 
@@ -745,6 +758,7 @@ dependencies = [
  "egui",
  "log",
  "raw-window-handle",
+ "serde",
  "smithay-clipboard",
  "web-time 1.1.0",
  "webbrowser",
@@ -760,6 +774,7 @@ dependencies = [
  "duplicate",
  "egui",
  "paste",
+ "serde",
 ]
 
 [[package]]
@@ -2260,6 +2275,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 
 [[package]]
+name = "ron"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b91f7eff05f748767f183df4320a63d6936e9c6107d97c9e6bdd9784f4289c94"
+dependencies = [
+ "base64",
+ "bitflags 2.6.0",
+ "serde",
+ "serde_derive",
+]
+
+[[package]]
 name = "rustc-demangle"
 version = "0.1.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2337,6 +2364,7 @@ dependencies = [
  "log",
  "memory",
  "puffin_egui",
+ "ron",
  "seq",
  "serde",
  "sysinfo",
