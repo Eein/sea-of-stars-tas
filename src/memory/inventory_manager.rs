@@ -25,8 +25,8 @@ impl Default for MemoryManager<InventoryManagerData> {
 pub struct InventoryManagerData {
     // This references QuantityByInventoryItemReference which is a
     // SerializableDictionary<InventoryItemReference, int> which is
-    // T1 = Guid
-    // T2 = Quantity
+    // T1 = InventoryItemName
+    // T2 = InventoryItemQuantity
     // In memory you may see the values packed within 0x20 Dictionary 0x18 Entries
     // With a starting point of 0x20; from there the memory is laid out like:
     // 0x20 Metadata (unused, for internal stuff)
