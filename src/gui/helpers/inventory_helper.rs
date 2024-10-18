@@ -29,6 +29,13 @@ impl GuiHelper for InventoryHelper {
         ui.separator();
         ui.label("Inventory");
 
+        // The following code pipelines the data as follows:
+        // - get the items in the inventory manager
+        // - map them to `Item`s
+        // - sort by item type so we can chunk them efficiently
+        // - chunk by item type
+        //
+        // Once we generate the chunks, we can render each chunk sorted by order_priority.
         for group in &inventory_manager
             .items
             .items
