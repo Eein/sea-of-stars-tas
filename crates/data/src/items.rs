@@ -1,6 +1,6 @@
-use super::PlayerPartyCharacter;
+use crate::prelude::PlayerPartyCharacter;
 
-#[derive(Default, Debug)]
+#[derive(Default, PartialEq, Debug, Eq, PartialOrd, Ord, Clone)]
 pub enum ItemType {
     Valuable,
     Weapon,
@@ -17,7 +17,7 @@ pub enum ItemType {
     Unknown,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct Item {
     pub guid: &'static str,
     pub item_type: ItemType,
@@ -39,8 +39,129 @@ pub struct Item {
     pub equippable_by: Option<&'static [PlayerPartyCharacter]>,
 }
 
+#[allow(dead_code)]
+impl Item {
+    fn equippable_by_character(self, character: PlayerPartyCharacter) -> bool {
+        if let Some(characters) = self.equippable_by {
+            characters.iter().any(|c| *c == character)
+        } else {
+            false
+        }
+    }
+}
+
 use std::collections::HashMap;
 use std::sync::OnceLock;
+
+pub fn story_artifacts() -> &'static HashMap<&'static str, Item> {
+    static HASHMAP: OnceLock<HashMap<&'static str, Item>> = OnceLock::new();
+    HASHMAP.get_or_init(|| {
+        all_items()
+            .iter()
+            .filter(|(_k, v)| v.item_type == ItemType::StoryArtifact)
+            .map(|(k, v)| (*k, v.clone()))
+            .collect::<HashMap<_, _>>()
+    })
+}
+
+pub fn recipes() -> &'static HashMap<&'static str, Item> {
+    static HASHMAP: OnceLock<HashMap<&'static str, Item>> = OnceLock::new();
+    HASHMAP.get_or_init(|| {
+        all_items()
+            .iter()
+            .filter(|(_k, v)| v.item_type == ItemType::Recipe)
+            .map(|(k, v)| (*k, v.clone()))
+            .collect::<HashMap<_, _>>()
+    })
+}
+
+pub fn ingredients() -> &'static HashMap<&'static str, Item> {
+    static HASHMAP: OnceLock<HashMap<&'static str, Item>> = OnceLock::new();
+    HASHMAP.get_or_init(|| {
+        all_items()
+            .iter()
+            .filter(|(_k, v)| v.item_type == ItemType::Ingredient)
+            .map(|(k, v)| (*k, v.clone()))
+            .collect::<HashMap<_, _>>()
+    })
+}
+
+pub fn snacks() -> &'static HashMap<&'static str, Item> {
+    static HASHMAP: OnceLock<HashMap<&'static str, Item>> = OnceLock::new();
+    HASHMAP.get_or_init(|| {
+        all_items()
+            .iter()
+            .filter(|(_k, v)| v.item_type == ItemType::Snack)
+            .map(|(k, v)| (*k, v.clone()))
+            .collect::<HashMap<_, _>>()
+    })
+}
+
+pub fn group_trinkets() -> &'static HashMap<&'static str, Item> {
+    static HASHMAP: OnceLock<HashMap<&'static str, Item>> = OnceLock::new();
+    HASHMAP.get_or_init(|| {
+        all_items()
+            .iter()
+            .filter(|(_k, v)| v.item_type == ItemType::GroupTrinket)
+            .map(|(k, v)| (*k, v.clone()))
+            .collect::<HashMap<_, _>>()
+    })
+}
+
+pub fn trinkets() -> &'static HashMap<&'static str, Item> {
+    static HASHMAP: OnceLock<HashMap<&'static str, Item>> = OnceLock::new();
+    HASHMAP.get_or_init(|| {
+        all_items()
+            .iter()
+            .filter(|(_k, v)| v.item_type == ItemType::Trinket)
+            .map(|(k, v)| (*k, v.clone()))
+            .collect::<HashMap<_, _>>()
+    })
+}
+
+pub fn valuables() -> &'static HashMap<&'static str, Item> {
+    static HASHMAP: OnceLock<HashMap<&'static str, Item>> = OnceLock::new();
+    HASHMAP.get_or_init(|| {
+        all_items()
+            .iter()
+            .filter(|(_k, v)| v.item_type == ItemType::Valuable)
+            .map(|(k, v)| (*k, v.clone()))
+            .collect::<HashMap<_, _>>()
+    })
+}
+
+pub fn key_items() -> &'static HashMap<&'static str, Item> {
+    static HASHMAP: OnceLock<HashMap<&'static str, Item>> = OnceLock::new();
+    HASHMAP.get_or_init(|| {
+        all_items()
+            .iter()
+            .filter(|(_k, v)| v.item_type == ItemType::Key)
+            .map(|(k, v)| (*k, v.clone()))
+            .collect::<HashMap<_, _>>()
+    })
+}
+
+pub fn weapons() -> &'static HashMap<&'static str, Item> {
+    static HASHMAP: OnceLock<HashMap<&'static str, Item>> = OnceLock::new();
+    HASHMAP.get_or_init(|| {
+        all_items()
+            .iter()
+            .filter(|(_k, v)| v.item_type == ItemType::Weapon)
+            .map(|(k, v)| (*k, v.clone()))
+            .collect::<HashMap<_, _>>()
+    })
+}
+
+pub fn armor() -> &'static HashMap<&'static str, Item> {
+    static HASHMAP: OnceLock<HashMap<&'static str, Item>> = OnceLock::new();
+    HASHMAP.get_or_init(|| {
+        all_items()
+            .iter()
+            .filter(|(_k, v)| v.item_type == ItemType::Armor)
+            .map(|(k, v)| (*k, v.clone()))
+            .collect::<HashMap<_, _>>()
+    })
+}
 
 pub fn all_items() -> &'static HashMap<&'static str, Item> {
     static HASHMAP: OnceLock<HashMap<&'static str, Item>> = OnceLock::new();
@@ -638,11 +759,11 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
 
         // Armor_BasicArmor_Name
         m.insert(
-            "INTERNAL[UKNOWN ARMOR]",
+            "Basic Armor",
             Item {
                 guid: "a31ee5ffc1b693148be7c48150ebff81",
                 item_type: ItemType::Armor,
-                name: "INTERNAL[UKNOWN ARMOR]",
+                name: "Basic Armor",
                 order_priority: 5,
                 max_quantity: 255,
                 buy_price: 28,
@@ -668,7 +789,7 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             Item {
                 guid: "a31ee5ffc1b693148be7c48150ebff81",
                 item_type: ItemType::Armor,
-                name: "INTERNAL[UKNOWN ARMOR]",
+                name: "Basic Armor",
                 order_priority: 5,
                 max_quantity: 255,
                 buy_price: 28,
@@ -17784,4 +17905,48 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
 
         m
     })
+}
+
+#[cfg(test)]
+mod tests {
+    // Include the library
+    use crate::items::*;
+
+    #[test]
+    fn read_from_all_test() -> std::io::Result<()> {
+        // initialize
+        let items = all_items();
+
+        assert!(items.get("Abacus").is_some());
+
+        Ok(())
+    }
+
+    #[test]
+    fn can_query_by_name_or_guid_test() -> std::io::Result<()> {
+        // initialize
+        let items = all_items();
+
+        let abacus = items.get("Abacus").unwrap();
+        let guid = items.get("6a39fd9b315b53a4faa9e3736d820eff").unwrap();
+
+        assert_eq!(abacus.guid, guid.guid);
+        assert!(items.get("NOT_IN_THE_LIST").is_none());
+
+        Ok(())
+    }
+
+    #[test]
+    fn can_query_by_armor_test() -> std::io::Result<()> {
+        // initialize
+        let armor = armor();
+
+        assert!(armor.get("Abacus").is_none());
+        assert!(armor.get("NOT_IN_THE_LIST").is_none());
+
+        assert!(armor.get("Adventurer's Vest").is_some());
+        assert!(armor.get("3ac3907f841cc2a40bd0fdce51cd52e2").is_some());
+
+        Ok(())
+    }
 }

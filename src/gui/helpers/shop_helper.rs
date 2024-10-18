@@ -1,6 +1,8 @@
 use super::GuiHelper;
 use crate::{game_manager::GameManager, state::GameState};
 
+use data::prelude::*;
+
 pub const NAME: &str = "Shop Helper";
 
 #[derive(Debug)]
@@ -23,8 +25,13 @@ impl GuiHelper for ShopHelper {
         let shop_manager = &game_state.memory_managers.shop_manager.data;
 
         ui.label(format!("Shop (Total: {})", shop_manager.items.count));
-        for item in shop_manager.items.items.iter() {
-            ui.label(&item.guid);
+        for item in shop_manager
+            .items
+            .items
+            .iter()
+            .map(|item| all_items().get(&item.guid as &str).unwrap())
+        {
+            ui.label(format!("[{}g] {}", item.buy_price, item.name));
         }
     }
 }

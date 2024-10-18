@@ -126,7 +126,7 @@ fs.readdir('./input/', function(err, filenames) {
         itemType = "UNKNOWN"
       }
       if(guid == "a31ee5ffc1b693148be7c48150ebff81"){
-        name = "INTERNAL[UKNOWN ARMOR]"
+        name = "Basic Armor"
       }
 
       let out = `// ${localeKey}

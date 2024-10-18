@@ -1,0 +1,3 @@
+scripts/item-parser/locale/*.json
+scripts/item-parser/input/*.json
+scripts/item-parser/output/*.rs

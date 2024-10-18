@@ -1,7 +1,7 @@
 use crate::seq::branch::CondMainChar;
 use crate::seq::movement::*;
 use crate::state::{GameEvent, GameState};
-use data::PlayerPartyCharacter;
+use data::prelude::*;
 use seq::prelude::*;
 
 use super::SeqSelectOption;

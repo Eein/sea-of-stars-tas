@@ -4,7 +4,7 @@ use crate::state::StateContext;
 
 use log::info;
 
-use data::PlayerPartyCharacter;
+use data::prelude::PlayerPartyCharacter;
 use memory::game_engine::il2cpp::unity_list::{UnityItem, UnityList};
 use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;

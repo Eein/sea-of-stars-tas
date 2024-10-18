@@ -2368,6 +2368,7 @@ dependencies = [
  "eframe",
  "egui 0.29.1",
  "egui_dock",
+ "itertools 0.13.0",
  "itoa",
  "joystick",
  "libm",

@@ -1,4 +1,7 @@
 pub mod characters;
 pub mod items;
 
-pub use self::{characters::*, items::*};
+pub mod prelude {
+    pub use crate::characters::*;
+    pub use crate::items::*;
+}

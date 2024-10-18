@@ -2,10 +2,10 @@ use crate::control::SosAction;
 use crate::memory::title_sequence_manager::TitleMenuOption;
 use crate::seq::button::ButtonPress;
 use crate::state::{GameEvent, GameState};
-use data::PlayerPartyCharacter;
-use joystick::prelude::*;
 use log::info;
+use joystick::prelude::*;
 use seq::prelude::*;
+use data::prelude::*;
 
 struct KonamiCode {
     sequence: Vec<SosAction>,

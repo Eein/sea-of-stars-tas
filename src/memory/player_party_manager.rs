@@ -1,12 +1,12 @@
 use crate::memory::memory_context::MemoryContext;
 use crate::memory::{MemoryManager, MemoryManagerUpdate};
 use crate::state::StateContext;
-use data::PlayerPartyCharacter;
 use log::info;
 use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
 use memory::string::ArrayWString;
 use vec3_rs::Vector3;
+use data::prelude::*;
 
 impl Default for MemoryManager<PlayerPartyManagerData> {
     fn default() -> Self {

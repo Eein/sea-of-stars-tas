@@ -1,6 +1,7 @@
 use crate::memory::memory_context::MemoryContext;
 use crate::memory::{MemoryManager, MemoryManagerUpdate};
 use crate::state::StateContext;
+use data::prelude::all_items;
 use log::info;
 use memory::game_engine::il2cpp::unity_serializable_dictionary::*;
 use memory::memory_manager::il2cpp::UnityMemoryManager;
@@ -36,7 +37,7 @@ pub struct InventoryManagerData {
     // ... so on until count is met or NULL pointer
     // These types can theoretically originally have a `next` link for key collisions
     // so be on the watch for missing items
-    pub items: UnitySerializableDictionary<InventoryItemGuid, InventoryItemQuantity>,
+    pub items: UnitySerializableDictionary<InventoryItemName, InventoryItemQuantity>,
 }
 
 impl MemoryManagerUpdate for InventoryManagerData {
@@ -59,7 +60,7 @@ impl InventoryManagerData {
         if let Ok(items_ptr) = memory_context.follow_fields::<u64>(&["ownedInventoryItems"]) {
             if items_ptr != 0x0 {
                 self.items =
-                    UnitySerializableDictionary::<InventoryItemGuid, InventoryItemQuantity>::read(
+                    UnitySerializableDictionary::<InventoryItemName, InventoryItemQuantity>::read(
                         memory_context.process,
                         items_ptr,
                     )?;
@@ -71,16 +72,19 @@ impl InventoryManagerData {
 }
 
 #[derive(Default, Debug, Eq, PartialEq, Hash)]
-pub struct InventoryItemGuid(pub String);
+pub struct InventoryItemName(pub String);
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, PartialEq, Eq, Hash)]
 pub struct InventoryItemQuantity(pub u64);
 
-impl UnitySerializableDictKey for InventoryItemGuid {
+impl UnitySerializableDictKey for InventoryItemName {
     fn read(process: &Process, item_ptr: u64) -> Result<Self, MemoryError> {
         if let Ok(guid) = process.read::<ArrayWString<128>>(item_ptr + 0x14) {
             match String::from_utf16(guid.as_slice()) {
-                Ok(value) => Ok(InventoryItemGuid(value)),
+                Ok(value) => {
+                    let item = all_items().get(value.as_str()).unwrap();
+                    Ok(InventoryItemName(item.name.to_string()))
+                }
                 Err(_) => Err(MemoryError::Unset),
             }
         } else {
