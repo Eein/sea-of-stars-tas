@@ -19,8 +19,8 @@ pub enum Move {
     HoldDirWorld([f32; 2], [f32; 3]),
     Confirm,
     Log(&'static str),
-    ChangeTime(f32),          // 0.0-24.0
-    AwaitCombat(Box<Move>),   // Break inner Move when combat is done
+    ChangeTime(f32),        // 0.0-24.0
+    AwaitCombat(Box<Move>), // Break inner Move when combat is done
     #[allow(dead_code)]
     AwaitCutscene(Box<Move>), // Break inner Move when cutscene is done
 }
