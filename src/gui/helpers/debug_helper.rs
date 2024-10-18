@@ -26,6 +26,12 @@ impl GuiHelper for DebugHelper {
         let cutscene_manager = &game_state.memory_managers.cutscene_manager.data;
         let combat_manager = &game_state.memory_managers.combat_manager.data;
         let speedrun_manager = &game_state.memory_managers.speedrun_manager.data;
+        let player_party_manager = &game_state.memory_managers.player_party_manager.data;
+
+        ui.label(format!(
+            "Leader: {:?}",
+            player_party_manager.leader_character
+        ));
 
         ui.label("Encounter".to_string());
         ui.label(format!(

@@ -1,9 +1,11 @@
 use crate::memory::memory_context::MemoryContext;
+use crate::memory::objects::character::PlayerPartyCharacter;
 use crate::memory::{MemoryManager, MemoryManagerUpdate};
 use crate::state::StateContext;
 use log::info;
 use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
+use memory::string::ArrayWString;
 use vec3_rs::Vector3;
 
 impl Default for MemoryManager<PlayerPartyManagerData> {
@@ -24,6 +26,7 @@ pub struct PlayerPartyManagerData {
     pub gameobject_position: Vector3<f32>,
     leader_offset: Option<u32>,
     pub movement_state: PlayerMovementState,
+    pub leader_character: PlayerPartyCharacter,
 }
 
 impl MemoryManagerUpdate for PlayerPartyManagerData {
@@ -40,6 +43,7 @@ impl MemoryManagerUpdate for PlayerPartyManagerData {
             self.update_position(&memory_context)?;
             self.update_gameobject_position(&memory_context)?;
             self.update_movement_state(&memory_context)?;
+            self.update_leader_character(&memory_context)?;
         }
 
         Ok(())
@@ -115,6 +119,23 @@ impl PlayerPartyManagerData {
                 _ => PlayerMovementState::None,
             }
         };
+
+        Ok(())
+    }
+
+    pub fn update_leader_character(
+        &mut self,
+        memory_context: &MemoryContext,
+    ) -> Result<(), MemoryError> {
+        if let Some(leader_id) = memory_context.get_field_offset("leaderID") {
+            if let Ok(character) =
+                memory_context.read_pointer_path::<ArrayWString<128>>(&[leader_id.into(), 0x14])
+            {
+                if let Ok(name) = String::from_utf16(character.as_slice()) {
+                    self.leader_character = PlayerPartyCharacter::parse(&name)
+                }
+            }
+        }
 
         Ok(())
     }
