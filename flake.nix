@@ -30,6 +30,7 @@
           buildInputs = [
             pkg-config
             openssl
+            nodejs
             xorg.libxcb
             linuxPackages_latest.perf
             # wasm-pack

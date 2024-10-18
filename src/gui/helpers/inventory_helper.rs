@@ -1,5 +1,7 @@
 use super::GuiHelper;
 use crate::{game_manager::GameManager, state::GameState};
+use data::prelude::*;
+use itertools::Itertools;
 
 pub const NAME: &str = "Inventory Helper";
 
@@ -21,9 +23,39 @@ impl GuiHelper for InventoryHelper {
         _tab: &mut String,
     ) {
         let currency_manager = &game_state.memory_managers.currency_manager.data;
+        let inventory_manager = &game_state.memory_managers.inventory_manager.data;
 
         ui.label(format!("Money: {}", currency_manager.money));
         ui.separator();
-        ui.label("Inventory: NOT YET IMPLEMENTED");
+        ui.label("Inventory");
+
+        // The following code pipelines the data as follows:
+        // - get the items in the inventory manager
+        // - map them to `Item`s
+        // - sort by item type so we can chunk them efficiently
+        // - chunk by item type
+        //
+        // Once we generate the chunks, we can render each chunk sorted by order_priority.
+        for group in &inventory_manager
+            .items
+            .items
+            .iter()
+            .map(|(item, quantity)| (all_items().get(&item.0 as &str).unwrap(), quantity))
+            .sorted_by_key(|(item, _quantity)| item.item_type.clone())
+            .chunk_by(|(item, _quantity)| item.item_type.clone())
+        {
+            let title = format!("{:?}", group.0);
+            egui::CollapsingHeader::new(title)
+                .default_open(true)
+                .show(ui, |ui| {
+                    for (item, quantity) in group
+                        .1
+                        .sorted_by_key(|(item, _quantity)| item.order_priority)
+                        .rev()
+                    {
+                        ui.label(format!("{} x {}", quantity.0, item.name));
+                    }
+                });
+        }
     }
 }

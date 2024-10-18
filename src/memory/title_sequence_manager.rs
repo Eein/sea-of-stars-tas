@@ -1,10 +1,10 @@
 use crate::memory::memory_context::MemoryContext;
-use crate::memory::objects::character::PlayerPartyCharacter;
 use crate::memory::{MemoryManager, MemoryManagerUpdate};
 use crate::state::StateContext;
 
 use log::info;
 
+use data::prelude::PlayerPartyCharacter;
 use memory::game_engine::il2cpp::unity_list::{UnityItem, UnityList};
 use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
