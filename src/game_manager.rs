@@ -57,9 +57,13 @@ impl GameManager {
 
         match self.fsm {
             GameFsm::Combat => {
-                // TODO(orkaboy): actually handle combat. For now, handle manually
+                // TODO(orkaboy): actually handle combat. For now, mash!
+                if self.btn.update(&mut context.gamepad, dt) {
+                    self.btn = ButtonPress::new(SosAction::Confirm);
+                }
+
                 if !cmd.encounter_active {
-                    // TODO(orkaboy): Relinquish to sequencer immediately or hold until we're sure combat isn't done
+                    context.gamepad.release_all();
                     self.fsm = GameFsm::Route;
                     // Signal return to sequencer
                     self.sequencer.on_event(context, &GameEvent::Combat);
@@ -82,6 +86,8 @@ impl GameManager {
                 if !csmd.is_in_cutscene {
                     context.gamepad.release_all();
                     self.fsm = GameFsm::Route;
+                    // Signal return to sequencer
+                    self.sequencer.on_event(context, &GameEvent::Cutscene);
                 }
             }
         }

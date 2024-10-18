@@ -7,7 +7,6 @@ pub fn intro() -> Box<dyn Node<GameState, GameEvent>> {
         "Evermist Island",
         vec![
             SeqLog::create("TAS START"),
-            // TODO: Combat
             SeqMove::create(
                 "Navigate tutorial fights",
                 vec![
@@ -17,9 +16,8 @@ pub fn intro() -> Box<dyn Node<GameState, GameEvent>> {
                     Move::To(54.534, 6.002, 6.543),
                     Move::Interact(55.458, 10.002, 9.467),
                     Move::To(57.051, 10.002, 12.404),
-                    Move::Interact(43.963, 13.010, 26.059),
-                    // TODO: This part is janky
-                    Move::Interact(35.870, 13.010, 28.070), // after fight
+                    Move::AwaitCombat(Box::new(Move::Interact(43.963, 13.010, 26.059))),
+                    // after fight (climb ladder)
                     Move::Climb(34.448, 6.002, 25.407),
                     Move::Log("Move to cavern"),
                     Move::To(31.505, 6.002, 19.783),

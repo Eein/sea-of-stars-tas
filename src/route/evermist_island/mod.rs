@@ -38,12 +38,7 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                 vec![
                     // Note, after Elder Mist time tutorial
                     Move::ChangeTime(21.0),
-                ],
-            ),
-            SeqWait::create("Wait on bridge", 3.0),
-            SeqMove::create(
-                "Get Y'eeted",
-                vec![
+                    Move::WaitFor(3.0),
                     Move::ChangeTime(15.0),
                     Move::Log("Cross the bridges"),
                     Move::To(46.352, 97.002, 170.300),

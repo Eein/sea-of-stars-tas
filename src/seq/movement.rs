@@ -14,13 +14,15 @@ pub enum Move {
     ToWorld(f32, f32, f32),
     Climb(f32, f32, f32),
     Interact(f32, f32, f32),
-    #[allow(dead_code)]
     WaitFor(f64),
     HoldDir([f32; 2], [f32; 3]),
     HoldDirWorld([f32; 2], [f32; 3]),
     Confirm,
     Log(&'static str),
-    ChangeTime(f32), // 0.0-24.0
+    ChangeTime(f32),          // 0.0-24.0
+    AwaitCombat(Box<Move>),   // Break inner Move when combat is done
+    #[allow(dead_code)]
+    AwaitCutscene(Box<Move>), // Break inner Move when cutscene is done
 }
 
 pub struct SeqMove {
@@ -107,28 +109,19 @@ impl SeqMove {
             }
         }
     }
-}
 
-impl Node<GameState, GameEvent> for SeqMove {
-    fn enter(&mut self, state: &mut GameState) {
-        state.gamepad.release_all();
-    }
-
-    fn on_event(&mut self, _state: &mut GameState, _event: &GameEvent) {
-        // TODO(orkaboy): Handle events
-    }
-
-    fn execute(&mut self, state: &mut GameState, delta: f64) -> bool {
-        if self.step >= self.coords.len() {
-            return true;
-        }
-
-        let coord = self.coords[self.step].clone();
-
+    fn handle_coord(&mut self, state: &mut GameState, coord: Move, delta: f64) {
         let ppmd = &state.memory_managers.player_party_manager.data;
         let player = &ppmd.gameobject_position;
 
         match coord {
+            // Run the inner command
+            Move::AwaitCombat(inner) => {
+                self.handle_coord(state, *inner, delta);
+            }
+            Move::AwaitCutscene(inner) => {
+                self.handle_coord(state, *inner, delta);
+            }
             // Put text entry in log
             Move::Log(text) => {
                 info!("{}: {}", self.name, text);
@@ -224,6 +217,42 @@ impl Node<GameState, GameEvent> for SeqMove {
                 }
             }
         }
+    }
+}
+
+impl Node<GameState, GameEvent> for SeqMove {
+    fn enter(&mut self, state: &mut GameState) {
+        state.gamepad.release_all();
+    }
+
+    fn on_event(&mut self, _state: &mut GameState, event: &GameEvent) {
+        if self.step >= self.coords.len() {
+            return;
+        }
+
+        let coord = self.coords[self.step].clone();
+
+        match event {
+            GameEvent::Combat => {
+                if let Move::AwaitCombat(_) = coord {
+                    self.step += 1;
+                }
+            }
+            GameEvent::Cutscene => {
+                if let Move::AwaitCutscene(_) = coord {
+                    self.step += 1;
+                }
+            }
+        }
+    }
+
+    fn execute(&mut self, state: &mut GameState, delta: f64) -> bool {
+        if self.step >= self.coords.len() {
+            return true;
+        }
+
+        let coord = self.coords[self.step].clone();
+        self.handle_coord(state, coord, delta);
 
         false
     }
