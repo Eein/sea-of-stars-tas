@@ -33,7 +33,7 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                     Move::To(49.572, 1.002, -10.738),
                 ],
             ),
-            SeqSelectOption::create(0, false),
+            SeqSelectOption::create(vec![0], false),
             SeqChangeTimeTutorial::create(),
             SeqMove::create(
                 "Change time",
@@ -56,7 +56,7 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                     Move::To(-428.018, 27.002, 180.034),
                 ],
             ),
-            SeqSelectOption::create(0, false),
+            SeqSelectOption::create(vec![0], false),
         ],
     )
 }

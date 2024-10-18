@@ -109,7 +109,7 @@ pub fn flashback() -> Box<dyn Node<GameState, GameEvent>> {
                 )),
                 true,
             ),
-            SeqSelectOption::create(0, false),
+            SeqSelectOption::create(vec![0], false),
             SeqMove::create(
                 "Training",
                 vec![
@@ -203,17 +203,13 @@ pub fn flashback() -> Box<dyn Node<GameState, GameEvent>> {
                 ],
             ),
             // Skip Erlina Tutorial
-            SeqSelectOption::create(1, false),
-            // TODO(orkaboy): Fails (immediately choses option 0)
-            SeqSelectOption::create(1, false),
+            SeqSelectOption::create(vec![1, 1], false),
             SeqMove::create("Move to Brugaves", vec![Move::To(33.529, -8.932, -141.817)]),
             // Skip Brugaves Tutorial
-            SeqSelectOption::create(1, false),
-            // TODO(orkaboy): Fails (immediately choses option 0)
-            SeqSelectOption::create(1, false),
+            SeqSelectOption::create(vec![1, 1], false),
             SeqMove::create("Move to Moraine", vec![Move::To(33.071, -8.998, -136.126)]),
             // Talk with Moraine
-            SeqSelectOption::create(0, false),
+            SeqSelectOption::create(vec![0], false),
             // TODO(orkaboy): MoveToward
         ],
     )

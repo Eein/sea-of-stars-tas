@@ -17,20 +17,22 @@ enum SelectFsm {
 
 pub struct SeqSelectOption {
     btn: ButtonPress,
-    option: usize,
+    option: Vec<usize>,
     skip_dialog_check: bool,
     fsm: SelectFsm,
     timer: f64,
+    step: usize,
 }
 
 impl SeqSelectOption {
-    pub fn create(option: usize, skip_dialog_check: bool) -> Box<Self> {
+    pub fn create(option: Vec<usize>, skip_dialog_check: bool) -> Box<Self> {
         Box::new(Self {
             btn: ButtonPress::new(SosAction::Confirm),
             option,
             skip_dialog_check,
             fsm: Default::default(),
             timer: 0.0,
+            step: 0,
         })
     }
 }
@@ -70,17 +72,23 @@ impl Node<GameState, GameEvent> for SeqSelectOption {
                 }
             }
             SelectFsm::ToAnswer(option) => {
-                if option == self.option {
-                    self.fsm = SelectFsm::Answer;
-                    self.btn = ButtonPress::new(SosAction::Confirm);
-                } else if self.btn.update(&mut state.gamepad, delta) {
-                    self.fsm = SelectFsm::ToAnswer(option + 1);
-                    self.btn = ButtonPress::new(SosAction::MenuDown);
+                if let Some(opt) = self.option.get(self.step) {
+                    if option == *opt {
+                        self.fsm = SelectFsm::Answer;
+                        self.btn = ButtonPress::new(SosAction::Confirm);
+                    } else if self.btn.update(&mut state.gamepad, delta) {
+                        self.fsm = SelectFsm::ToAnswer(option + 1);
+                        self.btn = ButtonPress::new(SosAction::MenuDown);
+                    }
+                } else {
+                    return true;
                 }
             }
             SelectFsm::Answer => {
                 if self.btn.update(&mut state.gamepad, delta) {
-                    return true;
+                    self.step += 1;
+                    self.fsm = SelectFsm::ToAnswer(0);
+                    self.btn = ButtonPress::new(SosAction::MenuDown);
                 }
             }
         }
