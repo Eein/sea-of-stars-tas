@@ -41,6 +41,8 @@ impl SeqRelicList {
         self.fsm = RelicScreenFSM::PressButton;
         self.btn = ButtonPress {
             action: SosAction::MenuDown,
+            press_time: 0.1,
+            release_time: 0.1,
             ..Default::default()
         };
     }
@@ -50,6 +52,8 @@ impl SeqRelicList {
         self.fsm = RelicScreenFSM::PressButton;
         self.btn = ButtonPress {
             action: SosAction::Confirm,
+            press_time: 0.1,
+            release_time: 0.1,
             ..Default::default()
         };
     }
