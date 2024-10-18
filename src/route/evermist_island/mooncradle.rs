@@ -8,7 +8,7 @@ use super::SeqSelectOption;
 
 fn looms_to_center() -> Box<dyn Node<GameState, GameEvent>> {
     SeqIf::create(
-        "Main Character",
+        "MC Valere",
         CondMainChar {
             leader: PlayerPartyCharacter::Valere,
         },
@@ -83,7 +83,7 @@ pub fn flashback() -> Box<dyn Node<GameState, GameEvent>> {
             ),
             SeqCheckpoint::create("intro_dorms"),
             SeqIf::create(
-                "Main Character",
+                "MC Valere",
                 CondMainChar {
                     leader: PlayerPartyCharacter::Valere,
                 },
@@ -142,7 +142,7 @@ pub fn flashback() -> Box<dyn Node<GameState, GameEvent>> {
                 ],
             ),
             SeqIf::create(
-                "Main Character",
+                "MC Valere",
                 CondMainChar {
                     leader: PlayerPartyCharacter::Valere,
                 },
