@@ -32,6 +32,7 @@ pub const RELIC_NAMES: [&str; 21] = [
 
 #[derive(Deserialize, Default, Debug)]
 pub struct Config {
+    pub persist_tab_state: bool,
     pub konami_code: bool,
     pub relics: HashMap<String, bool>,
 }

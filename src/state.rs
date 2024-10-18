@@ -58,11 +58,28 @@ pub struct StateContext {
 }
 
 impl State {
-    pub fn new(_cc: &eframe::CreationContext<'_>, conf: Config) -> Self {
+    pub fn new(cc: &eframe::CreationContext<'_>, conf: Config) -> Self {
         // Register any GUI helpers here
+
+        // potential load memory and or dock state
+
         let gui_helpers = GuiHelpers::default();
 
         let tree_names = gui_helpers.tree_names();
+        let mut dock_state = DockState::new(tree_names);
+
+        if conf.persist_tab_state {
+            if let Some(storage) = cc.storage {
+                if let Some(surface_store) = storage.get_string("dock_state") {
+                    let main_surface = dock_state.main_surface_mut();
+                    use egui_dock::Tree;
+                    if let Ok(deserialized_surface) = ron::from_str::<Tree<String>>(&surface_store)
+                    {
+                        *main_surface = deserialized_surface;
+                    }
+                }
+            }
+        }
 
         Self {
             context: StateContext {
@@ -73,7 +90,7 @@ impl State {
             process_list: ProcessList::default(),
             gui: StateGui {
                 helpers: gui_helpers,
-                dock_state: DockState::new(tree_names),
+                dock_state,
             },
             debug: StateDebug {
                 fps: FpsClock::new(100),
@@ -152,9 +169,15 @@ impl State {
 
 impl eframe::App for State {
     /// Called by the frame work to save state before shutdown.
-    // fn save(&mut self, storage: &mut dyn eframe::Storage) {
-    //     eframe::set_value(storage, eframe::APP_KEY, self);
-    // }
+    fn save(&mut self, storage: &mut dyn eframe::Storage) {
+        if self.game_state.config.persist_tab_state {
+            eframe::set_value(storage, "dock_state", &self.gui.dock_state.main_surface());
+        }
+    }
+
+    fn persist_egui_memory(&self) -> bool {
+        true
+    }
 
     /// Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {

@@ -2,6 +2,9 @@
 # Examples on serialization and deserialization here:
 # https://docs.rs/toml/latest/toml/#deserialization-and-serialization
 
+# Do tabs persist between restarts
+persist_tab_state = true
+
 # Speedrun related parameters
 konami_code = true
 

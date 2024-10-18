@@ -33,6 +33,7 @@ impl egui_dock::TabViewer for TabViewer<'_> {
 impl Gui {
     pub fn run(conf: Config) {
         let options = eframe::NativeOptions {
+            persist_window: true,
             viewport: egui::ViewportBuilder::default()
                 .with_inner_size([800.0, 800.0])
                 .with_min_inner_size([800.0, 800.0]),
