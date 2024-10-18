@@ -14,14 +14,9 @@ pub fn create_tas() -> GameManager {
             SeqLog::create("SEQ START"),
             SeqTitleScreen::create(),
             SeqRelicList::create(),
+            evermist_island::create(),
+            sleeper_island::create(),
             SeqLog::create("SEQ DONE"),
         ],
-    ))
-}
-
-pub fn create_movement_test() -> GameManager {
-    GameManager::new(SeqList::create(
-        "Move Test",
-        vec![evermist_island::create(), sleeper_island::create()],
     ))
 }

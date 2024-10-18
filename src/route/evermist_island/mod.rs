@@ -1,4 +1,5 @@
 mod change_time_tutorial;
+mod mountain_trail;
 
 use self::change_time_tutorial::SeqChangeTimeTutorial;
 
@@ -9,9 +10,11 @@ use seq::prelude::*;
 
 pub fn create() -> Box<dyn Node<GameState>> {
     SeqList::create(
-        "Sleeper Island",
+        "Evermist Island",
         vec![
             SeqLog::create("MOVE START"),
+            mountain_trail::intro(),
+            SeqLog::create("TODO BREAK"),
             // TODO: more stuff
             SeqMove::create(
                 "Leave dream world",

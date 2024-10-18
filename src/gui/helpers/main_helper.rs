@@ -42,13 +42,5 @@ impl GuiHelper for MainHelper {
             let gm = tas::create_tas();
             *game_manager = Some(gm);
         }
-
-        if ui
-            .add_enabled(!running, egui::Button::new("Start Move Test"))
-            .clicked()
-        {
-            let gm = tas::create_movement_test();
-            *game_manager = Some(gm);
-        }
     }
 }
