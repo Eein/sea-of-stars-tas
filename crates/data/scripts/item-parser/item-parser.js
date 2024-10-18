@@ -189,30 +189,3 @@ m.insert("${guid}", Item {
   })
 })
 
-
-// Additional Work
-// 1. sort all items as json objects by ItemType
-// 2. write a function that processes each group and writes it to a file by group name to its own rs file
-// 3. move this code into a crate instead that hosts all the game_data so other people can use it
-
-        // m.insert( "AdventurersVest", Item {
-        //     guid: ${guid},
-        //     item_type: ItemType::None,
-        //     name: ${name},
-        //     order_priority: ${orderPriority},
-        //     buy_price: ${buyPrice},
-        //     sell_price: ${sellPrice},
-        //     equippable_by: None
-        //     meta: EquippableItem { 
-        //         phy_def: 5,
-        //         mag_def: 5,
-        //         equippable_by:Some(&[
-        //             PlayerPartyCharacter::Zale,
-        //             PlayerPartyCharacter::Valere,
-        //             PlayerPartyCharacter::Garl,
-        //             PlayerPartyCharacter::Serai,
-        //         ]),
-        //         .. EquippableItem::default()
-        //     },
-        // });
-
