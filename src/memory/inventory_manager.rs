@@ -59,11 +59,13 @@ impl InventoryManagerData {
         // If currentInventory != 0x0
         if let Ok(items_ptr) = memory_context.follow_fields::<u64>(&["ownedInventoryItems"]) {
             if items_ptr != 0x0 {
-                self.items =
-                    UnitySerializableDictionary::<InventoryItemName, InventoryItemQuantity>::read(
-                        memory_context.process,
-                        items_ptr,
-                    )?;
+                if let Ok(items) = UnitySerializableDictionary::<
+                    InventoryItemName,
+                    InventoryItemQuantity,
+                >::read(memory_context.process, items_ptr)
+                {
+                    self.items = items
+                };
             }
         }
 
