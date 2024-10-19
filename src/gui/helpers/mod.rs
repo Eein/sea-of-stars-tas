@@ -1,16 +1,16 @@
+mod combat_helper;
 mod debug_helper;
 mod inventory_helper;
 mod main_helper;
 mod nav_helper;
 mod shop_helper;
 mod title_helper;
-mod combat_helper;
 
 use std::collections::HashMap;
 
 use self::{
-    debug_helper::*, inventory_helper::*, main_helper::*, nav_helper::*, shop_helper::*,
-    title_helper::*, combat_helper::*,
+    combat_helper::*, debug_helper::*, inventory_helper::*, main_helper::*, nav_helper::*,
+    shop_helper::*, title_helper::*,
 };
 
 use crate::{game_manager::GameManager, state::GameState};

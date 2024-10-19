@@ -29,12 +29,14 @@ pub struct LiveMana {
     pub small: u32,
 }
 
-
 #[derive(Default, Debug)]
 pub struct CombatManagerData {
     pub encounter_active: bool,
     pub combat_controller_type: CombatControllerType,
     pub live_mana: LiveMana,
+    pub combo_points: u32,
+    pub combo_point_progress: u32,
+    pub ultimate_progress: f32,
 }
 
 impl Default for MemoryManager<CombatManagerData> {
@@ -64,7 +66,7 @@ impl MemoryManagerUpdate for CombatManagerData {
         if self.encounter_active {
             self.update_combat_controller_type(&memory_context)?;
             self.update_live_mana(&memory_context)?;
-
+            self.update_combo_points_and_ultimates(&memory_context)?;
         }
 
         Ok(())
@@ -91,14 +93,15 @@ impl CombatManagerData {
         &mut self,
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
-
-                    // [self.current_encounter_base, 0x128, 0x0, 0x10, 0x0],
+        // [self.current_encounter_base, 0x128, 0x0, 0x10, 0x0],
         if let Ok(controller) =
             memory_context.follow_fields::<u8>(&["currentEncounter", "controller"])
         {
             // This code reaches into the base types of the controller thats active to find the
             // name
-            if let Ok(controller_type_c_str) = memory_context.read_pointer_path::<ArrayCString<200>>(&[controller.into(), 0x0, 0x10, 0x0]) {
+            if let Ok(controller_type_c_str) = memory_context
+                .read_pointer_path::<ArrayCString<200>>(&[controller.into(), 0x0, 0x10, 0x0])
+            {
                 if let Ok(controller_type) = controller_type_c_str.validate_utf8() {
                     self.combat_controller_type = match controller_type {
                         "EncounterController" => CombatControllerType::Basic,
@@ -117,33 +120,75 @@ impl CombatManagerData {
                     }
                 }
             }
-
         }
 
         Ok(())
     }
 
-    pub fn update_live_mana(
-        &mut self,
-        memory_context: &MemoryContext,
-    ) -> Result<(), MemoryError> {
-        if let Ok(small_live_mana_ptr) =
-            memory_context.follow_fields::<u64>(&["currentEncounter", "liveManaHandler", "smallLiveManaParticles"])
-        {
-            if let Ok(small_mana) = memory_context.read_pointer_path::<u32>(&[small_live_mana_ptr.into(), 0x18]) {
+    pub fn update_live_mana(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
+        if let Ok(small_live_mana_ptr) = memory_context.follow_fields::<u64>(&[
+            "currentEncounter",
+            "liveManaHandler",
+            "smallLiveManaParticles",
+        ]) {
+            if let Ok(small_mana) =
+                memory_context.read_pointer_path::<u32>(&[small_live_mana_ptr, 0x18])
+            {
                 self.live_mana.small = small_mana
             }
         } else {
             self.live_mana.small = 0;
         }
-        if let Ok(big_live_mana_ptr) =
-            memory_context.follow_fields::<u64>(&["currentEncounter", "liveManaHandler", "bigLiveManaParticles"])
-        {
-            if let Ok(big_mana) = memory_context.read_pointer_path::<u32>(&[big_live_mana_ptr.into(), 0x18]) {
+        if let Ok(big_live_mana_ptr) = memory_context.follow_fields::<u64>(&[
+            "currentEncounter",
+            "liveManaHandler",
+            "bigLiveManaParticles",
+        ]) {
+            if let Ok(big_mana) =
+                memory_context.read_pointer_path::<u32>(&[big_live_mana_ptr, 0x18])
+            {
                 self.live_mana.big = big_mana
             }
         } else {
             self.live_mana.big = 0;
+        }
+
+        Ok(())
+    }
+
+    pub fn update_combo_points_and_ultimates(
+        &mut self,
+        memory_context: &MemoryContext,
+    ) -> Result<(), MemoryError> {
+        if let Ok(combo_points_panel_ptr) = memory_context.follow_fields::<u64>(&[
+            "currentEncounter",
+            "controller",
+            "battleUI",
+            "comboPointsPanel",
+        ]) {
+            // comboPointsPanel -> ultMeter -> targetFill
+            if let Ok(combo_points) =
+                memory_context.read_pointer_path::<u32>(&[combo_points_panel_ptr, 0x30, 0x58])
+            {
+                self.combo_points = combo_points
+            } else {
+                self.combo_points = 0
+            }
+            if let Ok(combo_point_progress) =
+                memory_context.read_pointer_path::<u32>(&[combo_points_panel_ptr, 0x30, 0x5C])
+            {
+                self.combo_point_progress = combo_point_progress
+            } else {
+                self.combo_point_progress = 0
+            }
+            // comboPointsPanel -> comboPointsMeter -> currentComboPoints
+            if let Ok(ultimate_progress) =
+                memory_context.read_pointer_path::<f32>(&[combo_points_panel_ptr, 0x28, 0x40])
+            {
+                self.ultimate_progress = ultimate_progress
+            } else {
+                self.ultimate_progress = 0.0
+            }
         }
 
         Ok(())

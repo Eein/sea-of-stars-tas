@@ -35,6 +35,12 @@ impl GuiHelper for CombatHelper {
                 "Live Mana: Small: {} | Big: {}",
                 combat_manager.live_mana.small, combat_manager.live_mana.big
             ));
+            ui.label(format!(
+                "Combo: {}/3000 | Filled: {}/3 | Ultimate Progress: {:.3}%",
+                combat_manager.combo_point_progress,
+                combat_manager.combo_points,
+                combat_manager.ultimate_progress
+            ));
         }
     }
 }
