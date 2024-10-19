@@ -6,6 +6,7 @@ use joystick::prelude::*;
 use log::info;
 use seq::prelude::*;
 
+use vec2;
 use vec3_rs::Vector3;
 
 #[derive(Clone, Debug)]
@@ -72,13 +73,14 @@ impl SeqMove {
     }
 
     fn get_dir(player: &Vector3<f32>, target: &Vector3<f32>, climb: bool) -> [f32; 2] {
-        let mut diff = *target - *player;
-        diff.normalize();
-        if climb {
+        let diff = *target - *player;
+        let mut diff2d = if climb {
             [diff.get_x(), diff.get_y()]
         } else {
             [diff.get_x(), diff.get_z()]
-        }
+        };
+        vec2::norm_mut(&mut diff2d);
+        diff2d
     }
 
     fn change_time(&mut self, state: &mut GameState, target_time: f32) {
