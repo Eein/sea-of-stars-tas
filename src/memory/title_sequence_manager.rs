@@ -11,18 +11,6 @@ use memory::process::MemoryError;
 use memory::process::Process;
 use memory::string::{ArrayCString, ArrayWString};
 
-impl Default for MemoryManager<TitleSequenceManagerData> {
-    fn default() -> Self {
-        let manager = Self {
-            name: "TitleSequenceManager".to_string(),
-            data: TitleSequenceManagerData::default(),
-            manager: UnityMemoryManager::default(),
-        };
-        info!("Memory: {} Loaded", manager.name);
-        manager
-    }
-}
-
 #[derive(Default, Debug)]
 pub struct TitleSequenceManagerData {
     /// Title Menu Option data
@@ -37,6 +25,18 @@ pub struct TitleSequenceManagerData {
     pub load_save_done: bool,
     /// If the player has pressed start on the intro screen.
     pub pressed_start: bool,
+}
+
+impl Default for MemoryManager<TitleSequenceManagerData> {
+    fn default() -> Self {
+        let manager = Self {
+            name: "TitleSequenceManager".to_string(),
+            data: TitleSequenceManagerData::default(),
+            manager: UnityMemoryManager::default(),
+        };
+        info!("Memory: {} Loaded", manager.name);
+        manager
+    }
 }
 
 impl MemoryManagerUpdate for TitleSequenceManagerData {

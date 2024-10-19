@@ -6,6 +6,13 @@ use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
 use memory::string::ArrayWString;
 
+#[derive(Default, Debug)]
+pub struct LevelManagerData {
+    pub loading: bool,
+    pub scene_guid: String,
+    pub scene_name: String,
+}
+
 impl Default for MemoryManager<LevelManagerData> {
     fn default() -> Self {
         let manager = Self {
@@ -16,13 +23,6 @@ impl Default for MemoryManager<LevelManagerData> {
         info!("Memory: {} Loaded", manager.name);
         manager
     }
-}
-
-#[derive(Default, Debug)]
-pub struct LevelManagerData {
-    pub loading: bool,
-    pub scene_guid: String,
-    pub scene_name: String,
 }
 
 impl MemoryManagerUpdate for LevelManagerData {

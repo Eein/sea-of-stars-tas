@@ -7,6 +7,11 @@ use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::{MemoryError, Process};
 use memory::string::ArrayWString;
 
+#[derive(Default, Debug)]
+pub struct ShopManagerData {
+    pub items: UnityList<ShopItem>,
+}
+
 impl Default for MemoryManager<ShopManagerData> {
     fn default() -> Self {
         let manager = Self {
@@ -17,11 +22,6 @@ impl Default for MemoryManager<ShopManagerData> {
         info!("Memory: {} Loaded", manager.name);
         manager
     }
-}
-
-#[derive(Default, Debug)]
-pub struct ShopManagerData {
-    pub items: UnityList<ShopItem>,
 }
 
 impl MemoryManagerUpdate for ShopManagerData {
