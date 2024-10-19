@@ -99,6 +99,42 @@ impl GuiHelper for CombatHelper {
             //         ui.label(format!("{:?}", lock));
             //     }
             // }
+
+            // TODO(eein): Another alternative where they are collapsable headers
+            // egui::Grid::new("enemies")
+            //     .min_col_width(10.0)
+            //     .striped(true)
+            //     .show(ui, |ui| {
+
+            //         for (i, enemy) in combat_manager.enemies.items.iter().enumerate() {
+            //            let mut header = format!("NYI ({})  G: {:.5}  U: {:.5}  HP: {}/{}  Act: {}  Locks ({})  ",
+            //                 i,
+            //                 enemy.guid,
+            //                 enemy.unique_id,
+            //                 enemy.current_hp,
+            //                 enemy.max_hp,
+            //                 enemy.turns_to_action,
+            //                 enemy.total_spell_locks);
+
+            //             for lock in enemy.spell_locks.items.iter() {
+            //                 header = format!("{} {:?}", header, lock);
+            //             }
+
+            //             egui::CollapsingHeader::new(header)
+            //                 .default_open(true)
+            //                 .show(ui, |ui| {
+            //                 ui.label(format!("Spd: {}, Patk: {}, Pdef: {}, Matk: {}, Mdef: {}",
+            //                     enemy.speed,
+            //                     enemy.physical_attack,
+            //                     enemy.physical_defense,
+            //                     enemy.magical_attack,
+            //                     enemy.magical_defense,
+            //                 ));
+            //             });
+            //             ui.end_row();
+            //         }
+            //     });
+            // ui.separator();
         }
     }
 }
