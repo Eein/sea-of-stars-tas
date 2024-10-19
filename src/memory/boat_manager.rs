@@ -9,6 +9,15 @@ use log::info;
 use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
 
+#[derive(Default, Debug)]
+pub struct BoatManagerData {
+    backing_field: Option<u32>,
+    pub position: Vector3<f32>,
+    pub rotation: Quaternion,
+    pub speed: f32,
+    pub max_speed: f32,
+}
+
 impl Default for MemoryManager<BoatManagerData> {
     fn default() -> Self {
         let manager = Self {
@@ -19,15 +28,6 @@ impl Default for MemoryManager<BoatManagerData> {
         info!("Memory: {} Loaded", manager.name);
         manager
     }
-}
-
-#[derive(Default, Debug)]
-pub struct BoatManagerData {
-    backing_field: Option<u32>,
-    pub position: Vector3<f32>,
-    pub rotation: Quaternion,
-    pub speed: f32,
-    pub max_speed: f32,
 }
 
 impl MemoryManagerUpdate for BoatManagerData {

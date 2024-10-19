@@ -5,6 +5,11 @@ use log::info;
 use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
 
+#[derive(Default, Debug)]
+pub struct TimeOfDayManagerData {
+    pub current_time: f32,
+}
+
 ///  We are reaching into the AudioManager for Time of Day instead of using
 ///  Sabotage.TODManager simply as a way to avoid having to load the other module
 ///  into memory. The currentTimeOfDay field is provided on the AudioManager as well.
@@ -19,11 +24,6 @@ impl Default for MemoryManager<TimeOfDayManagerData> {
         info!("Memory: {} Loaded", manager.name);
         manager
     }
-}
-
-#[derive(Default, Debug)]
-pub struct TimeOfDayManagerData {
-    pub current_time: f32,
 }
 
 impl MemoryManagerUpdate for TimeOfDayManagerData {

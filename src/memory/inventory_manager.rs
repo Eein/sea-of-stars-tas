@@ -9,18 +9,6 @@ use memory::process::{MemoryError, Process};
 use memory::string::ArrayWString;
 use std::hash::Hash;
 
-impl Default for MemoryManager<InventoryManagerData> {
-    fn default() -> Self {
-        let manager = Self {
-            name: "InventoryManager".to_string(),
-            data: InventoryManagerData::default(),
-            manager: UnityMemoryManager::default(),
-        };
-        info!("Memory: {} Loaded", manager.name);
-        manager
-    }
-}
-
 #[derive(Default, Debug)]
 pub struct InventoryManagerData {
     // This references QuantityByInventoryItemReference which is a
@@ -38,6 +26,18 @@ pub struct InventoryManagerData {
     // These types can theoretically originally have a `next` link for key collisions
     // so be on the watch for missing items
     pub items: UnitySerializableDictionary<InventoryItemName, InventoryItemQuantity>,
+}
+
+impl Default for MemoryManager<InventoryManagerData> {
+    fn default() -> Self {
+        let manager = Self {
+            name: "InventoryManager".to_string(),
+            data: InventoryManagerData::default(),
+            manager: UnityMemoryManager::default(),
+        };
+        info!("Memory: {} Loaded", manager.name);
+        manager
+    }
 }
 
 impl MemoryManagerUpdate for InventoryManagerData {

@@ -5,18 +5,6 @@ use log::info;
 use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
 
-impl Default for MemoryManager<CutsceneManagerData> {
-    fn default() -> Self {
-        let manager = Self {
-            name: "CutsceneManager".to_string(),
-            data: CutsceneManagerData::default(),
-            manager: UnityMemoryManager::default(),
-        };
-        info!("Memory: {} Loaded", manager.name);
-        manager
-    }
-}
-
 #[derive(Default, Debug)]
 pub struct CutsceneManagerData {
     // Toggles during every loss of control event;
@@ -37,6 +25,18 @@ pub struct CutsceneManagerData {
     // This briefly flashes after a cutscene is over and is generally here
     // for debugging purposes only.
     pub skip_cutscene_transition_screen: u64,
+}
+
+impl Default for MemoryManager<CutsceneManagerData> {
+    fn default() -> Self {
+        let manager = Self {
+            name: "CutsceneManager".to_string(),
+            data: CutsceneManagerData::default(),
+            manager: UnityMemoryManager::default(),
+        };
+        info!("Memory: {} Loaded", manager.name);
+        manager
+    }
 }
 
 impl MemoryManagerUpdate for CutsceneManagerData {

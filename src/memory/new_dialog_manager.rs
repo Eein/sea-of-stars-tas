@@ -5,6 +5,11 @@ use log::info;
 use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
 
+#[derive(Default, Debug)]
+pub struct NewDialogManagerData {
+    pub dialog_visible: bool,
+}
+
 impl Default for MemoryManager<NewDialogManagerData> {
     fn default() -> Self {
         let manager = Self {
@@ -15,11 +20,6 @@ impl Default for MemoryManager<NewDialogManagerData> {
         info!("Memory: {} Loaded", manager.name);
         manager
     }
-}
-
-#[derive(Default, Debug)]
-pub struct NewDialogManagerData {
-    pub dialog_visible: bool,
 }
 
 impl MemoryManagerUpdate for NewDialogManagerData {

@@ -10,18 +10,6 @@ use std::time::Duration;
 const SECONDS_PER_MINUTE: u64 = 60;
 const SECONDS_PER_HOUR: u64 = 60 * SECONDS_PER_MINUTE;
 
-impl Default for MemoryManager<SpeedrunManagerData> {
-    fn default() -> Self {
-        let manager = Self {
-            name: "SpeedrunManager".to_string(),
-            data: SpeedrunManagerData::default(),
-            manager: UnityMemoryManager::default(),
-        };
-        info!("Memory: {} Loaded", manager.name);
-        manager
-    }
-}
-
 #[derive(Default, Debug)]
 pub struct SpeedrunManagerData {
     // The Main Timer for speedrun mode
@@ -38,6 +26,18 @@ pub struct SpeedrunManagerData {
     // and is used for ui or statemachine. The next field in the struct
     // is resumeSpeedrunNextFrame, which likely is for their statemachine.
     pub speedrun_timer_pause_lock: bool,
+}
+
+impl Default for MemoryManager<SpeedrunManagerData> {
+    fn default() -> Self {
+        let manager = Self {
+            name: "SpeedrunManager".to_string(),
+            data: SpeedrunManagerData::default(),
+            manager: UnityMemoryManager::default(),
+        };
+        info!("Memory: {} Loaded", manager.name);
+        manager
+    }
 }
 
 #[derive(Default, Debug)]

@@ -5,6 +5,11 @@ use log::info;
 use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
 
+#[derive(Default, Debug)]
+pub struct CurrencyManagerData {
+    pub money: u64,
+}
+
 impl Default for MemoryManager<CurrencyManagerData> {
     fn default() -> Self {
         let manager = Self {
@@ -15,11 +20,6 @@ impl Default for MemoryManager<CurrencyManagerData> {
         info!("Memory: {} Loaded", manager.name);
         manager
     }
-}
-
-#[derive(Default, Debug)]
-pub struct CurrencyManagerData {
-    pub money: u64,
 }
 
 impl MemoryManagerUpdate for CurrencyManagerData {

@@ -8,6 +8,15 @@ use memory::process::MemoryError;
 use memory::string::ArrayWString;
 use vec3_rs::Vector3;
 
+#[derive(Default, Debug)]
+pub struct PlayerPartyManagerData {
+    pub position: Vector3<f32>,
+    pub gameobject_position: Vector3<f32>,
+    leader_offset: Option<u32>,
+    pub movement_state: PlayerMovementState,
+    pub leader_character: PlayerPartyCharacter,
+}
+
 impl Default for MemoryManager<PlayerPartyManagerData> {
     fn default() -> Self {
         let manager = Self {
@@ -18,15 +27,6 @@ impl Default for MemoryManager<PlayerPartyManagerData> {
         info!("Memory: {} Loaded", manager.name);
         manager
     }
-}
-
-#[derive(Default, Debug)]
-pub struct PlayerPartyManagerData {
-    pub position: Vector3<f32>,
-    pub gameobject_position: Vector3<f32>,
-    leader_offset: Option<u32>,
-    pub movement_state: PlayerMovementState,
-    pub leader_character: PlayerPartyCharacter,
 }
 
 impl MemoryManagerUpdate for PlayerPartyManagerData {

@@ -5,6 +5,11 @@ use log::info;
 use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
 
+#[derive(Default, Debug)]
+pub struct CombatManagerData {
+    pub encounter_active: bool,
+}
+
 impl Default for MemoryManager<CombatManagerData> {
     fn default() -> Self {
         let manager = Self {
@@ -15,11 +20,6 @@ impl Default for MemoryManager<CombatManagerData> {
         info!("Memory: {} Loaded", manager.name);
         manager
     }
-}
-
-#[derive(Default, Debug)]
-pub struct CombatManagerData {
-    pub encounter_active: bool,
 }
 
 impl MemoryManagerUpdate for CombatManagerData {
