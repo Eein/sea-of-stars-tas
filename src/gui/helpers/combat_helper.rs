@@ -41,22 +41,61 @@ impl GuiHelper for CombatHelper {
                 combat_manager.combo_points,
                 combat_manager.ultimate_progress
             ));
+            ui.separator();
             ui.label("Enemies");
-            for enemy in combat_manager.enemies.items.iter() {
-                ui.label(format!("GUID: {}", enemy.guid));
-                ui.label(format!("Unique ID: {}", enemy.unique_id));
-                ui.label(format!("HP: {}/{}", enemy.current_hp, enemy.max_hp));
-                ui.label(format!("Speed: {}", enemy.speed));
-                ui.label(format!("Physical Attack: {}", enemy.physical_attack));
-                ui.label(format!("Physical Defense: {}", enemy.physical_defense));
-                ui.label(format!("Magical Attack: {}", enemy.magical_attack));
-                ui.label(format!("Magical Defense: {}", enemy.magical_defense));
-                ui.label(format!("Next Action: {}", enemy.turns_to_action));
-                ui.label(format!("Locks: {}", enemy.total_spell_locks));
-                for lock in enemy.spell_locks.items.iter() {
-                    ui.label(format!("{:?}", lock));
+            egui::Grid::new("enemies").show(ui, |ui| {
+                ui.label("Name");
+                ui.label("Guid");
+                ui.label("UniqueID");
+                ui.label("HP");
+                ui.label("Speed");
+                ui.label("Patk");
+                ui.label("Pdef");
+                ui.label("Matk");
+                ui.label("Mdef");
+                ui.label("Act");
+                // ui.label("# Locks");
+                ui.label("Locks");
+                ui.end_row();
+
+                for (i, enemy) in combat_manager.enemies.items.iter().enumerate() {
+                    ui.label(format!("NYI ({})", i));
+                    ui.label(format!("{:.5}", enemy.guid));
+                    ui.label(format!("{:.5}", enemy.unique_id));
+                    ui.label(format!("{}/{}", enemy.current_hp, enemy.max_hp));
+                    ui.label(format!("{}", enemy.speed));
+                    ui.label(format!("{}", enemy.physical_attack));
+                    ui.label(format!("{}", enemy.physical_defense));
+                    ui.label(format!("{}", enemy.magical_attack));
+                    ui.label(format!("{}", enemy.magical_defense));
+                    ui.label(format!("{}", enemy.turns_to_action));
+                    // ui.label(format!("{}", enemy.total_spell_locks));
+                    for lock in enemy.spell_locks.items.iter() {
+                        ui.label(format!("{:?}", lock));
+                    }
+                    ui.end_row();
                 }
-            }
+            });
+            ui.separator();
+            
+            // TODO(eein): Alternatively the following; not sure if we want to keep 
+            // the same style here or not.
+            // for (i, enemy) in combat_manager.enemies.items.iter().enumerate() {
+            //     ui.label(format!("Name NYI ({})", i));
+            //     ui.label(format!("GUID: {}", enemy.guid));
+            //     ui.label(format!("Unique ID: {}", enemy.unique_id));
+            //     ui.label(format!("HP: {}/{}", enemy.current_hp, enemy.max_hp));
+            //     ui.label(format!("Speed: {}", enemy.speed));
+            //     ui.label(format!("Physical Attack: {}", enemy.physical_attack));
+            //     ui.label(format!("Physical Defense: {}", enemy.physical_defense));
+            //     ui.label(format!("Magical Attack: {}", enemy.magical_attack));
+            //     ui.label(format!("Magical Defense: {}", enemy.magical_defense));
+            //     ui.label(format!("Next Action: {}", enemy.turns_to_action));
+            //     ui.label(format!("Locks: {}", enemy.total_spell_locks));
+            //     for lock in enemy.spell_locks.items.iter() {
+            //         ui.label(format!("{:?}", lock));
+            //     }
+            // }
         }
     }
 }
