@@ -41,6 +41,22 @@ impl GuiHelper for CombatHelper {
                 combat_manager.combo_points,
                 combat_manager.ultimate_progress
             ));
+            ui.label("Enemies");
+            for enemy in combat_manager.enemies.items.iter() {
+                ui.label(format!("GUID: {}", enemy.guid));
+                ui.label(format!("Unique ID: {}", enemy.unique_id));
+                ui.label(format!("HP: {}/{}", enemy.current_hp, enemy.max_hp));
+                ui.label(format!("Speed: {}", enemy.speed));
+                ui.label(format!("Physical Attack: {}", enemy.physical_attack));
+                ui.label(format!("Physical Defense: {}", enemy.physical_defense));
+                ui.label(format!("Magical Attack: {}", enemy.magical_attack));
+                ui.label(format!("Magical Defense: {}", enemy.magical_defense));
+                ui.label(format!("Next Action: {}", enemy.turns_to_action));
+                ui.label(format!("Locks: {}", enemy.total_spell_locks));
+                for lock in enemy.spell_locks.items.iter() {
+                    ui.label(format!("{:?}", lock));
+                }
+            }
         }
     }
 }

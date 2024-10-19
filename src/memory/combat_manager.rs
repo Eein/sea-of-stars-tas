@@ -2,9 +2,11 @@ use crate::memory::memory_context::MemoryContext;
 use crate::memory::{MemoryManager, MemoryManagerUpdate};
 use crate::state::StateContext;
 use log::info;
+use memory::game_engine::il2cpp::unity_list::{UnityItem, UnityList};
 use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
-use memory::string::ArrayCString;
+use memory::process::Process;
+use memory::string::*;
 
 #[derive(Default, Debug)]
 pub enum CombatControllerType {
@@ -23,10 +25,61 @@ pub enum CombatControllerType {
     TimedHitsTutorial,
 }
 
+#[derive(Debug, Default, Clone)]
+pub enum CombatDamageType {
+    #[default]
+    None = 0,
+    Any = 1,
+    Sword = 2,
+    Sun = 4,
+    Moon = 8,
+    Eclipse = 16,
+    Poison = 32,
+    Arcane = 64,
+    Stun = 128,
+    Blunt = 256,
+    Magical = 252,
+}
+
+impl CombatDamageType {
+    fn from_u32(value: u32) -> CombatDamageType {
+        match value {
+            0 => CombatDamageType::None,
+            1 => CombatDamageType::Any,
+            2 => CombatDamageType::Sword,
+            4 => CombatDamageType::Sun,
+            8 => CombatDamageType::Moon,
+            16 => CombatDamageType::Eclipse,
+            32 => CombatDamageType::Poison,
+            64 => CombatDamageType::Arcane,
+            128 => CombatDamageType::Stun,
+            256 => CombatDamageType::Blunt,
+            252 => CombatDamageType::Magical,
+            _ => CombatDamageType::None,
+        }
+    }
+}
+
 #[derive(Default, Debug)]
 pub struct LiveMana {
     pub big: u32,
     pub small: u32,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct CombatEnemy {
+    pub current_hp: u32,
+    pub unique_id: String,
+    pub guid: String,
+    pub max_hp: u32,
+    pub speed: u32,
+    pub physical_attack: u32,
+    pub physical_defense: u32,
+    pub magical_attack: u32,
+    pub magical_defense: u32,
+    pub turns_to_action: u8,
+    pub total_spell_locks: u8,
+    pub spell_locks: UnityList<CombatDamageType>,
 }
 
 #[derive(Default, Debug)]
@@ -37,6 +90,7 @@ pub struct CombatManagerData {
     pub combo_points: u32,
     pub combo_point_progress: u32,
     pub ultimate_progress: f32,
+    pub enemies: UnityList<CombatEnemy>,
 }
 
 impl Default for MemoryManager<CombatManagerData> {
@@ -67,6 +121,7 @@ impl MemoryManagerUpdate for CombatManagerData {
             self.update_combat_controller_type(&memory_context)?;
             self.update_live_mana(&memory_context)?;
             self.update_combo_points_and_ultimates(&memory_context)?;
+            self.update_enemies(&memory_context)?;
         }
 
         Ok(())
@@ -195,5 +250,71 @@ impl CombatManagerData {
         }
 
         Ok(())
+    }
+
+    pub fn update_enemies(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
+        if let Ok(enemies) =
+            memory_context.follow_fields::<u64>(&["currentEncounter", "enemyTargets"])
+        {
+            let enemies = UnityList::<CombatEnemy>::read(memory_context.process, enemies)?;
+            self.enemies = enemies;
+        }
+        Ok(())
+    }
+}
+
+impl UnityItem for CombatEnemy {
+    fn read(process: &Process, item_ptr: u64) -> Result<Self, MemoryError> {
+        // Top level pointers
+        let enemy_data = process.read_pointer_path::<u64>(item_ptr, &[0x80, 0x108])?;
+        let casting_data = process.read_pointer_path::<u64>(item_ptr, &[0x80, 0x120])?;
+        let current_hp = process.read_pointer_path::<u32>(item_ptr, &[0x94])?;
+        let guid_w_str =
+            process.read_pointer_path::<ArrayWString<128>>(enemy_data, &[0x18, 0x14])?;
+        let guid = String::from_utf16(guid_w_str.as_slice()).unwrap_or("Unknown".to_string());
+
+        // enemy data
+        let unique_id_w_str = process
+            .read_pointer_path::<ArrayWString<36>>(item_ptr, &[0x80, 0xF8, 0xF0, 0x18, 0x14])?;
+        let unique_id =
+            String::from_utf16(unique_id_w_str.as_slice()).unwrap_or("Unknown".to_string());
+        let max_hp = process.read_pointer::<u32>(enemy_data + 0x20)?;
+        let speed = process.read_pointer::<u32>(enemy_data + 0x24)?;
+        let physical_attack = process.read_pointer::<u32>(enemy_data + 0x2C)?;
+        let physical_defense = process.read_pointer::<u32>(enemy_data + 0x28)?;
+        let magical_attack = process.read_pointer::<u32>(enemy_data + 0x30)?;
+        let magical_defense = process.read_pointer::<u32>(enemy_data + 0x34)?;
+
+        // casting data
+        let turns_to_action = process.read_pointer::<u8>(casting_data + 0x24)?;
+        let total_spell_locks = process.read_pointer::<u8>(casting_data + 0x28)?;
+        let spell_locks = if let Ok(locks) = process.read_pointer_path::<u64>(casting_data, &[0x18])
+        {
+            UnityList::<CombatDamageType>::read(process, locks)?
+        } else {
+            UnityList::<CombatDamageType>::default()
+        };
+
+        Ok(CombatEnemy {
+            guid,
+            unique_id,
+            current_hp,
+            max_hp,
+            speed,
+            physical_attack,
+            physical_defense,
+            magical_attack,
+            magical_defense,
+            turns_to_action,
+            total_spell_locks,
+            spell_locks,
+        })
+    }
+}
+
+impl UnityItem for CombatDamageType {
+    fn read(process: &Process, item_ptr: u64) -> Result<Self, MemoryError> {
+        let lock = process.read_pointer::<u32>(item_ptr + 0x40)?;
+        Ok(CombatDamageType::from_u32(lock))
     }
 }
