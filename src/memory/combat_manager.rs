@@ -167,23 +167,26 @@ impl CombatManagerData {
             "comboPointsPanel",
         ]) {
             // comboPointsPanel -> ultMeter -> targetFill
-            if let Ok(combo_points) =
-                memory_context.read_pointer_path::<u32>(&[combo_points_panel_ptr, 0x30, 0x58])
-            {
-                self.combo_points = combo_points
-            } else {
-                self.combo_points = 0
-            }
-            if let Ok(combo_point_progress) =
-                memory_context.read_pointer_path::<u32>(&[combo_points_panel_ptr, 0x30, 0x5C])
+            if let Ok(combo_point_progress) = memory_context
+                .process
+                .read_pointer_path::<u32>(combo_points_panel_ptr, &[0x30, 0x58])
             {
                 self.combo_point_progress = combo_point_progress
             } else {
                 self.combo_point_progress = 0
             }
+            if let Ok(combo_points) = memory_context
+                .process
+                .read_pointer_path::<u32>(combo_points_panel_ptr, &[0x30, 0x5C])
+            {
+                self.combo_points = combo_points
+            } else {
+                self.combo_points = 0
+            }
             // comboPointsPanel -> comboPointsMeter -> currentComboPoints
-            if let Ok(ultimate_progress) =
-                memory_context.read_pointer_path::<f32>(&[combo_points_panel_ptr, 0x28, 0x40])
+            if let Ok(ultimate_progress) = memory_context
+                .process
+                .read_pointer_path::<f32>(combo_points_panel_ptr, &[0x28, 0x40])
             {
                 self.ultimate_progress = ultimate_progress
             } else {
