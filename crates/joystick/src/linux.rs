@@ -3,7 +3,6 @@ use evdev::{
     AbsInfo, AbsoluteAxisCode, AbsoluteAxisEvent, AttributeSet, BusType, EventType, InputEvent,
     InputId, KeyCode, UinputAbsSetup,
 };
-use vec2::clamp;
 
 use log::error;
 use std::sync::Arc;
@@ -66,17 +65,11 @@ impl JoystickBtnInterface<Button> for Joystick {
 
 impl Joystick {
     fn set_joy(&mut self, dir: [f32; 2], x_code: AbsoluteAxisCode, y_code: AbsoluteAxisCode) {
-        let mut clamped_dir = dir;
-        clamp(&mut clamped_dir, &[-1.0, -1.0], &[1.0, 1.0]);
-        // Convert from range -1..1 to -32768..32767
-        // Negative values are down/left, positive are up/right
         let x_code = x_code.0;
         let y_code = y_code.0;
-        let abs_x = (clamped_dir[0] * i16::MAX as f32) as i16;
-        let abs_y = -(clamped_dir[1] * i16::MAX as f32) as i16;
 
-        let n_x = normalize(abs_x.into());
-        let n_y = normalize(abs_y.into());
+        let n_x = normalize(dir[0]);
+        let n_y = normalize(-dir[1]);
 
         let x_event = *AbsoluteAxisEvent::new(AbsoluteAxisCode(x_code), n_x.into());
         let y_event = *AbsoluteAxisEvent::new(AbsoluteAxisCode(y_code), n_y.into());
@@ -167,7 +160,7 @@ impl Default for Joystick {
 // Normalizing a value for linux should normalize against the abs values
 pub fn normalize(value: f32) -> u16 {
     let val = ((value - -1.0) / (1.0 - -1.0)) * ABS_MAX as f32;
-    val.round() as u16
+    (val.ceil()) as u16
 }
 
 #[cfg(test)]
