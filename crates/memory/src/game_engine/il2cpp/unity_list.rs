@@ -1,6 +1,6 @@
 use crate::process::{MemoryError, Process};
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct UnityList<T: UnityItem> {
     pub count: u32,
     pub items: Vec<T>,
