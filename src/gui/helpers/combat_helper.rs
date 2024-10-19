@@ -26,9 +26,15 @@ impl GuiHelper for CombatHelper {
             "Encounter Active: {}",
             combat_manager.encounter_active
         ));
-        ui.label(format!(
-            "Combat Controller: {:?}",
-            combat_manager.combat_controller_type
-        ));
+        if combat_manager.encounter_active {
+            ui.label(format!(
+                "Combat Controller: {:?}",
+                combat_manager.combat_controller_type
+            ));
+            ui.label(format!(
+                "Live Mana: Small: {} | Big: {}",
+                combat_manager.live_mana.small, combat_manager.live_mana.big
+            ));
+        }
     }
 }

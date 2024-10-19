@@ -24,9 +24,17 @@ pub enum CombatControllerType {
 }
 
 #[derive(Default, Debug)]
+pub struct LiveMana {
+    pub big: u32,
+    pub small: u32,
+}
+
+
+#[derive(Default, Debug)]
 pub struct CombatManagerData {
     pub encounter_active: bool,
-    pub combat_controller_type: CombatControllerType
+    pub combat_controller_type: CombatControllerType,
+    pub live_mana: LiveMana,
 }
 
 impl Default for MemoryManager<CombatManagerData> {
@@ -55,6 +63,7 @@ impl MemoryManagerUpdate for CombatManagerData {
         // of the updates.
         if self.encounter_active {
             self.update_combat_controller_type(&memory_context)?;
+            self.update_live_mana(&memory_context)?;
 
         }
 
@@ -109,6 +118,32 @@ impl CombatManagerData {
                 }
             }
 
+        }
+
+        Ok(())
+    }
+
+    pub fn update_live_mana(
+        &mut self,
+        memory_context: &MemoryContext,
+    ) -> Result<(), MemoryError> {
+        if let Ok(small_live_mana_ptr) =
+            memory_context.follow_fields::<u64>(&["currentEncounter", "liveManaHandler", "smallLiveManaParticles"])
+        {
+            if let Ok(small_mana) = memory_context.read_pointer_path::<u32>(&[small_live_mana_ptr.into(), 0x18]) {
+                self.live_mana.small = small_mana
+            }
+        } else {
+            self.live_mana.small = 0;
+        }
+        if let Ok(big_live_mana_ptr) =
+            memory_context.follow_fields::<u64>(&["currentEncounter", "liveManaHandler", "bigLiveManaParticles"])
+        {
+            if let Ok(big_mana) = memory_context.read_pointer_path::<u32>(&[big_live_mana_ptr.into(), 0x18]) {
+                self.live_mana.big = big_mana
+            }
+        } else {
+            self.live_mana.big = 0;
         }
 
         Ok(())
