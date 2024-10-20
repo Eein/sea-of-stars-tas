@@ -1,6 +1,7 @@
 mod change_time_tutorial;
 mod diploma;
 mod elder_mist;
+mod forbidden_cave;
 mod mooncradle;
 mod mountain_trail;
 
@@ -29,6 +30,8 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                 false,
             ),
             SeqCheckpoint::create("forbidden_cave"),
+            forbidden_cave::create(),
+            // TODO: Rest of mountain trail
             SeqLog::create("TODO BREAK"),
             elder_mist::create(),
         ],

@@ -7,7 +7,7 @@ use seq::prelude::*;
 
 pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
     SeqList::create(
-        "Evermist Island",
+        "Elder Mist",
         vec![
             // TODO: more stuff
             SeqMove::create(
