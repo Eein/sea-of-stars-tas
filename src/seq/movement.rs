@@ -229,6 +229,7 @@ impl SeqMove {
                         state.gamepad.release_all();
                     }
                 } else {
+                    state.gamepad.release_all(); // Release held joystick direction
                     self.setup_confirm();
                     state.gamepad.press(&SosAction::Turbo);
                 }
