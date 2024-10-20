@@ -132,6 +132,7 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
             SeqMove::create(
                 "Boss",
                 vec![
+                    Move::Log("Approach"),
                     Move::To(-39.370, 2.002, 206.332),
                     Move::To(-39.370, 2.002, 219.607),
                     Move::AwaitCombat(Box::new(Move::HoldDir([0.0, 1.0], [0.0, 0.0, 0.0]))),

@@ -235,7 +235,7 @@ pub fn flashback() -> Box<dyn Node<GameState, GameEvent>> {
                     Move::Interact(41.214, -7.998, -340.309),
                     Move::To(41.550, -7.998, -334.885),
                     Move::Log("Brazier"),
-                    Move::Confirm, // TODO(orkaboy): Fix, use SeqSelectOption?
+                    Move::Confirm,
                     Move::To(37.523, -7.998, -335.876),
                     Move::Interact(36.012, -12.998, -335.664),
                     Move::Log("Attack enemies"),
@@ -265,7 +265,7 @@ pub fn flashback() -> Box<dyn Node<GameState, GameEvent>> {
                     Move::Interact(39.358, -2.998, -301.492),
                     Move::To(41.340, -2.998, -297.060),
                     Move::Log("Brazier"),
-                    Move::Confirm, // TODO(orkaboy): Fix, use SeqSelectOption?
+                    Move::Confirm,
                     Move::To(39.415, -2.998, -297.149),
                     Move::To(32.923, -2.998, -292.023),
                     Move::Log("Elevator"),
@@ -277,14 +277,13 @@ pub fn flashback() -> Box<dyn Node<GameState, GameEvent>> {
                     Move::To(82.074, -9.998, -198.437),
                     Move::HoldDir([0.0, -1.0], [33.000, 4.002, -128.083]),
                     Move::Log("Leave dungeon"),
-                    // TODO(orkaboy): Failed to jump?
                     Move::AwaitCutscene(Box::new(Move::Interact(33.000, -6.990, -130.200))),
                     // Cutscene here leaving Mooncradle
                     Move::Log("To Forbidden Cave"),
                     Move::ToWorld(109.500, 2.002, 64.000),
                     Move::ToWorld(108.000, 2.002, 64.000),
                     Move::ToWorld(108.000, 2.002, 66.500),
-                    // TODO(orkaboy): Failed to enter? Precision value?
+                    // TODO(orkaboy): Failed to enter? Need to hold button for longer?
                     Move::Confirm,
                 ],
             ),
