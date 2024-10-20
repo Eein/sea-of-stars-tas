@@ -26,9 +26,7 @@ impl SeqCondition<GameState> for CondRelic {
     fn evaluate(&self, state: &GameState) -> bool {
         match state.config.relics.get(self.name) {
             // If the relic was found in the configuration, return its state
-            Some(relic) => {
-                *relic
-            }
+            Some(relic) => *relic,
             None => {
                 warn!("Relic '{}' not in config, ignored!", self.name);
                 false
