@@ -1,9 +1,12 @@
 mod change_time_tutorial;
+mod diploma;
 mod mooncradle;
 mod mountain_trail;
 
 use self::change_time_tutorial::SeqChangeTimeTutorial;
+use self::diploma::SeqDiploma;
 
+use crate::seq::branch::CondRelic;
 use crate::seq::dialog::*;
 use crate::seq::movement::*;
 use crate::state::{GameEvent, GameState};
@@ -15,7 +18,16 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
         vec![
             SeqLog::create("MOVE START"),
             mountain_trail::intro(),
-            mooncradle::flashback(),
+            SeqIf::create(
+                "Solstice Diploma",
+                CondRelic {
+                    name: "Solstice Diploma",
+                },
+                // TODO(orkaboy): Currently doesn't work since control is grabbed by cutscene
+                Some(SeqDiploma::create()),
+                Some(mooncradle::flashback()),
+                false,
+            ),
             SeqCheckpoint::create("forbidden_cave"),
             SeqLog::create("TODO BREAK"),
             // TODO: more stuff
