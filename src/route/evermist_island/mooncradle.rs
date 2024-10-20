@@ -278,8 +278,7 @@ pub fn flashback() -> Box<dyn Node<GameState, GameEvent>> {
                     Move::HoldDir([0.0, -1.0], [33.000, 4.002, -128.083]),
                     Move::Log("Leave dungeon"),
                     // TODO(orkaboy): Failed to jump?
-                    Move::Interact(33.000, -6.990, -130.200),
-                    Move::AwaitCutscene(Box::new(Move::HoldDir([0.0, -1.0], [0.0, 0.0, 0.0]))),
+                    Move::AwaitCutscene(Box::new(Move::Interact(33.000, -6.990, -130.200))),
                     // Cutscene here leaving Mooncradle
                     Move::Log("To Forbidden Cave"),
                     Move::ToWorld(109.500, 2.002, 64.000),
