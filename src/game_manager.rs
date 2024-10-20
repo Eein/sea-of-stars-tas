@@ -51,6 +51,10 @@ impl GameManager {
         self.paused
     }
 
+    pub fn advance_to_checkpoint(&mut self, context: &mut GameState, checkpoint: &str) -> bool {
+        self.sequencer.advance_to_checkpoint(context, checkpoint)
+    }
+
     pub fn run(&mut self, context: &mut GameState) -> bool {
         let dt = self.timer.mark_secs();
 

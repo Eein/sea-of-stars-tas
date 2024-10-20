@@ -5,11 +5,13 @@ use crate::{game_manager::GameManager, state::GameState};
 pub const NAME: &str = "Main Helper";
 
 #[derive(Debug)]
-pub struct MainHelper;
+pub struct MainHelper {
+    checkpoint: Option<String>,
+}
 
 impl MainHelper {
     pub fn create() -> Box<Self> {
-        Box::new(Self)
+        Box::new(Self { checkpoint: None })
     }
 }
 
@@ -41,11 +43,51 @@ impl GuiHelper for MainHelper {
             }
         }
 
+        egui::ComboBox::from_label("Checkpoint")
+            .selected_text(format!("{:?}", self.checkpoint))
+            .show_ui(ui, |ui| {
+                ui.selectable_value(&mut self.checkpoint, None, "New Game");
+                ui.selectable_value(
+                    &mut self.checkpoint,
+                    Some("intro_mooncradle".to_owned()),
+                    "Mooncradle Intro Cavern",
+                );
+                ui.selectable_value(
+                    &mut self.checkpoint,
+                    Some("intro_dorms".to_owned()),
+                    "Zenith Academy Dorms",
+                );
+                ui.selectable_value(
+                    &mut self.checkpoint,
+                    Some("intro_dorms2".to_owned()),
+                    "Zenith Academy Dorms 2",
+                );
+                ui.selectable_value(
+                    &mut self.checkpoint,
+                    Some("forbidden_cave".to_owned()),
+                    "Outside Forbidden Cavern",
+                );
+                ui.selectable_value(
+                    &mut self.checkpoint,
+                    Some("forbidden_cave2".to_owned()),
+                    "Before Bosslug",
+                );
+                // TODO: More checkpoints
+                ui.selectable_value(
+                    &mut self.checkpoint,
+                    Some("elder_mist_boss2".to_owned()),
+                    "After Elder Mist Boss-fight",
+                );
+            });
+
         if ui
             .add_enabled(!running, egui::Button::new("Start TAS"))
             .clicked()
         {
-            let gm = tas::create_tas();
+            let mut gm = tas::create_tas();
+            if let Some(checkpoint) = &self.checkpoint {
+                gm.advance_to_checkpoint(game_state, checkpoint);
+            }
             *game_manager = Some(gm);
         }
     }
