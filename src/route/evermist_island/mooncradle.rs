@@ -283,7 +283,6 @@ pub fn flashback() -> Box<dyn Node<GameState, GameEvent>> {
                     Move::ToWorld(109.500, 2.002, 64.000),
                     Move::ToWorld(108.000, 2.002, 64.000),
                     Move::ToWorld(108.000, 2.002, 66.500),
-                    // TODO(orkaboy): Failed to enter? Need to hold button for longer?
                     Move::Confirm,
                 ],
             ),

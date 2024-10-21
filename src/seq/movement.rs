@@ -253,11 +253,13 @@ impl Node<GameState, GameEvent> for SeqMove {
         match event {
             GameEvent::Combat => {
                 if let Move::AwaitCombat(_) = coord {
+                    self.btn = None;
                     self.step += 1;
                 }
             }
             GameEvent::Cutscene => {
                 if let Move::AwaitCutscene(_) = coord {
+                    self.btn = None;
                     self.step += 1;
                 }
             }
