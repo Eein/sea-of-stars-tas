@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter, Result};
+
 use crate::control::SosAction;
 use crate::seq::button::ButtonPress;
 use crate::state::{GameEvent, GameState};
@@ -24,6 +26,30 @@ pub enum Move {
     ChangeTime(f32),          // 0.0-24.0
     AwaitCombat(Box<Move>),   // Break inner Move when combat is done
     AwaitCutscene(Box<Move>), // Break inner Move when cutscene is done
+}
+
+impl Display for Move {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        match self {
+            Move::To(x, y, z) => write!(f, "Move::To({:.3}, {:.3}, {:.3})", x, y, z),
+            Move::ToWorld(x, y, z) => write!(f, "Move::ToWorld({:.3}, {:.3}, {:.3})", x, y, z),
+            Move::Towards(target, anchor, mash) => {
+                write!(f, "Move::Towards({:#?}, {:#?}, {})", target, anchor, mash)
+            }
+            Move::Climb(x, y, z) => write!(f, "Move::Climb({:.3}, {:.3}, {:.3})", x, y, z),
+            Move::Interact(x, y, z) => write!(f, "Move::Interact({:.3}, {:.3}, {:.3})", x, y, z),
+            Move::WaitFor(duration) => write!(f, "Move::WaitFor({:.3})", duration),
+            Move::HoldDir(joy, target) => write!(f, "Move::HoldDir({:#?}, {:#?})", joy, target),
+            Move::HoldDirWorld(joy, target) => {
+                write!(f, "Move::HoldDirWorld({:#?}, {:#?})", joy, target)
+            }
+            Move::Confirm => write!(f, "Move::Confirm"),
+            Move::Log(text) => write!(f, "Move::Log(\"{}\")", text),
+            Move::ChangeTime(time) => write!(f, "Move::ChangeTime({:.3})", time),
+            Move::AwaitCombat(inner) => write!(f, "Move::AwaitCombat(Box::new({}))", inner),
+            Move::AwaitCutscene(inner) => write!(f, "Move::AwaitCutscene(Box::new({}))", inner),
+        }
+    }
 }
 
 pub struct SeqMove {
