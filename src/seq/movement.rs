@@ -39,9 +39,9 @@ impl Display for Move {
             Move::Climb(x, y, z) => write!(f, "Move::Climb({:.3}, {:.3}, {:.3})", x, y, z),
             Move::Interact(x, y, z) => write!(f, "Move::Interact({:.3}, {:.3}, {:.3})", x, y, z),
             Move::WaitFor(duration) => write!(f, "Move::WaitFor({:.3})", duration),
-            Move::HoldDir(joy, target) => write!(f, "Move::HoldDir({:#?}, {:#?})", joy, target),
+            Move::HoldDir(joy, target) => write!(f, "Move::HoldDir({:?}, {:?})", joy, target),
             Move::HoldDirWorld(joy, target) => {
-                write!(f, "Move::HoldDirWorld({:#?}, {:#?})", joy, target)
+                write!(f, "Move::HoldDirWorld({:?}, {:?})", joy, target)
             }
             Move::Confirm => write!(f, "Move::Confirm"),
             Move::Log(text) => write!(f, "Move::Log(\"{}\")", text),
