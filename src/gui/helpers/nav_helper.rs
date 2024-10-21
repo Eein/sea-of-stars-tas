@@ -15,7 +15,7 @@ impl NavHelper {
     pub fn create() -> Box<Self> {
         Box::new(Self {
             precision: 0.200,
-            target_coordinates: Vector3::new(0.0, 0.0, 0.0),
+            target_coordinates: Vector3::default(),
             run_enabled: true,
         })
     }
@@ -47,13 +47,10 @@ impl GuiHelper for NavHelper {
                 ui.label(format!("z: {}", pos_z));
 
                 if ui.button("Set as target").clicked() {
-                    self.target_coordinates =
-                        Vector3::new(position.get_x(), position.get_y(), position.get_z())
+                    self.target_coordinates = position;
                 };
-                if ui.button("Copy to clipboard NOT IMPLEMENTED").clicked() {
-                    let text = "YOU COPIED THIS TEXT FROM THE CLIPBOARD";
-                    ui.output_mut(|o| o.copied_text = String::from(text));
-                    // nothing yet
+                if ui.button("Copy to clipboard").clicked() {
+                    ui.output_mut(|o| o.copied_text = format!("{}, {}, {}", pos_x, pos_y, pos_z));
                 };
             });
 
@@ -75,9 +72,8 @@ impl GuiHelper for NavHelper {
                     format!("Distance to target {:.3}", distance_to_target);
                 ui.label(distance_to_target_string);
 
-                if ui.button("Copy to clipboard NOT IMPLEMENTED").clicked() {
-                    let text = "YOU COPIED THIS TEXT FROM THE CLIPBOARD";
-                    ui.output_mut(|o| o.copied_text = String::from(text));
+                if ui.button("Copy to clipboard").clicked() {
+                    ui.output_mut(|o| o.copied_text = format!("{}, {}, {}", pos_x, pos_y, pos_z));
                 };
             });
         ui.separator();
@@ -103,10 +99,8 @@ impl GuiHelper for NavHelper {
                 ui.label(format!("y: {}", pos_y));
                 ui.label(format!("z: {}", pos_z));
 
-                if ui.button("Copy to clipboard NOT IMPLEMENTED").clicked() {
-                    let text = "YOU COPIED THIS TEXT FROM THE CLIPBOARD";
-                    ui.output_mut(|o| o.copied_text = String::from(text));
-                    // nothing yet
+                if ui.button("Copy to clipboard").clicked() {
+                    ui.output_mut(|o| o.copied_text = format!("{}, {}, {}", pos_x, pos_y, pos_z));
                 };
             });
         egui::CollapsingHeader::new("Boat Coordinates")
@@ -121,9 +115,7 @@ impl GuiHelper for NavHelper {
                 ui.label(format!("z: {}", pos_z));
 
                 if ui.button("Copy to clipboard").clicked() {
-                    let text = "YOU COPIED THIS TEXT FROM THE CLIPBOARD";
-                    ui.output_mut(|o| o.copied_text = String::from(text));
-                    // nothing yet
+                    ui.output_mut(|o| o.copied_text = format!("{}, {}, {}", pos_x, pos_y, pos_z));
                 };
                 ui.label(format!("Rot (yaw): {:?}", &boat_manager.rotation.to_yaw()));
                 ui.label(format!(
