@@ -4,6 +4,7 @@ use std::fmt::Display;
 use joystick::common::{JoystickBtnInterface, JoystickInterface};
 use seq::prelude::*;
 
+use super::level_up::LevelUpManager;
 use crate::seq::button::ButtonPress;
 use crate::{
     control::SosAction,
@@ -16,10 +17,12 @@ enum GameFsm {
     #[default]
     Route,
     Cutscene,
+    LevelUp,
 }
 
 pub struct GameManager {
     sequencer: Sequencer<GameState, GameEvent>,
+    level_up: Option<LevelUpManager>,
     fsm: GameFsm,
     btn: ButtonPress,
     timer: Timer,
@@ -40,6 +43,7 @@ impl GameManager {
             btn: ButtonPress::default(),
             timer: delta::Timer::new(),
             paused: false,
+            level_up: None,
         }
     }
 
@@ -65,6 +69,7 @@ impl GameManager {
 
         let cmd = &context.memory_managers.combat_manager.data;
         let csmd = &context.memory_managers.cutscene_manager.data;
+        let lumd = &context.memory_managers.level_up_manager.data;
 
         // TODO(orkaboy): detect game over?
         // TODO(orkaboy): detect level up screen
@@ -72,6 +77,8 @@ impl GameManager {
             // Stop whatever we're doing and enter combat controller
             context.gamepad.release_all();
             self.fsm = GameFsm::Combat;
+        } else if lumd.active {
+            self.fsm = GameFsm::LevelUp;
         }
 
         match self.fsm {
@@ -91,6 +98,17 @@ impl GameManager {
                     self.fsm = GameFsm::Route;
                     // Signal return to sequencer
                     self.sequencer.on_event(context, &GameEvent::Combat);
+                }
+            }
+            GameFsm::LevelUp => {
+                if let Some(level_up) = self.level_up.as_mut() {
+                    if level_up.update(context, dt) {
+                        self.level_up = None;
+                        self.fsm = GameFsm::Route;
+                    }
+                } else {
+                    context.gamepad.release_all();
+                    self.level_up = Some(LevelUpManager::default());
                 }
             }
             GameFsm::Route => {
