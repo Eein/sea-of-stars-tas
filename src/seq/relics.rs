@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::control::SosAction;
 use crate::memory::title_sequence_manager::{RelicButton, TitleSequenceManagerData};
 use crate::state::{GameEvent, GameState};
@@ -7,7 +9,7 @@ use seq::prelude::*;
 
 use crate::seq::button::ButtonPress;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 enum RelicScreenFSM {
     #[default]
     Eval,
@@ -83,6 +85,12 @@ impl SeqRelicList {
             self.first = Some(cur_relic.to_owned());
         }
         false
+    }
+}
+
+impl Display for SeqRelicList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "RelicList({:?})", self.fsm)
     }
 }
 

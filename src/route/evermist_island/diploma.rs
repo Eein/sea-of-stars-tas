@@ -4,7 +4,9 @@ use crate::state::{GameEvent, GameState};
 use joystick::common::JoystickBtnInterface;
 use joystick::common::JoystickInterface;
 use seq::prelude::*;
+use std::fmt::Display;
 
+#[derive(Debug)]
 enum DiplomaFsm {
     Wait(f64),
     TapRight,
@@ -26,6 +28,12 @@ impl SeqDiploma {
 }
 
 const TIMEOUT: f64 = 3.0;
+
+impl Display for SeqDiploma {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Diploma({:?})", self.fsm)
+    }
+}
 
 impl Node<GameState, GameEvent> for SeqDiploma {
     fn execute(&mut self, state: &mut GameState, delta: f64) -> bool {

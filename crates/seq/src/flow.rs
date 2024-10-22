@@ -1,6 +1,7 @@
+use std::fmt::Display;
+
 use crate::Node;
 use log::{debug, info};
-use std::fmt::Display;
 
 pub struct SeqIf<State, Event, Cond: SeqCondition<State>> {
     name: String,
@@ -27,6 +28,25 @@ impl<State, Event, Cond: SeqCondition<State>> SeqIf<State, Event, Cond> {
             selection: false,
             default_selection,
         })
+    }
+}
+
+impl<State, Event, Cond: SeqCondition<State>> Display for SeqIf<State, Event, Cond> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut ret = format!("SeqIf({}), selecting path: {}", self.name, self.selection);
+        match self.selection {
+            true => {
+                if let Some(child) = &self.on_true {
+                    ret = format!("{}\n-> {}", ret, child);
+                }
+            }
+            false => {
+                if let Some(child) = &self.on_false {
+                    ret = format!("{}\n-> {}", ret, child);
+                }
+            }
+        }
+        write!(f, "{}", ret)
     }
 }
 
@@ -153,21 +173,19 @@ impl<State: Default, Event: Default> SeqList<State, Event> {
     }
 }
 
-impl<State, Event> Display for SeqList<State, Event> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}({}/{})",
-            self.name,
-            self.step + 1,
-            self.children.len()
-        )
-    }
-}
-
 impl<State, Event> SeqList<State, Event> {
     fn in_bounds(&self) -> bool {
         self.step < self.children.len()
+    }
+}
+
+impl<State, Event> Display for SeqList<State, Event> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut ret = format!("{}({}/{})", self.name, self.step + 1, self.children.len());
+        if self.in_bounds() {
+            ret = format!("{}\n-> {}", ret, self.children[self.step]);
+        }
+        write!(f, "{}", ret)
     }
 }
 
@@ -251,5 +269,11 @@ impl<State, Event> Node<State, Event> for SeqCheckpoint {
 
     fn advance_to_checkpoint(&mut self, _state: &mut State, checkpoint: &str) -> bool {
         self.checkpoint_name == checkpoint
+    }
+}
+
+impl Display for SeqCheckpoint {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Checkpoint({})", self.checkpoint_name)
     }
 }

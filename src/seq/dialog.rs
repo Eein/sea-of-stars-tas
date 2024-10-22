@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::control::SosAction;
 use crate::seq::button::ButtonPress;
 use crate::state::{GameEvent, GameState};
@@ -5,7 +7,7 @@ use crate::state::{GameEvent, GameState};
 use joystick::prelude::*;
 use seq::prelude::*;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 enum SelectFsm {
     #[default]
     Approach,
@@ -38,6 +40,12 @@ impl SeqSelectOption {
 }
 
 const HOLD_TIME: f64 = 0.3;
+
+impl Display for SeqSelectOption {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "SelectOption({:?})", self.fsm)
+    }
+}
 
 impl Node<GameState, GameEvent> for SeqSelectOption {
     fn enter(&mut self, state: &mut GameState) {

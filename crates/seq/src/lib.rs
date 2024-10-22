@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 pub mod prelude {
     pub use crate::flow::*;
     pub use crate::logging::*;
@@ -11,7 +13,7 @@ pub mod logging;
 pub mod sequencer;
 pub mod wait;
 
-pub trait Node<State, Event> {
+pub trait Node<State, Event>: Display {
     fn execute(&mut self, _state: &mut State, _delta: f64) -> bool {
         true
     }

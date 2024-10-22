@@ -32,15 +32,6 @@ impl GuiHelper for MainHelper {
         let mut running = false;
         if let Some(gm) = game_manager {
             running = gm.is_running();
-            if running {
-                ui.label(format!("FSM: {}", gm));
-            }
-
-            let paused = gm.is_paused();
-            let text = if paused { "Resume" } else { "Pause" };
-            if ui.button(text).clicked() {
-                gm.pause(!paused);
-            }
         }
 
         egui::ComboBox::from_label("Checkpoint")
@@ -89,6 +80,20 @@ impl GuiHelper for MainHelper {
                 gm.advance_to_checkpoint(game_state, checkpoint);
             }
             *game_manager = Some(gm);
+        }
+
+        if let Some(gm) = game_manager {
+            ui.separator();
+
+            let paused = gm.is_paused();
+            let text = if paused { "Resume" } else { "Pause" };
+            if ui.button(text).clicked() {
+                gm.pause(!paused);
+            }
+
+            if running {
+                ui.label(format!("{}", gm));
+            }
         }
     }
 }

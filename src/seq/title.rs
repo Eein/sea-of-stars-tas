@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::control::SosAction;
 use crate::memory::title_sequence_manager::TitleMenuOption;
 use crate::seq::button::ButtonPress;
@@ -57,6 +59,7 @@ impl KonamiCode {
     }
 }
 
+#[derive(Debug)]
 enum TitleScreenFSM {
     Countdown,
     Konami,
@@ -86,6 +89,12 @@ impl SeqTitleScreen {
             kc: KonamiCode::default(),
             timer: COUNTDOWN_TIMEOUT,
         })
+    }
+}
+
+impl Display for SeqTitleScreen {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "TitleScreen({:?})", self.fsm)
     }
 }
 

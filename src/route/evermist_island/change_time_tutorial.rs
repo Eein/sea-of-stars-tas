@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::control::SosAction;
 use crate::memory::player_party_manager::PlayerMovementState;
 use crate::seq::button::ButtonPress;
@@ -18,6 +20,12 @@ impl SeqChangeTimeTutorial {
             btn: ButtonPress::new(SosAction::Confirm),
             right_time: false,
         })
+    }
+}
+
+impl Display for SeqChangeTimeTutorial {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "ChangeTimeTutorial")
     }
 }
 

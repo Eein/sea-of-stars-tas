@@ -264,6 +264,21 @@ impl SeqMove {
     }
 }
 
+impl Display for SeqMove {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut ret = format!(
+            "SeqMove({}) [{}/{}]",
+            self.name,
+            self.step + 1,
+            self.coords.len()
+        );
+        if self.step < self.coords.len() {
+            ret = format!("{}\n-> {}", ret, self.coords[self.step]);
+        }
+        write!(f, "{}", ret)
+    }
+}
+
 impl Node<GameState, GameEvent> for SeqMove {
     fn enter(&mut self, state: &mut GameState) {
         state.gamepad.release_all();
