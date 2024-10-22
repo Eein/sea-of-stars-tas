@@ -4,7 +4,8 @@ use crate::state::StateContext;
 use data::prelude::{armor, trinkets, weapons, PlayerPartyCharacter};
 use data::Item;
 use log::info;
-use memory::game_engine::il2cpp::unity_list::{UnityItem, UnityList};
+use memory::game_engine::il2cpp::unity_list::*;
+use memory::game_engine::il2cpp::unity_serializable_dictionary::*;
 use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
 use memory::process::Process;
@@ -27,7 +28,7 @@ pub enum CombatControllerType {
     TimedHitsTutorial,
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub enum CombatDamageType {
     #[default]
     None = 0,
@@ -98,7 +99,7 @@ pub struct CombatPlayer {
     // pub equipped_group_trinket: Option<Item>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Default)]
 pub struct CombatEnemy {
     pub current_hp: u32,
     pub unique_id: String,
@@ -112,6 +113,13 @@ pub struct CombatEnemy {
     pub turns_to_action: u8,
     pub total_spell_locks: u8,
     pub spell_locks: UnityList<CombatDamageType>,
+    pub damage_type_modifiers:
+        UnitySerializableDictionary<DamageTypeModifierKey, DamageTypeModifierValue>,
+    pub damage_type_modifiers_override:
+        UnitySerializableDictionary<DamageTypeModifierKey, DamageTypeModifierValue>,
+    pub fleshmancer_minion: bool,
+    pub level: u32,
+    pub live_mana_spawn_quantity: u32,
 }
 
 #[derive(Default, Debug)]
@@ -344,6 +352,35 @@ impl UnityItem for CombatEnemy {
             };
         }
 
+        let damage_type_modifiers_ptr =
+            process.read_pointer_path::<u64>(item_ptr, &[0x80, 0x108, 0x38])?;
+        let damage_type_modifiers = UnitySerializableDictionary::<
+            DamageTypeModifierKey,
+            DamageTypeModifierValue,
+        >::read(
+            process, damage_type_modifiers_ptr, 0x10, 0x8, 0xC
+        )?;
+
+        let damage_type_modifiers_override_ptr =
+            process.read_pointer_path::<u64>(item_ptr, &[0x80, 0x108, 0x40])?;
+        let damage_type_modifiers_override =
+            UnitySerializableDictionary::<DamageTypeModifierKey, DamageTypeModifierValue>::read(
+                process,
+                damage_type_modifiers_override_ptr,
+                0x10,
+                0x8,
+                0xC,
+            )?;
+
+        let live_mana_spawn_quantity = process.read_pointer::<u32>(enemy_data + 0x58)?;
+        let level = process.read_pointer::<u32>(enemy_data + 0x5C)?;
+        let fleshmancer_minion = if let Ok(minion) = process.read_pointer::<u32>(enemy_data + 0x60)
+        {
+            matches!(minion, 1)
+        } else {
+            false
+        };
+
         Ok(CombatEnemy {
             guid,
             unique_id,
@@ -357,6 +394,11 @@ impl UnityItem for CombatEnemy {
             turns_to_action,
             total_spell_locks,
             spell_locks,
+            damage_type_modifiers,
+            damage_type_modifiers_override,
+            fleshmancer_minion,
+            level,
+            live_mana_spawn_quantity,
         })
     }
 }
@@ -525,5 +567,43 @@ impl UnityItem for CombatDamageType {
     fn read(process: &Process, item_ptr: u64) -> Result<Self, MemoryError> {
         let lock = process.read_pointer::<u32>(item_ptr + 0x40)?;
         Ok(CombatDamageType::from_u32(lock))
+    }
+}
+
+#[derive(Default, Debug, PartialEq, Eq, Hash)]
+pub struct DamageTypeModifierKey {
+    pub key: CombatDamageType,
+}
+
+#[derive(Default, Debug)]
+pub struct DamageTypeModifierValue {
+    pub value: f32,
+}
+
+impl PartialEq for DamageTypeModifierValue {
+    fn eq(&self, other: &Self) -> bool {
+        (self.value - other.value).abs() < 0.001
+    }
+}
+
+impl UnitySerializableDictKey for DamageTypeModifierKey {
+    fn read(process: &Process, item_ptr: u64) -> Result<Self, MemoryError> {
+        if let Ok(damage_type) = process.read::<u32>(item_ptr) {
+            Ok(DamageTypeModifierKey {
+                key: CombatDamageType::from_u32(damage_type),
+            })
+        } else {
+            Err(MemoryError::ReadError)
+        }
+    }
+}
+
+impl UnitySerializableDictValue for DamageTypeModifierValue {
+    fn read(process: &Process, item_ptr: u64) -> Result<Self, MemoryError> {
+        if let Ok(value) = process.read::<f32>(item_ptr) {
+            Ok(DamageTypeModifierValue { value })
+        } else {
+            Err(MemoryError::ReadError)
+        }
     }
 }

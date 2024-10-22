@@ -46,6 +46,9 @@ const DICTIONARY_OFFSET: u64 = 0x20;
 ///        0x28 key -> ptr
 ///        0x29 value -> ptr
 ///  ```
+///
+///  Note:
+///  Implementors will receive the pointer value, and must follow the pointer if desired.
 
 impl<K: UnitySerializableDictKey + Eq + Hash, V: UnitySerializableDictValue>
     UnitySerializableDictionary<K, V>
@@ -60,6 +63,10 @@ impl<K: UnitySerializableDictKey + Eq + Hash, V: UnitySerializableDictValue>
         let mut items = IndexMap::<K, V>::new();
         let mut fields_base = ITEMS_0_INDEX_BASE;
 
+        // If the root address is 0x0, then we dont have any items.
+        if addr == 0x0 {
+            return Ok(Self { count: 0, items });
+        }
         // The root items pointer
         let items_ptr =
             process.read_pointer_path::<u64>(addr, &[DICTIONARY_OFFSET, ENTRIES_OFFSET])?;
@@ -80,9 +87,13 @@ impl<K: UnitySerializableDictKey + Eq + Hash, V: UnitySerializableDictValue>
                     break;
                 }
 
-                if let Ok(key_ptr) = process.read_pointer::<u64>(item_base + key_offset) {
+                if let Ok(key_ptr) =
+                    process.read_pointer_path_without_read(item_base + key_offset, &[0x0])
+                {
                     let key = K::read(process, key_ptr)?;
-                    if let Ok(value_ptr) = process.read_pointer::<u64>(item_base + value_offset) {
+                    if let Ok(value_ptr) =
+                        process.read_pointer_path_without_read(item_base + value_offset, &[0x0])
+                    {
                         let value = V::read(process, value_ptr)?;
                         items.insert(key, value);
                     }

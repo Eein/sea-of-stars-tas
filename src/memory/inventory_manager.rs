@@ -88,7 +88,7 @@ pub struct InventoryItemQuantity(pub u64);
 
 impl UnitySerializableDictKey for InventoryItemName {
     fn read(process: &Process, item_ptr: u64) -> Result<Self, MemoryError> {
-        if let Ok(guid) = process.read::<ArrayWString<128>>(item_ptr + 0x14) {
+        if let Ok(guid) = process.read_pointer_path::<ArrayWString<128>>(item_ptr, &[0x0, 0x14]) {
             match String::from_utf16(guid.as_slice()) {
                 Ok(value) => match all_items().get(value.as_str()) {
                     Some(item) => Ok(InventoryItemName(item.name.to_string())),
@@ -103,8 +103,11 @@ impl UnitySerializableDictKey for InventoryItemName {
 }
 
 impl UnitySerializableDictValue for InventoryItemQuantity {
-    fn read(_process: &Process, item_ptr: u64) -> Result<Self, MemoryError> {
-        // For this, the value is simply stored at the pointer
-        Ok(InventoryItemQuantity(item_ptr))
+    fn read(process: &Process, item_ptr: u64) -> Result<Self, MemoryError> {
+        if let Ok(value) = process.read_pointer_path::<u64>(item_ptr, &[0x0]) {
+            Ok(InventoryItemQuantity(value))
+        } else {
+            Err(MemoryError::ReadError)
+        }
     }
 }
