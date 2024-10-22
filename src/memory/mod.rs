@@ -4,6 +4,7 @@ pub mod currency_manager;
 pub mod cutscene_manager;
 pub mod inventory_manager;
 pub mod level_manager;
+pub mod level_up_manager;
 pub mod memory_context;
 pub mod new_dialog_manager;
 pub mod player_party_manager;
@@ -22,6 +23,7 @@ use currency_manager::CurrencyManagerData;
 use cutscene_manager::CutsceneManagerData;
 use inventory_manager::InventoryManagerData;
 use level_manager::LevelManagerData;
+use level_up_manager::LevelUpManagerData;
 use memory::memory_manager::il2cpp::{UnityMemoryManagement, UnityMemoryManager};
 use memory::process::MemoryError;
 use new_dialog_manager::NewDialogManagerData;
@@ -59,6 +61,7 @@ pub struct MemoryManagers {
     pub shop_manager: MemoryManager<ShopManagerData>,
     pub speedrun_manager: MemoryManager<SpeedrunManagerData>,
     pub inventory_manager: MemoryManager<InventoryManagerData>,
+    pub level_up_manager: MemoryManager<LevelUpManagerData>,
 }
 
 impl MemoryManagers {
@@ -76,6 +79,7 @@ impl MemoryManagers {
             self.shop_manager.update(ctx);
             self.speedrun_manager.update(ctx);
             self.inventory_manager.update(ctx);
+            self.level_up_manager.update(ctx);
         }
     }
     pub fn ready_for_updates(&mut self, ctx: &StateContext) -> bool {
