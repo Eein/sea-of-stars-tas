@@ -9,13 +9,16 @@ pub struct UnitySerializableDictionary<K: UnitySerializableDictKey, V: UnitySeri
 }
 
 const ENTRIES_OFFSET: u64 = 0x18;
-const OFFSET: u64 = 0x18;
-const ITEMS_0_INDEX_BASE: u64 = 0x20; // Skipping first metadata
-const KEY_OFFSET: u64 = 0x8;
-const VALUE_OFFSET: u64 = 0x10;
+const ITEMS_0_INDEX_BASE: u64 = 0x20;
 const DICTIONARY_OFFSET: u64 = 0x20;
 
 ///  UnitySerializableDictionary are laid out in the following format:
+///
+///  Example of [packed struct header, key, value]
+///  In this case: slot[]<key, value>
+///  ITEM_OFFSET: u64 = 0x18;
+///  KEY_OFFSET: u64 = 0x8;
+///  VALUE_OFFSET: u64 = 0x10;
 ///  ```
 ///  field -> ptr
 ///    0x10 keys (unused)
@@ -23,18 +26,37 @@ const DICTIONARY_OFFSET: u64 = 0x20;
 ///    0x20 dictionary -> ptr
 ///      0x10 _buckets (unused)
 ///      0x18 _entries
-///        ... header/metadata
 ///        0x20 metadata -> (unused)
 ///        0x28 key -> ptr
-///          0x14 first byte of key if is struct
 ///        0x30 value -> ptr
 ///  ```
 ///
+///  Example of packed struct [4byte Enum, 4byte float]
+///  ITEM_OFFSET: u64 = 0x10;
+///  KEY_OFFSET: u64 = 0x8;
+///  VALUE_OFFSET: u64 = 0x10;
+///  ```
+///  field -> ptr
+///    0x10 keys (unused)
+///    0x18 values (unused)
+///    0x20 dictionary -> ptr
+///      0x10 _buckets (unused)
+///      0x18 _entries
+///        0x20 metadata -> (unused)
+///        0x28 key -> ptr
+///        0x29 value -> ptr
+///  ```
 
 impl<K: UnitySerializableDictKey + Eq + Hash, V: UnitySerializableDictValue>
     UnitySerializableDictionary<K, V>
 {
-    pub fn read(process: &Process, addr: u64) -> Result<Self, MemoryError> {
+    pub fn read(
+        process: &Process,
+        addr: u64,
+        item_offset: u64,
+        key_offset: u64,
+        value_offset: u64,
+    ) -> Result<Self, MemoryError> {
         let mut items = IndexMap::<K, V>::new();
         let mut fields_base = ITEMS_0_INDEX_BASE;
 
@@ -58,16 +80,16 @@ impl<K: UnitySerializableDictKey + Eq + Hash, V: UnitySerializableDictValue>
                     break;
                 }
 
-                if let Ok(key_ptr) = process.read_pointer::<u64>(item_base + KEY_OFFSET) {
+                if let Ok(key_ptr) = process.read_pointer::<u64>(item_base + key_offset) {
                     let key = K::read(process, key_ptr)?;
-                    if let Ok(value_ptr) = process.read_pointer::<u64>(item_base + VALUE_OFFSET) {
+                    if let Ok(value_ptr) = process.read_pointer::<u64>(item_base + value_offset) {
                         let value = V::read(process, value_ptr)?;
                         items.insert(key, value);
                     }
                 }
             }
 
-            fields_base += OFFSET;
+            fields_base += item_offset;
         }
 
         Ok(Self {
