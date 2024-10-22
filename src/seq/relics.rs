@@ -7,7 +7,7 @@ use seq::prelude::*;
 
 use crate::seq::button::ButtonPress;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 enum RelicScreenFSM {
     #[default]
     Eval,
@@ -87,6 +87,10 @@ impl SeqRelicList {
 }
 
 impl Node<GameState, GameEvent> for SeqRelicList {
+    fn print(&self) -> String {
+        format!("RelicList({:?})", self.fsm)
+    }
+
     fn enter(&mut self, state: &mut GameState) {
         state.gamepad.release_all();
     }

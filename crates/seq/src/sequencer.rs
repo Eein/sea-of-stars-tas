@@ -1,9 +1,16 @@
 use crate::Node;
+use std::fmt::Display;
 
 pub struct Sequencer<T, E> {
     root: Box<dyn Node<T, E>>,
     initialized: bool,
     finished: bool,
+}
+
+impl<T, E> Display for Sequencer<T, E> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Root: {}", self.root)
+    }
 }
 
 impl<T, E> Sequencer<T, E> {

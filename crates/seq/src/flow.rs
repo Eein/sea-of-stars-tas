@@ -1,6 +1,5 @@
 use crate::Node;
 use log::{debug, info};
-use std::fmt::Display;
 
 pub struct SeqIf<State, Event, Cond: SeqCondition<State>> {
     name: String,
@@ -31,6 +30,22 @@ impl<State, Event, Cond: SeqCondition<State>> SeqIf<State, Event, Cond> {
 }
 
 impl<State, Event, Cond: SeqCondition<State>> Node<State, Event> for SeqIf<State, Event, Cond> {
+    fn print(&self) -> String {
+        let mut ret = format!("SeqIf({}), selecting path: {}", self.name, self.selection);
+        match self.selection {
+            true => {
+                if let Some(child) = &self.on_true {
+                    ret = format!("{}\n-> {}", ret, child.print());
+                }
+            }
+            false => {
+                if let Some(child) = &self.on_false {
+                    ret = format!("{}\n-> {}", ret, child.print());
+                }
+            }
+        }
+        ret
+    }
     // When first entering the node, evaluate the conditional
     fn enter(&mut self, state: &mut State) {
         self.selection = self.condition.evaluate(state);
@@ -153,18 +168,6 @@ impl<State: Default, Event: Default> SeqList<State, Event> {
     }
 }
 
-impl<State, Event> Display for SeqList<State, Event> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}({}/{})",
-            self.name,
-            self.step + 1,
-            self.children.len()
-        )
-    }
-}
-
 impl<State, Event> SeqList<State, Event> {
     fn in_bounds(&self) -> bool {
         self.step < self.children.len()
@@ -182,6 +185,14 @@ impl<State, Event> Node<State, Event> for SeqList<State, Event> {
         if self.in_bounds() {
             self.children[self.step].enter(state);
         }
+    }
+
+    fn print(&self) -> String {
+        let mut ret = format!("{}({}/{})", self.name, self.step + 1, self.children.len());
+        if self.in_bounds() {
+            ret = format!("{}\n-> {}", ret, self.children[self.step].print());
+        }
+        ret
     }
 
     fn exit(&self, _state: &mut State) {

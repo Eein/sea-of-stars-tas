@@ -265,6 +265,19 @@ impl SeqMove {
 }
 
 impl Node<GameState, GameEvent> for SeqMove {
+    fn print(&self) -> String {
+        let mut ret = format!(
+            "SeqMove({}) [{}/{}]",
+            self.name,
+            self.step + 1,
+            self.coords.len()
+        );
+        if self.step < self.coords.len() {
+            ret = format!("{}\n-> {}", ret, self.coords[self.step]);
+        }
+        ret
+    }
+
     fn enter(&mut self, state: &mut GameState) {
         state.gamepad.release_all();
     }

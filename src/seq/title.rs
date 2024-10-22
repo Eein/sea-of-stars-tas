@@ -57,6 +57,7 @@ impl KonamiCode {
     }
 }
 
+#[derive(Debug)]
 enum TitleScreenFSM {
     Countdown,
     Konami,
@@ -90,6 +91,10 @@ impl SeqTitleScreen {
 }
 
 impl Node<GameState, GameEvent> for SeqTitleScreen {
+    fn print(&self) -> String {
+        format!("TitleScreen({:?})", self.fsm)
+    }
+
     fn enter(&mut self, state: &mut GameState) {
         state.gamepad.release_all();
         info!("Starting TAS! Focus the Sea of Stars window before the timer expires.");

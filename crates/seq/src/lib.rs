@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 pub mod prelude {
     pub use crate::flow::*;
     pub use crate::logging::*;
@@ -29,5 +31,14 @@ pub trait Node<State, Event> {
     }
     fn cutscene_control(&self) -> bool {
         false
+    }
+    fn print(&self) -> String {
+        String::new()
+    }
+}
+
+impl<State, Event> Display for dyn Node<State, Event> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Root: {}", self.print())
     }
 }

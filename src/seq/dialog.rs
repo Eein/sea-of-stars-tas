@@ -5,7 +5,7 @@ use crate::state::{GameEvent, GameState};
 use joystick::prelude::*;
 use seq::prelude::*;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 enum SelectFsm {
     #[default]
     Approach,
@@ -40,6 +40,10 @@ impl SeqSelectOption {
 const HOLD_TIME: f64 = 0.3;
 
 impl Node<GameState, GameEvent> for SeqSelectOption {
+    fn print(&self) -> String {
+        format!("SelectOption({:?})", self.fsm)
+    }
+
     fn enter(&mut self, state: &mut GameState) {
         state.gamepad.release_all();
     }
