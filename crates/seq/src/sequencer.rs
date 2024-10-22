@@ -62,6 +62,7 @@ impl<T, E> Sequencer<T, E> {
 
 #[cfg(test)]
 mod tests {
+    use std::fmt::Display;
     use crate::flow::{SeqCheckpoint, SeqCondition, SeqIf, SeqList};
     use crate::logging::SeqLog;
     use crate::sequencer::Sequencer;
@@ -95,6 +96,12 @@ mod tests {
         }
     }
 
+    impl Display for SeqTest {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "Test({})", self.value)
+        }
+    }
+
     // Example node
     #[derive(Default)]
     struct SeqAssert {
@@ -113,6 +120,12 @@ mod tests {
         }
     }
 
+    impl Display for SeqAssert {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "Assert({})", self.value)
+        }
+    }
+
     // Example node
     #[derive(Default)]
     struct SeqSetter {
@@ -128,6 +141,12 @@ mod tests {
     impl Node<State, Event> for SeqSetter {
         fn enter(&mut self, state: &mut State) {
             state.value = self.value;
+        }
+    }
+
+    impl Display for SeqSetter {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "Setter({})", self.value)
         }
     }
 

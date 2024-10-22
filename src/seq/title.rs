@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::control::SosAction;
 use crate::memory::title_sequence_manager::TitleMenuOption;
 use crate::seq::button::ButtonPress;
@@ -90,11 +92,13 @@ impl SeqTitleScreen {
     }
 }
 
-impl Node<GameState, GameEvent> for SeqTitleScreen {
-    fn print(&self) -> String {
-        format!("TitleScreen({:?})", self.fsm)
+impl Display for SeqTitleScreen {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "TitleScreen({:?})", self.fsm)
     }
+}
 
+impl Node<GameState, GameEvent> for SeqTitleScreen {
     fn enter(&mut self, state: &mut GameState) {
         state.gamepad.release_all();
         info!("Starting TAS! Focus the Sea of Stars window before the timer expires.");

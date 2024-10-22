@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::control::SosAction;
 use crate::memory::title_sequence_manager::{RelicButton, TitleSequenceManagerData};
 use crate::state::{GameEvent, GameState};
@@ -86,11 +88,13 @@ impl SeqRelicList {
     }
 }
 
-impl Node<GameState, GameEvent> for SeqRelicList {
-    fn print(&self) -> String {
-        format!("RelicList({:?})", self.fsm)
+impl Display for SeqRelicList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "RelicList({:?})", self.fsm)
     }
+}
 
+impl Node<GameState, GameEvent> for SeqRelicList {
     fn enter(&mut self, state: &mut GameState) {
         state.gamepad.release_all();
     }

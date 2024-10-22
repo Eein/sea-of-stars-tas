@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use crate::Node;
 
 pub struct SeqWait {
@@ -17,12 +18,15 @@ impl SeqWait {
 }
 
 impl<State, Event> Node<State, Event> for SeqWait {
-    fn print(&self) -> String {
-        format!("Wait({}): {}/{}", self.name, self.timer, self.timeout)
-    }
     // Execute the selected path until it terminates
     fn execute(&mut self, _state: &mut State, delta: f64) -> bool {
         self.timer += delta;
         self.timer >= self.timeout
+    }
+}
+
+impl Display for SeqWait {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Wait({}): {}/{}", self.name, self.timer, self.timeout)
     }
 }

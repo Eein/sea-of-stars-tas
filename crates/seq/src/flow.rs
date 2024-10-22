@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::Node;
 use log::{debug, info};
 
@@ -29,23 +31,26 @@ impl<State, Event, Cond: SeqCondition<State>> SeqIf<State, Event, Cond> {
     }
 }
 
-impl<State, Event, Cond: SeqCondition<State>> Node<State, Event> for SeqIf<State, Event, Cond> {
-    fn print(&self) -> String {
+impl<State, Event, Cond: SeqCondition<State>> Display for SeqIf<State, Event, Cond> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut ret = format!("SeqIf({}), selecting path: {}", self.name, self.selection);
         match self.selection {
             true => {
                 if let Some(child) = &self.on_true {
-                    ret = format!("{}\n-> {}", ret, child.print());
+                    ret = format!("{}\n-> {}", ret, child);
                 }
             }
             false => {
                 if let Some(child) = &self.on_false {
-                    ret = format!("{}\n-> {}", ret, child.print());
+                    ret = format!("{}\n-> {}", ret, child);
                 }
             }
         }
-        ret
+        write!(f, "{}", ret)
     }
+}
+
+impl<State, Event, Cond: SeqCondition<State>> Node<State, Event> for SeqIf<State, Event, Cond> {
     // When first entering the node, evaluate the conditional
     fn enter(&mut self, state: &mut State) {
         self.selection = self.condition.evaluate(state);
@@ -174,6 +179,16 @@ impl<State, Event> SeqList<State, Event> {
     }
 }
 
+impl<State, Event> Display for SeqList<State, Event> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut ret = format!("{}({}/{})", self.name, self.step + 1, self.children.len());
+        if self.in_bounds() {
+            ret = format!("{}\n-> {}", ret, self.children[self.step]);
+        }
+        write!(f, "{}", ret)
+    }
+}
+
 impl<State, Event> Node<State, Event> for SeqList<State, Event> {
     fn enter(&mut self, state: &mut State) {
         // Run enter for the first child
@@ -185,14 +200,6 @@ impl<State, Event> Node<State, Event> for SeqList<State, Event> {
         if self.in_bounds() {
             self.children[self.step].enter(state);
         }
-    }
-
-    fn print(&self) -> String {
-        let mut ret = format!("{}({}/{})", self.name, self.step + 1, self.children.len());
-        if self.in_bounds() {
-            ret = format!("{}\n-> {}", ret, self.children[self.step].print());
-        }
-        ret
     }
 
     fn exit(&self, _state: &mut State) {
@@ -262,5 +269,11 @@ impl<State, Event> Node<State, Event> for SeqCheckpoint {
 
     fn advance_to_checkpoint(&mut self, _state: &mut State, checkpoint: &str) -> bool {
         self.checkpoint_name == checkpoint
+    }
+}
+
+impl Display for SeqCheckpoint {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Checkpoint({})", self.checkpoint_name)
     }
 }

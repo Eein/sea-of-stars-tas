@@ -28,7 +28,7 @@ pub struct GameManager {
 
 impl Display for GameManager {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "FSM: {:?}\n{}", self.fsm, self.sequencer)
+        write!(f, "FSM: {:?}\nRoot: {}", self.fsm, self.sequencer)
     }
 }
 
