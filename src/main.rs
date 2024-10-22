@@ -2,6 +2,7 @@ mod config;
 mod control;
 mod game_manager;
 mod gui;
+mod level_up;
 mod memory;
 mod route;
 mod seq;

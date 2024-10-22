@@ -35,7 +35,7 @@ pub struct LevelUpUpgradeButton {
     pub selected: bool,
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub enum LevelUpUpgrade {
     #[default]
     None = -1,
@@ -135,7 +135,9 @@ impl LevelUpManagerData {
                 .find(|(_i, u)| u.selected)
                 .map(|(i, _u)| i)
                 .take();
-            self.upgrade_index = active.unwrap() as u32;
+            if let Some(active_index) = active {
+                self.upgrade_index = active_index as u32;
+            }
         }
         Ok(())
     }
