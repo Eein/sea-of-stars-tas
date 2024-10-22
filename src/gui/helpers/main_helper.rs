@@ -35,40 +35,28 @@ impl GuiHelper for MainHelper {
         }
 
         egui::ComboBox::from_label("Checkpoint")
-            .selected_text(format!("{:?}", self.checkpoint))
+            .selected_text(
+                self.checkpoint
+                    .clone()
+                    .unwrap_or(String::from("New Game"))
+                    .to_string(),
+            )
             .show_ui(ui, |ui| {
-                ui.selectable_value(&mut self.checkpoint, None, "New Game");
-                ui.selectable_value(
-                    &mut self.checkpoint,
-                    Some("intro_mooncradle".to_owned()),
+                for checkpoint in [
+                    "New Game",
                     "Mooncradle Intro Cavern",
-                );
-                ui.selectable_value(
-                    &mut self.checkpoint,
-                    Some("intro_dorms".to_owned()),
                     "Zenith Academy Dorms",
-                );
-                ui.selectable_value(
-                    &mut self.checkpoint,
-                    Some("intro_dorms2".to_owned()),
                     "Zenith Academy Dorms 2",
-                );
-                ui.selectable_value(
-                    &mut self.checkpoint,
-                    Some("forbidden_cave".to_owned()),
                     "Outside Forbidden Cavern",
-                );
-                ui.selectable_value(
-                    &mut self.checkpoint,
-                    Some("forbidden_cave2".to_owned()),
                     "Before Bosslug",
-                );
-                // TODO: More checkpoints
-                ui.selectable_value(
-                    &mut self.checkpoint,
-                    Some("elder_mist_boss2".to_owned()),
                     "After Elder Mist Boss-fight",
-                );
+                ] {
+                    ui.selectable_value(
+                        &mut self.checkpoint,
+                        Some(checkpoint.to_string()),
+                        checkpoint,
+                    );
+                }
             });
 
         if ui
