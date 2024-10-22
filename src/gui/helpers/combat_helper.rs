@@ -79,62 +79,140 @@ impl GuiHelper for CombatHelper {
                         ui.end_row();
                     }
                 });
-            ui.separator();
-
-            // TODO(eein): Alternatively the following; not sure if we want to keep
-            // the same style here or not.
-            // for (i, enemy) in combat_manager.enemies.items.iter().enumerate() {
-            //     ui.label(format!("Name NYI ({})", i));
-            //     ui.label(format!("GUID: {}", enemy.guid));
-            //     ui.label(format!("Unique ID: {}", enemy.unique_id));
-            //     ui.label(format!("HP: {}/{}", enemy.current_hp, enemy.max_hp));
-            //     ui.label(format!("Speed: {}", enemy.speed));
-            //     ui.label(format!("Physical Attack: {}", enemy.physical_attack));
-            //     ui.label(format!("Physical Defense: {}", enemy.physical_defense));
-            //     ui.label(format!("Magical Attack: {}", enemy.magical_attack));
-            //     ui.label(format!("Magical Defense: {}", enemy.magical_defense));
-            //     ui.label(format!("Next Action: {}", enemy.turns_to_action));
-            //     ui.label(format!("Locks: {}", enemy.total_spell_locks));
-            //     for lock in enemy.spell_locks.items.iter() {
-            //         ui.label(format!("{:?}", lock));
-            //     }
-            // }
-
-            // TODO(eein): Another alternative where they are collapsable headers
-            // egui::Grid::new("enemies")
-            //     .min_col_width(10.0)
-            //     .striped(true)
-            //     .show(ui, |ui| {
-
-            //         for (i, enemy) in combat_manager.enemies.items.iter().enumerate() {
-            //            let mut header = format!("NYI ({})  G: {:.5}  U: {:.5}  HP: {}/{}  Act: {}  Locks ({})  ",
-            //                 i,
-            //                 enemy.guid,
-            //                 enemy.unique_id,
-            //                 enemy.current_hp,
-            //                 enemy.max_hp,
-            //                 enemy.turns_to_action,
-            //                 enemy.total_spell_locks);
-
-            //             for lock in enemy.spell_locks.items.iter() {
-            //                 header = format!("{} {:?}", header, lock);
-            //             }
-
-            //             egui::CollapsingHeader::new(header)
-            //                 .default_open(true)
-            //                 .show(ui, |ui| {
-            //                 ui.label(format!("Spd: {}, Patk: {}, Pdef: {}, Matk: {}, Mdef: {}",
-            //                     enemy.speed,
-            //                     enemy.physical_attack,
-            //                     enemy.physical_defense,
-            //                     enemy.magical_attack,
-            //                     enemy.magical_defense,
-            //                 ));
-            //             });
-            //             ui.end_row();
-            //         }
-            //     });
-            // ui.separator();
         }
+        ui.separator();
+        ui.label("Players");
+        egui::Grid::new("players")
+            .min_col_width(10.0)
+            .striped(true)
+            .show(ui, |ui| {
+                ui.label("Name");
+                ui.label("Selected");
+                ui.label("Enabled");
+                ui.label("HP");
+                ui.label("MP");
+                ui.label("Patk");
+                ui.label("Pdef");
+                ui.label("Matk");
+                ui.label("Mdef");
+                ui.label("Dead");
+                ui.label("Timed Atk Rdy");
+                ui.label("Charge");
+                ui.label("Weapon");
+                ui.label("Armor");
+                ui.label("Trinket 1");
+                ui.label("2");
+                ui.end_row();
+
+                for (i, player) in combat_manager.players.items.iter().enumerate() {
+                    ui.label(format!("{:?} ({})", player.character, i));
+                    ui.label(format!("{}", player.selected));
+                    ui.label(format!("{}", player.enabled));
+                    ui.label(format!("{}", player.current_hp));
+                    ui.label(format!("{}", player.current_mp));
+                    ui.label(format!(
+                        "{}|{}",
+                        player.base_physical_attack, player.physical_attack
+                    ));
+                    ui.label(format!(
+                        "{}|{}",
+                        player.base_physical_defense, player.physical_defense
+                    ));
+                    ui.label(format!(
+                        "{}|{}",
+                        player.base_magical_attack, player.magical_attack
+                    ));
+                    ui.label(format!(
+                        "{}|{}",
+                        player.base_magical_defense, player.magical_defense
+                    ));
+                    ui.label(format!("{}", player.dead));
+                    ui.label(format!("{}", player.timed_attack_ready));
+                    ui.label(format!("{}", player.mana_charge_count));
+                    ui.label(
+                        player
+                            .equipped_weapon
+                            .clone()
+                            .unwrap_or(data::Item::default())
+                            .name
+                            .to_string(),
+                    );
+                    ui.label(
+                        player
+                            .equipped_armor
+                            .clone()
+                            .unwrap_or(data::Item::default())
+                            .name
+                            .to_string(),
+                    );
+                    for trinket in player.equipped_trinkets.iter() {
+                        ui.label(
+                            trinket
+                                .clone()
+                                .trinket
+                                .unwrap_or(data::Item::default())
+                                .name
+                                .to_string(),
+                        );
+                    }
+                    ui.end_row();
+                }
+            });
+        ui.separator();
+
+        // TODO(eein): Alternatively the following; not sure if we want to keep
+        // the same style here or not.
+        // for (i, enemy) in combat_manager.enemies.items.iter().enumerate() {
+        //     ui.label(format!("Name NYI ({})", i));
+        //     ui.label(format!("GUID: {}", enemy.guid));
+        //     ui.label(format!("Unique ID: {}", enemy.unique_id));
+        //     ui.label(format!("HP: {}/{}", enemy.current_hp, enemy.max_hp));
+        //     ui.label(format!("Speed: {}", enemy.speed));
+        //     ui.label(format!("Physical Attack: {}", enemy.physical_attack));
+        //     ui.label(format!("Physical Defense: {}", enemy.physical_defense));
+        //     ui.label(format!("Magical Attack: {}", enemy.magical_attack));
+        //     ui.label(format!("Magical Defense: {}", enemy.magical_defense));
+        //     ui.label(format!("Next Action: {}", enemy.turns_to_action));
+        //     ui.label(format!("Locks: {}", enemy.total_spell_locks));
+        //     for lock in enemy.spell_locks.items.iter() {
+        //         ui.label(format!("{:?}", lock));
+        //     }
+        // }
+
+        // TODO(eein): Another alternative where they are collapsable headers
+        // egui::Grid::new("enemies")
+        //     .min_col_width(10.0)
+        //     .striped(true)
+        //     .show(ui, |ui| {
+
+        //         for (i, enemy) in combat_manager.enemies.items.iter().enumerate() {
+        //            let mut header = format!("NYI ({})  G: {:.5}  U: {:.5}  HP: {}/{}  Act: {}  Locks ({})  ",
+        //                 i,
+        //                 enemy.guid,
+        //                 enemy.unique_id,
+        //                 enemy.current_hp,
+        //                 enemy.max_hp,
+        //                 enemy.turns_to_action,
+        //                 enemy.total_spell_locks);
+
+        //             for lock in enemy.spell_locks.items.iter() {
+        //                 header = format!("{} {:?}", header, lock);
+        //             }
+
+        //             egui::CollapsingHeader::new(header)
+        //                 .default_open(true)
+        //                 .show(ui, |ui| {
+        //                 ui.label(format!("Spd: {}, Patk: {}, Pdef: {}, Matk: {}, Mdef: {}",
+        //                     enemy.speed,
+        //                     enemy.physical_attack,
+        //                     enemy.physical_defense,
+        //                     enemy.magical_attack,
+        //                     enemy.magical_defense,
+        //                 ));
+        //             });
+        //             ui.end_row();
+        //         }
+        //     });
+        // ui.separator();
     }
 }

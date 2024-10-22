@@ -1,6 +1,8 @@
 use crate::memory::memory_context::MemoryContext;
 use crate::memory::{MemoryManager, MemoryManagerUpdate};
 use crate::state::StateContext;
+use data::prelude::{armor, trinkets, weapons, PlayerPartyCharacter};
+use data::Item;
 use log::info;
 use memory::game_engine::il2cpp::unity_list::{UnityItem, UnityList};
 use memory::memory_manager::il2cpp::UnityMemoryManager;
@@ -66,6 +68,36 @@ pub struct LiveMana {
     pub small: u32,
 }
 
+#[derive(Default, Debug, Clone)]
+pub struct EquippedTrinket {
+    pub trinket: Option<Item>,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct CombatPlayer {
+    // TODO(eein): use raw calcs for max_hp/max_mp
+    pub current_hp: u32,
+    pub current_mp: u32,
+    pub base_physical_attack: u32,
+    pub base_physical_defense: u32,
+    pub base_magical_attack: u32,
+    pub base_magical_defense: u32,
+    pub physical_attack: u32,
+    pub physical_defense: u32,
+    pub magical_attack: u32,
+    pub magical_defense: u32,
+    pub selected: bool,
+    pub character: PlayerPartyCharacter,
+    pub timed_attack_ready: bool,
+    pub dead: bool,
+    pub enabled: bool, // this is if active on the screen
+    pub mana_charge_count: u32,
+    pub equipped_weapon: Option<Item>,
+    pub equipped_armor: Option<Item>,
+    pub equipped_trinkets: Vec<EquippedTrinket>,
+    // pub equipped_group_trinket: Option<Item>,
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct CombatEnemy {
     pub current_hp: u32,
@@ -91,6 +123,7 @@ pub struct CombatManagerData {
     pub combo_point_progress: u32,
     pub ultimate_progress: f32,
     pub enemies: UnityList<CombatEnemy>,
+    pub players: UnityList<CombatPlayer>,
 }
 
 impl Default for MemoryManager<CombatManagerData> {
@@ -122,6 +155,7 @@ impl MemoryManagerUpdate for CombatManagerData {
             self.update_live_mana(&memory_context)?;
             self.update_combo_points_and_ultimates(&memory_context)?;
             self.update_enemies(&memory_context)?;
+            self.update_players(&memory_context)?;
         }
 
         Ok(())
@@ -261,6 +295,16 @@ impl CombatManagerData {
         }
         Ok(())
     }
+
+    pub fn update_players(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
+        if let Ok(players) =
+            memory_context.follow_fields::<u64>(&["currentEncounter", "playerActors"])
+        {
+            let players = UnityList::<CombatPlayer>::read(memory_context.process, players)?;
+            self.players = players;
+        }
+        Ok(())
+    }
 }
 
 impl UnityItem for CombatEnemy {
@@ -314,6 +358,166 @@ impl UnityItem for CombatEnemy {
             total_spell_locks,
             spell_locks,
         })
+    }
+}
+
+impl UnityItem for CombatPlayer {
+    fn read(process: &Process, item_ptr: u64) -> Result<Self, MemoryError> {
+        // Top level pointers
+        // max_hp/mp may be 0x58 instead of 0x50
+        let current_hp = process.read_pointer_path::<u32>(item_ptr, &[0x180, 0x28, 0x58])?;
+        let current_mp = process.read_pointer_path::<u32>(item_ptr, &[0x180, 0x30, 0x58])?;
+
+        let base_physical_defense =
+            process.read_pointer_path::<u32>(item_ptr, &[0x150, 0x30, 0x28])?;
+        let base_physical_attack =
+            process.read_pointer_path::<u32>(item_ptr, &[0x150, 0x30, 0x2C])?;
+        let base_magical_attack =
+            process.read_pointer_path::<u32>(item_ptr, &[0x150, 0x30, 0x30])?;
+        let base_magical_defense =
+            process.read_pointer_path::<u32>(item_ptr, &[0x150, 0x30, 0x34])?;
+
+        let selected = if let Ok(sel) = process.read_pointer_path::<u32>(item_ptr, &[0x180, 0x78]) {
+            matches!(sel, 1)
+        } else {
+            false
+        };
+
+        let character = if let Ok(char) =
+            process.read_pointer_path::<ArrayWString<128>>(item_ptr, &[0x180, 0x70, 0x14])
+        {
+            if let Ok(name) = String::from_utf16(char.as_slice()) {
+                PlayerPartyCharacter::parse(&name)
+            } else {
+                PlayerPartyCharacter::None
+            }
+        } else {
+            PlayerPartyCharacter::None
+        };
+
+        let timed_attack_ready =
+            if let Ok(tar) = process.read_pointer_path::<u8>(item_ptr, &[0x160, 0x3A]) {
+                matches!(tar, 1)
+            } else {
+                false
+            };
+
+        let dead = if let Ok(tar) = process.read_pointer_path::<u8>(item_ptr, &[0xD0]) {
+            matches!(tar, 1)
+        } else {
+            false
+        };
+
+        let enabled = if let Ok(char_enabled) =
+            process.read_pointer_path::<u8>(item_ptr, &[0x180, 0x68, 0x30])
+        {
+            matches!(char_enabled, 1)
+        } else {
+            false
+        };
+        let mana_charge_count = process.read_pointer_path::<u32>(item_ptr, &[0x148, 0x58])?;
+
+        let equipped_weapon = if let Ok(weapon_guid) = process
+            .read_pointer_path::<ArrayWString<128>>(item_ptr, &[0x150, 0x30, 0xA0, 0x18, 0x14])
+        {
+            if let Ok(name) = String::from_utf16(weapon_guid.as_slice()) {
+                weapons().get(name.as_str()).cloned()
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+        let equipped_armor = if let Ok(armor_guid) = process
+            .read_pointer_path::<ArrayWString<128>>(item_ptr, &[0x150, 0x30, 0xA8, 0x18, 0x14])
+        {
+            if let Ok(name) = String::from_utf16(armor_guid.as_slice()) {
+                armor().get(name.as_str()).cloned()
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+        let equipped_trinkets = if let Ok(equipped_trinkets_ptr) =
+            process.read_pointer_path::<u64>(item_ptr, &[0x150, 0x30, 0xB0])
+        {
+            UnityList::<EquippedTrinket>::read(process, equipped_trinkets_ptr)?
+        } else {
+            UnityList::<EquippedTrinket>::default()
+        };
+
+        // TODO(eein): Implement equipped group trinket once i can verify it.
+        // let equipped_group_trinket = if let Ok(group_trinket_guid) = process.read_pointer_path::<ArrayWString<128>>(item_ptr, &[0x150, 0x30, 0xA8, 0x18, 0x14]){
+        //     if let Ok(name) = String::from_utf16(armor_guid.as_slice()) {
+        //         armor().get(name.as_str()).cloned()
+        //     } else {
+        //         None
+        //     }
+        // } else {
+        //     None
+        // };
+        let mut physical_attack = base_physical_attack;
+        let mut physical_defense = base_physical_defense;
+        let mut magical_attack = base_magical_attack;
+        let mut magical_defense = base_magical_defense;
+
+        // Adds weapon stats
+        if let Some(ref item) = equipped_weapon {
+            physical_attack += item.physical_attack;
+            physical_defense += item.physical_defense;
+            magical_attack += item.magical_attack;
+            magical_defense += item.magical_defense;
+        }
+
+        // Adds armor stats
+        if let Some(ref item) = equipped_armor {
+            physical_attack += item.physical_attack;
+            physical_defense += item.physical_defense;
+            magical_attack += item.magical_attack;
+            magical_defense += item.magical_defense;
+        }
+        // TODO(eein): Adds level up stats
+        // Need level up stats from another PR to continue./
+
+        Ok(CombatPlayer {
+            current_hp,
+            current_mp,
+            base_physical_attack,
+            base_physical_defense,
+            base_magical_attack,
+            base_magical_defense,
+            selected,
+            character,
+            timed_attack_ready,
+            dead,
+            enabled,
+            mana_charge_count,
+            equipped_weapon,
+            equipped_armor,
+            equipped_trinkets: equipped_trinkets.items,
+            // TODO(eein): find a group trinket and add this
+            // equipped_group_trinket: None,
+            physical_attack,
+            physical_defense,
+            magical_attack,
+            magical_defense,
+        })
+    }
+}
+impl UnityItem for EquippedTrinket {
+    fn read(process: &Process, item_ptr: u64) -> Result<EquippedTrinket, MemoryError> {
+        let item_name = process.read_pointer_path::<ArrayWString<128>>(item_ptr, &[0x18, 0x14])?;
+        if let Ok(name) = String::from_utf16(item_name.as_slice()) {
+            let equipped_trinket = trinkets().get(name.as_str()).unwrap().clone();
+            Ok(EquippedTrinket {
+                trinket: Some(equipped_trinket),
+            })
+        } else {
+            Ok(EquippedTrinket { trinket: None })
+        }
     }
 }
 
