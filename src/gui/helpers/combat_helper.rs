@@ -81,13 +81,13 @@ impl GuiHelper for CombatHelper {
                         ui.label(format!("{}", enemy.turns_to_action));
                         ui.label(format!("{}", enemy.total_spell_locks));
 
-                        let mut lock_str = String::from("");
+                        let mut lock_str = String::new();
                         for lock in enemy.spell_locks.items.iter() {
                             lock_str = format!("{} {:?}", &lock_str, &lock);
                         }
                         ui.label(lock_str);
 
-                        let mut damage_modifiers_str = String::from("");
+                        let mut damage_modifiers_str = String::new();
                         for modifier in enemy.damage_type_modifiers.items.iter() {
                             damage_modifiers_str = format!(
                                 "{} {:?} {}",
@@ -96,7 +96,7 @@ impl GuiHelper for CombatHelper {
                         }
                         ui.label(damage_modifiers_str);
 
-                        let mut damage_modifiers_override_str = String::from("");
+                        let mut damage_modifiers_override_str = String::new();
                         for modifier in enemy.damage_type_modifiers_override.items.iter() {
                             damage_modifiers_override_str = format!(
                                 "{} {:?} {}",
