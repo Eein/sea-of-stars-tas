@@ -1,10 +1,10 @@
-use std::fmt::Display;
 use crate::control::SosAction;
 use crate::seq::button::ButtonPress;
 use crate::state::{GameEvent, GameState};
 use joystick::common::JoystickBtnInterface;
 use joystick::common::JoystickInterface;
 use seq::prelude::*;
+use std::fmt::Display;
 
 #[derive(Debug)]
 enum DiplomaFsm {

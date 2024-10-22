@@ -13,7 +13,7 @@ pub mod logging;
 pub mod sequencer;
 pub mod wait;
 
-pub trait Node<State, Event> : Display {
+pub trait Node<State, Event>: Display {
     fn execute(&mut self, _state: &mut State, _delta: f64) -> bool {
         true
     }

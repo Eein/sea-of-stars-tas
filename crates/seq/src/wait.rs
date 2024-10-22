@@ -1,5 +1,5 @@
-use std::fmt::Display;
 use crate::Node;
+use std::fmt::Display;
 
 pub struct SeqWait {
     name: String,
