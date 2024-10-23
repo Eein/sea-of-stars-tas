@@ -4,6 +4,7 @@ mod control;
 mod game_manager;
 mod gui;
 mod level_up;
+mod combat;
 mod memory;
 mod route;
 mod seq;
