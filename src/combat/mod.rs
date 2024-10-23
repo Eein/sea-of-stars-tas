@@ -1,7 +1,12 @@
+#![allow(dead_code)]
+
 mod controllers;
 
-use crate::combat::controllers::CombatController; 
-use crate::{state::GameState};
+use crate::combat::controllers::basic_encounter_controller::BasicEncounterController;
+use crate::combat::controllers::EncounterController;
+use crate::control::SosAction;
+use crate::seq::button::ButtonPress;
+use crate::state::GameState;
 
 #[derive(Debug)]
 enum CombatFsm {
@@ -15,24 +20,40 @@ enum CombatFsm {
 
 pub struct CombatManager {
     fsm: CombatFsm,
-    controller: Option<&dyn CombatController>
+    btn: ButtonPress,
+    controller: Option<Box<dyn EncounterController>>,
 }
 
 impl Default for CombatManager {
     fn default() -> Self {
         Self {
+            btn: ButtonPress::new(SosAction::Confirm),
             fsm: CombatFsm::Idle,
+            controller: None,
         }
     }
 }
 
 impl CombatManager {
-    pub fn update(&mut self, state: &mut GameState, _dt: f64) -> bool {
+    pub fn update(&mut self, state: &mut GameState, dt: f64) -> bool {
         let combat_manager = &state.memory_managers.combat_manager.data;
 
+        if self.controller.is_none() {
+            // determine controller
+            self.controller = Some(Box::new(BasicEncounterController::default()));
+        }
+
+        if self.btn.update(&mut state.gamepad, dt) {
+            self.btn = ButtonPress {
+                action: SosAction::Confirm,
+                press_time: 0.1,
+                release_time: 0.2,
+                ..Default::default()
+            };
+        }
         match self.fsm {
             CombatFsm::Idle => {
-                // Nothing to do, but we dont want to give control back
+                // intended to wait for acceptable parameters
             }
             CombatFsm::Dialog => {
                 // this may not be needed - can probably handle this outside of combat
@@ -47,7 +68,7 @@ impl CombatManager {
             CombatFsm::Consideration => {
                 // Execute Consideration from action
             }
-            CombatFsm::Appraisal=> {
+            CombatFsm::Appraisal => {
                 // Execute Appraisal
             }
         }

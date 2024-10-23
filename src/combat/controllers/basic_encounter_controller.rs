@@ -1,8 +1,6 @@
-use crate::combat::controllers::EncounterController; 
+use crate::combat::controllers::EncounterController;
 
 #[derive(Default, Debug)]
-pub struct BasicEncounterController {
-}
+pub struct BasicEncounterController {}
 
-impl EncounterController for BasicEncounterController {
-}
+impl EncounterController for BasicEncounterController {}
