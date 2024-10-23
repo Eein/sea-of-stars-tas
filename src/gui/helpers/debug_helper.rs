@@ -1,5 +1,5 @@
 use super::GuiHelper;
-use crate::{game_manager::GameManager, state::GameState};
+use crate::{game_manager::GameManager, memory::speedrun_manager::SpeedrunTimer, state::GameState};
 
 pub const NAME: &str = "Debug Menu";
 
@@ -9,6 +9,16 @@ pub struct DebugHelper;
 impl DebugHelper {
     pub fn create() -> Box<Self> {
         Box::new(Self)
+    }
+
+    fn draw_timer(&self, ui: &mut egui::Ui, timer: &SpeedrunTimer) {
+        ui.label(format!("Is Started: {}", timer.is_started));
+        ui.label(format!("Is Paused: {}", timer.is_paused));
+        ui.label(format!("Timer In Second: {}", timer.timer_in_second));
+        ui.label(format!(
+            "Realtime Delta Time: {}",
+            timer.realtime_delta_time
+        ));
     }
 }
 
@@ -79,43 +89,12 @@ impl GuiHelper for DebugHelper {
             "Speedrun Timer Pause Lock: {}",
             speedrun_manager.speedrun_timer_pause_lock
         ));
-        ui.label("".to_string());
-
+        ui.separator();
         ui.label("# Speedrun Timer".to_string());
-        ui.label(format!(
-            "Is Started: {}",
-            speedrun_manager.speedrun_timer.is_started
-        ));
-        ui.label(format!(
-            "Is Paused: {}",
-            speedrun_manager.speedrun_timer.is_paused
-        ));
-        ui.label(format!(
-            "Timer In Second: {}",
-            speedrun_manager.speedrun_timer.timer_in_second
-        ));
-        ui.label(format!(
-            "Realtime Delta Time: {}",
-            speedrun_manager.speedrun_timer.realtime_delta_time
-        ));
+        self.draw_timer(ui, &speedrun_manager.speedrun_timer);
 
-        ui.label("".to_string());
+        ui.separator();
         ui.label("# PauseTimer".to_string());
-        ui.label(format!(
-            "Is Started: {}",
-            speedrun_manager.pause_timer.is_started
-        ));
-        ui.label(format!(
-            "Is Paused: {}",
-            speedrun_manager.pause_timer.is_paused
-        ));
-        ui.label(format!(
-            "Timer In Second: {}",
-            speedrun_manager.pause_timer.timer_in_second
-        ));
-        ui.label(format!(
-            "Realtime Delta Time: {}",
-            speedrun_manager.pause_timer.realtime_delta_time
-        ));
+        self.draw_timer(ui, &speedrun_manager.pause_timer);
     }
 }
