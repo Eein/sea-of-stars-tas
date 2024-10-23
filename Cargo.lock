@@ -2732,6 +2732,7 @@ dependencies = [
  "libm",
  "log",
  "memory",
+ "puffin",
  "puffin_egui",
  "ron",
  "seq",

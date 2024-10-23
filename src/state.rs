@@ -186,7 +186,7 @@ impl eframe::App for State {
         // Uncomment for puffin profiler
         // puffin::profile_function!();
         // puffin::set_scopes_on(true);
-        // puffin_egui::show_viewport_if_enabled(ctx);
+        // puffin_egui::profiler_window(ctx);
 
         // Deregister the project in state if its not running anymore
         let _ = &self.maybe_deregister_process();

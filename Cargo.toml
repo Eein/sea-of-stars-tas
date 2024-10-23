@@ -21,6 +21,7 @@ egui_dock = { version = "0.14.0", features = ["serde"] }
 colog = "1.3.0"
 log = "0.4.22"
 puffin_egui = { git = "https://github.com/tedsteen/puffin", branch = "upgrade-egui" }
+puffin = { git = "https://github.com/tedsteen/puffin", branch = "upgrade-egui" }
 yaml-rust2 = "0.9.0"
 vec3-rs = "0.1.6"
 libm = "0.2.8"
