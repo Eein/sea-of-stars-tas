@@ -509,7 +509,7 @@ impl UnityItem for CombatPlayer {
         // } else {
         //     None
         // };
-        
+
         let mut max_hp = base_hp;
         let mut max_mp = base_mp;
         let mut physical_attack = base_physical_attack;
@@ -533,15 +533,14 @@ impl UnityItem for CombatPlayer {
             magical_defense += item.magical_defense;
         }
 
-        let stats = data::level_up_tables::get_sum_of_character_stats_by_level(character.clone(), level);
+        let stats =
+            data::level_up_tables::get_sum_of_character_stats_by_level(character.clone(), level);
         max_hp += stats.hp;
         max_mp += stats.mp;
         physical_attack += stats.physical_attack;
         physical_attack += stats.physical_attack;
         magical_attack += stats.magical_attack;
         magical_defense += stats.magical_defense;
-
-
 
         Ok(CombatPlayer {
             level,
