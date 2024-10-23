@@ -3,8 +3,8 @@ use crate::level_up_tables::LevelUpStats;
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
-pub fn stats_table_summed() -> &'static HashMap<u8, LevelUpStats> {
-    static HASHMAP: OnceLock<HashMap<u8, LevelUpStats>> = OnceLock::new();
+pub fn stats_table_summed() -> &'static HashMap<u32, LevelUpStats> {
+    static HASHMAP: OnceLock<HashMap<u32, LevelUpStats>> = OnceLock::new();
     HASHMAP.get_or_init(|| {
         let mut m = HashMap::new();
         // Sum Level 2 - bst_level_up_table_sum
@@ -388,8 +388,8 @@ pub fn stats_table_summed() -> &'static HashMap<u8, LevelUpStats> {
     })
 }
 
-pub fn stats_table() -> &'static HashMap<u8, LevelUpStats> {
-    static HASHMAP: OnceLock<HashMap<u8, LevelUpStats>> = OnceLock::new();
+pub fn stats_table() -> &'static HashMap<u32, LevelUpStats> {
+    static HASHMAP: OnceLock<HashMap<u32, LevelUpStats>> = OnceLock::new();
     HASHMAP.get_or_init(|| {
         let mut m = HashMap::new();
         // Level 2 - bst_level_up_table

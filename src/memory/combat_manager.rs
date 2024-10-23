@@ -77,6 +77,9 @@ pub struct EquippedTrinket {
 #[derive(Debug, Clone, Default)]
 pub struct CombatPlayer {
     // TODO(eein): use raw calcs for max_hp/max_mp
+    pub level: u32, // Estimation
+    pub max_hp: u32,
+    pub max_mp: u32,
     pub current_hp: u32,
     pub current_mp: u32,
     pub base_physical_attack: u32,
@@ -407,8 +410,13 @@ impl UnityItem for CombatPlayer {
     fn read(process: &Process, item_ptr: u64) -> Result<Self, MemoryError> {
         // Top level pointers
         // max_hp/mp may be 0x58 instead of 0x50
-        let current_hp = process.read_pointer_path::<u32>(item_ptr, &[0x180, 0x28, 0x58])?;
+        let current_hp = process.read_pointer_path::<u32>(item_ptr, &[0x150, 0x28, 0x58])?;
         let current_mp = process.read_pointer_path::<u32>(item_ptr, &[0x180, 0x30, 0x58])?;
+
+        let base_hp = process.read_pointer_path::<u32>(item_ptr, &[0x150, 0x30, 0x20])?;
+        let base_mp = process.read_pointer_path::<u32>(item_ptr, &[0x150, 0x30, 0x50])?;
+
+        let level = process.read_pointer_path::<u32>(item_ptr, &[0x150, 0x30, 0x88, 0x18])?;
 
         let base_physical_defense =
             process.read_pointer_path::<u32>(item_ptr, &[0x150, 0x30, 0x28])?;
@@ -501,6 +509,9 @@ impl UnityItem for CombatPlayer {
         // } else {
         //     None
         // };
+        
+        let mut max_hp = base_hp;
+        let mut max_mp = base_mp;
         let mut physical_attack = base_physical_attack;
         let mut physical_defense = base_physical_defense;
         let mut magical_attack = base_magical_attack;
@@ -521,10 +532,21 @@ impl UnityItem for CombatPlayer {
             magical_attack += item.magical_attack;
             magical_defense += item.magical_defense;
         }
-        // TODO(eein): Adds level up stats
-        // Need level up stats from another PR to continue./
+
+        let stats = data::level_up_tables::get_sum_of_character_stats_by_level(character.clone(), level);
+        max_hp += stats.hp;
+        max_mp += stats.mp;
+        physical_attack += stats.physical_attack;
+        physical_attack += stats.physical_attack;
+        magical_attack += stats.magical_attack;
+        magical_defense += stats.magical_defense;
+
+
 
         Ok(CombatPlayer {
+            level,
+            max_hp,
+            max_mp,
             current_hp,
             current_mp,
             base_physical_attack,
