@@ -1,5 +1,6 @@
 pub mod characters;
 pub mod items;
+pub mod level_up_tables;
 
 pub mod prelude {
     pub use crate::characters::*;
