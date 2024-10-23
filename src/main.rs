@@ -1,3 +1,4 @@
+mod assets;
 mod config;
 mod control;
 mod game_manager;
@@ -15,7 +16,6 @@ use log::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     colog::init();
-
     // Loads the config.toml if it exists or loads defaults
     let conf = match load_config("./config.toml") {
         Ok(conf) => conf,
