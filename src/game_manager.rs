@@ -90,6 +90,7 @@ impl GameManager {
 
                 if !cmd.encounter_active {
                     context.gamepad.release_all();
+                    self.combat_manager = None;
                     self.fsm = GameFsm::Route;
                     // Signal return to sequencer
                     self.sequencer.on_event(context, &GameEvent::Combat);
