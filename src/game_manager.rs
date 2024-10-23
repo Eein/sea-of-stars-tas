@@ -12,13 +12,12 @@ use crate::{
 };
 
 #[derive(Default, Debug)]
-pub enum GameFsm {
+enum GameFsm {
     Combat,
     #[default]
     Route,
     Cutscene,
     LevelUp,
-    Title,
 }
 
 pub struct GameManager {
@@ -133,7 +132,6 @@ impl GameManager {
                     self.sequencer.on_event(context, &GameEvent::Cutscene);
                 }
             }
-            GameFsm::Title => {}
         }
         false
     }
