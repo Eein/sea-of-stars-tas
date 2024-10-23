@@ -1,4 +1,6 @@
 use super::GuiHelper;
+use crate::assets::ASSETS;
+use crate::memory::combat_manager::CombatDamageType;
 use crate::{game_manager::GameManager, state::GameState};
 
 pub const NAME: &str = "Combat";
@@ -81,29 +83,27 @@ impl GuiHelper for CombatHelper {
                         ui.label(format!("{}", enemy.turns_to_action));
                         ui.label(format!("{}", enemy.total_spell_locks));
 
-                        let mut lock_str = String::new();
-                        for lock in enemy.spell_locks.items.iter() {
-                            lock_str = format!("{} {:?}", &lock_str, &lock);
-                        }
-                        ui.label(lock_str);
+                        ui.horizontal(|ui| {
+                            for modifier in enemy.spell_locks.items.iter() {
+                                damage_type_image(ui, modifier)
+                            }
+                            // This is required to push the column that images dont seem to resize
+                            ui.label("");
+                        });
 
-                        let mut damage_modifiers_str = String::new();
-                        for modifier in enemy.damage_type_modifiers.items.iter() {
-                            damage_modifiers_str = format!(
-                                "{} {:?} {}",
-                                damage_modifiers_str, modifier.0.key, modifier.1.value
-                            );
-                        }
-                        ui.label(damage_modifiers_str);
+                        ui.horizontal(|ui| {
+                            for modifier in enemy.damage_type_modifiers.items.iter() {
+                                damage_type_image(ui, &modifier.0.key);
+                                ui.label(format!("{}", &modifier.1.value));
+                            }
+                        });
+                        ui.horizontal(|ui| {
+                            for modifier in enemy.damage_type_modifiers_override.items.iter() {
+                                damage_type_image(ui, &modifier.0.key);
+                                ui.label(format!("{}", &modifier.1.value));
+                            }
+                        });
 
-                        let mut damage_modifiers_override_str = String::new();
-                        for modifier in enemy.damage_type_modifiers_override.items.iter() {
-                            damage_modifiers_override_str = format!(
-                                "{} {:?} {}",
-                                damage_modifiers_override_str, modifier.0.key, modifier.1.value
-                            );
-                        }
-                        ui.label(damage_modifiers_override_str);
                         ui.label(format!("{}", enemy.fleshmancer_minion));
                         ui.label(format!("{}", enemy.live_mana_spawn_quantity));
 
@@ -190,60 +190,18 @@ impl GuiHelper for CombatHelper {
                 }
             });
         ui.separator();
-
-        // TODO(eein): Alternatively the following; not sure if we want to keep
-        // the same style here or not.
-        // for (i, enemy) in combat_manager.enemies.items.iter().enumerate() {
-        //     ui.label(format!("Name NYI ({})", i));
-        //     ui.label(format!("GUID: {}", enemy.guid));
-        //     ui.label(format!("Unique ID: {}", enemy.unique_id));
-        //     ui.label(format!("HP: {}/{}", enemy.current_hp, enemy.max_hp));
-        //     ui.label(format!("Speed: {}", enemy.speed));
-        //     ui.label(format!("Physical Attack: {}", enemy.physical_attack));
-        //     ui.label(format!("Physical Defense: {}", enemy.physical_defense));
-        //     ui.label(format!("Magical Attack: {}", enemy.magical_attack));
-        //     ui.label(format!("Magical Defense: {}", enemy.magical_defense));
-        //     ui.label(format!("Next Action: {}", enemy.turns_to_action));
-        //     ui.label(format!("Locks: {}", enemy.total_spell_locks));
-        //     for lock in enemy.spell_locks.items.iter() {
-        //         ui.label(format!("{:?}", lock));
-        //     }
-        // }
-
-        // TODO(eein): Another alternative where they are collapsable headers
-        // egui::Grid::new("enemies")
-        //     .min_col_width(10.0)
-        //     .striped(true)
-        //     .show(ui, |ui| {
-
-        //         for (i, enemy) in combat_manager.enemies.items.iter().enumerate() {
-        //            let mut header = format!("NYI ({})  G: {:.5}  U: {:.5}  HP: {}/{}  Act: {}  Locks ({})  ",
-        //                 i,
-        //                 enemy.guid,
-        //                 enemy.unique_id,
-        //                 enemy.current_hp,
-        //                 enemy.max_hp,
-        //                 enemy.turns_to_action,
-        //                 enemy.total_spell_locks);
-
-        //             for lock in enemy.spell_locks.items.iter() {
-        //                 header = format!("{} {:?}", header, lock);
-        //             }
-
-        //             egui::CollapsingHeader::new(header)
-        //                 .default_open(true)
-        //                 .show(ui, |ui| {
-        //                 ui.label(format!("Spd: {}, Patk: {}, Pdef: {}, Matk: {}, Mdef: {}",
-        //                     enemy.speed,
-        //                     enemy.physical_attack,
-        //                     enemy.physical_defense,
-        //                     enemy.magical_attack,
-        //                     enemy.magical_defense,
-        //                 ));
-        //             });
-        //             ui.end_row();
-        //         }
-        //     });
-        // ui.separator();
     }
+}
+
+fn damage_type_image(ui: &mut egui::Ui, damage_type: &CombatDamageType) {
+    let damage_type_icon = match damage_type {
+        CombatDamageType::Arcane => ASSETS.damage_types.arcane.clone(),
+        CombatDamageType::Blunt => ASSETS.damage_types.blunt.clone(),
+        CombatDamageType::Moon => ASSETS.damage_types.moon.clone(),
+        CombatDamageType::Poison => ASSETS.damage_types.poison.clone(),
+        CombatDamageType::Sun => ASSETS.damage_types.sun.clone(),
+        CombatDamageType::Sword => ASSETS.damage_types.sword.clone(),
+        _ => ASSETS.stats.hp.clone(),
+    };
+    ui.add(damage_type_icon);
 }

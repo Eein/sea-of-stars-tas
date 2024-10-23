@@ -59,15 +59,17 @@ pub struct StateContext {
 
 impl State {
     pub fn new(cc: &eframe::CreationContext<'_>, conf: Config) -> Self {
+        // Install Image Loaders
+        egui_extras::install_image_loaders(&cc.egui_ctx);
+
         // Register any GUI helpers here
-
-        // potential load memory and or dock state
-
         let gui_helpers = GuiHelpers::default();
 
+        // Setup Dock State
         let tree_names = gui_helpers.tree_names();
         let mut dock_state = DockState::new(tree_names);
 
+        // Restore Dock State from Store
         if conf.persist_tab_state {
             if let Some(storage) = cc.storage {
                 if let Some(surface_store) = storage.get_string("dock_state") {

@@ -32,6 +32,8 @@ itertools = "0.13.0"
 fps_clock = "2.0.0"
 ron = "0.8.1"
 vec2 = "0.2.1"
+egui_extras = { version = "*", features = ["image"] }
+image = { version = "0.25", features = ["png"] }
 
 [dependencies.winit]
 # version = "*"
