@@ -10,7 +10,7 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
         "Elder Mist",
         vec![
             // TODO: more stuff
-            SeqCheckpoint::create("elder_mist_boss2"),
+            SeqCheckpoint::create("After Elder Mist Boss-fight"),
             SeqMove::create(
                 "Leave dream world",
                 vec![

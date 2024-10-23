@@ -37,7 +37,7 @@ pub fn flashback() -> Box<dyn Node<GameState, GameEvent>> {
     SeqList::create(
         "Mooncradle flashback",
         vec![
-            SeqCheckpoint::create("intro_mooncradle"),
+            SeqCheckpoint::create("Mooncradle Intro Cavern"),
             SeqMove::create(
                 "Mooncradle intro",
                 vec![
@@ -81,7 +81,7 @@ pub fn flashback() -> Box<dyn Node<GameState, GameEvent>> {
                     Move::To(94.005, -11.998, -133.576),
                 ],
             ),
-            SeqCheckpoint::create("intro_dorms"),
+            SeqCheckpoint::create("Zenith Academy Dorms"),
             SeqIf::create(
                 "MC Valere",
                 CondMainChar {
@@ -183,7 +183,7 @@ pub fn flashback() -> Box<dyn Node<GameState, GameEvent>> {
                 ],
             ),
             looms_to_center(),
-            SeqCheckpoint::create("intro_dorms2"),
+            SeqCheckpoint::create("Zenith Academy Dorms 2"),
             SeqMove::create(
                 "Move to Moraine",
                 vec![

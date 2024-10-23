@@ -29,7 +29,7 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                 Some(mooncradle::flashback()),
                 false,
             ),
-            SeqCheckpoint::create("forbidden_cave"),
+            SeqCheckpoint::create("Outside Forbidden Cavern"),
             forbidden_cave::create(),
             // TODO: Rest of mountain trail
             SeqLog::create("TODO BREAK"),

@@ -127,7 +127,7 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                     Move::Confirm,
                 ],
             ),
-            SeqCheckpoint::create("forbidden_cave2"),
+            SeqCheckpoint::create("Before Bosslug"),
             // Continue to boss
             SeqMove::create(
                 "Boss",
