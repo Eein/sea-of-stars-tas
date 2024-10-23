@@ -9,7 +9,7 @@ use crate::prelude::PlayerPartyCharacter;
 
 pub fn get_sum_of_character_stats_by_level(
     character: PlayerPartyCharacter,
-    level: u8,
+    level: u32,
 ) -> LevelUpStats {
     match character {
         PlayerPartyCharacter::Valere => self::valere::stats_table().get(&level).unwrap().clone(),
@@ -24,10 +24,10 @@ pub fn get_sum_of_character_stats_by_level(
 
 #[derive(Default, Clone)]
 pub struct LevelUpStats {
-    pub hp: u16,
-    pub mp: u16,
-    pub physical_attack: u16,
-    pub physical_defense: u16,
-    pub magical_attack: u16,
-    pub magical_defense: u16,
+    pub hp: u32,
+    pub mp: u32,
+    pub physical_attack: u32,
+    pub physical_defense: u32,
+    pub magical_attack: u32,
+    pub magical_defense: u32,
 }
