@@ -5,6 +5,7 @@ mod controllers;
 use crate::combat::controllers::basic_encounter_controller::BasicEncounterController;
 use crate::combat::controllers::EncounterController;
 use crate::control::SosAction;
+use crate::memory::combat_manager::CombatControllerType;
 use crate::seq::button::ButtonPress;
 use crate::state::GameState;
 
@@ -39,8 +40,7 @@ impl CombatManager {
         let combat_manager = &state.memory_managers.combat_manager.data;
 
         if self.controller.is_none() {
-            // determine controller
-            self.controller = Some(Box::new(BasicEncounterController::default()));
+            self.controller = Self::encounter_factory(state)
         }
 
         if self.btn.update(&mut state.gamepad, dt) {
@@ -51,6 +51,18 @@ impl CombatManager {
                 ..Default::default()
             };
         }
+
+        // Execute Different states if controller is active
+        if let Some(ref controller) = self.controller {
+            // Always right before fsm - we never want to deal with dialog
+            if controller.execute_dialog(state) {
+                self.fsm = CombatFsm::Dialog
+            }
+        } else {
+            // Otherwise set idle and wait for a controller
+            self.fsm = CombatFsm::Idle
+        }
+
         match self.fsm {
             CombatFsm::Idle => {
                 // intended to wait for acceptable parameters
@@ -58,6 +70,7 @@ impl CombatManager {
             CombatFsm::Dialog => {
                 // this may not be needed - can probably handle this outside of combat
                 // by delegating control to whoever can deal with this.
+                // TODO(eein): button press here
             }
             CombatFsm::Action => {
                 // Generate Action
@@ -74,5 +87,28 @@ impl CombatManager {
         }
 
         !combat_manager.encounter_active
+    }
+
+    fn encounter_factory(state: &GameState) -> Option<Box<dyn EncounterController>> {
+        match &state
+            .memory_managers
+            .combat_manager
+            .data
+            .combat_controller_type
+        {
+            CombatControllerType::Basic => Some(Box::new(BasicEncounterController::default())),
+            // CombatControllerType::FirstEncounter => Some(Box::new(FirstEncounterController::default())),
+            // CombatControllerType::SecondEncounter => Some(Box::new(SecondEncounterController::default())),
+            // CombatControllerType::DwellerOfStrife => Some(Box::new(DwellerOfStrifeEncounterController::default())),
+            // CombatControllerType::DwellerOfDread => Some(Box::new(DwellerOfDreadEncounterController::default())),
+            // CombatControllerType::KOTutorial => Some(Box::new(KOTutorialEncounterController::default())),
+            // CombatControllerType::LiveManaTutorial => Some(Box::new(LiveManaTutorialEncounterController::default())),
+            // CombatControllerType::ManaRegenTutorial => Some(Box::new(ManaRegenTutorialEncounterController::default())),
+            // CombatControllerType::RoundsTutorial => Some(Box::new(RoundsTutorialEncounterController::default())),
+            // CombatControllerType::SpellLockTutorial => Some(Box::new(SpellLockTutorialEncounterController::default())),
+            // CombatControllerType::TimedBlocksTutorial => Some(Box::new(TimedBlocksTutorialEncounterController::default())),
+            // CombatControllerType::TimedHitsTutorial => Some(Box::new(TimedHitsTutorialEncounterController::default())),
+            _ => Some(Box::new(BasicEncounterController::default())),
+        }
     }
 }

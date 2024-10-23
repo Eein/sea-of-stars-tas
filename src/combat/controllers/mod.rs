@@ -2,17 +2,12 @@ pub mod basic_encounter_controller;
 use crate::state::GameState;
 
 pub trait EncounterController {
-    /// If combat is done, just exit.
-    fn encounter_done(&self, state: &GameState) -> bool {
-        state.memory_managers.combat_manager.data.encounter_active
-    }
-
     /// Mashing confirm to dismiss dialog on screen.
     ///
     /// There are some fights with dialog mid-fight and
     /// this will get us through it until we regain control.
-    fn execute_dialog(&self, _state: &GameState) -> bool {
-        true
+    fn execute_dialog(&self, state: &GameState) -> bool {
+        state.memory_managers.new_dialog_manager.data.dialog_visible
     }
 
     /// Generate an action.
