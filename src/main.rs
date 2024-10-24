@@ -1,4 +1,5 @@
 mod assets;
+mod combat;
 mod config;
 mod control;
 mod game_manager;
