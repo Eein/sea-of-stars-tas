@@ -125,19 +125,19 @@ impl GuiHelper for DebugHelper {
                 ));
                 ui.separator();
                 ui.label(format!(
-                    "Is In Cutscene: : {}",
+                    "Is In Cutscene: {}",
                     cutscene_manager.is_in_cutscene
                 ));
                 ui.label(format!(
-                    "Is Skipping Cutscene: : {}",
+                    "Is Skipping Cutscene: {}",
                     cutscene_manager.is_skipping_cutscene
                 ));
                 ui.label(format!(
-                    "Skip Cutscene Locked: : {}",
+                    "Skip Cutscene Locked: {}",
                     cutscene_manager.skip_cutscene_locked
                 ));
                 ui.label(format!(
-                    "Skip Cutscene Transition Screen PTR : 0x{:x}",
+                    "Skip Cutscene Transition Screen PTR: 0x{:x}",
                     cutscene_manager.skip_cutscene_transition_screen
                 ));
             });
