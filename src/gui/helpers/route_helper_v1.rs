@@ -41,50 +41,51 @@ impl GuiHelper for RouteHelperV1 {
         let world_pos = ppmd.position;
         let pos = ppmd.gameobject_position;
 
-        // TODO(orkaboy): Layout? Put all of these on the same line
-        if ui.button("To").clicked() {
-            self.coords
-                .push(Move::To(pos.get_x(), pos.get_y(), pos.get_z()));
-        }
-        if ui.button("ToWorld").clicked() {
-            self.coords.push(Move::ToWorld(
-                world_pos.get_x(),
-                world_pos.get_y(),
-                world_pos.get_z(),
-            ));
-        }
-        if ui.button("Climb").clicked() {
-            self.coords
-                .push(Move::Climb(pos.get_x(), pos.get_y(), pos.get_z()));
-        }
-        if ui.button("Interact").clicked() {
-            self.coords
-                .push(Move::Interact(pos.get_x(), pos.get_y(), pos.get_z()));
-        }
-        if ui.button("WaitFor").clicked() {
-            self.coords.push(Move::WaitFor(0.0));
-        }
-        if ui.button("HoldDir").clicked() {
-            self.coords.push(Move::HoldDir(
-                [0.0, 0.0],
-                [pos.get_x(), pos.get_y(), pos.get_z()],
-            ));
-        }
-        if ui.button("HoldDirWorld").clicked() {
-            self.coords.push(Move::HoldDirWorld(
-                [0.0, 0.0],
-                [world_pos.get_x(), world_pos.get_y(), world_pos.get_z()],
-            ));
-        }
-        if ui.button("Confirm").clicked() {
-            self.coords.push(Move::Confirm);
-        }
-        if ui.button("Log").clicked() {
-            self.coords.push(Move::Log("TEMP"));
-        }
-        if ui.button("ChangeTime").clicked() {
-            self.coords.push(Move::ChangeTime(0.0));
-        }
+        ui.horizontal(|ui| {
+            if ui.button("To").clicked() {
+                self.coords
+                    .push(Move::To(pos.get_x(), pos.get_y(), pos.get_z()));
+            }
+            if ui.button("ToWorld").clicked() {
+                self.coords.push(Move::ToWorld(
+                    world_pos.get_x(),
+                    world_pos.get_y(),
+                    world_pos.get_z(),
+                ));
+            }
+            if ui.button("Climb").clicked() {
+                self.coords
+                    .push(Move::Climb(pos.get_x(), pos.get_y(), pos.get_z()));
+            }
+            if ui.button("Interact").clicked() {
+                self.coords
+                    .push(Move::Interact(pos.get_x(), pos.get_y(), pos.get_z()));
+            }
+            if ui.button("WaitFor").clicked() {
+                self.coords.push(Move::WaitFor(0.0));
+            }
+            if ui.button("HoldDir").clicked() {
+                self.coords.push(Move::HoldDir(
+                    [0.0, 0.0],
+                    [pos.get_x(), pos.get_y(), pos.get_z()],
+                ));
+            }
+            if ui.button("HoldDirWorld").clicked() {
+                self.coords.push(Move::HoldDirWorld(
+                    [0.0, 0.0],
+                    [world_pos.get_x(), world_pos.get_y(), world_pos.get_z()],
+                ));
+            }
+            if ui.button("Confirm").clicked() {
+                self.coords.push(Move::Confirm);
+            }
+            if ui.button("Log").clicked() {
+                self.coords.push(Move::Log("TEMP"));
+            }
+            if ui.button("ChangeTime").clicked() {
+                self.coords.push(Move::ChangeTime(0.0));
+            }
+        });
 
         ui.separator();
         if ui.button("Copy to clipboard").clicked() {
