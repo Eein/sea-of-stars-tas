@@ -51,6 +51,7 @@ impl MainHelper {
     fn draw_title(&self, game_state: &GameState, ui: &mut egui::Ui) {
         let tsmd = &game_state.memory_managers.title_sequence_manager.data;
 
+        ui.label("Title Screen Active");
         match tsmd.current_screen_name.as_str() {
             "TitleScreen" => {
                 if tsmd.pressed_start {
@@ -260,10 +261,9 @@ impl MainHelper {
     fn draw_level_up(&self, game_state: &mut GameState, ui: &mut egui::Ui) {
         let lum = &game_state.memory_managers.level_up_manager.data;
 
+        ui.label("Level Up Active");
         ui.label(format!("Current Character: {:?}", lum.current_character));
-
         ui.label(format!("Active Index: {}", lum.upgrade_index));
-
         ui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |ui| {
             for upgrade in lum.current_upgrades.items.iter() {
                 stat_image(ui, &upgrade.upgrade, upgrade.selected);
