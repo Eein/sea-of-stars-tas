@@ -1,4 +1,4 @@
-use super::GuiHelper;
+use super::{GuiHelper, MovementGui};
 use crate::{game_manager::GameManager, seq::movement::Move, state::GameState};
 
 pub const NAME: &str = "Route Helper v1";
@@ -6,11 +6,15 @@ pub const NAME: &str = "Route Helper v1";
 #[derive(Debug)]
 pub struct RouteHelperV1 {
     coords: Vec<Move>,
+    m_gui: MovementGui,
 }
 
 impl RouteHelperV1 {
     pub fn create() -> Box<Self> {
-        Box::new(Self { coords: Vec::new() })
+        Box::new(Self {
+            coords: Vec::new(),
+            m_gui: MovementGui::new(),
+        })
     }
 }
 
@@ -23,6 +27,9 @@ impl GuiHelper for RouteHelperV1 {
         _tab: &mut String,
     ) {
         let ppmd = &game_state.memory_managers.player_party_manager.data;
+
+        self.m_gui.draw(game_state, ui);
+        ui.separator();
 
         ui.label(format!("Coords: {}", self.coords.len()));
         if ui.button("Clear").clicked() {

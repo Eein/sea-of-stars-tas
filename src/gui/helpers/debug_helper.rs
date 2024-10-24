@@ -13,31 +13,54 @@ enum CoordFsm {
 }
 
 #[derive(Debug)]
-pub struct DebugHelper {
+pub struct MovementGui {
     coord_fsm: CoordFsm,
     last_game_obj: Vector3<f32>,
     last_world: Vector3<f32>,
     last_boat: Vector3<f32>,
 }
 
-impl DebugHelper {
-    pub fn create() -> Box<Self> {
-        Box::new(Self {
+impl MovementGui {
+    pub fn new() -> Self {
+        Self {
             coord_fsm: CoordFsm::GameObj,
             last_game_obj: Vector3::default(),
             last_world: Vector3::default(),
             last_boat: Vector3::default(),
-        })
+        }
     }
 
-    fn draw_timer(&self, ui: &mut egui::Ui, timer: &SpeedrunTimer) {
-        ui.label(format!("Is Started: {}", timer.is_started));
-        ui.label(format!("Is Paused: {}", timer.is_paused));
-        ui.label(format!("Timer In Second: {}", timer.timer_in_second));
-        ui.label(format!(
-            "Realtime Delta Time: {}",
-            timer.realtime_delta_time
-        ));
+    pub fn draw(&mut self, game_state: &GameState, ui: &mut egui::Ui) {
+        let ppmd = &game_state.memory_managers.player_party_manager.data;
+        let bmd = &game_state.memory_managers.boat_manager.data;
+
+        const EPSILON: f64 = 0.01;
+
+        if !self
+            .last_game_obj
+            .fuzzy_equal(&ppmd.gameobject_position, EPSILON)
+        {
+            self.coord_fsm = CoordFsm::GameObj;
+        } else if !self.last_world.fuzzy_equal(&ppmd.position, EPSILON) {
+            self.coord_fsm = CoordFsm::World;
+        } else if !self.last_boat.fuzzy_equal(&bmd.position, EPSILON) {
+            self.coord_fsm = CoordFsm::Boat;
+        }
+
+        ui.label(format!("Coord type: {:?}", self.coord_fsm));
+        match self.coord_fsm {
+            CoordFsm::GameObj => self.draw_coord(ui, &ppmd.gameobject_position),
+            CoordFsm::World => self.draw_coord(ui, &ppmd.position),
+            CoordFsm::Boat => {
+                self.draw_coord(ui, &bmd.position);
+                ui.label(format!("Rot (yaw): {:?}", &bmd.rotation.to_yaw()));
+                ui.label(format!("speed: {:.3}/{:.3}", bmd.speed, bmd.max_speed));
+            }
+        }
+
+        self.last_game_obj = ppmd.gameobject_position;
+        self.last_world = ppmd.position;
+        self.last_boat = bmd.position;
     }
 
     fn draw_coord(&self, ui: &mut egui::Ui, pos: &Vector3<f32>) {
@@ -56,6 +79,29 @@ impl DebugHelper {
     }
 }
 
+#[derive(Debug)]
+pub struct DebugHelper {
+    m_gui: MovementGui,
+}
+
+impl DebugHelper {
+    pub fn create() -> Box<Self> {
+        Box::new(Self {
+            m_gui: MovementGui::new(),
+        })
+    }
+
+    fn draw_timer(&self, ui: &mut egui::Ui, timer: &SpeedrunTimer) {
+        ui.label(format!("Is Started: {}", timer.is_started));
+        ui.label(format!("Is Paused: {}", timer.is_paused));
+        ui.label(format!("Timer In Second: {}", timer.timer_in_second));
+        ui.label(format!(
+            "Realtime Delta Time: {}",
+            timer.realtime_delta_time
+        ));
+    }
+}
+
 impl GuiHelper for DebugHelper {
     fn draw(
         &mut self,
@@ -70,38 +116,11 @@ impl GuiHelper for DebugHelper {
         let cutscene_manager = &game_state.memory_managers.cutscene_manager.data;
         let speedrun_manager = &game_state.memory_managers.speedrun_manager.data;
         let ppmd = &game_state.memory_managers.player_party_manager.data;
-        let bmd = &game_state.memory_managers.boat_manager.data;
-
-        const EPSILON: f64 = 0.01;
-
-        if !self
-            .last_game_obj
-            .fuzzy_equal(&ppmd.gameobject_position, EPSILON)
-        {
-            self.coord_fsm = CoordFsm::GameObj;
-        } else if !self.last_world.fuzzy_equal(&ppmd.position, EPSILON) {
-            self.coord_fsm = CoordFsm::World;
-        } else if !self.last_boat.fuzzy_equal(&bmd.position, EPSILON) {
-            self.coord_fsm = CoordFsm::Boat;
-        }
 
         ui.label(format!("Leader: {:?}", ppmd.leader_character));
         ui.label(format!("Movement State: {:?}", ppmd.movement_state));
-        ui.label(format!("Coord type: {:?}", self.coord_fsm));
 
-        match self.coord_fsm {
-            CoordFsm::GameObj => self.draw_coord(ui, &ppmd.gameobject_position),
-            CoordFsm::World => self.draw_coord(ui, &ppmd.position),
-            CoordFsm::Boat => {
-                self.draw_coord(ui, &bmd.position);
-                ui.label(format!("Rot (yaw): {:?}", &bmd.rotation.to_yaw()));
-                ui.label(format!("speed: {:.3}/{:.3}", bmd.speed, bmd.max_speed));
-            }
-        }
-
-        self.last_game_obj = ppmd.gameobject_position;
-        self.last_world = ppmd.position;
-        self.last_boat = bmd.position;
+        self.m_gui.draw(game_state, ui);
 
         ui.separator();
 
