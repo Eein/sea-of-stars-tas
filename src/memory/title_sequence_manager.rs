@@ -13,6 +13,8 @@ use memory::string::{ArrayCString, ArrayWString};
 
 #[derive(Default, Debug)]
 pub struct TitleSequenceManagerData {
+    /// True if singleton is not 0x0
+    pub active: bool,
     /// Title Menu Option data
     pub title_menu_option_selected: TitleMenuOption,
     /// Current Screen Name field
@@ -46,6 +48,9 @@ impl MemoryManagerUpdate for TitleSequenceManagerData {
         manager: &mut UnityMemoryManager,
     ) -> Result<(), MemoryError> {
         let memory_context = MemoryContext::create(ctx, manager)?;
+
+        // if the singleton is not 0x0, set active true
+        self.active = !matches!(memory_context.singleton.class, 0);
 
         self.update_pressed_start(&memory_context)?;
         self.update_current_screen_name(&memory_context)?;

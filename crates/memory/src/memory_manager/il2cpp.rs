@@ -37,6 +37,8 @@ impl UnityMemoryManagement for UnityMemoryManager {
             if let Some(static_table) = self.static_table {
                 if let Ok(addr) = process.read_pointer::<u64>(static_table + instance as u64) {
                     self.singleton = Some(Class { class: addr });
+                } else {
+                    self.singleton = Some(Class { class: 0 });
                 }
             }
         }
