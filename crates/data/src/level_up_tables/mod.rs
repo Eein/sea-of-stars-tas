@@ -12,12 +12,12 @@ pub fn get_sum_of_character_stats_by_level(
     level: u32,
 ) -> LevelUpStats {
     match character {
-        PlayerPartyCharacter::Valere => self::valere::stats_table().get(&level).unwrap().clone(),
-        PlayerPartyCharacter::Zale => self::valere::stats_table().get(&level).unwrap().clone(),
-        PlayerPartyCharacter::Bst => self::bst::stats_table().get(&level).unwrap().clone(),
-        PlayerPartyCharacter::Garl => self::garl::stats_table().get(&level).unwrap().clone(),
-        PlayerPartyCharacter::Serai => self::serai::stats_table().get(&level).unwrap().clone(),
-        PlayerPartyCharacter::Reshan => self::reshan::stats_table().get(&level).unwrap().clone(),
+        PlayerPartyCharacter::Valere => self::valere::stats_table_summed().get(&level).unwrap().clone(),
+        PlayerPartyCharacter::Zale => self::zale::stats_table_summed().get(&level).unwrap().clone(),
+        PlayerPartyCharacter::Bst => self::bst::stats_table_summed().get(&level).unwrap().clone(),
+        PlayerPartyCharacter::Garl => self::garl::stats_table_summed().get(&level).unwrap().clone(),
+        PlayerPartyCharacter::Serai => self::serai::stats_table_summed().get(&level).unwrap().clone(),
+        PlayerPartyCharacter::Reshan => self::reshan::stats_table_summed().get(&level).unwrap().clone(),
         _ => LevelUpStats::default().clone(),
     }
 }

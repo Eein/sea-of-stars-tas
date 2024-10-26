@@ -410,13 +410,15 @@ impl UnityItem for CombatPlayer {
     fn read(process: &Process, item_ptr: u64) -> Result<Self, MemoryError> {
         // Top level pointers
         // max_hp/mp may be 0x58 instead of 0x50
-        let current_hp = process.read_pointer_path::<u32>(item_ptr, &[0x150, 0x28, 0x58])?;
+        let current_hp = process.read_pointer_path::<u32>(item_ptr, &[0x180, 0x28, 0x58])?;
         let current_mp = process.read_pointer_path::<u32>(item_ptr, &[0x180, 0x30, 0x58])?;
 
         let base_hp = process.read_pointer_path::<u32>(item_ptr, &[0x150, 0x30, 0x20])?;
         let base_mp = process.read_pointer_path::<u32>(item_ptr, &[0x150, 0x30, 0x50])?;
 
-        let level = process.read_pointer_path::<u32>(item_ptr, &[0x150, 0x30, 0x88, 0x18])?;
+        // this get the current level up upgrades + 1, so if they're level 2 they should
+        // have one upgrade.
+        let level = process.read_pointer_path::<u32>(item_ptr, &[0x150, 0x30, 0x88, 0x18])? + 1;
 
         let base_physical_defense =
             process.read_pointer_path::<u32>(item_ptr, &[0x150, 0x30, 0x28])?;

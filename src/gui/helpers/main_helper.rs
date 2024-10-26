@@ -205,8 +205,8 @@ impl MainHelper {
                             ui.label(format!("{:?} ({})", player.character, i));
                             ui.label(format!("{}", player.selected));
                             ui.label(format!("{}", player.enabled));
-                            ui.label(format!("{}", player.current_hp));
-                            ui.label(format!("{}", player.current_mp));
+                            ui.label(format!("{}/{}", player.current_hp, player.max_hp));
+                            ui.label(format!("{}/{}", player.current_mp, player.max_mp));
                             ui.label(format!(
                                 "{}|{}",
                                 player.base_physical_attack, player.physical_attack
