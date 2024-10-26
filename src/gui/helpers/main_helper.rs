@@ -5,8 +5,8 @@ use crate::{game_manager::GameManager, state::GameState};
 
 use crate::assets::ASSETS;
 use crate::memory::combat_manager::CombatDamageType;
-use crate::memory::level_up_manager::LevelUpUpgrade;
 use crate::memory::combat_manager::{CombatEnemy, CombatPlayer};
+use crate::memory::level_up_manager::LevelUpUpgrade;
 
 use data::prelude::PlayerPartyCharacter;
 
@@ -326,55 +326,80 @@ impl MainHelper {
                 //calculate basic attack damage
                 let min_damage = Self::calculate_basic_attack_damage(player, enemy, 0.0);
                 let max_damage = Self::calculate_basic_attack_damage(player, enemy, 3.0);
-                ui.label(format!("Enemy: {:.5} | Damage: {:.3}-{:.3} Timed: {:.3}-{:.3}", enemy.unique_id, min_damage.0.round(), max_damage.0.round(), (min_damage.0 + min_damage.1).round(), (max_damage.0 + max_damage.1).round()));
-
+                ui.label(format!(
+                    "Enemy: {:.5} | Damage: {:.3}-{:.3} Timed: {:.3}-{:.3}",
+                    enemy.unique_id,
+                    min_damage.0.round(),
+                    max_damage.0.round(),
+                    (min_damage.0 + min_damage.1).round(),
+                    (max_damage.0 + max_damage.1).round()
+                ));
             }
         }
-
     }
 
     // The final damage calculation is (int)value, so just floor them.
-    fn calculate_basic_attack_damage(player: &CombatPlayer, enemy: &CombatEnemy, random: f32) -> (f32, f32) {
-
+    fn calculate_basic_attack_damage(
+        player: &CombatPlayer,
+        enemy: &CombatEnemy,
+        random: f32,
+    ) -> (f32, f32) {
+        // floats are very specific - this matters
         const PHYSICAL_DEFENSE_CAP: f32 = 150.0;
-        const MANA_CHARGE_STAT_MULTIPLIER: f32 = 0.3;
+        const MANA_CHARGE_STAT_MULTIPLIER: f32 = 0.330000;
         const MAGICAL_DEFENSE_CAP: f32 = 150.0;
-        const TIMED_HIT_MULTIPLIER: f32 = 1.3; // in globalCombatSettings -> basicAttackTimedHitMultiplier
+        const TIMED_HIT_MULTIPLIER: f32 = 1.299999; // in globalCombatSettings -> basicAttackTimedHitMultiplier
 
         // manually do this for now
         let damage_type_attack_modifier = match player.character {
             PlayerPartyCharacter::Zale => {
                 if player.mana_charge_count > 0 {
                     // find modifier in enemy weaknesses
-                    if let Some((_key, value)) = enemy.damage_type_modifiers.items.iter().find(|(k,_v)| k.key == CombatDamageType::Sun) {
+                    if let Some((_key, value)) = enemy
+                        .damage_type_modifiers
+                        .items
+                        .iter()
+                        .find(|(k, _v)| k.key == CombatDamageType::Sun)
+                    {
                         value.value
-                    } else { 1.0 }
-                } else { 
-                    1.0
-                }
-
-            },
-            PlayerPartyCharacter::Valere => {
-                if player.mana_charge_count > 0 {
-                    if let Some((_key, value)) = enemy.damage_type_modifiers.items.iter().find(|(k,_v)| k.key == CombatDamageType::Moon) {
-                        value.value
-                    } else { 1.0 }
+                    } else {
+                        1.0
+                    }
                 } else {
                     1.0
                 }
-            },
-            _ => 1.0
+            }
+            PlayerPartyCharacter::Valere => {
+                if player.mana_charge_count > 0 {
+                    if let Some((_key, value)) = enemy
+                        .damage_type_modifiers
+                        .items
+                        .iter()
+                        .find(|(k, _v)| k.key == CombatDamageType::Moon)
+                    {
+                        value.value
+                    } else {
+                        1.0
+                    }
+                } else {
+                    1.0
+                }
+            }
+            _ => 1.0,
         };
-        
-        // Apply boosted damage emodifier to physical attack on basic attacks
-        let boosted_live_mana_attack = (player.magical_attack as f32 * MANA_CHARGE_STAT_MULTIPLIER * damage_type_attack_modifier);// + random;
 
-        let total_physical_attack = (damage_type_attack_modifier * player.physical_attack as f32) + random;
+        // Apply boosted damage emodifier to physical attack on basic attacks
+        let boosted_live_mana_attack = player.magical_attack as f32
+            * MANA_CHARGE_STAT_MULTIPLIER
+            * damage_type_attack_modifier; // + random;
+
+        let total_physical_attack =
+            (damage_type_attack_modifier * player.physical_attack as f32) + random;
 
         let magical_defense_cap_ratio = enemy.magical_defense as f32 / MAGICAL_DEFENSE_CAP;
         let physical_defense_cap_ratio = enemy.physical_defense as f32 / PHYSICAL_DEFENSE_CAP;
-        
-        let mut total_magical_attack  = boosted_live_mana_attack * player.mana_charge_count as f32;
+
+        let mut total_magical_attack = boosted_live_mana_attack * player.mana_charge_count as f32;
         total_magical_attack *= 1.0 - magical_defense_cap_ratio; // deduct enemy defense ratio
 
         let mut total_physical_attack = total_physical_attack;
@@ -387,7 +412,6 @@ impl MainHelper {
         (total_attack, timed_hit_damage)
     }
 }
-
 
 impl GuiHelper for MainHelper {
     fn draw(
