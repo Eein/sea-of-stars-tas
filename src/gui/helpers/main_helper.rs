@@ -353,6 +353,15 @@ impl MainHelper {
         // manually do this for now
         let damage_type_attack_modifier = match player.character {
             PlayerPartyCharacter::Zale => {
+                let mut modifiers = 1.0;
+                if let Some((_key, value)) = enemy
+                    .damage_type_modifiers
+                    .items
+                    .iter()
+                    .find(|(k, _v)| k.key == CombatDamageType::Sword)
+                {
+                    modifiers *= value.value;
+                }
                 if player.mana_charge_count > 0 {
                     // find modifier in enemy weaknesses
                     if let Some((_key, value)) = enemy
@@ -361,15 +370,21 @@ impl MainHelper {
                         .iter()
                         .find(|(k, _v)| k.key == CombatDamageType::Sun)
                     {
-                        value.value
-                    } else {
-                        1.0
+                        modifiers *= value.value;
                     }
-                } else {
-                    1.0
                 }
+                modifiers
             }
             PlayerPartyCharacter::Valere => {
+                let mut modifiers = 1.0;
+                if let Some((_key, value)) = enemy
+                    .damage_type_modifiers
+                    .items
+                    .iter()
+                    .find(|(k, _v)| k.key == CombatDamageType::Blunt)
+                {
+                    modifiers *= value.value;
+                }
                 if player.mana_charge_count > 0 {
                     if let Some((_key, value)) = enemy
                         .damage_type_modifiers
@@ -377,13 +392,23 @@ impl MainHelper {
                         .iter()
                         .find(|(k, _v)| k.key == CombatDamageType::Moon)
                     {
-                        value.value
-                    } else {
-                        1.0
+                        modifiers *= value.value;
                     }
-                } else {
-                    1.0
                 }
+                modifiers
+            }
+
+            PlayerPartyCharacter::Garl => {
+                let mut modifiers = 1.0;
+                if let Some((_key, value)) = enemy
+                    .damage_type_modifiers
+                    .items
+                    .iter()
+                    .find(|(k, _v)| k.key == CombatDamageType::Blunt)
+                {
+                    modifiers *= value.value;
+                }
+                modifiers
             }
             _ => 1.0,
         };
