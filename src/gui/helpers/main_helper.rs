@@ -184,6 +184,7 @@ impl MainHelper {
                     .striped(true)
                     .show(ui, |ui| {
                         ui.label("Name");
+                        ui.label("Lv");
                         ui.label("Selected");
                         ui.label("Enabled");
                         ui.label("HP");
@@ -203,6 +204,7 @@ impl MainHelper {
 
                         for (i, player) in cmd.players.items.iter().enumerate() {
                             ui.label(format!("{:?} ({})", player.character, i));
+                            ui.label(format!("{}", player.level));
                             ui.label(format!("{}", player.selected));
                             ui.label(format!("{}", player.enabled));
                             ui.label(format!("{}/{}", player.current_hp, player.max_hp));
