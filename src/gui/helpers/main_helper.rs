@@ -144,8 +144,10 @@ impl MainHelper {
                             ui.label(format!("{}", enemy.total_spell_locks));
 
                             ui.horizontal(|ui| {
-                                for modifier in enemy.spell_locks.items.iter() {
-                                    damage_type_image(ui, modifier)
+                                if enemy.turns_to_action > 0 {
+                                    for modifier in enemy.spell_locks.items.iter() {
+                                        damage_type_image(ui, modifier)
+                                    }
                                 }
                                 // This is required to push the column that images dont seem to resize
                                 ui.label("");
