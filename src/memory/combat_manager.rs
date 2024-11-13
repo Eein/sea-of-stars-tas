@@ -346,7 +346,7 @@ impl UnityItem for CombatEnemy {
 
         let mut spell_locks = UnityList::<CombatDamageType>::default();
 
-        if total_spell_locks > 0 {
+        if turns_to_action > 0 && total_spell_locks > 0 {
             spell_locks = if let Ok(locks) = process.read_pointer_path::<u64>(casting_data, &[0x18])
             {
                 UnityList::<CombatDamageType>::read(process, locks)?
