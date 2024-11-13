@@ -42,6 +42,8 @@ const parseItemType = (type) => {
   switch(type) {
   case 'WEAPON': 
      return "ItemType::Weapon"
+  case 'WEAPON': 
+     return "ItemType::Weapon"
   case 'GROUP': 
      return "ItemType::GroupTrinket"
   case 'SNACK': 
@@ -68,6 +70,8 @@ const parseItemType = (type) => {
      return "ItemType::Ingredient"
   case 'Armor': 
      return "ItemType::Armor"
+  case 'CURRENCY': 
+     return "ItemType::Currency"
   
   default:
     console.error(`Not type found for: ${type}`)
@@ -100,9 +104,9 @@ fs.readdir('./input/', function(err, filenames) {
         return
       }
       let maxQuantity = json?.maxQuantity
-      let orderPriority = json?.orderPriority
-      let buyPrice = json?.buyPrice
-      let sellPrice = json?.sellPrice
+      let orderPriority = json?.orderPriority || 0
+      let buyPrice = json?.buyPrice || 0
+      let sellPrice = json?.sellPrice || 0
       let validCharacters = json?.validCharacters
       let isGroupTrinket = json?.isGroupTrinket
       let physicalAttack = json?.physicalAttack || 0

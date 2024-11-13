@@ -22,6 +22,7 @@ pub enum ItemType {
     Recipe,
     Relic,
     StoryArtifact, // Teaks Item
+    Currency,
     #[default]
     Unknown,
 }
