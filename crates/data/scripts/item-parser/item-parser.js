@@ -42,8 +42,6 @@ const parseItemType = (type) => {
   switch(type) {
   case 'WEAPON': 
      return "ItemType::Weapon"
-  case 'WEAPON': 
-     return "ItemType::Weapon"
   case 'GROUP': 
      return "ItemType::GroupTrinket"
   case 'SNACK': 
