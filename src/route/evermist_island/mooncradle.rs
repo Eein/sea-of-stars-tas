@@ -35,7 +35,6 @@ fn looms_to_center() -> Box<dyn Node<GameState, GameEvent>> {
     )
 }
 
-
 pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
     SeqList::create(
         "Mooncradle intro",
@@ -75,9 +74,7 @@ fn skip_intro() -> Box<dyn Node<GameState, GameEvent>> {
         vec![
             SeqMove::create(
                 "Move to Solstice Diploma",
-                vec![
-                    Move::To(-12.353, -0.998, 49.594),
-                ],
+                vec![Move::To(-12.353, -0.998, 49.594)],
             ),
             // Trigger Solstice Diploma
             SeqSelectOption::create(vec![0], false),
