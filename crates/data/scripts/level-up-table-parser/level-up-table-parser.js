@@ -29,6 +29,18 @@ tables.forEach((table) => {
   // let summed_name = camel_to_snake(table.m_Name) + `_sum`
   fs.writeFileSync(`./output/${name}.rs`, output)
 
+  // level 1 stats
+     output = `// Level 1
+m.insert(1, LevelUpStats { 
+  hp: 0, 
+  mp: 0,
+  physical_attack: 0,
+  physical_defense: 0,
+  magical_attack: 0,
+  magical_defense: 0,
+});
+
+`
   table.levelUpStats.Array.forEach((stat, index) =>  {
      output += `// Level ${index+2} - ${name}
 m.insert(${index+2}, LevelUpStats { 
@@ -67,6 +79,17 @@ tables.forEach((table) => {
   let ma = 0
   let md = 0
 
+     output = `// Level 1
+m.insert(1, LevelUpStats { 
+  hp: 0, 
+  mp: 0,
+  physical_attack: 0,
+  physical_defense: 0,
+  magical_attack: 0,
+  magical_defense: 0,
+});
+
+`
   table.levelUpStats.Array.forEach((stat, index) =>  {
     hp += stat.hp
     sp += stat.sp
