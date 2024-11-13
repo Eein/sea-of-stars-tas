@@ -2,7 +2,7 @@ use crate::seq::movement::*;
 use crate::state::{GameEvent, GameState};
 use seq::prelude::*;
 
-pub fn intro() -> Box<dyn Node<GameState, GameEvent>> {
+pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
     SeqMove::create(
         "Mountain trail intro",
         vec![
