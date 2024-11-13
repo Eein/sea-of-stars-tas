@@ -7,6 +7,19 @@ pub fn stats_table_summed() -> &'static HashMap<u32, LevelUpStats> {
     static HASHMAP: OnceLock<HashMap<u32, LevelUpStats>> = OnceLock::new();
     HASHMAP.get_or_init(|| {
         let mut m = HashMap::new();
+        // Level 1
+        m.insert(
+            1,
+            LevelUpStats {
+                hp: 0,
+                mp: 0,
+                physical_attack: 0,
+                physical_defense: 0,
+                magical_attack: 0,
+                magical_defense: 0,
+            },
+        );
+
         // Sum Level 2 - valere_level_up_table_sum
         m.insert(
             2,
