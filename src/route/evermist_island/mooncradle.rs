@@ -4,6 +4,8 @@ use crate::state::{GameEvent, GameState};
 use data::prelude::*;
 use seq::prelude::*;
 
+use crate::seq::branch::CondRelic;
+
 use super::SeqSelectOption;
 
 fn looms_to_center() -> Box<dyn Node<GameState, GameEvent>> {
@@ -33,23 +35,63 @@ fn looms_to_center() -> Box<dyn Node<GameState, GameEvent>> {
     )
 }
 
-pub fn flashback() -> Box<dyn Node<GameState, GameEvent>> {
+
+pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
     SeqList::create(
-        "Mooncradle flashback",
+        "Mooncradle intro",
         vec![
             SeqCheckpoint::create("Mooncradle Intro Cavern"),
             SeqMove::create(
                 "Mooncradle intro",
                 vec![
                     Move::Log("Move to cliff"),
-                    Move::To(-68.930, -10.998, 26.150),
-                    Move::HoldDir([0.0, -1.0], [-13.969, -11.998, 38.757]),
-                    Move::To(-13.969, -11.998, 36.392),
-                    Move::To(-12.504, -11.998, 34.927),
-                    Move::To(-9.406, -11.998, 34.927),
-                    Move::Climb(-9.500, -6.998, 36.467),
-                    Move::To(-13.482, -6.998, 40.543),
-                    Move::Climb(-13.500, -0.998, 41.467),
+                    Move::To(-69.005, -10.998, 24.871),
+                    Move::HoldDir([0.0, -1.0], [-13.969002, -11.998001, 36.68851]),
+                    Move::To(-12.039, -11.998, 35.009),
+                    Move::Interact(-9.407, -10.998, 35.009),
+                    Move::Interact(-9.375, -6.998, 37.092),
+                    Move::Interact(-12.149, -5.998, 39.865),
+                    Move::To(-13.446, -5.998, 40.543),
+                    Move::Interact(-13.500, -0.998, 41.967),
+                ],
+            ),
+            // Up to Diploma
+            SeqIf::create(
+                "Solstice Diploma",
+                CondRelic {
+                    name: "Solstice Diploma",
+                },
+                Some(skip_intro()),
+                Some(flashback()), // Rest of flashback
+                false,
+            ),
+        ],
+    )
+}
+
+fn skip_intro() -> Box<dyn Node<GameState, GameEvent>> {
+    SeqList::create(
+        "Mooncradle flashback",
+        vec![
+            SeqMove::create(
+                "Move to Solstice Diploma",
+                vec![
+                    Move::To(-12.353, -0.998, 49.594),
+                ],
+            ),
+            // Trigger Solstice Diploma
+            SeqSelectOption::create(vec![0], false),
+        ],
+    )
+}
+
+fn flashback() -> Box<dyn Node<GameState, GameEvent>> {
+    SeqList::create(
+        "Mooncradle flashback",
+        vec![
+            SeqMove::create(
+                "Mooncradle intro",
+                vec![
                     Move::Log("Move to cutscene"),
                     Move::To(-9.222, -0.820, 53.985),
                     Move::To(-7.318, 1.010, 62.634),

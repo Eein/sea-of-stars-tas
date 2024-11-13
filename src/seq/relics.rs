@@ -26,6 +26,7 @@ pub struct SeqRelicList {
 }
 
 impl SeqRelicList {
+    #[allow(dead_code)]
     pub fn create() -> Box<Self> {
         Box::new(Self::default())
     }
