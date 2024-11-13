@@ -238,59 +238,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // WEAPON_AETHERWOODCORK_NAME
-        m.insert(
-            "Aetherwood Cork",
-            Item {
-                guid: "807d9f5c8b8f5514abcf261a36dc1711",
-                item_type: ItemType::Weapon,
-                name: "Aetherwood Cork",
-                order_priority: 215,
-                max_quantity: 255,
-                buy_price: 172,
-                sell_price: 43,
-                equippable_by: Some(&[PlayerPartyCharacter::Reshan]),
-                physical_attack: 44,
-                magical_attack: 49,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "807d9f5c8b8f5514abcf261a36dc1711",
-            Item {
-                guid: "807d9f5c8b8f5514abcf261a36dc1711",
-                item_type: ItemType::Weapon,
-                name: "Aetherwood Cork",
-                order_priority: 215,
-                max_quantity: 255,
-                buy_price: 172,
-                sell_price: 43,
-                equippable_by: Some(&[PlayerPartyCharacter::Reshan]),
-                physical_attack: 44,
-                magical_attack: 49,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // ARMOR_ADVENRURERVEST_NAME
         m.insert(
             "Adventurer's Vest",
@@ -407,20 +354,20 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // WEAPON_APOGEEDAGGERS_NAME
+        // WEAPON_AETHERWOODCORK_NAME
         m.insert(
-            "Apogee Daggers",
+            "Aetherwood Cork",
             Item {
-                guid: "a164640364ccf3546b0b9a0ac82b59cf",
+                guid: "807d9f5c8b8f5514abcf261a36dc1711",
                 item_type: ItemType::Weapon,
-                name: "Apogee Daggers",
-                order_priority: 185,
+                name: "Aetherwood Cork",
+                order_priority: 215,
                 max_quantity: 255,
-                buy_price: 184,
-                sell_price: 46,
-                equippable_by: Some(&[PlayerPartyCharacter::Serai]),
-                physical_attack: 41,
-                magical_attack: 35,
+                buy_price: 172,
+                sell_price: 43,
+                equippable_by: Some(&[PlayerPartyCharacter::Reshan]),
+                physical_attack: 44,
+                magical_attack: 49,
                 physical_defense: 0,
                 magical_defense: 0,
                 hp_to_restore: 0,
@@ -435,18 +382,18 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
         );
 
         m.insert(
-            "a164640364ccf3546b0b9a0ac82b59cf",
+            "807d9f5c8b8f5514abcf261a36dc1711",
             Item {
-                guid: "a164640364ccf3546b0b9a0ac82b59cf",
+                guid: "807d9f5c8b8f5514abcf261a36dc1711",
                 item_type: ItemType::Weapon,
-                name: "Apogee Daggers",
-                order_priority: 185,
+                name: "Aetherwood Cork",
+                order_priority: 215,
                 max_quantity: 255,
-                buy_price: 184,
-                sell_price: 46,
-                equippable_by: Some(&[PlayerPartyCharacter::Serai]),
-                physical_attack: 41,
-                magical_attack: 35,
+                buy_price: 172,
+                sell_price: 43,
+                equippable_by: Some(&[PlayerPartyCharacter::Reshan]),
+                physical_attack: 44,
+                magical_attack: 49,
                 physical_defense: 0,
                 magical_defense: 0,
                 hp_to_restore: 0,
@@ -527,6 +474,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
+        // WEAPON_APOGEEDAGGERS_NAME
+        m.insert(
+            "Apogee Daggers",
+            Item {
+                guid: "a164640364ccf3546b0b9a0ac82b59cf",
+                item_type: ItemType::Weapon,
+                name: "Apogee Daggers",
+                order_priority: 185,
+                max_quantity: 255,
+                buy_price: 184,
+                sell_price: 46,
+                equippable_by: Some(&[PlayerPartyCharacter::Serai]),
+                physical_attack: 41,
+                magical_attack: 35,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "a164640364ccf3546b0b9a0ac82b59cf",
+            Item {
+                guid: "a164640364ccf3546b0b9a0ac82b59cf",
+                item_type: ItemType::Weapon,
+                name: "Apogee Daggers",
+                order_priority: 185,
+                max_quantity: 255,
+                buy_price: 184,
+                sell_price: 46,
+                equippable_by: Some(&[PlayerPartyCharacter::Serai]),
+                physical_attack: 41,
+                magical_attack: 35,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
         // TRINKET_ASSASSINSPIN_NAME
         m.insert(
             "Assassin's Pin",
@@ -594,59 +594,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // WEAPON_BAMBOOSLICER_NAME
-        m.insert(
-            "Bamboo Slicer",
-            Item {
-                guid: "0a9e0ac0bb822b349af356af38ad6a5d",
-                item_type: ItemType::Weapon,
-                name: "Bamboo Slicer",
-                order_priority: 95,
-                max_quantity: 255,
-                buy_price: 140,
-                sell_price: 35,
-                equippable_by: Some(&[PlayerPartyCharacter::Zale]),
-                physical_attack: 22,
-                magical_attack: 19,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "0a9e0ac0bb822b349af356af38ad6a5d",
-            Item {
-                guid: "0a9e0ac0bb822b349af356af38ad6a5d",
-                item_type: ItemType::Weapon,
-                name: "Bamboo Slicer",
-                order_priority: 95,
-                max_quantity: 255,
-                buy_price: 140,
-                sell_price: 35,
-                equippable_by: Some(&[PlayerPartyCharacter::Zale]),
-                physical_attack: 22,
-                magical_attack: 19,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // ARMOR_AZURECAPE_NAME
         m.insert(
             "Azure Cape",
@@ -697,6 +644,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 magical_attack: 0,
                 physical_defense: 33,
                 magical_defense: 39,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // WEAPON_BAMBOOSLICER_NAME
+        m.insert(
+            "Bamboo Slicer",
+            Item {
+                guid: "0a9e0ac0bb822b349af356af38ad6a5d",
+                item_type: ItemType::Weapon,
+                name: "Bamboo Slicer",
+                order_priority: 95,
+                max_quantity: 255,
+                buy_price: 140,
+                sell_price: 35,
+                equippable_by: Some(&[PlayerPartyCharacter::Zale]),
+                physical_attack: 22,
+                magical_attack: 19,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "0a9e0ac0bb822b349af356af38ad6a5d",
+            Item {
+                guid: "0a9e0ac0bb822b349af356af38ad6a5d",
+                item_type: ItemType::Weapon,
+                name: "Bamboo Slicer",
+                order_priority: 95,
+                max_quantity: 255,
+                buy_price: 140,
+                sell_price: 35,
+                equippable_by: Some(&[PlayerPartyCharacter::Zale]),
+                physical_attack: 22,
+                magical_attack: 19,
+                physical_defense: 0,
+                magical_defense: 0,
                 hp_to_restore: 0,
                 mp_to_restore: 0,
                 // Restore mode
@@ -881,59 +881,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // WEAPON_CALCITELID_NAME
-        m.insert(
-            "Calcite Lid",
-            Item {
-                guid: "108a40870288c934d94c1661286ff1f0",
-                item_type: ItemType::Weapon,
-                name: "Calcite Lid",
-                order_priority: 65,
-                max_quantity: 255,
-                buy_price: 56,
-                sell_price: 14,
-                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
-                physical_attack: 15,
-                magical_attack: 13,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "108a40870288c934d94c1661286ff1f0",
-            Item {
-                guid: "108a40870288c934d94c1661286ff1f0",
-                item_type: ItemType::Weapon,
-                name: "Calcite Lid",
-                order_priority: 65,
-                max_quantity: 255,
-                buy_price: 56,
-                sell_price: 14,
-                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
-                physical_attack: 15,
-                magical_attack: 13,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // ARMOR_BOXERSHORTS_NAME
         m.insert(
             "Leather Pauldrons",
@@ -984,6 +931,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 ]),
                 physical_attack: 0,
                 magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // WEAPON_CALCITELID_NAME
+        m.insert(
+            "Calcite Lid",
+            Item {
+                guid: "108a40870288c934d94c1661286ff1f0",
+                item_type: ItemType::Weapon,
+                name: "Calcite Lid",
+                order_priority: 65,
+                max_quantity: 255,
+                buy_price: 56,
+                sell_price: 14,
+                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
+                physical_attack: 15,
+                magical_attack: 13,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "108a40870288c934d94c1661286ff1f0",
+            Item {
+                guid: "108a40870288c934d94c1661286ff1f0",
+                item_type: ItemType::Weapon,
+                name: "Calcite Lid",
+                order_priority: 65,
+                max_quantity: 255,
+                buy_price: 56,
+                sell_price: 14,
+                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
+                physical_attack: 15,
+                magical_attack: 13,
                 physical_defense: 0,
                 magical_defense: 0,
                 hp_to_restore: 0,
@@ -1156,59 +1156,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // ARMOR_CLOUDYSIMULACRUM_NAME
-        m.insert(
-            "Cloudy Simulacrum",
-            Item {
-                guid: "2e09170437a631e46ac9b9669464618c",
-                item_type: ItemType::Armor,
-                name: "Cloudy Simulacrum",
-                order_priority: 210,
-                max_quantity: 255,
-                buy_price: 144,
-                sell_price: 36,
-                equippable_by: Some(&[PlayerPartyCharacter::Bst]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 45,
-                magical_defense: 42,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "2e09170437a631e46ac9b9669464618c",
-            Item {
-                guid: "2e09170437a631e46ac9b9669464618c",
-                item_type: ItemType::Armor,
-                name: "Cloudy Simulacrum",
-                order_priority: 210,
-                max_quantity: 255,
-                buy_price: 144,
-                sell_price: 36,
-                equippable_by: Some(&[PlayerPartyCharacter::Bst]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 45,
-                magical_defense: 42,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // CONCHITEM_RAINBOWSTAR_NAME
         m.insert(
             "Rainbow Star",
@@ -1251,6 +1198,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 magical_attack: 0,
                 physical_defense: 0,
                 magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // ARMOR_CLOUDYSIMULACRUM_NAME
+        m.insert(
+            "Cloudy Simulacrum",
+            Item {
+                guid: "2e09170437a631e46ac9b9669464618c",
+                item_type: ItemType::Armor,
+                name: "Cloudy Simulacrum",
+                order_priority: 210,
+                max_quantity: 255,
+                buy_price: 144,
+                sell_price: 36,
+                equippable_by: Some(&[PlayerPartyCharacter::Bst]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 45,
+                magical_defense: 42,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "2e09170437a631e46ac9b9669464618c",
+            Item {
+                guid: "2e09170437a631e46ac9b9669464618c",
+                item_type: ItemType::Armor,
+                name: "Cloudy Simulacrum",
+                order_priority: 210,
+                max_quantity: 255,
+                buy_price: 144,
+                sell_price: 36,
+                equippable_by: Some(&[PlayerPartyCharacter::Bst]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 45,
+                magical_defense: 42,
                 hp_to_restore: 0,
                 mp_to_restore: 0,
                 // Restore mode
@@ -1408,6 +1408,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 equippable_by: Some(&[PlayerPartyCharacter::Zale]),
                 physical_attack: 19,
                 magical_attack: 15,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // WEAPON_CORALSTAFF_NAME
+        m.insert(
+            "Coral Staff",
+            Item {
+                guid: "70a7707a760f40046b71b4b2e111a708",
+                item_type: ItemType::Weapon,
+                name: "Coral Staff",
+                order_priority: 85,
+                max_quantity: 255,
+                buy_price: 112,
+                sell_price: 28,
+                equippable_by: Some(&[PlayerPartyCharacter::Valere]),
+                physical_attack: 22,
+                magical_attack: 10,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "70a7707a760f40046b71b4b2e111a708",
+            Item {
+                guid: "70a7707a760f40046b71b4b2e111a708",
+                item_type: ItemType::Weapon,
+                name: "Coral Staff",
+                order_priority: 85,
+                max_quantity: 255,
+                buy_price: 112,
+                sell_price: 28,
+                equippable_by: Some(&[PlayerPartyCharacter::Valere]),
+                physical_attack: 22,
+                magical_attack: 10,
                 physical_defense: 0,
                 magical_defense: 0,
                 hp_to_restore: 0,
@@ -1722,59 +1775,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // ARMOR_DULLSIMULACRUM_NAME
-        m.insert(
-            "Dull Simulacrum",
-            Item {
-                guid: "e26fa36b128e76041938bf3c86ad8eef",
-                item_type: ItemType::Armor,
-                name: "Dull Simulacrum",
-                order_priority: 195,
-                max_quantity: 255,
-                buy_price: 144,
-                sell_price: 36,
-                equippable_by: Some(&[PlayerPartyCharacter::Bst]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 37,
-                magical_defense: 37,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "e26fa36b128e76041938bf3c86ad8eef",
-            Item {
-                guid: "e26fa36b128e76041938bf3c86ad8eef",
-                item_type: ItemType::Armor,
-                name: "Dull Simulacrum",
-                order_priority: 195,
-                max_quantity: 255,
-                buy_price: 144,
-                sell_price: 36,
-                equippable_by: Some(&[PlayerPartyCharacter::Bst]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 37,
-                magical_defense: 37,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // WEAPON_EARTHSHINESTAFF_NAME
         m.insert(
             "Earthshine Staff",
@@ -1828,6 +1828,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
+        // ARMOR_DULLSIMULACRUM_NAME
+        m.insert(
+            "Dull Simulacrum",
+            Item {
+                guid: "e26fa36b128e76041938bf3c86ad8eef",
+                item_type: ItemType::Armor,
+                name: "Dull Simulacrum",
+                order_priority: 195,
+                max_quantity: 255,
+                buy_price: 144,
+                sell_price: 36,
+                equippable_by: Some(&[PlayerPartyCharacter::Bst]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 37,
+                magical_defense: 37,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "e26fa36b128e76041938bf3c86ad8eef",
+            Item {
+                guid: "e26fa36b128e76041938bf3c86ad8eef",
+                item_type: ItemType::Armor,
+                name: "Dull Simulacrum",
+                order_priority: 195,
+                max_quantity: 255,
+                buy_price: 144,
+                sell_price: 36,
+                equippable_by: Some(&[PlayerPartyCharacter::Bst]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 37,
+                magical_defense: 37,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
         // ARMOR_ECLIPSEARMOR_NAME
         m.insert(
             "Eclipse Armor",
@@ -1870,73 +1923,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 magical_attack: 0,
                 physical_defense: 53,
                 magical_defense: 49,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // TRINKET_ENCHANTEDCHAINLINK_NAME
-        m.insert(
-            "Enchanted Chain-Link",
-            Item {
-                guid: "d311de20fa85a5148a7b523f0af76f47",
-                item_type: ItemType::Trinket,
-                name: "Enchanted Chain-Link",
-                order_priority: 0,
-                max_quantity: 255,
-                buy_price: 150,
-                sell_price: 120,
-                equippable_by: Some(&[
-                    PlayerPartyCharacter::Zale,
-                    PlayerPartyCharacter::Valere,
-                    PlayerPartyCharacter::Garl,
-                    PlayerPartyCharacter::Serai,
-                    PlayerPartyCharacter::Reshan,
-                    PlayerPartyCharacter::Bst,
-                ]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "d311de20fa85a5148a7b523f0af76f47",
-            Item {
-                guid: "d311de20fa85a5148a7b523f0af76f47",
-                item_type: ItemType::Trinket,
-                name: "Enchanted Chain-Link",
-                order_priority: 0,
-                max_quantity: 255,
-                buy_price: 150,
-                sell_price: 120,
-                equippable_by: Some(&[
-                    PlayerPartyCharacter::Zale,
-                    PlayerPartyCharacter::Valere,
-                    PlayerPartyCharacter::Garl,
-                    PlayerPartyCharacter::Serai,
-                    PlayerPartyCharacter::Reshan,
-                    PlayerPartyCharacter::Bst,
-                ]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
                 hp_to_restore: 0,
                 mp_to_restore: 0,
                 // Restore mode
@@ -2015,17 +2001,17 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // TRINKET_EVERGREEN_LEAF_NAME
+        // TRINKET_ENCHANTEDCHAINLINK_NAME
         m.insert(
-            "Evergreen Leaf",
+            "Enchanted Chain-Link",
             Item {
-                guid: "af3e10fe5b7abd940baadad96a4e5e7c",
+                guid: "d311de20fa85a5148a7b523f0af76f47",
                 item_type: ItemType::Trinket,
-                name: "Evergreen Leaf",
-                order_priority: 40,
+                name: "Enchanted Chain-Link",
+                order_priority: 0,
                 max_quantity: 255,
-                buy_price: 220,
-                sell_price: 55,
+                buy_price: 150,
+                sell_price: 120,
                 equippable_by: Some(&[
                     PlayerPartyCharacter::Zale,
                     PlayerPartyCharacter::Valere,
@@ -2050,15 +2036,15 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
         );
 
         m.insert(
-            "af3e10fe5b7abd940baadad96a4e5e7c",
+            "d311de20fa85a5148a7b523f0af76f47",
             Item {
-                guid: "af3e10fe5b7abd940baadad96a4e5e7c",
+                guid: "d311de20fa85a5148a7b523f0af76f47",
                 item_type: ItemType::Trinket,
-                name: "Evergreen Leaf",
-                order_priority: 40,
+                name: "Enchanted Chain-Link",
+                order_priority: 0,
                 max_quantity: 255,
-                buy_price: 220,
-                sell_price: 55,
+                buy_price: 150,
+                sell_price: 120,
                 equippable_by: Some(&[
                     PlayerPartyCharacter::Zale,
                     PlayerPartyCharacter::Valere,
@@ -2126,6 +2112,73 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 max_quantity: 255,
                 buy_price: 888,
                 sell_price: 87,
+                equippable_by: Some(&[
+                    PlayerPartyCharacter::Zale,
+                    PlayerPartyCharacter::Valere,
+                    PlayerPartyCharacter::Garl,
+                    PlayerPartyCharacter::Serai,
+                    PlayerPartyCharacter::Reshan,
+                    PlayerPartyCharacter::Bst,
+                ]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // TRINKET_EVERGREEN_LEAF_NAME
+        m.insert(
+            "Evergreen Leaf",
+            Item {
+                guid: "af3e10fe5b7abd940baadad96a4e5e7c",
+                item_type: ItemType::Trinket,
+                name: "Evergreen Leaf",
+                order_priority: 40,
+                max_quantity: 255,
+                buy_price: 220,
+                sell_price: 55,
+                equippable_by: Some(&[
+                    PlayerPartyCharacter::Zale,
+                    PlayerPartyCharacter::Valere,
+                    PlayerPartyCharacter::Garl,
+                    PlayerPartyCharacter::Serai,
+                    PlayerPartyCharacter::Reshan,
+                    PlayerPartyCharacter::Bst,
+                ]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "af3e10fe5b7abd940baadad96a4e5e7c",
+            Item {
+                guid: "af3e10fe5b7abd940baadad96a4e5e7c",
+                item_type: ItemType::Trinket,
+                name: "Evergreen Leaf",
+                order_priority: 40,
+                max_quantity: 255,
+                buy_price: 220,
+                sell_price: 55,
                 equippable_by: Some(&[
                     PlayerPartyCharacter::Zale,
                     PlayerPartyCharacter::Valere,
@@ -2308,6 +2361,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
+        // ARMOR_GARLSAPRON_NAME
+        m.insert(
+            "Garl's Apron",
+            Item {
+                guid: "86737d6ef697c204187aea8533ec4244",
+                item_type: ItemType::Armor,
+                name: "Garl's Apron",
+                order_priority: 224,
+                max_quantity: 255,
+                buy_price: 144,
+                sell_price: 36,
+                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 50,
+                magical_defense: 50,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "86737d6ef697c204187aea8533ec4244",
+            Item {
+                guid: "86737d6ef697c204187aea8533ec4244",
+                item_type: ItemType::Armor,
+                name: "Garl's Apron",
+                order_priority: 224,
+                max_quantity: 255,
+                buy_price: 144,
+                sell_price: 36,
+                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 50,
+                magical_defense: 50,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
         // TRINKET_GAMBLEREARRING_NAME
         m.insert(
             "Gambler's Earring",
@@ -2361,78 +2467,18 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // WEAPON_CORALSTAFF_NAME
+        // CURRENCY_GOLD_NAME
         m.insert(
-            "Coral Staff",
+            "Gold",
             Item {
-                guid: "70a7707a760f40046b71b4b2e111a708",
-                item_type: ItemType::Weapon,
-                name: "Coral Staff",
-                order_priority: 85,
-                max_quantity: 255,
-                buy_price: 112,
-                sell_price: 28,
-                equippable_by: Some(&[PlayerPartyCharacter::Valere]),
-                physical_attack: 22,
-                magical_attack: 10,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "70a7707a760f40046b71b4b2e111a708",
-            Item {
-                guid: "70a7707a760f40046b71b4b2e111a708",
-                item_type: ItemType::Weapon,
-                name: "Coral Staff",
-                order_priority: 85,
-                max_quantity: 255,
-                buy_price: 112,
-                sell_price: 28,
-                equippable_by: Some(&[PlayerPartyCharacter::Valere]),
-                physical_attack: 22,
-                magical_attack: 10,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // TRINKET_GREEN_LEAF_NAME
-        m.insert(
-            "Green Leaf",
-            Item {
-                guid: "0ee892db1da195541bcbe578898265b5",
-                item_type: ItemType::Trinket,
-                name: "Green Leaf",
-                order_priority: 5,
-                max_quantity: 255,
-                buy_price: 28,
-                sell_price: 7,
-                equippable_by: Some(&[
-                    PlayerPartyCharacter::Zale,
-                    PlayerPartyCharacter::Valere,
-                    PlayerPartyCharacter::Garl,
-                    PlayerPartyCharacter::Serai,
-                    PlayerPartyCharacter::Reshan,
-                    PlayerPartyCharacter::Bst,
-                ]),
+                guid: "aa25a5a12fc640d48b5e36da20aa0798",
+                item_type: ItemType::Currency,
+                name: "Gold",
+                order_priority: 0,
+                max_quantity: 999,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
                 physical_attack: 0,
                 magical_attack: 0,
                 physical_defense: 0,
@@ -2449,80 +2495,20 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
         );
 
         m.insert(
-            "0ee892db1da195541bcbe578898265b5",
+            "aa25a5a12fc640d48b5e36da20aa0798",
             Item {
-                guid: "0ee892db1da195541bcbe578898265b5",
-                item_type: ItemType::Trinket,
-                name: "Green Leaf",
-                order_priority: 5,
-                max_quantity: 255,
-                buy_price: 28,
-                sell_price: 7,
-                equippable_by: Some(&[
-                    PlayerPartyCharacter::Zale,
-                    PlayerPartyCharacter::Valere,
-                    PlayerPartyCharacter::Garl,
-                    PlayerPartyCharacter::Serai,
-                    PlayerPartyCharacter::Reshan,
-                    PlayerPartyCharacter::Bst,
-                ]),
+                guid: "aa25a5a12fc640d48b5e36da20aa0798",
+                item_type: ItemType::Currency,
+                name: "Gold",
+                order_priority: 0,
+                max_quantity: 999,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
                 physical_attack: 0,
                 magical_attack: 0,
                 physical_defense: 0,
                 magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // ARMOR_GARLSAPRON_NAME
-        m.insert(
-            "Garl's Apron",
-            Item {
-                guid: "86737d6ef697c204187aea8533ec4244",
-                item_type: ItemType::Armor,
-                name: "Garl's Apron",
-                order_priority: 224,
-                max_quantity: 255,
-                buy_price: 144,
-                sell_price: 36,
-                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 50,
-                magical_defense: 50,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "86737d6ef697c204187aea8533ec4244",
-            Item {
-                guid: "86737d6ef697c204187aea8533ec4244",
-                item_type: ItemType::Armor,
-                name: "Garl's Apron",
-                order_priority: 224,
-                max_quantity: 255,
-                buy_price: 144,
-                sell_price: 36,
-                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 50,
-                magical_defense: 50,
                 hp_to_restore: 0,
                 mp_to_restore: 0,
                 // Restore mode
@@ -2640,17 +2626,84 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // INGREDIENT_APPLE_NAME
+        // TRINKET_GREEN_LEAF_NAME
         m.insert(
-            "Apple",
+            "Green Leaf",
             Item {
-                guid: "1050b67b61f94084d970b6ae4c33dc01",
-                item_type: ItemType::Ingredient,
-                name: "Apple",
-                order_priority: 140,
+                guid: "0ee892db1da195541bcbe578898265b5",
+                item_type: ItemType::Trinket,
+                name: "Green Leaf",
+                order_priority: 5,
                 max_quantity: 255,
-                buy_price: 4,
-                sell_price: 2,
+                buy_price: 28,
+                sell_price: 7,
+                equippable_by: Some(&[
+                    PlayerPartyCharacter::Zale,
+                    PlayerPartyCharacter::Valere,
+                    PlayerPartyCharacter::Garl,
+                    PlayerPartyCharacter::Serai,
+                    PlayerPartyCharacter::Reshan,
+                    PlayerPartyCharacter::Bst,
+                ]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "0ee892db1da195541bcbe578898265b5",
+            Item {
+                guid: "0ee892db1da195541bcbe578898265b5",
+                item_type: ItemType::Trinket,
+                name: "Green Leaf",
+                order_priority: 5,
+                max_quantity: 255,
+                buy_price: 28,
+                sell_price: 7,
+                equippable_by: Some(&[
+                    PlayerPartyCharacter::Zale,
+                    PlayerPartyCharacter::Valere,
+                    PlayerPartyCharacter::Garl,
+                    PlayerPartyCharacter::Serai,
+                    PlayerPartyCharacter::Reshan,
+                    PlayerPartyCharacter::Bst,
+                ]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // INGREDIENT_BONE_NAME
+        m.insert(
+            "Bone",
+            Item {
+                guid: "9a6abc7114f0eb9409f27b6816830fff",
+                item_type: ItemType::Ingredient,
+                name: "Bone",
+                order_priority: 40,
+                max_quantity: 255,
+                buy_price: 6,
+                sell_price: 3,
                 equippable_by: None,
                 physical_attack: 0,
                 magical_attack: 0,
@@ -2668,15 +2721,15 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
         );
 
         m.insert(
-            "1050b67b61f94084d970b6ae4c33dc01",
+            "9a6abc7114f0eb9409f27b6816830fff",
             Item {
-                guid: "1050b67b61f94084d970b6ae4c33dc01",
+                guid: "9a6abc7114f0eb9409f27b6816830fff",
                 item_type: ItemType::Ingredient,
-                name: "Apple",
-                order_priority: 140,
+                name: "Bone",
+                order_priority: 40,
                 max_quantity: 255,
-                buy_price: 4,
-                sell_price: 2,
+                buy_price: 6,
+                sell_price: 3,
                 equippable_by: None,
                 physical_attack: 0,
                 magical_attack: 0,
@@ -2799,17 +2852,17 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // INGREDIENT_BONE_NAME
+        // INGREDIENT_APPLE_NAME
         m.insert(
-            "Bone",
+            "Apple",
             Item {
-                guid: "9a6abc7114f0eb9409f27b6816830fff",
+                guid: "1050b67b61f94084d970b6ae4c33dc01",
                 item_type: ItemType::Ingredient,
-                name: "Bone",
-                order_priority: 40,
+                name: "Apple",
+                order_priority: 140,
                 max_quantity: 255,
-                buy_price: 6,
-                sell_price: 3,
+                buy_price: 4,
+                sell_price: 2,
                 equippable_by: None,
                 physical_attack: 0,
                 magical_attack: 0,
@@ -2827,15 +2880,15 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
         );
 
         m.insert(
-            "9a6abc7114f0eb9409f27b6816830fff",
+            "1050b67b61f94084d970b6ae4c33dc01",
             Item {
-                guid: "9a6abc7114f0eb9409f27b6816830fff",
+                guid: "1050b67b61f94084d970b6ae4c33dc01",
                 item_type: ItemType::Ingredient,
-                name: "Bone",
-                order_priority: 40,
+                name: "Apple",
+                order_priority: 140,
                 max_quantity: 255,
-                buy_price: 6,
-                sell_price: 3,
+                buy_price: 4,
+                sell_price: 2,
                 equippable_by: None,
                 physical_attack: 0,
                 magical_attack: 0,
@@ -2958,59 +3011,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // INGREDIENT_MEAT_NAME
-        m.insert(
-            "Meat",
-            Item {
-                guid: "0b7efbffd76a27f489ea26df56bbc5ad",
-                item_type: ItemType::Ingredient,
-                name: "Meat",
-                order_priority: 50,
-                max_quantity: 255,
-                buy_price: 4,
-                sell_price: 2,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "0b7efbffd76a27f489ea26df56bbc5ad",
-            Item {
-                guid: "0b7efbffd76a27f489ea26df56bbc5ad",
-                item_type: ItemType::Ingredient,
-                name: "Meat",
-                order_priority: 50,
-                max_quantity: 255,
-                buy_price: 4,
-                sell_price: 2,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // INGREDIENT_MAPLESYRUP_NAME
         m.insert(
             "Maple Syrup",
@@ -3064,17 +3064,17 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // INGREDIENT_MUSHROOM_NAME
+        // INGREDIENT_MEAT_NAME
         m.insert(
-            "Mushroom",
+            "Meat",
             Item {
-                guid: "8a5e759b4475ca04d882e7d2b0c9b47a",
+                guid: "0b7efbffd76a27f489ea26df56bbc5ad",
                 item_type: ItemType::Ingredient,
-                name: "Mushroom",
-                order_priority: 110,
+                name: "Meat",
+                order_priority: 50,
                 max_quantity: 255,
-                buy_price: 2,
-                sell_price: 1,
+                buy_price: 4,
+                sell_price: 2,
                 equippable_by: None,
                 physical_attack: 0,
                 magical_attack: 0,
@@ -3092,15 +3092,15 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
         );
 
         m.insert(
-            "8a5e759b4475ca04d882e7d2b0c9b47a",
+            "0b7efbffd76a27f489ea26df56bbc5ad",
             Item {
-                guid: "8a5e759b4475ca04d882e7d2b0c9b47a",
+                guid: "0b7efbffd76a27f489ea26df56bbc5ad",
                 item_type: ItemType::Ingredient,
-                name: "Mushroom",
-                order_priority: 110,
+                name: "Meat",
+                order_priority: 50,
                 max_quantity: 255,
-                buy_price: 2,
-                sell_price: 1,
+                buy_price: 4,
+                sell_price: 2,
                 equippable_by: None,
                 physical_attack: 0,
                 magical_attack: 0,
@@ -3207,6 +3207,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 max_quantity: 255,
                 buy_price: 4,
                 sell_price: 2,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // INGREDIENT_MUSHROOM_NAME
+        m.insert(
+            "Mushroom",
+            Item {
+                guid: "8a5e759b4475ca04d882e7d2b0c9b47a",
+                item_type: ItemType::Ingredient,
+                name: "Mushroom",
+                order_priority: 110,
+                max_quantity: 255,
+                buy_price: 2,
+                sell_price: 1,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "8a5e759b4475ca04d882e7d2b0c9b47a",
+            Item {
+                guid: "8a5e759b4475ca04d882e7d2b0c9b47a",
+                item_type: ItemType::Ingredient,
+                name: "Mushroom",
+                order_priority: 110,
+                max_quantity: 255,
+                buy_price: 2,
+                sell_price: 1,
                 equippable_by: None,
                 physical_attack: 0,
                 magical_attack: 0,
@@ -3435,59 +3488,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // INGREDIENT_SEAFOOD_NAME
-        m.insert(
-            "Seafood",
-            Item {
-                guid: "76b491199a5df8745a77f2a20ae8bc38",
-                item_type: ItemType::Ingredient,
-                name: "Seafood",
-                order_priority: 70,
-                max_quantity: 255,
-                buy_price: 2,
-                sell_price: 1,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "76b491199a5df8745a77f2a20ae8bc38",
-            Item {
-                guid: "76b491199a5df8745a77f2a20ae8bc38",
-                item_type: ItemType::Ingredient,
-                name: "Seafood",
-                order_priority: 70,
-                max_quantity: 255,
-                buy_price: 2,
-                sell_price: 1,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // INGREDIENT_TOMATO_NAME
         m.insert(
             "Tomato",
@@ -3541,14 +3541,67 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // DEFAULTCHESTCUTSCENE_1
+        // INGREDIENT_SEAFOOD_NAME
         m.insert(
-            "INTERNAL[DEFAULT CHEST CUTSCENE]",
+            "Seafood",
             Item {
-                guid: "68ab74a0318d0824fa8f2e0426562469",
-                item_type: ItemType::Unknown,
-                name: "INTERNAL[DEFAULT CHEST CUTSCENE]",
-                order_priority: 0,
+                guid: "76b491199a5df8745a77f2a20ae8bc38",
+                item_type: ItemType::Ingredient,
+                name: "Seafood",
+                order_priority: 70,
+                max_quantity: 255,
+                buy_price: 2,
+                sell_price: 1,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "76b491199a5df8745a77f2a20ae8bc38",
+            Item {
+                guid: "76b491199a5df8745a77f2a20ae8bc38",
+                item_type: ItemType::Ingredient,
+                name: "Seafood",
+                order_priority: 70,
+                max_quantity: 255,
+                buy_price: 2,
+                sell_price: 1,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // KEYITEM_WIZARDLAB_REDCRYSTAL_NAME
+        m.insert(
+            "Red Crystal",
+            Item {
+                guid: "d0ecc064753be7d48b7818b0113d10f8",
+                item_type: ItemType::Key,
+                name: "Red Crystal",
+                order_priority: 2030,
                 max_quantity: 1,
                 buy_price: 0,
                 sell_price: 0,
@@ -3569,12 +3622,12 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
         );
 
         m.insert(
-            "68ab74a0318d0824fa8f2e0426562469",
+            "d0ecc064753be7d48b7818b0113d10f8",
             Item {
-                guid: "68ab74a0318d0824fa8f2e0426562469",
-                item_type: ItemType::Unknown,
-                name: "INTERNAL[DEFAULT CHEST CUTSCENE]",
-                order_priority: 0,
+                guid: "d0ecc064753be7d48b7818b0113d10f8",
+                item_type: ItemType::Key,
+                name: "Red Crystal",
+                order_priority: 2030,
                 max_quantity: 1,
                 buy_price: 0,
                 sell_price: 0,
@@ -3628,59 +3681,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 item_type: ItemType::Key,
                 name: "Coin of Undeath Accord",
                 order_priority: 2040,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // KEYITEM_WIZARDLAB_REDCRYSTAL_NAME
-        m.insert(
-            "Red Crystal",
-            Item {
-                guid: "d0ecc064753be7d48b7818b0113d10f8",
-                item_type: ItemType::Key,
-                name: "Red Crystal",
-                order_priority: 2030,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "d0ecc064753be7d48b7818b0113d10f8",
-            Item {
-                guid: "d0ecc064753be7d48b7818b0113d10f8",
-                item_type: ItemType::Key,
-                name: "Red Crystal",
-                order_priority: 2030,
                 max_quantity: 1,
                 buy_price: 0,
                 sell_price: 0,
@@ -3806,59 +3806,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // KEYITEM_AIRELEMENTALTRIANGULARSOCKETKEY_NAME
-        m.insert(
-            "Triangular Slab",
-            Item {
-                guid: "91949467e3e270d459a609213183ecaf",
-                item_type: ItemType::Key,
-                name: "Triangular Slab",
-                order_priority: 7005,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "91949467e3e270d459a609213183ecaf",
-            Item {
-                guid: "91949467e3e270d459a609213183ecaf",
-                item_type: ItemType::Key,
-                name: "Triangular Slab",
-                order_priority: 7005,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // VALUABLEITEM_ALUMNITOKEN_NAME
         m.insert(
             "Alumni Token",
@@ -3894,6 +3841,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 name: "Alumni Token",
                 order_priority: 0,
                 max_quantity: 99,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // KEYITEM_AIRELEMENTALTRIANGULARSOCKETKEY_NAME
+        m.insert(
+            "Triangular Slab",
+            Item {
+                guid: "91949467e3e270d459a609213183ecaf",
+                item_type: ItemType::Key,
+                name: "Triangular Slab",
+                order_priority: 7005,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "91949467e3e270d459a609213183ecaf",
+            Item {
+                guid: "91949467e3e270d459a609213183ecaf",
+                item_type: ItemType::Key,
+                name: "Triangular Slab",
+                order_priority: 7005,
+                max_quantity: 1,
                 buy_price: 0,
                 sell_price: 0,
                 equippable_by: None,
@@ -4230,59 +4230,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // KEYITEM_DUKEKEY_NAME
-        m.insert(
-            "Duke Aventry's Key",
-            Item {
-                guid: "e9e25324a369a4d4e9331778a4deb8b5",
-                item_type: ItemType::Key,
-                name: "Duke Aventry's Key",
-                order_priority: 11050,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "e9e25324a369a4d4e9331778a4deb8b5",
-            Item {
-                guid: "e9e25324a369a4d4e9331778a4deb8b5",
-                item_type: ItemType::Key,
-                name: "Duke Aventry's Key",
-                order_priority: 11050,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // KEYITEM_DECRYPTEDDATACHIP_NAME
         m.insert(
             "Cypher",
@@ -4317,6 +4264,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 item_type: ItemType::Key,
                 name: "Cypher",
                 order_priority: 11015,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // KEYITEM_DUKEKEY_NAME
+        m.insert(
+            "Duke Aventry's Key",
+            Item {
+                guid: "e9e25324a369a4d4e9331778a4deb8b5",
+                item_type: ItemType::Key,
+                name: "Duke Aventry's Key",
+                order_priority: 11050,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "e9e25324a369a4d4e9331778a4deb8b5",
+            Item {
+                guid: "e9e25324a369a4d4e9331778a4deb8b5",
+                item_type: ItemType::Key,
+                name: "Duke Aventry's Key",
+                order_priority: 11050,
                 max_quantity: 1,
                 buy_price: 0,
                 sell_price: 0,
@@ -4389,59 +4389,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // KEYITEM_FACTORYCRANEKEY_NAME
-        m.insert(
-            "Crane Operator ID Card",
-            Item {
-                guid: "503a7b18abfa01249b986399fe588505",
-                item_type: ItemType::Key,
-                name: "Crane Operator ID Card",
-                order_priority: 8005,
-                max_quantity: 20,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "503a7b18abfa01249b986399fe588505",
-            Item {
-                guid: "503a7b18abfa01249b986399fe588505",
-                item_type: ItemType::Key,
-                name: "Crane Operator ID Card",
-                order_priority: 8005,
-                max_quantity: 20,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // KEYITEM_FACTORYPOWERBLOCK_NAME
         m.insert(
             "Power Unit",
@@ -4476,6 +4423,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 item_type: ItemType::Key,
                 name: "Power Unit",
                 order_priority: 8010,
+                max_quantity: 20,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // KEYITEM_FACTORYCRANEKEY_NAME
+        m.insert(
+            "Crane Operator ID Card",
+            Item {
+                guid: "503a7b18abfa01249b986399fe588505",
+                item_type: ItemType::Key,
+                name: "Crane Operator ID Card",
+                order_priority: 8005,
+                max_quantity: 20,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "503a7b18abfa01249b986399fe588505",
+            Item {
+                guid: "503a7b18abfa01249b986399fe588505",
+                item_type: ItemType::Key,
+                name: "Crane Operator ID Card",
+                order_priority: 8005,
                 max_quantity: 20,
                 buy_price: 0,
                 sell_price: 0,
@@ -4601,59 +4601,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // KEYITEM_FACTORYWIREPLATESHEET_NAME
-        m.insert(
-            "Wireplate Sheet",
-            Item {
-                guid: "01e9b3e17b5f4c647b43afaba1305bc4",
-                item_type: ItemType::Key,
-                name: "Wireplate Sheet",
-                order_priority: 8020,
-                max_quantity: 20,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "01e9b3e17b5f4c647b43afaba1305bc4",
-            Item {
-                guid: "01e9b3e17b5f4c647b43afaba1305bc4",
-                item_type: ItemType::Key,
-                name: "Wireplate Sheet",
-                order_priority: 8020,
-                max_quantity: 20,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // KEYITEM_FISHINGDUNGEON_DOORKEY_NAME
         m.insert(
             "Fishing Dungeon Key",
@@ -4689,6 +4636,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 name: "Fishing Dungeon Key",
                 order_priority: 11030,
                 max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // KEYITEM_FACTORYWIREPLATESHEET_NAME
+        m.insert(
+            "Wireplate Sheet",
+            Item {
+                guid: "01e9b3e17b5f4c647b43afaba1305bc4",
+                item_type: ItemType::Key,
+                name: "Wireplate Sheet",
+                order_priority: 8020,
+                max_quantity: 20,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "01e9b3e17b5f4c647b43afaba1305bc4",
+            Item {
+                guid: "01e9b3e17b5f4c647b43afaba1305bc4",
+                item_type: ItemType::Key,
+                name: "Wireplate Sheet",
+                order_priority: 8020,
+                max_quantity: 20,
                 buy_price: 0,
                 sell_price: 0,
                 equippable_by: None,
@@ -4919,59 +4919,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // KEYITEM_FLESHMANCERLAIR_VASE03_NAME
-        m.insert(
-            "Big Jar",
-            Item {
-                guid: "ae301ae0d0834f14e8ed770c2c9cfba6",
-                item_type: ItemType::Key,
-                name: "Big Jar",
-                order_priority: 10015,
-                max_quantity: 20,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "ae301ae0d0834f14e8ed770c2c9cfba6",
-            Item {
-                guid: "ae301ae0d0834f14e8ed770c2c9cfba6",
-                item_type: ItemType::Key,
-                name: "Big Jar",
-                order_priority: 10015,
-                max_quantity: 20,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // VALUABLEITEM_FLIMSYHAMMER_NAME
         m.insert(
             "Flimsy Hammer",
@@ -5025,6 +4972,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
+        // KEYITEM_FLESHMANCERLAIR_VASE03_NAME
+        m.insert(
+            "Big Jar",
+            Item {
+                guid: "ae301ae0d0834f14e8ed770c2c9cfba6",
+                item_type: ItemType::Key,
+                name: "Big Jar",
+                order_priority: 10015,
+                max_quantity: 20,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "ae301ae0d0834f14e8ed770c2c9cfba6",
+            Item {
+                guid: "ae301ae0d0834f14e8ed770c2c9cfba6",
+                item_type: ItemType::Key,
+                name: "Big Jar",
+                order_priority: 10015,
+                max_quantity: 20,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
         // KEYITEM_FORBIDDENCAVERNKEY_NAME
         m.insert(
             "Forbidden Cavern Key",
@@ -5059,59 +5059,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 item_type: ItemType::Key,
                 name: "Forbidden Cavern Key",
                 order_priority: 1000,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // KEYITEM_GOLDENFISH_NAME
-        m.insert(
-            "Fish Key",
-            Item {
-                guid: "8b255d22228b85244a4bb673b2b8586b",
-                item_type: ItemType::Key,
-                name: "Fish Key",
-                order_priority: 11035,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "8b255d22228b85244a4bb673b2b8586b",
-            Item {
-                guid: "8b255d22228b85244a4bb673b2b8586b",
-                item_type: ItemType::Key,
-                name: "Fish Key",
-                order_priority: 11035,
                 max_quantity: 1,
                 buy_price: 0,
                 sell_price: 0,
@@ -5184,6 +5131,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
+        // KEYITEM_GOLDENFISH_NAME
+        m.insert(
+            "Fish Key",
+            Item {
+                guid: "8b255d22228b85244a4bb673b2b8586b",
+                item_type: ItemType::Key,
+                name: "Fish Key",
+                order_priority: 11035,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "8b255d22228b85244a4bb673b2b8586b",
+            Item {
+                guid: "8b255d22228b85244a4bb673b2b8586b",
+                item_type: ItemType::Key,
+                name: "Fish Key",
+                order_priority: 11035,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
         // KEYITEM_GRAPLOU_NAME
         m.insert(
             "Graplou",
@@ -5237,59 +5237,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // KEYITEM_GREENPEARL_NAME
-        m.insert(
-            "Green Pearl",
-            Item {
-                guid: "aa4d810d27c12864eb74a976a24a6c5a",
-                item_type: ItemType::Key,
-                name: "Green Pearl",
-                order_priority: 5030,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "aa4d810d27c12864eb74a976a24a6c5a",
-            Item {
-                guid: "aa4d810d27c12864eb74a976a24a6c5a",
-                item_type: ItemType::Key,
-                name: "Green Pearl",
-                order_priority: 5030,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // KEYITEM_GREENFLAME_NAME
         m.insert(
             "Green Flame",
@@ -5324,6 +5271,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 item_type: ItemType::Key,
                 name: "Green Flame",
                 order_priority: 3000,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // KEYITEM_GREENPEARL_NAME
+        m.insert(
+            "Green Pearl",
+            Item {
+                guid: "aa4d810d27c12864eb74a976a24a6c5a",
+                item_type: ItemType::Key,
+                name: "Green Pearl",
+                order_priority: 5030,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "aa4d810d27c12864eb74a976a24a6c5a",
+            Item {
+                guid: "aa4d810d27c12864eb74a976a24a6c5a",
+                item_type: ItemType::Key,
+                name: "Green Pearl",
+                order_priority: 5030,
                 max_quantity: 1,
                 buy_price: 0,
                 sell_price: 0,
@@ -5502,59 +5502,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // KEYITEM_HAUNTEDMANSION_SUPREME_SANDWICH_NAME
-        m.insert(
-            "Master Ghost Sandwich",
-            Item {
-                guid: "e94e5414de65af34a810b8f89c117b6b",
-                item_type: ItemType::Key,
-                name: "Master Ghost Sandwich",
-                order_priority: 3035,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "e94e5414de65af34a810b8f89c117b6b",
-            Item {
-                guid: "e94e5414de65af34a810b8f89c117b6b",
-                item_type: ItemType::Key,
-                name: "Master Ghost Sandwich",
-                order_priority: 3035,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // KEYITEM_HAUNTEDMANSION_REGULAR_SANDWICH_NAME
         m.insert(
             "Ordinary Ghost Sandwich",
@@ -5589,6 +5536,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 item_type: ItemType::Key,
                 name: "Ordinary Ghost Sandwich",
                 order_priority: 3030,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // KEYITEM_HAUNTEDMANSION_SUPREME_SANDWICH_NAME
+        m.insert(
+            "Master Ghost Sandwich",
+            Item {
+                guid: "e94e5414de65af34a810b8f89c117b6b",
+                item_type: ItemType::Key,
+                name: "Master Ghost Sandwich",
+                order_priority: 3035,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "e94e5414de65af34a810b8f89c117b6b",
+            Item {
+                guid: "e94e5414de65af34a810b8f89c117b6b",
+                item_type: ItemType::Key,
+                name: "Master Ghost Sandwich",
+                order_priority: 3035,
                 max_quantity: 1,
                 buy_price: 0,
                 sell_price: 0,
@@ -5767,59 +5767,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // KEYITEM_LUCENT_GHOSTCOOKIE_NAME
-        m.insert(
-            "Turbo Cookie",
-            Item {
-                guid: "5dc17c895fa172b47b22fba330496a8e",
-                item_type: ItemType::Key,
-                name: "Turbo Cookie",
-                order_priority: 3050,
-                max_quantity: 6,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "5dc17c895fa172b47b22fba330496a8e",
-            Item {
-                guid: "5dc17c895fa172b47b22fba330496a8e",
-                item_type: ItemType::Key,
-                name: "Turbo Cookie",
-                order_priority: 3050,
-                max_quantity: 6,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // KEYITEM_LOCKET_NAME
         m.insert(
             "Aventry Locket",
@@ -5908,6 +5855,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 name: "Shed Key",
                 order_priority: 3055,
                 max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // KEYITEM_LUCENT_GHOSTCOOKIE_NAME
+        m.insert(
+            "Turbo Cookie",
+            Item {
+                guid: "5dc17c895fa172b47b22fba330496a8e",
+                item_type: ItemType::Key,
+                name: "Turbo Cookie",
+                order_priority: 3050,
+                max_quantity: 6,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "5dc17c895fa172b47b22fba330496a8e",
+            Item {
+                guid: "5dc17c895fa172b47b22fba330496a8e",
+                item_type: ItemType::Key,
+                name: "Turbo Cookie",
+                order_priority: 3050,
+                max_quantity: 6,
                 buy_price: 0,
                 sell_price: 0,
                 equippable_by: None,
@@ -6244,59 +6244,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // KEYITEM_MORAINEOFFICEKEY_NAME
-        m.insert(
-            "Moraine's Office Key",
-            Item {
-                guid: "c5f18f0632cff954eb6a3bc67eb9c7fe",
-                item_type: ItemType::Key,
-                name: "Moraine's Office Key",
-                order_priority: 5015,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "c5f18f0632cff954eb6a3bc67eb9c7fe",
-            Item {
-                guid: "c5f18f0632cff954eb6a3bc67eb9c7fe",
-                item_type: ItemType::Key,
-                name: "Moraine's Office Key",
-                order_priority: 5015,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // KEYITEM_MORAINE_KEY_NAME
         m.insert(
             "Evermist Shrine Key",
@@ -6331,6 +6278,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 item_type: ItemType::Key,
                 name: "Evermist Shrine Key",
                 order_priority: 5010,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // KEYITEM_MORAINEOFFICEKEY_NAME
+        m.insert(
+            "Moraine's Office Key",
+            Item {
+                guid: "c5f18f0632cff954eb6a3bc67eb9c7fe",
+                item_type: ItemType::Key,
+                name: "Moraine's Office Key",
+                order_priority: 5015,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "c5f18f0632cff954eb6a3bc67eb9c7fe",
+            Item {
+                guid: "c5f18f0632cff954eb6a3bc67eb9c7fe",
+                item_type: ItemType::Key,
+                name: "Moraine's Office Key",
+                order_priority: 5015,
                 max_quantity: 1,
                 buy_price: 0,
                 sell_price: 0,
@@ -6562,59 +6562,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // KEYITEM_PUSHBRACELET_NAME
-        m.insert(
-            "Mistral Bracelet",
-            Item {
-                guid: "5b77e66a1d52fce4cbab840d6dd157c4",
-                item_type: ItemType::Key,
-                name: "Mistral Bracelet",
-                order_priority: 2010,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "5b77e66a1d52fce4cbab840d6dd157c4",
-            Item {
-                guid: "5b77e66a1d52fce4cbab840d6dd157c4",
-                item_type: ItemType::Key,
-                name: "Mistral Bracelet",
-                order_priority: 2010,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // KEYITEM_QUIZZ_QUESTIONPACK01_NAME
         m.insert(
             "Question Pack #1",
@@ -6668,14 +6615,14 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // KEYITEM_QUIZZ_QUESTIONPACK03_NAME
+        // KEYITEM_PUSHBRACELET_NAME
         m.insert(
-            "Question Pack #3",
+            "Mistral Bracelet",
             Item {
-                guid: "dc7c66a209c025f4697e8e8491e098cd",
+                guid: "5b77e66a1d52fce4cbab840d6dd157c4",
                 item_type: ItemType::Key,
-                name: "Question Pack #3",
-                order_priority: 950,
+                name: "Mistral Bracelet",
+                order_priority: 2010,
                 max_quantity: 1,
                 buy_price: 0,
                 sell_price: 0,
@@ -6696,12 +6643,12 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
         );
 
         m.insert(
-            "dc7c66a209c025f4697e8e8491e098cd",
+            "5b77e66a1d52fce4cbab840d6dd157c4",
             Item {
-                guid: "dc7c66a209c025f4697e8e8491e098cd",
+                guid: "5b77e66a1d52fce4cbab840d6dd157c4",
                 item_type: ItemType::Key,
-                name: "Question Pack #3",
-                order_priority: 950,
+                name: "Mistral Bracelet",
+                order_priority: 2010,
                 max_quantity: 1,
                 buy_price: 0,
                 sell_price: 0,
@@ -6755,6 +6702,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 item_type: ItemType::Key,
                 name: "Question Pack #2",
                 order_priority: 955,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // KEYITEM_QUIZZ_QUESTIONPACK03_NAME
+        m.insert(
+            "Question Pack #3",
+            Item {
+                guid: "dc7c66a209c025f4697e8e8491e098cd",
+                item_type: ItemType::Key,
+                name: "Question Pack #3",
+                order_priority: 950,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "dc7c66a209c025f4697e8e8491e098cd",
+            Item {
+                guid: "dc7c66a209c025f4697e8e8491e098cd",
+                item_type: ItemType::Key,
+                name: "Question Pack #3",
+                order_priority: 950,
                 max_quantity: 1,
                 buy_price: 0,
                 sell_price: 0,
@@ -6880,6 +6880,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
+        // KEYITEM_QUIZZ_QUESTIONPACK07_NAME
+        m.insert(
+            "Question Pack #7",
+            Item {
+                guid: "fe30e0ddff22ff94081ceecff3a5d5fd",
+                item_type: ItemType::Key,
+                name: "Question Pack #7",
+                order_priority: 930,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "fe30e0ddff22ff94081ceecff3a5d5fd",
+            Item {
+                guid: "fe30e0ddff22ff94081ceecff3a5d5fd",
+                item_type: ItemType::Key,
+                name: "Question Pack #7",
+                order_priority: 930,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
         // KEYITEM_QUIZZ_QUESTIONPACK06_NAME
         m.insert(
             "Question Pack #6",
@@ -6986,59 +7039,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // KEYITEM_QUIZZ_QUESTIONPACK07_NAME
-        m.insert(
-            "Question Pack #7",
-            Item {
-                guid: "fe30e0ddff22ff94081ceecff3a5d5fd",
-                item_type: ItemType::Key,
-                name: "Question Pack #7",
-                order_priority: 930,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "fe30e0ddff22ff94081ceecff3a5d5fd",
-            Item {
-                guid: "fe30e0ddff22ff94081ceecff3a5d5fd",
-                item_type: ItemType::Key,
-                name: "Question Pack #7",
-                order_priority: 930,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // KEYITEM_QUIZZ_QUESTIONPACK09_NAME
         m.insert(
             "Question Pack #9",
@@ -7079,6 +7079,1885 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 equippable_by: None,
                 physical_attack: 0,
                 magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // WEAPON_SQUIRE_SWORD_NAME
+        m.insert(
+            "Squire Sword",
+            Item {
+                guid: "4a1710ba97ae350428f18704e36fe234",
+                item_type: ItemType::Weapon,
+                name: "Squire Sword",
+                order_priority: 10,
+                max_quantity: 255,
+                buy_price: 32,
+                sell_price: 8,
+                equippable_by: Some(&[PlayerPartyCharacter::Zale]),
+                physical_attack: 5,
+                magical_attack: 5,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "4a1710ba97ae350428f18704e36fe234",
+            Item {
+                guid: "4a1710ba97ae350428f18704e36fe234",
+                item_type: ItemType::Weapon,
+                name: "Squire Sword",
+                order_priority: 10,
+                max_quantity: 255,
+                buy_price: 32,
+                sell_price: 8,
+                equippable_by: Some(&[PlayerPartyCharacter::Zale]),
+                physical_attack: 5,
+                magical_attack: 5,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // ARMOR_SPARKMESHCAPE_NAME
+        m.insert(
+            "Sparkmesh Cape",
+            Item {
+                guid: "fe4a8a4cada2d4a4999403d31f73a50a",
+                item_type: ItemType::Armor,
+                name: "Sparkmesh Cape",
+                order_priority: 205,
+                max_quantity: 255,
+                buy_price: 144,
+                sell_price: 36,
+                equippable_by: Some(&[
+                    PlayerPartyCharacter::Garl,
+                    PlayerPartyCharacter::Serai,
+                    PlayerPartyCharacter::Reshan,
+                ]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 43,
+                magical_defense: 44,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "fe4a8a4cada2d4a4999403d31f73a50a",
+            Item {
+                guid: "fe4a8a4cada2d4a4999403d31f73a50a",
+                item_type: ItemType::Armor,
+                name: "Sparkmesh Cape",
+                order_priority: 205,
+                max_quantity: 255,
+                buy_price: 144,
+                sell_price: 36,
+                equippable_by: Some(&[
+                    PlayerPartyCharacter::Garl,
+                    PlayerPartyCharacter::Serai,
+                    PlayerPartyCharacter::Reshan,
+                ]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 43,
+                magical_defense: 44,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // WEAPON_STARSHARDS_NAME
+        m.insert(
+            "Star Shards",
+            Item {
+                guid: "a27614e2379ef9e4dac1950a51b3f71d",
+                item_type: ItemType::Weapon,
+                name: "Star Shards",
+                order_priority: 210,
+                max_quantity: 255,
+                buy_price: 184,
+                sell_price: 46,
+                equippable_by: Some(&[PlayerPartyCharacter::Serai]),
+                physical_attack: 49,
+                magical_attack: 38,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "a27614e2379ef9e4dac1950a51b3f71d",
+            Item {
+                guid: "a27614e2379ef9e4dac1950a51b3f71d",
+                item_type: ItemType::Weapon,
+                name: "Star Shards",
+                order_priority: 210,
+                max_quantity: 255,
+                buy_price: 184,
+                sell_price: 46,
+                equippable_by: Some(&[PlayerPartyCharacter::Serai]),
+                physical_attack: 49,
+                magical_attack: 38,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // STORYARTIFACT_CLOCKWORKANDKIDENGINEERS_NAME
+        m.insert(
+            "Cog Prototype",
+            Item {
+                guid: "9fffcbe75bd0a61439e3546edd2d1049",
+                item_type: ItemType::StoryArtifact,
+                name: "Cog Prototype",
+                order_priority: 705,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "9fffcbe75bd0a61439e3546edd2d1049",
+            Item {
+                guid: "9fffcbe75bd0a61439e3546edd2d1049",
+                item_type: ItemType::StoryArtifact,
+                name: "Cog Prototype",
+                order_priority: 705,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // STORYARTIFACT_GUNGODDESS_NAME
+        m.insert(
+            "Joce's Belt Buckle",
+            Item {
+                guid: "a7eb75ef484df8748a4c507fba097b85",
+                item_type: ItemType::StoryArtifact,
+                name: "Joce's Belt Buckle",
+                order_priority: 700,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "a7eb75ef484df8748a4c507fba097b85",
+            Item {
+                guid: "a7eb75ef484df8748a4c507fba097b85",
+                item_type: ItemType::StoryArtifact,
+                name: "Joce's Belt Buckle",
+                order_priority: 700,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // ARMOR_SPECTRALCAPE_NAME
+        m.insert(
+            "Spectral Cape",
+            Item {
+                guid: "d2fd56a9405f9c04fb303795c7840f2f",
+                item_type: ItemType::Armor,
+                name: "Spectral Cape",
+                order_priority: 130,
+                max_quantity: 255,
+                buy_price: 44,
+                sell_price: 11,
+                equippable_by: Some(&[
+                    PlayerPartyCharacter::Garl,
+                    PlayerPartyCharacter::Serai,
+                    PlayerPartyCharacter::Reshan,
+                ]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 19,
+                magical_defense: 23,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "d2fd56a9405f9c04fb303795c7840f2f",
+            Item {
+                guid: "d2fd56a9405f9c04fb303795c7840f2f",
+                item_type: ItemType::Armor,
+                name: "Spectral Cape",
+                order_priority: 130,
+                max_quantity: 255,
+                buy_price: 44,
+                sell_price: 11,
+                equippable_by: Some(&[
+                    PlayerPartyCharacter::Garl,
+                    PlayerPartyCharacter::Serai,
+                    PlayerPartyCharacter::Reshan,
+                ]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 19,
+                magical_defense: 23,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // STORYARTIFACT_LUCENTSHROUDNIGHT_NAME
+        m.insert(
+            "Aventry Crest",
+            Item {
+                guid: "2cbaec690b20378448407f18f53c7607",
+                item_type: ItemType::StoryArtifact,
+                name: "Aventry Crest",
+                order_priority: 715,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "2cbaec690b20378448407f18f53c7607",
+            Item {
+                guid: "2cbaec690b20378448407f18f53c7607",
+                item_type: ItemType::StoryArtifact,
+                name: "Aventry Crest",
+                order_priority: 715,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // STORYARTIFACT_ESTRISTAE_NAME
+        m.insert(
+            "Broken Handle",
+            Item {
+                guid: "027715b8b6eb986459da52f290a22c45",
+                item_type: ItemType::StoryArtifact,
+                name: "Broken Handle",
+                order_priority: 710,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "027715b8b6eb986459da52f290a22c45",
+            Item {
+                guid: "027715b8b6eb986459da52f290a22c45",
+                item_type: ItemType::StoryArtifact,
+                name: "Broken Handle",
+                order_priority: 710,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // STORYARTIFACT_MOONCRADLEELDERMIST_NAME
+        m.insert(
+            "Celestial Willow Leaf",
+            Item {
+                guid: "a079a093d27333e4e99cd0b4abe3b6a1",
+                item_type: ItemType::StoryArtifact,
+                name: "Celestial Willow Leaf",
+                order_priority: 720,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "a079a093d27333e4e99cd0b4abe3b6a1",
+            Item {
+                guid: "a079a093d27333e4e99cd0b4abe3b6a1",
+                item_type: ItemType::StoryArtifact,
+                name: "Celestial Willow Leaf",
+                order_priority: 720,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // STORYARTIFACT_NOMADANDSEA_NAME
+        m.insert(
+            "Old Coral Vase",
+            Item {
+                guid: "6086a4552abd9ab4dbd76f1cfb4b6812",
+                item_type: ItemType::StoryArtifact,
+                name: "Old Coral Vase",
+                order_priority: 725,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "6086a4552abd9ab4dbd76f1cfb4b6812",
+            Item {
+                guid: "6086a4552abd9ab4dbd76f1cfb4b6812",
+                item_type: ItemType::StoryArtifact,
+                name: "Old Coral Vase",
+                order_priority: 725,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // STORYARTIFACT_SLEEPERANDMOLEKINS_NAME
+        m.insert(
+            "Ancient Molekin Cloak",
+            Item {
+                guid: "c7e3009a90c46164e86fd8fb5d08cbce",
+                item_type: ItemType::StoryArtifact,
+                name: "Ancient Molekin Cloak",
+                order_priority: 735,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "c7e3009a90c46164e86fd8fb5d08cbce",
+            Item {
+                guid: "c7e3009a90c46164e86fd8fb5d08cbce",
+                item_type: ItemType::StoryArtifact,
+                name: "Ancient Molekin Cloak",
+                order_priority: 735,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // STORYARTIFACT_THREESISTERS_NAME
+        m.insert(
+            "Romaya's Hairpin",
+            Item {
+                guid: "f65753c0374254346afc37b1f75cd0ee",
+                item_type: ItemType::StoryArtifact,
+                name: "Romaya's Hairpin",
+                order_priority: 740,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "f65753c0374254346afc37b1f75cd0ee",
+            Item {
+                guid: "f65753c0374254346afc37b1f75cd0ee",
+                item_type: ItemType::StoryArtifact,
+                name: "Romaya's Hairpin",
+                order_priority: 740,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // STORYARTIFACT_SKYGIANTANDKHUKKAR_NAME
+        m.insert(
+            "Cloudy Shard",
+            Item {
+                guid: "bcedb2e46cfcb9a45a9736062dbd6e47",
+                item_type: ItemType::StoryArtifact,
+                name: "Cloudy Shard",
+                order_priority: 730,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "bcedb2e46cfcb9a45a9736062dbd6e47",
+            Item {
+                guid: "bcedb2e46cfcb9a45a9736062dbd6e47",
+                item_type: ItemType::StoryArtifact,
+                name: "Cloudy Shard",
+                order_priority: 730,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // WEAPON_STURDYCOG_NAME
+        m.insert(
+            "Sturdy Cog",
+            Item {
+                guid: "68d99c8b95dbf7c41a00d562b41b289a",
+                item_type: ItemType::Weapon,
+                name: "Sturdy Cog",
+                order_priority: 110,
+                max_quantity: 255,
+                buy_price: 136,
+                sell_price: 34,
+                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
+                physical_attack: 27,
+                magical_attack: 19,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "68d99c8b95dbf7c41a00d562b41b289a",
+            Item {
+                guid: "68d99c8b95dbf7c41a00d562b41b289a",
+                item_type: ItemType::Weapon,
+                name: "Sturdy Cog",
+                order_priority: 110,
+                max_quantity: 255,
+                buy_price: 136,
+                sell_price: 34,
+                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
+                physical_attack: 27,
+                magical_attack: 19,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // STORYARTIFACT_VAMPIREROSE_NAME
+        m.insert(
+            "Stone Tablet Piece",
+            Item {
+                guid: "5c4863eb4f266574e937fb34e3031ed4",
+                item_type: ItemType::StoryArtifact,
+                name: "Stone Tablet Piece",
+                order_priority: 745,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "5c4863eb4f266574e937fb34e3031ed4",
+            Item {
+                guid: "5c4863eb4f266574e937fb34e3031ed4",
+                item_type: ItemType::StoryArtifact,
+                name: "Stone Tablet Piece",
+                order_priority: 745,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // ARMOR_TATTEREDCAPE_NAME
+        m.insert(
+            "Tattered Cape",
+            Item {
+                guid: "ecf26467374cebc4b812538e7fbe44a4",
+                item_type: ItemType::Armor,
+                name: "Tattered Cape",
+                order_priority: 155,
+                max_quantity: 255,
+                buy_price: 92,
+                sell_price: 23,
+                equippable_by: Some(&[
+                    PlayerPartyCharacter::Garl,
+                    PlayerPartyCharacter::Serai,
+                    PlayerPartyCharacter::Reshan,
+                ]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 26,
+                magical_defense: 33,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "ecf26467374cebc4b812538e7fbe44a4",
+            Item {
+                guid: "ecf26467374cebc4b812538e7fbe44a4",
+                item_type: ItemType::Armor,
+                name: "Tattered Cape",
+                order_priority: 155,
+                max_quantity: 255,
+                buy_price: 92,
+                sell_price: 23,
+                equippable_by: Some(&[
+                    PlayerPartyCharacter::Garl,
+                    PlayerPartyCharacter::Serai,
+                    PlayerPartyCharacter::Reshan,
+                ]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 26,
+                magical_defense: 33,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // WEAPON_AMBER_STAFF_NAME
+        m.insert(
+            "Teal Amber Staff",
+            Item {
+                guid: "e27094f36cb7bb140b614b89fde60550",
+                item_type: ItemType::Weapon,
+                name: "Teal Amber Staff",
+                order_priority: 20,
+                max_quantity: 255,
+                buy_price: 48,
+                sell_price: 12,
+                equippable_by: Some(&[PlayerPartyCharacter::Valere]),
+                physical_attack: 11,
+                magical_attack: 6,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "e27094f36cb7bb140b614b89fde60550",
+            Item {
+                guid: "e27094f36cb7bb140b614b89fde60550",
+                item_type: ItemType::Weapon,
+                name: "Teal Amber Staff",
+                order_priority: 20,
+                max_quantity: 255,
+                buy_price: 48,
+                sell_price: 12,
+                equippable_by: Some(&[PlayerPartyCharacter::Valere]),
+                physical_attack: 11,
+                magical_attack: 6,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // INGREDIENT_TESTINGREDIENT_NAME
+        m.insert(
+            "Test Ingredient",
+            Item {
+                guid: "8c9604711530463408f53774a8c44177",
+                item_type: ItemType::Ingredient,
+                name: "Test Ingredient",
+                order_priority: 0,
+                max_quantity: 255,
+                buy_price: 10,
+                sell_price: 5,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "8c9604711530463408f53774a8c44177",
+            Item {
+                guid: "8c9604711530463408f53774a8c44177",
+                item_type: ItemType::Ingredient,
+                name: "Test Ingredient",
+                order_priority: 0,
+                max_quantity: 255,
+                buy_price: 10,
+                sell_price: 5,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // ARMOR_THALASSICCLOAK_NAME
+        m.insert(
+            "Thalassic Cloak",
+            Item {
+                guid: "0e08751170c68ca4faae2b08ea913275",
+                item_type: ItemType::Armor,
+                name: "Thalassic Cloak",
+                order_priority: 150,
+                max_quantity: 255,
+                buy_price: 96,
+                sell_price: 24,
+                equippable_by: Some(&[PlayerPartyCharacter::Serai, PlayerPartyCharacter::Reshan]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 25,
+                magical_defense: 33,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "0e08751170c68ca4faae2b08ea913275",
+            Item {
+                guid: "0e08751170c68ca4faae2b08ea913275",
+                item_type: ItemType::Armor,
+                name: "Thalassic Cloak",
+                order_priority: 150,
+                max_quantity: 255,
+                buy_price: 96,
+                sell_price: 24,
+                equippable_by: Some(&[PlayerPartyCharacter::Serai, PlayerPartyCharacter::Reshan]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 25,
+                magical_defense: 33,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // WEAPON_MOONGIRL_NAME
+        m.insert(
+            "Training Staff",
+            Item {
+                guid: "40b7062ac812c5d47bb1ff0df4987e8e",
+                item_type: ItemType::Weapon,
+                name: "Training Staff",
+                order_priority: 1,
+                max_quantity: 255,
+                buy_price: 10,
+                sell_price: 5,
+                equippable_by: Some(&[PlayerPartyCharacter::Valere]),
+                physical_attack: 3,
+                magical_attack: 1,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "40b7062ac812c5d47bb1ff0df4987e8e",
+            Item {
+                guid: "40b7062ac812c5d47bb1ff0df4987e8e",
+                item_type: ItemType::Weapon,
+                name: "Training Staff",
+                order_priority: 1,
+                max_quantity: 255,
+                buy_price: 10,
+                sell_price: 5,
+                equippable_by: Some(&[PlayerPartyCharacter::Valere]),
+                physical_attack: 3,
+                magical_attack: 1,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // WEAPON_SUNBOY_NAME
+        m.insert(
+            "Training Sword",
+            Item {
+                guid: "e3098c0169021924a97713b57a009928",
+                item_type: ItemType::Weapon,
+                name: "Training Sword",
+                order_priority: 0,
+                max_quantity: 255,
+                buy_price: 10,
+                sell_price: 5,
+                equippable_by: Some(&[PlayerPartyCharacter::Zale]),
+                physical_attack: 1,
+                magical_attack: 3,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "e3098c0169021924a97713b57a009928",
+            Item {
+                guid: "e3098c0169021924a97713b57a009928",
+                item_type: ItemType::Weapon,
+                name: "Training Sword",
+                order_priority: 0,
+                max_quantity: 255,
+                buy_price: 10,
+                sell_price: 5,
+                equippable_by: Some(&[PlayerPartyCharacter::Zale]),
+                physical_attack: 1,
+                magical_attack: 3,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // WEAPON_TRUESILVERDAGGERS_NAME
+        m.insert(
+            "Truesilver Daggers",
+            Item {
+                guid: "0d86cee64cf8be44985fcee7a34c49f2",
+                item_type: ItemType::Weapon,
+                name: "Truesilver Daggers",
+                order_priority: 125,
+                max_quantity: 255,
+                buy_price: 168,
+                sell_price: 42,
+                equippable_by: Some(&[PlayerPartyCharacter::Serai]),
+                physical_attack: 27,
+                magical_attack: 29,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "0d86cee64cf8be44985fcee7a34c49f2",
+            Item {
+                guid: "0d86cee64cf8be44985fcee7a34c49f2",
+                item_type: ItemType::Weapon,
+                name: "Truesilver Daggers",
+                order_priority: 125,
+                max_quantity: 255,
+                buy_price: 168,
+                sell_price: 42,
+                equippable_by: Some(&[PlayerPartyCharacter::Serai]),
+                physical_attack: 27,
+                magical_attack: 29,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // VALUABLEITEM_ADAMANTITEORE_NAME
+        m.insert(
+            "Adamantite Ore",
+            Item {
+                guid: "77a0a1cac957b4b4d8cfbb1ee9b2548c",
+                item_type: ItemType::Valuable,
+                name: "Adamantite Ore",
+                order_priority: 0,
+                max_quantity: 255,
+                buy_price: 0,
+                sell_price: 8,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "77a0a1cac957b4b4d8cfbb1ee9b2548c",
+            Item {
+                guid: "77a0a1cac957b4b4d8cfbb1ee9b2548c",
+                item_type: ItemType::Valuable,
+                name: "Adamantite Ore",
+                order_priority: 0,
+                max_quantity: 255,
+                buy_price: 0,
+                sell_price: 8,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // VALUABLEITEM_ALUMNITOKEN_NAME
+        m.insert(
+            "Alumni Token",
+            Item {
+                guid: "c067bbcbb9deb85488d779cf334e50db",
+                item_type: ItemType::Valuable,
+                name: "Alumni Token",
+                order_priority: 0,
+                max_quantity: 255,
+                buy_price: 0,
+                sell_price: 1,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "c067bbcbb9deb85488d779cf334e50db",
+            Item {
+                guid: "c067bbcbb9deb85488d779cf334e50db",
+                item_type: ItemType::Valuable,
+                name: "Alumni Token",
+                order_priority: 0,
+                max_quantity: 255,
+                buy_price: 0,
+                sell_price: 1,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // VALUABLEITEM_OBSIDIANORE_NAME
+        m.insert(
+            "Obsidian Ore",
+            Item {
+                guid: "7a9b2938fabc5434da21134b18b4e0ee",
+                item_type: ItemType::Valuable,
+                name: "Obsidian Ore",
+                order_priority: 990,
+                max_quantity: 255,
+                buy_price: 0,
+                sell_price: 45,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "7a9b2938fabc5434da21134b18b4e0ee",
+            Item {
+                guid: "7a9b2938fabc5434da21134b18b4e0ee",
+                item_type: ItemType::Valuable,
+                name: "Obsidian Ore",
+                order_priority: 990,
+                max_quantity: 255,
+                buy_price: 0,
+                sell_price: 45,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // VALUABLEITEM_OBSIDIANINGOT_NAME
+        m.insert(
+            "Obsidian Ingot",
+            Item {
+                guid: "4717dc86cf98f2d4794b40e910b63e61",
+                item_type: ItemType::Valuable,
+                name: "Obsidian Ingot",
+                order_priority: 985,
+                max_quantity: 255,
+                buy_price: 0,
+                sell_price: 120,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "4717dc86cf98f2d4794b40e910b63e61",
+            Item {
+                guid: "4717dc86cf98f2d4794b40e910b63e61",
+                item_type: ItemType::Valuable,
+                name: "Obsidian Ingot",
+                order_priority: 985,
+                max_quantity: 255,
+                buy_price: 0,
+                sell_price: 120,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // VALUABLEITEM_SAPPHIREINGOT_NAME
+        m.insert(
+            "Sapphire Ingot",
+            Item {
+                guid: "79b159a1b2b69834a96cd56d5e02058c",
+                item_type: ItemType::Valuable,
+                name: "Sapphire Ingot",
+                order_priority: 975,
+                max_quantity: 255,
+                buy_price: 0,
+                sell_price: 140,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "79b159a1b2b69834a96cd56d5e02058c",
+            Item {
+                guid: "79b159a1b2b69834a96cd56d5e02058c",
+                item_type: ItemType::Valuable,
+                name: "Sapphire Ingot",
+                order_priority: 975,
+                max_quantity: 255,
+                buy_price: 0,
+                sell_price: 140,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // VALUABLEITEM_SHINYPEARL_NAME
+        m.insert(
+            "Shiny Pearl",
+            Item {
+                guid: "7337dc21759feae4a92aba8200c42898",
+                item_type: ItemType::Valuable,
+                name: "Shiny Pearl",
+                order_priority: 1000,
+                max_quantity: 255,
+                buy_price: 0,
+                sell_price: 20,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "7337dc21759feae4a92aba8200c42898",
+            Item {
+                guid: "7337dc21759feae4a92aba8200c42898",
+                item_type: ItemType::Valuable,
+                name: "Shiny Pearl",
+                order_priority: 1000,
+                max_quantity: 255,
+                buy_price: 0,
+                sell_price: 20,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // VALUABLEITEM_SAPPHIREORE_NAME
+        m.insert(
+            "Sapphire Ore",
+            Item {
+                guid: "c43421b626574174e9b5156141213250",
+                item_type: ItemType::Valuable,
+                name: "Sapphire Ore",
+                order_priority: 980,
+                max_quantity: 255,
+                buy_price: 0,
+                sell_price: 55,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "c43421b626574174e9b5156141213250",
+            Item {
+                guid: "c43421b626574174e9b5156141213250",
+                item_type: ItemType::Valuable,
+                name: "Sapphire Ore",
+                order_priority: 980,
+                max_quantity: 255,
+                buy_price: 0,
+                sell_price: 55,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // VALUABLEITEM_TEALAMBERORE_NAME
+        m.insert(
+            "Teal Amber Ore",
+            Item {
+                guid: "33e568f23e2581d448041ac97fb8358d",
+                item_type: ItemType::Valuable,
+                name: "Teal Amber Ore",
+                order_priority: 995,
+                max_quantity: 255,
+                buy_price: 0,
+                sell_price: 35,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "33e568f23e2581d448041ac97fb8358d",
+            Item {
+                guid: "33e568f23e2581d448041ac97fb8358d",
+                item_type: ItemType::Valuable,
+                name: "Teal Amber Ore",
+                order_priority: 995,
+                max_quantity: 255,
+                buy_price: 0,
+                sell_price: 35,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // ARMOR_VITRICSIMULACRUM_NAME
+        m.insert(
+            "Vitric Simulacrum",
+            Item {
+                guid: "ebe89a4a81e46c245bd98a337df06eb8",
+                item_type: ItemType::Armor,
+                name: "Vitric Simulacrum",
+                order_priority: 220,
+                max_quantity: 255,
+                buy_price: 144,
+                sell_price: 36,
+                equippable_by: Some(&[PlayerPartyCharacter::Bst]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 53,
+                magical_defense: 51,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "ebe89a4a81e46c245bd98a337df06eb8",
+            Item {
+                guid: "ebe89a4a81e46c245bd98a337df06eb8",
+                item_type: ItemType::Armor,
+                name: "Vitric Simulacrum",
+                order_priority: 220,
+                max_quantity: 255,
+                buy_price: 144,
+                sell_price: 36,
+                equippable_by: Some(&[PlayerPartyCharacter::Bst]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 53,
+                magical_defense: 51,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // ARMOR_VOLCANICARMOR_NAME
+        m.insert(
+            "Volcanic Armor",
+            Item {
+                guid: "0c8b9c021791a734892aaafde3b847b6",
+                item_type: ItemType::Armor,
+                name: "Volcanic Armor",
+                order_priority: 175,
+                max_quantity: 255,
+                buy_price: 136,
+                sell_price: 34,
+                equippable_by: Some(&[PlayerPartyCharacter::Zale, PlayerPartyCharacter::Valere]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 40,
+                magical_defense: 32,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "0c8b9c021791a734892aaafde3b847b6",
+            Item {
+                guid: "0c8b9c021791a734892aaafde3b847b6",
+                item_type: ItemType::Armor,
+                name: "Volcanic Armor",
+                order_priority: 175,
+                max_quantity: 255,
+                buy_price: 136,
+                sell_price: 34,
+                equippable_by: Some(&[PlayerPartyCharacter::Zale, PlayerPartyCharacter::Valere]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 40,
+                magical_defense: 32,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // WEAPON_WALNUTCORK_NAME
+        m.insert(
+            "Walnut Cork",
+            Item {
+                guid: "c3b22a46f99faba498bfbc7519cce88c",
+                item_type: ItemType::Weapon,
+                name: "Walnut Cork",
+                order_priority: 150,
+                max_quantity: 255,
+                buy_price: 172,
+                sell_price: 43,
+                equippable_by: Some(&[PlayerPartyCharacter::Reshan]),
+                physical_attack: 29,
+                magical_attack: 39,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "c3b22a46f99faba498bfbc7519cce88c",
+            Item {
+                guid: "c3b22a46f99faba498bfbc7519cce88c",
+                item_type: ItemType::Weapon,
+                name: "Walnut Cork",
+                order_priority: 150,
+                max_quantity: 255,
+                buy_price: 172,
+                sell_price: 43,
+                equippable_by: Some(&[PlayerPartyCharacter::Reshan]),
+                physical_attack: 29,
+                magical_attack: 39,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // ARMOR_WIREPLATEARMOR_NAME
+        m.insert(
+            "Wireplate Armor",
+            Item {
+                guid: "67e51219a3a7ea14fa14e9eb4e8643e4",
+                item_type: ItemType::Armor,
+                name: "Wireplate Armor",
+                order_priority: 185,
+                max_quantity: 255,
+                buy_price: 152,
+                sell_price: 38,
+                equippable_by: Some(&[PlayerPartyCharacter::Zale, PlayerPartyCharacter::Valere]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 43,
+                magical_defense: 36,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "67e51219a3a7ea14fa14e9eb4e8643e4",
+            Item {
+                guid: "67e51219a3a7ea14fa14e9eb4e8643e4",
+                item_type: ItemType::Armor,
+                name: "Wireplate Armor",
+                order_priority: 185,
+                max_quantity: 255,
+                buy_price: 152,
+                sell_price: 38,
+                equippable_by: Some(&[PlayerPartyCharacter::Zale, PlayerPartyCharacter::Valere]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 43,
+                magical_defense: 36,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // WEAPON_WITHEREDCORK_NAME
+        m.insert(
+            "Withered Cork",
+            Item {
+                guid: "441bec8771714944eb32ff53c082f8da",
+                item_type: ItemType::Weapon,
+                name: "Withered Cork",
+                order_priority: 95,
+                max_quantity: 255,
+                buy_price: 112,
+                sell_price: 28,
+                equippable_by: Some(&[PlayerPartyCharacter::Reshan]),
+                physical_attack: 17,
+                magical_attack: 18,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "441bec8771714944eb32ff53c082f8da",
+            Item {
+                guid: "441bec8771714944eb32ff53c082f8da",
+                item_type: ItemType::Weapon,
+                name: "Withered Cork",
+                order_priority: 95,
+                max_quantity: 255,
+                buy_price: 112,
+                sell_price: 28,
+                equippable_by: Some(&[PlayerPartyCharacter::Reshan]),
+                physical_attack: 17,
+                magical_attack: 18,
                 physical_defense: 0,
                 magical_defense: 0,
                 hp_to_restore: 0,
@@ -7198,59 +9077,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // KEYITEM_SS2_KEYA_NAME
-        m.insert(
-            "Solstice Shrine Key A",
-            Item {
-                guid: "42595a0119f967845b9397365508ba64",
-                item_type: ItemType::Key,
-                name: "Solstice Shrine Key A",
-                order_priority: 11060,
-                max_quantity: 20,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "42595a0119f967845b9397365508ba64",
-            Item {
-                guid: "42595a0119f967845b9397365508ba64",
-                item_type: ItemType::Key,
-                name: "Solstice Shrine Key A",
-                order_priority: 11060,
-                max_quantity: 20,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // KEYITEM_ROMAYAJOURNAL_NAME
         m.insert(
             "Romaya's Journal",
@@ -7338,6 +9164,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 item_type: ItemType::Key,
                 name: "Solstice Shrine Key B",
                 order_priority: 11055,
+                max_quantity: 20,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // KEYITEM_SS2_KEYA_NAME
+        m.insert(
+            "Solstice Shrine Key A",
+            Item {
+                guid: "42595a0119f967845b9397365508ba64",
+                item_type: ItemType::Key,
+                name: "Solstice Shrine Key A",
+                order_priority: 11060,
+                max_quantity: 20,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "42595a0119f967845b9397365508ba64",
+            Item {
+                guid: "42595a0119f967845b9397365508ba64",
+                item_type: ItemType::Key,
+                name: "Solstice Shrine Key A",
+                order_priority: 11060,
                 max_quantity: 20,
                 buy_price: 0,
                 sell_price: 0,
@@ -7463,59 +9342,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // KEYITEM_MUSICSHEET3_NAME
-        m.insert(
-            "Music Sheet #3",
-            Item {
-                guid: "25e534eb1a920ed4897ad72ae4ff9453",
-                item_type: ItemType::Key,
-                name: "Music Sheet #3",
-                order_priority: 820,
-                max_quantity: 1,
-                buy_price: 56,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "25e534eb1a920ed4897ad72ae4ff9453",
-            Item {
-                guid: "25e534eb1a920ed4897ad72ae4ff9453",
-                item_type: ItemType::Key,
-                name: "Music Sheet #3",
-                order_priority: 820,
-                max_quantity: 1,
-                buy_price: 56,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // KEYITEM_MUSICSHEET2_NAME
         m.insert(
             "Music Sheet #2",
@@ -7550,6 +9376,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 item_type: ItemType::Key,
                 name: "Music Sheet #2",
                 order_priority: 825,
+                max_quantity: 1,
+                buy_price: 56,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // KEYITEM_MUSICSHEET3_NAME
+        m.insert(
+            "Music Sheet #3",
+            Item {
+                guid: "25e534eb1a920ed4897ad72ae4ff9453",
+                item_type: ItemType::Key,
+                name: "Music Sheet #3",
+                order_priority: 820,
+                max_quantity: 1,
+                buy_price: 56,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "25e534eb1a920ed4897ad72ae4ff9453",
+            Item {
+                guid: "25e534eb1a920ed4897ad72ae4ff9453",
+                item_type: ItemType::Key,
+                name: "Music Sheet #3",
+                order_priority: 820,
                 max_quantity: 1,
                 buy_price: 56,
                 sell_price: 0,
@@ -7887,6 +9766,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
+        // RELIC_SOLSTICEDIPLOMA_NAME
+        m.insert(
+            "Solstice Diploma",
+            Item {
+                guid: "28e41ac6234015840a9c976425d74ee9",
+                item_type: ItemType::Relic,
+                name: "Solstice Diploma",
+                order_priority: 1010,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "28e41ac6234015840a9c976425d74ee9",
+            Item {
+                guid: "28e41ac6234015840a9c976425d74ee9",
+                item_type: ItemType::Relic,
+                name: "Solstice Diploma",
+                order_priority: 1010,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
         // KEYITEM_SOLSTICEAMULET_NAME
         m.insert(
             "Solstice Amulet",
@@ -7940,6 +9872,112 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
+        // RELIC_SOLSTICEDOCTORATE_NAME
+        m.insert(
+            "Solstice Doctorate",
+            Item {
+                guid: "d804d17171feb8949927b61e871fc746",
+                item_type: ItemType::Relic,
+                name: "Solstice Doctorate",
+                order_priority: 11,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 120,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "d804d17171feb8949927b61e871fc746",
+            Item {
+                guid: "d804d17171feb8949927b61e871fc746",
+                item_type: ItemType::Relic,
+                name: "Solstice Doctorate",
+                order_priority: 11,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 120,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // WEAPON_MAPLECORK_NAME
+        m.insert(
+            "Maple Cork",
+            Item {
+                guid: "8f50c130484e7c44a8d90860eaaa2806",
+                item_type: ItemType::Weapon,
+                name: "Maple Cork",
+                order_priority: 90,
+                max_quantity: 255,
+                buy_price: 136,
+                sell_price: 34,
+                equippable_by: Some(&[PlayerPartyCharacter::Reshan]),
+                physical_attack: 20,
+                magical_attack: 22,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "8f50c130484e7c44a8d90860eaaa2806",
+            Item {
+                guid: "8f50c130484e7c44a8d90860eaaa2806",
+                item_type: ItemType::Weapon,
+                name: "Maple Cork",
+                order_priority: 90,
+                max_quantity: 255,
+                buy_price: 136,
+                sell_price: 34,
+                equippable_by: Some(&[PlayerPartyCharacter::Reshan]),
+                physical_attack: 20,
+                magical_attack: 22,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
         // KEYITEM_SONGSHROOMMARSH_NAME
         m.insert(
             "Yomara's Key",
@@ -7978,6 +10016,165 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 buy_price: 0,
                 sell_price: 0,
                 equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // WEAPON_MOONCRADLEBOYLID_NAME
+        m.insert(
+            "Mooncradle Boy's Lid",
+            Item {
+                guid: "0f0053be4fa1bf84db338a626d751eb2",
+                item_type: ItemType::Weapon,
+                name: "Mooncradle Boy's Lid",
+                order_priority: 205,
+                max_quantity: 255,
+                buy_price: 136,
+                sell_price: 34,
+                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
+                physical_attack: 50,
+                magical_attack: 35,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "0f0053be4fa1bf84db338a626d751eb2",
+            Item {
+                guid: "0f0053be4fa1bf84db338a626d751eb2",
+                item_type: ItemType::Weapon,
+                name: "Mooncradle Boy's Lid",
+                order_priority: 205,
+                max_quantity: 255,
+                buy_price: 136,
+                sell_price: 34,
+                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
+                physical_attack: 50,
+                magical_attack: 35,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // ARMOR_MINERSSMOCK_NAME
+        m.insert(
+            "Miner's Smock",
+            Item {
+                guid: "f23fec51c068c00418db6127c54fcc8e",
+                item_type: ItemType::Armor,
+                name: "Miner's Smock",
+                order_priority: 10,
+                max_quantity: 255,
+                buy_price: 32,
+                sell_price: 8,
+                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 18,
+                magical_defense: 12,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "f23fec51c068c00418db6127c54fcc8e",
+            Item {
+                guid: "f23fec51c068c00418db6127c54fcc8e",
+                item_type: ItemType::Armor,
+                name: "Miner's Smock",
+                order_priority: 10,
+                max_quantity: 255,
+                buy_price: 32,
+                sell_price: 8,
+                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 18,
+                magical_defense: 12,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // TRINKET_MOONSTONEBRACER_NAME
+        m.insert(
+            "Moonstone Bracer",
+            Item {
+                guid: "4441ac030d9882445867b6ee06fbe941",
+                item_type: ItemType::Trinket,
+                name: "Moonstone Bracer",
+                order_priority: 60,
+                max_quantity: 255,
+                buy_price: 200,
+                sell_price: 50,
+                equippable_by: Some(&[PlayerPartyCharacter::Valere]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "4441ac030d9882445867b6ee06fbe941",
+            Item {
+                guid: "4441ac030d9882445867b6ee06fbe941",
+                item_type: ItemType::Trinket,
+                name: "Moonstone Bracer",
+                order_priority: 60,
+                max_quantity: 255,
+                buy_price: 200,
+                sell_price: 50,
+                equippable_by: Some(&[PlayerPartyCharacter::Valere]),
                 physical_attack: 0,
                 magical_attack: 0,
                 physical_defense: 0,
@@ -8048,11 +10245,11 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
 
         // KEYITEM_SEAOFNIGHTMARE_STORMKEY_NAME
         m.insert(
-            "Cursed Doubloons",
+            "Cursed Doubloon",
             Item {
                 guid: "0616ef249bcbe5b42abfd07c541cee31",
                 item_type: ItemType::Key,
-                name: "Cursed Doubloons",
+                name: "Cursed Doubloon",
                 order_priority: 4005,
                 max_quantity: 6,
                 buy_price: 0,
@@ -8078,7 +10275,7 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             Item {
                 guid: "0616ef249bcbe5b42abfd07c541cee31",
                 item_type: ItemType::Key,
-                name: "Cursed Doubloons",
+                name: "Cursed Doubloon",
                 order_priority: 4005,
                 max_quantity: 6,
                 buy_price: 0,
@@ -8152,59 +10349,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // KEYITEM_SUNKENRUINDISK_C_NAME
-        m.insert(
-            "Docarri Seal Fragment C",
-            Item {
-                guid: "5523dc3139186874695c75c920c337a4",
-                item_type: ItemType::Key,
-                name: "Docarri Seal Fragment C",
-                order_priority: 11065,
-                max_quantity: 20,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "5523dc3139186874695c75c920c337a4",
-            Item {
-                guid: "5523dc3139186874695c75c920c337a4",
-                item_type: ItemType::Key,
-                name: "Docarri Seal Fragment C",
-                order_priority: 11065,
-                max_quantity: 20,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // KEYITEM_SUNKENRUINDISK_B_NAME
         m.insert(
             "Docarri Seal Fragment B",
@@ -8239,6 +10383,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 item_type: ItemType::Key,
                 name: "Docarri Seal Fragment B",
                 order_priority: 11070,
+                max_quantity: 20,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // KEYITEM_SUNKENRUINDISK_C_NAME
+        m.insert(
+            "Docarri Seal Fragment C",
+            Item {
+                guid: "5523dc3139186874695c75c920c337a4",
+                item_type: ItemType::Key,
+                name: "Docarri Seal Fragment C",
+                order_priority: 11065,
+                max_quantity: 20,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "5523dc3139186874695c75c920c337a4",
+            Item {
+                guid: "5523dc3139186874695c75c920c337a4",
+                item_type: ItemType::Key,
+                name: "Docarri Seal Fragment C",
+                order_priority: 11065,
                 max_quantity: 20,
                 buy_price: 0,
                 sell_price: 0,
@@ -9265,59 +11462,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // KEYITEM_WIZARDLAB_BLUECRYSTAL_NAME
-        m.insert(
-            "Blue Crystal",
-            Item {
-                guid: "7072b9fc59fa699458b7acf5597d5d97",
-                item_type: ItemType::Key,
-                name: "Blue Crystal",
-                order_priority: 2025,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "7072b9fc59fa699458b7acf5597d5d97",
-            Item {
-                guid: "7072b9fc59fa699458b7acf5597d5d97",
-                item_type: ItemType::Key,
-                name: "Blue Crystal",
-                order_priority: 2025,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // KEYITEM_WINDKEY_NAME
         m.insert(
             "Wind Key",
@@ -9352,6 +11496,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 item_type: ItemType::Key,
                 name: "Wind Key",
                 order_priority: 7010,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // KEYITEM_WIZARDLAB_BLUECRYSTAL_NAME
+        m.insert(
+            "Blue Crystal",
+            Item {
+                guid: "7072b9fc59fa699458b7acf5597d5d97",
+                item_type: ItemType::Key,
+                name: "Blue Crystal",
+                order_priority: 2025,
+                max_quantity: 1,
+                buy_price: 0,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "7072b9fc59fa699458b7acf5597d5d97",
+            Item {
+                guid: "7072b9fc59fa699458b7acf5597d5d97",
+                item_type: ItemType::Key,
+                name: "Blue Crystal",
+                order_priority: 2025,
                 max_quantity: 1,
                 buy_price: 0,
                 sell_price: 0,
@@ -9583,6 +11780,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
+        // WEAPON_CRYOSTEELDAGGERS_NAME
+        m.insert(
+            "Kybersteel Daggers",
+            Item {
+                guid: "e24926f361bf385478653d34ac9f6a41",
+                item_type: ItemType::Weapon,
+                name: "Kybersteel Daggers",
+                order_priority: 145,
+                max_quantity: 255,
+                buy_price: 184,
+                sell_price: 46,
+                equippable_by: Some(&[PlayerPartyCharacter::Serai]),
+                physical_attack: 32,
+                magical_attack: 32,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "e24926f361bf385478653d34ac9f6a41",
+            Item {
+                guid: "e24926f361bf385478653d34ac9f6a41",
+                item_type: ItemType::Weapon,
+                name: "Kybersteel Daggers",
+                order_priority: 145,
+                max_quantity: 255,
+                buy_price: 184,
+                sell_price: 46,
+                equippable_by: Some(&[PlayerPartyCharacter::Serai]),
+                physical_attack: 32,
+                magical_attack: 32,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
         // ARMOR_LEAFCAPE_NAME
         m.insert(
             "Leaf Cape",
@@ -9633,59 +11883,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 magical_attack: 0,
                 physical_defense: 28,
                 magical_defense: 33,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // WEAPON_CRYOSTEELDAGGERS_NAME
-        m.insert(
-            "Kybersteel Daggers",
-            Item {
-                guid: "e24926f361bf385478653d34ac9f6a41",
-                item_type: ItemType::Weapon,
-                name: "Kybersteel Daggers",
-                order_priority: 145,
-                max_quantity: 255,
-                buy_price: 184,
-                sell_price: 46,
-                equippable_by: Some(&[PlayerPartyCharacter::Serai]),
-                physical_attack: 32,
-                magical_attack: 32,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "e24926f361bf385478653d34ac9f6a41",
-            Item {
-                guid: "e24926f361bf385478653d34ac9f6a41",
-                item_type: ItemType::Weapon,
-                name: "Kybersteel Daggers",
-                order_priority: 145,
-                max_quantity: 255,
-                buy_price: 184,
-                sell_price: 46,
-                equippable_by: Some(&[PlayerPartyCharacter::Serai]),
-                physical_attack: 32,
-                magical_attack: 32,
-                physical_defense: 0,
-                magical_defense: 0,
                 hp_to_restore: 0,
                 mp_to_restore: 0,
                 // Restore mode
@@ -10004,177 +12201,18 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // WEAPON_MAPLECORK_NAME
+        // GROUP_TRINKET_NANOINJECTOR_NAME
         m.insert(
-            "Maple Cork",
+            "Nano Injector",
             Item {
-                guid: "8f50c130484e7c44a8d90860eaaa2806",
-                item_type: ItemType::Weapon,
-                name: "Maple Cork",
-                order_priority: 90,
+                guid: "8c4cbe75847cc6249b3bd79cb5a29e8c",
+                item_type: ItemType::GroupTrinket,
+                name: "Nano Injector",
+                order_priority: 30,
                 max_quantity: 255,
-                buy_price: 136,
-                sell_price: 34,
-                equippable_by: Some(&[PlayerPartyCharacter::Reshan]),
-                physical_attack: 20,
-                magical_attack: 22,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "8f50c130484e7c44a8d90860eaaa2806",
-            Item {
-                guid: "8f50c130484e7c44a8d90860eaaa2806",
-                item_type: ItemType::Weapon,
-                name: "Maple Cork",
-                order_priority: 90,
-                max_quantity: 255,
-                buy_price: 136,
-                sell_price: 34,
-                equippable_by: Some(&[PlayerPartyCharacter::Reshan]),
-                physical_attack: 20,
-                magical_attack: 22,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // ARMOR_MINERSSMOCK_NAME
-        m.insert(
-            "Miner's Smock",
-            Item {
-                guid: "f23fec51c068c00418db6127c54fcc8e",
-                item_type: ItemType::Armor,
-                name: "Miner's Smock",
-                order_priority: 10,
-                max_quantity: 255,
-                buy_price: 32,
-                sell_price: 8,
-                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 18,
-                magical_defense: 12,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "f23fec51c068c00418db6127c54fcc8e",
-            Item {
-                guid: "f23fec51c068c00418db6127c54fcc8e",
-                item_type: ItemType::Armor,
-                name: "Miner's Smock",
-                order_priority: 10,
-                max_quantity: 255,
-                buy_price: 32,
-                sell_price: 8,
-                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 18,
-                magical_defense: 12,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // WEAPON_MOONCRADLEBOYLID_NAME
-        m.insert(
-            "Mooncradle Boy's Lid",
-            Item {
-                guid: "0f0053be4fa1bf84db338a626d751eb2",
-                item_type: ItemType::Weapon,
-                name: "Mooncradle Boy's Lid",
-                order_priority: 205,
-                max_quantity: 255,
-                buy_price: 136,
-                sell_price: 34,
-                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
-                physical_attack: 50,
-                magical_attack: 35,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "0f0053be4fa1bf84db338a626d751eb2",
-            Item {
-                guid: "0f0053be4fa1bf84db338a626d751eb2",
-                item_type: ItemType::Weapon,
-                name: "Mooncradle Boy's Lid",
-                order_priority: 205,
-                max_quantity: 255,
-                buy_price: 136,
-                sell_price: 34,
-                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
-                physical_attack: 50,
-                magical_attack: 35,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // TRINKET_MOONSTONEBRACER_NAME
-        m.insert(
-            "Moonstone Bracer",
-            Item {
-                guid: "4441ac030d9882445867b6ee06fbe941",
-                item_type: ItemType::Trinket,
-                name: "Moonstone Bracer",
-                order_priority: 60,
-                max_quantity: 255,
-                buy_price: 200,
-                sell_price: 50,
-                equippable_by: Some(&[PlayerPartyCharacter::Valere]),
+                buy_price: 344,
+                sell_price: 86,
+                equippable_by: Some(&[PlayerPartyCharacter::Serai]),
                 physical_attack: 0,
                 magical_attack: 0,
                 physical_defense: 0,
@@ -10191,16 +12229,16 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
         );
 
         m.insert(
-            "4441ac030d9882445867b6ee06fbe941",
+            "8c4cbe75847cc6249b3bd79cb5a29e8c",
             Item {
-                guid: "4441ac030d9882445867b6ee06fbe941",
-                item_type: ItemType::Trinket,
-                name: "Moonstone Bracer",
-                order_priority: 60,
+                guid: "8c4cbe75847cc6249b3bd79cb5a29e8c",
+                item_type: ItemType::GroupTrinket,
+                name: "Nano Injector",
+                order_priority: 30,
                 max_quantity: 255,
-                buy_price: 200,
-                sell_price: 50,
-                equippable_by: Some(&[PlayerPartyCharacter::Valere]),
+                buy_price: 344,
+                sell_price: 86,
+                equippable_by: Some(&[PlayerPartyCharacter::Serai]),
                 physical_attack: 0,
                 magical_attack: 0,
                 physical_defense: 0,
@@ -10256,59 +12294,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 equippable_by: Some(&[PlayerPartyCharacter::Valere]),
                 physical_attack: 44,
                 magical_attack: 23,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // GROUP_TRINKET_NANOINJECTOR_NAME
-        m.insert(
-            "Nano Injector",
-            Item {
-                guid: "8c4cbe75847cc6249b3bd79cb5a29e8c",
-                item_type: ItemType::GroupTrinket,
-                name: "Nano Injector",
-                order_priority: 30,
-                max_quantity: 255,
-                buy_price: 344,
-                sell_price: 86,
-                equippable_by: Some(&[PlayerPartyCharacter::Serai]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "8c4cbe75847cc6249b3bd79cb5a29e8c",
-            Item {
-                guid: "8c4cbe75847cc6249b3bd79cb5a29e8c",
-                item_type: ItemType::GroupTrinket,
-                name: "Nano Injector",
-                order_priority: 30,
-                max_quantity: 255,
-                buy_price: 344,
-                sell_price: 86,
-                equippable_by: Some(&[PlayerPartyCharacter::Serai]),
-                physical_attack: 0,
-                magical_attack: 0,
                 physical_defense: 0,
                 magical_defense: 0,
                 hp_to_restore: 0,
@@ -10707,6 +12692,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
+        // WEAPON_PHOSPHORITELID_NAME
+        m.insert(
+            "Phosphorite Lid",
+            Item {
+                guid: "8df0767e67aa4e34584a5066469765de",
+                item_type: ItemType::Weapon,
+                name: "Phosphorite Lid",
+                order_priority: 80,
+                max_quantity: 255,
+                buy_price: 112,
+                sell_price: 28,
+                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
+                physical_attack: 21,
+                magical_attack: 15,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "8df0767e67aa4e34584a5066469765de",
+            Item {
+                guid: "8df0767e67aa4e34584a5066469765de",
+                item_type: ItemType::Weapon,
+                name: "Phosphorite Lid",
+                order_priority: 80,
+                max_quantity: 255,
+                buy_price: 112,
+                sell_price: 28,
+                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
+                physical_attack: 21,
+                magical_attack: 15,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
         // ARMOR_PIRATEGARB_NAME
         m.insert(
             "Pirate Garb",
@@ -10759,59 +12797,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 magical_attack: 0,
                 physical_defense: 19,
                 magical_defense: 15,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // WEAPON_PHOSPHORITELID_NAME
-        m.insert(
-            "Phosphorite Lid",
-            Item {
-                guid: "8df0767e67aa4e34584a5066469765de",
-                item_type: ItemType::Weapon,
-                name: "Phosphorite Lid",
-                order_priority: 80,
-                max_quantity: 255,
-                buy_price: 112,
-                sell_price: 28,
-                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
-                physical_attack: 21,
-                magical_attack: 15,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "8df0767e67aa4e34584a5066469765de",
-            Item {
-                guid: "8df0767e67aa4e34584a5066469765de",
-                item_type: ItemType::Weapon,
-                name: "Phosphorite Lid",
-                order_priority: 80,
-                max_quantity: 255,
-                buy_price: 112,
-                sell_price: 28,
-                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
-                physical_attack: 21,
-                magical_attack: 15,
-                physical_defense: 0,
-                magical_defense: 0,
                 hp_to_restore: 0,
                 mp_to_restore: 0,
                 // Restore mode
@@ -11124,59 +13109,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // RECIPEUNLOCK_BASICSALAD_NAME
-        m.insert(
-            "Recipe: Basic Salad",
-            Item {
-                guid: "3ad1eaff8549fe94c897ac387f8ae4c9",
-                item_type: ItemType::Recipe,
-                name: "Recipe: Basic Salad",
-                order_priority: 20,
-                max_quantity: 1,
-                buy_price: 160,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "3ad1eaff8549fe94c897ac387f8ae4c9",
-            Item {
-                guid: "3ad1eaff8549fe94c897ac387f8ae4c9",
-                item_type: ItemType::Recipe,
-                name: "Recipe: Basic Salad",
-                order_priority: 20,
-                max_quantity: 1,
-                buy_price: 160,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // RECIPEUNLOCK_BERRYJAM_NAME
         m.insert(
             "Recipe: Berry Jam",
@@ -11211,6 +13143,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 item_type: ItemType::Recipe,
                 name: "Recipe: Berry Jam",
                 order_priority: 9,
+                max_quantity: 1,
+                buy_price: 160,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // RECIPEUNLOCK_BASICSALAD_NAME
+        m.insert(
+            "Recipe: Basic Salad",
+            Item {
+                guid: "3ad1eaff8549fe94c897ac387f8ae4c9",
+                item_type: ItemType::Recipe,
+                name: "Recipe: Basic Salad",
+                order_priority: 20,
+                max_quantity: 1,
+                buy_price: 160,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "3ad1eaff8549fe94c897ac387f8ae4c9",
+            Item {
+                guid: "3ad1eaff8549fe94c897ac387f8ae4c9",
+                item_type: ItemType::Recipe,
+                name: "Recipe: Basic Salad",
+                order_priority: 20,
                 max_quantity: 1,
                 buy_price: 160,
                 sell_price: 0,
@@ -11866,59 +13851,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // RECIPEUNLOCK_PAINDORE_NAME
-        m.insert(
-            "Recipe: Pain Doré",
-            Item {
-                guid: "88fd9a7fcfbd0854dbc95a58128b09c2",
-                item_type: ItemType::Recipe,
-                name: "Recipe: Pain Doré",
-                order_priority: 49,
-                max_quantity: 1,
-                buy_price: 110,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "88fd9a7fcfbd0854dbc95a58128b09c2",
-            Item {
-                guid: "88fd9a7fcfbd0854dbc95a58128b09c2",
-                item_type: ItemType::Recipe,
-                name: "Recipe: Pain Doré",
-                order_priority: 49,
-                max_quantity: 1,
-                buy_price: 110,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // RECIPEUNLOCK_MUSHROOMSOUP_NAME
         m.insert(
             "Recipe: Mushroom Soup",
@@ -11955,6 +13887,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 order_priority: 35,
                 max_quantity: 1,
                 buy_price: 100,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // RECIPEUNLOCK_PAINDORE_NAME
+        m.insert(
+            "Recipe: Pain Doré",
+            Item {
+                guid: "88fd9a7fcfbd0854dbc95a58128b09c2",
+                item_type: ItemType::Recipe,
+                name: "Recipe: Pain Doré",
+                order_priority: 49,
+                max_quantity: 1,
+                buy_price: 110,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "88fd9a7fcfbd0854dbc95a58128b09c2",
+            Item {
+                guid: "88fd9a7fcfbd0854dbc95a58128b09c2",
+                item_type: ItemType::Recipe,
+                name: "Recipe: Pain Doré",
+                order_priority: 49,
+                max_quantity: 1,
+                buy_price: 110,
                 sell_price: 0,
                 equippable_by: None,
                 physical_attack: 0,
@@ -12343,6 +14328,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
+        // RECIPEUNLOCK_SURFANDTURFTATAKI_NAME
+        m.insert(
+            "Recipe: Surf and Turf Tataki",
+            Item {
+                guid: "e44fdfcaf1b80d64b9b9e35ab29bddd7",
+                item_type: ItemType::Recipe,
+                name: "Recipe: Surf and Turf Tataki",
+                order_priority: 65,
+                max_quantity: 1,
+                buy_price: 150,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "e44fdfcaf1b80d64b9b9e35ab29bddd7",
+            Item {
+                guid: "e44fdfcaf1b80d64b9b9e35ab29bddd7",
+                item_type: ItemType::Recipe,
+                name: "Recipe: Surf and Turf Tataki",
+                order_priority: 65,
+                max_quantity: 1,
+                buy_price: 150,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
         // RECIPEUNLOCK_TOMATOCLUB_NAME
         m.insert(
             "Recipe: Tomato Club",
@@ -12377,6 +14415,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 item_type: ItemType::Recipe,
                 name: "Recipe: Tomato Club",
                 order_priority: 10,
+                max_quantity: 1,
+                buy_price: 100,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // RECIPEUNLOCK_YAKITORISHRIMP_NAME
+        m.insert(
+            "Recipe: Yakitori Shrimp",
+            Item {
+                guid: "254124e5f00a4734a9802bd36d84b622",
+                item_type: ItemType::Recipe,
+                name: "Recipe: Yakitori Shrimp",
+                order_priority: 60,
+                max_quantity: 1,
+                buy_price: 100,
+                sell_price: 0,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "254124e5f00a4734a9802bd36d84b622",
+            Item {
+                guid: "254124e5f00a4734a9802bd36d84b622",
+                item_type: ItemType::Recipe,
+                name: "Recipe: Yakitori Shrimp",
+                order_priority: 60,
                 max_quantity: 1,
                 buy_price: 100,
                 sell_price: 0,
@@ -12449,70 +14540,17 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // RECIPEUNLOCK_YAKITORISHRIMP_NAME
+        // RELIC_STORYTELLING_HP_NAME
         m.insert(
-            "Recipe: Yakitori Shrimp",
+            "Tourist's Provision",
             Item {
-                guid: "254124e5f00a4734a9802bd36d84b622",
-                item_type: ItemType::Recipe,
-                name: "Recipe: Yakitori Shrimp",
-                order_priority: 60,
-                max_quantity: 1,
-                buy_price: 100,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "254124e5f00a4734a9802bd36d84b622",
-            Item {
-                guid: "254124e5f00a4734a9802bd36d84b622",
-                item_type: ItemType::Recipe,
-                name: "Recipe: Yakitori Shrimp",
-                order_priority: 60,
-                max_quantity: 1,
-                buy_price: 100,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // RECIPEUNLOCK_SURFANDTURFTATAKI_NAME
-        m.insert(
-            "Recipe: Surf and Turf Tataki",
-            Item {
-                guid: "e44fdfcaf1b80d64b9b9e35ab29bddd7",
-                item_type: ItemType::Recipe,
-                name: "Recipe: Surf and Turf Tataki",
-                order_priority: 65,
+                guid: "866778a20ec11da4baad80bbe7540c56",
+                item_type: ItemType::Relic,
+                name: "Tourist's Provision",
+                order_priority: 999,
                 max_quantity: 1,
                 buy_price: 150,
-                sell_price: 0,
+                sell_price: 120,
                 equippable_by: None,
                 physical_attack: 0,
                 magical_attack: 0,
@@ -12530,15 +14568,15 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
         );
 
         m.insert(
-            "e44fdfcaf1b80d64b9b9e35ab29bddd7",
+            "866778a20ec11da4baad80bbe7540c56",
             Item {
-                guid: "e44fdfcaf1b80d64b9b9e35ab29bddd7",
-                item_type: ItemType::Recipe,
-                name: "Recipe: Surf and Turf Tataki",
-                order_priority: 65,
+                guid: "866778a20ec11da4baad80bbe7540c56",
+                item_type: ItemType::Relic,
+                name: "Tourist's Provision",
+                order_priority: 999,
                 max_quantity: 1,
                 buy_price: 150,
-                sell_price: 0,
+                sell_price: 120,
                 equippable_by: None,
                 physical_attack: 0,
                 magical_attack: 0,
@@ -12661,6 +14699,112 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
+        // RELIC_CHEF_KNIFE_NAME
+        m.insert(
+            "Chef's Knife",
+            Item {
+                guid: "4e0db461b8b133c4ab2536bc1016cf93",
+                item_type: ItemType::Relic,
+                name: "Chef's Knife",
+                order_priority: 945,
+                max_quantity: 1,
+                buy_price: 165,
+                sell_price: 120,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "4e0db461b8b133c4ab2536bc1016cf93",
+            Item {
+                guid: "4e0db461b8b133c4ab2536bc1016cf93",
+                item_type: ItemType::Relic,
+                name: "Chef's Knife",
+                order_priority: 945,
+                max_quantity: 1,
+                buy_price: 165,
+                sell_price: 120,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // RELIC_MYSTERYLOCK_NAME
+        m.insert(
+            "Signifying Glass",
+            Item {
+                guid: "3295ddb17b4340044bbf4f131c90c1df",
+                item_type: ItemType::Relic,
+                name: "Signifying Glass",
+                order_priority: 997,
+                max_quantity: 1,
+                buy_price: 150,
+                sell_price: 120,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "3295ddb17b4340044bbf4f131c90c1df",
+            Item {
+                guid: "3295ddb17b4340044bbf4f131c90c1df",
+                item_type: ItemType::Relic,
+                name: "Signifying Glass",
+                order_priority: 997,
+                max_quantity: 1,
+                buy_price: 150,
+                sell_price: 120,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
         // RELIC_DOUBLE_EDGE_NAME
         m.insert(
             "Double Edge",
@@ -12714,1991 +14858,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // ARMOR_SPARKMESHARMOR_NAME
-        m.insert(
-            "Sparkmesh Armor",
-            Item {
-                guid: "ccc69fb007cbda342844f25126c90377",
-                item_type: ItemType::Armor,
-                name: "Sparkmesh Armor",
-                order_priority: 200,
-                max_quantity: 255,
-                buy_price: 152,
-                sell_price: 38,
-                equippable_by: Some(&[PlayerPartyCharacter::Zale, PlayerPartyCharacter::Valere]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 46,
-                magical_defense: 41,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "ccc69fb007cbda342844f25126c90377",
-            Item {
-                guid: "ccc69fb007cbda342844f25126c90377",
-                item_type: ItemType::Armor,
-                name: "Sparkmesh Armor",
-                order_priority: 200,
-                max_quantity: 255,
-                buy_price: 152,
-                sell_price: 38,
-                equippable_by: Some(&[PlayerPartyCharacter::Zale, PlayerPartyCharacter::Valere]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 46,
-                magical_defense: 41,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // ARMOR_SPECTRALCAPE_NAME
-        m.insert(
-            "Spectral Cape",
-            Item {
-                guid: "d2fd56a9405f9c04fb303795c7840f2f",
-                item_type: ItemType::Armor,
-                name: "Spectral Cape",
-                order_priority: 130,
-                max_quantity: 255,
-                buy_price: 44,
-                sell_price: 11,
-                equippable_by: Some(&[
-                    PlayerPartyCharacter::Garl,
-                    PlayerPartyCharacter::Serai,
-                    PlayerPartyCharacter::Reshan,
-                ]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 19,
-                magical_defense: 23,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "d2fd56a9405f9c04fb303795c7840f2f",
-            Item {
-                guid: "d2fd56a9405f9c04fb303795c7840f2f",
-                item_type: ItemType::Armor,
-                name: "Spectral Cape",
-                order_priority: 130,
-                max_quantity: 255,
-                buy_price: 44,
-                sell_price: 11,
-                equippable_by: Some(&[
-                    PlayerPartyCharacter::Garl,
-                    PlayerPartyCharacter::Serai,
-                    PlayerPartyCharacter::Reshan,
-                ]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 19,
-                magical_defense: 23,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // WEAPON_STARSHARDS_NAME
-        m.insert(
-            "Star Shards",
-            Item {
-                guid: "a27614e2379ef9e4dac1950a51b3f71d",
-                item_type: ItemType::Weapon,
-                name: "Star Shards",
-                order_priority: 210,
-                max_quantity: 255,
-                buy_price: 184,
-                sell_price: 46,
-                equippable_by: Some(&[PlayerPartyCharacter::Serai]),
-                physical_attack: 49,
-                magical_attack: 38,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "a27614e2379ef9e4dac1950a51b3f71d",
-            Item {
-                guid: "a27614e2379ef9e4dac1950a51b3f71d",
-                item_type: ItemType::Weapon,
-                name: "Star Shards",
-                order_priority: 210,
-                max_quantity: 255,
-                buy_price: 184,
-                sell_price: 46,
-                equippable_by: Some(&[PlayerPartyCharacter::Serai]),
-                physical_attack: 49,
-                magical_attack: 38,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // WEAPON_SQUIRE_SWORD_NAME
-        m.insert(
-            "Squire Sword",
-            Item {
-                guid: "4a1710ba97ae350428f18704e36fe234",
-                item_type: ItemType::Weapon,
-                name: "Squire Sword",
-                order_priority: 10,
-                max_quantity: 255,
-                buy_price: 32,
-                sell_price: 8,
-                equippable_by: Some(&[PlayerPartyCharacter::Zale]),
-                physical_attack: 5,
-                magical_attack: 5,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "4a1710ba97ae350428f18704e36fe234",
-            Item {
-                guid: "4a1710ba97ae350428f18704e36fe234",
-                item_type: ItemType::Weapon,
-                name: "Squire Sword",
-                order_priority: 10,
-                max_quantity: 255,
-                buy_price: 32,
-                sell_price: 8,
-                equippable_by: Some(&[PlayerPartyCharacter::Zale]),
-                physical_attack: 5,
-                magical_attack: 5,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // TRINKET_SOLSTICESASH_NAME
-        m.insert(
-            "Solstice Sash",
-            Item {
-                guid: "076aaeb73b8283748accfb24f68a5c64",
-                item_type: ItemType::Trinket,
-                name: "Solstice Sash",
-                order_priority: 35,
-                max_quantity: 255,
-                buy_price: 220,
-                sell_price: 55,
-                equippable_by: Some(&[PlayerPartyCharacter::Zale, PlayerPartyCharacter::Valere]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "076aaeb73b8283748accfb24f68a5c64",
-            Item {
-                guid: "076aaeb73b8283748accfb24f68a5c64",
-                item_type: ItemType::Trinket,
-                name: "Solstice Sash",
-                order_priority: 35,
-                max_quantity: 255,
-                buy_price: 220,
-                sell_price: 55,
-                equippable_by: Some(&[PlayerPartyCharacter::Zale, PlayerPartyCharacter::Valere]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // GROUP_TRINKET_SOLSTICE_MAGE_RING_NAME
-        m.insert(
-            "Solstice Mage Ring",
-            Item {
-                guid: "c7eb103c76a21974c844159ab0f5a0d2",
-                item_type: ItemType::GroupTrinket,
-                name: "Solstice Mage Ring",
-                order_priority: 5,
-                max_quantity: 1,
-                buy_price: 999,
-                sell_price: 125,
-                equippable_by: Some(&[PlayerPartyCharacter::Zale, PlayerPartyCharacter::Valere]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "c7eb103c76a21974c844159ab0f5a0d2",
-            Item {
-                guid: "c7eb103c76a21974c844159ab0f5a0d2",
-                item_type: ItemType::GroupTrinket,
-                name: "Solstice Mage Ring",
-                order_priority: 5,
-                max_quantity: 1,
-                buy_price: 999,
-                sell_price: 125,
-                equippable_by: Some(&[PlayerPartyCharacter::Zale, PlayerPartyCharacter::Valere]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // ARMOR_SPARKMESHCAPE_NAME
-        m.insert(
-            "Sparkmesh Cape",
-            Item {
-                guid: "fe4a8a4cada2d4a4999403d31f73a50a",
-                item_type: ItemType::Armor,
-                name: "Sparkmesh Cape",
-                order_priority: 205,
-                max_quantity: 255,
-                buy_price: 144,
-                sell_price: 36,
-                equippable_by: Some(&[
-                    PlayerPartyCharacter::Garl,
-                    PlayerPartyCharacter::Serai,
-                    PlayerPartyCharacter::Reshan,
-                ]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 43,
-                magical_defense: 44,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "fe4a8a4cada2d4a4999403d31f73a50a",
-            Item {
-                guid: "fe4a8a4cada2d4a4999403d31f73a50a",
-                item_type: ItemType::Armor,
-                name: "Sparkmesh Cape",
-                order_priority: 205,
-                max_quantity: 255,
-                buy_price: 144,
-                sell_price: 36,
-                equippable_by: Some(&[
-                    PlayerPartyCharacter::Garl,
-                    PlayerPartyCharacter::Serai,
-                    PlayerPartyCharacter::Reshan,
-                ]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 43,
-                magical_defense: 44,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // STORYARTIFACT_CLOCKWORKANDKIDENGINEERS_NAME
-        m.insert(
-            "Cog Prototype",
-            Item {
-                guid: "9fffcbe75bd0a61439e3546edd2d1049",
-                item_type: ItemType::StoryArtifact,
-                name: "Cog Prototype",
-                order_priority: 705,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "9fffcbe75bd0a61439e3546edd2d1049",
-            Item {
-                guid: "9fffcbe75bd0a61439e3546edd2d1049",
-                item_type: ItemType::StoryArtifact,
-                name: "Cog Prototype",
-                order_priority: 705,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // STORYARTIFACT_ESTRISTAE_NAME
-        m.insert(
-            "Broken Handle",
-            Item {
-                guid: "027715b8b6eb986459da52f290a22c45",
-                item_type: ItemType::StoryArtifact,
-                name: "Broken Handle",
-                order_priority: 710,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "027715b8b6eb986459da52f290a22c45",
-            Item {
-                guid: "027715b8b6eb986459da52f290a22c45",
-                item_type: ItemType::StoryArtifact,
-                name: "Broken Handle",
-                order_priority: 710,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // STORYARTIFACT_MOONCRADLEELDERMIST_NAME
-        m.insert(
-            "Celestial Willow Leaf",
-            Item {
-                guid: "a079a093d27333e4e99cd0b4abe3b6a1",
-                item_type: ItemType::StoryArtifact,
-                name: "Celestial Willow Leaf",
-                order_priority: 720,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "a079a093d27333e4e99cd0b4abe3b6a1",
-            Item {
-                guid: "a079a093d27333e4e99cd0b4abe3b6a1",
-                item_type: ItemType::StoryArtifact,
-                name: "Celestial Willow Leaf",
-                order_priority: 720,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // STORYARTIFACT_LUCENTSHROUDNIGHT_NAME
-        m.insert(
-            "Aventry Crest",
-            Item {
-                guid: "2cbaec690b20378448407f18f53c7607",
-                item_type: ItemType::StoryArtifact,
-                name: "Aventry Crest",
-                order_priority: 715,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "2cbaec690b20378448407f18f53c7607",
-            Item {
-                guid: "2cbaec690b20378448407f18f53c7607",
-                item_type: ItemType::StoryArtifact,
-                name: "Aventry Crest",
-                order_priority: 715,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // STORYARTIFACT_GUNGODDESS_NAME
-        m.insert(
-            "Joce's Belt Buckle",
-            Item {
-                guid: "a7eb75ef484df8748a4c507fba097b85",
-                item_type: ItemType::StoryArtifact,
-                name: "Joce's Belt Buckle",
-                order_priority: 700,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "a7eb75ef484df8748a4c507fba097b85",
-            Item {
-                guid: "a7eb75ef484df8748a4c507fba097b85",
-                item_type: ItemType::StoryArtifact,
-                name: "Joce's Belt Buckle",
-                order_priority: 700,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // STORYARTIFACT_NOMADANDSEA_NAME
-        m.insert(
-            "Old Coral Vase",
-            Item {
-                guid: "6086a4552abd9ab4dbd76f1cfb4b6812",
-                item_type: ItemType::StoryArtifact,
-                name: "Old Coral Vase",
-                order_priority: 725,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "6086a4552abd9ab4dbd76f1cfb4b6812",
-            Item {
-                guid: "6086a4552abd9ab4dbd76f1cfb4b6812",
-                item_type: ItemType::StoryArtifact,
-                name: "Old Coral Vase",
-                order_priority: 725,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // STORYARTIFACT_SLEEPERANDMOLEKINS_NAME
-        m.insert(
-            "Ancient Molekin Cloak",
-            Item {
-                guid: "c7e3009a90c46164e86fd8fb5d08cbce",
-                item_type: ItemType::StoryArtifact,
-                name: "Ancient Molekin Cloak",
-                order_priority: 735,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "c7e3009a90c46164e86fd8fb5d08cbce",
-            Item {
-                guid: "c7e3009a90c46164e86fd8fb5d08cbce",
-                item_type: ItemType::StoryArtifact,
-                name: "Ancient Molekin Cloak",
-                order_priority: 735,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // STORYARTIFACT_THREESISTERS_NAME
-        m.insert(
-            "Romaya's Hairpin",
-            Item {
-                guid: "f65753c0374254346afc37b1f75cd0ee",
-                item_type: ItemType::StoryArtifact,
-                name: "Romaya's Hairpin",
-                order_priority: 740,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "f65753c0374254346afc37b1f75cd0ee",
-            Item {
-                guid: "f65753c0374254346afc37b1f75cd0ee",
-                item_type: ItemType::StoryArtifact,
-                name: "Romaya's Hairpin",
-                order_priority: 740,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // STORYARTIFACT_VAMPIREROSE_NAME
-        m.insert(
-            "Stone Tablet Piece",
-            Item {
-                guid: "5c4863eb4f266574e937fb34e3031ed4",
-                item_type: ItemType::StoryArtifact,
-                name: "Stone Tablet Piece",
-                order_priority: 745,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "5c4863eb4f266574e937fb34e3031ed4",
-            Item {
-                guid: "5c4863eb4f266574e937fb34e3031ed4",
-                item_type: ItemType::StoryArtifact,
-                name: "Stone Tablet Piece",
-                order_priority: 745,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // WEAPON_STURDYCOG_NAME
-        m.insert(
-            "Sturdy Cog",
-            Item {
-                guid: "68d99c8b95dbf7c41a00d562b41b289a",
-                item_type: ItemType::Weapon,
-                name: "Sturdy Cog",
-                order_priority: 110,
-                max_quantity: 255,
-                buy_price: 136,
-                sell_price: 34,
-                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
-                physical_attack: 27,
-                magical_attack: 19,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "68d99c8b95dbf7c41a00d562b41b289a",
-            Item {
-                guid: "68d99c8b95dbf7c41a00d562b41b289a",
-                item_type: ItemType::Weapon,
-                name: "Sturdy Cog",
-                order_priority: 110,
-                max_quantity: 255,
-                buy_price: 136,
-                sell_price: 34,
-                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
-                physical_attack: 27,
-                magical_attack: 19,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // ARMOR_TATTEREDCAPE_NAME
-        m.insert(
-            "Tattered Cape",
-            Item {
-                guid: "ecf26467374cebc4b812538e7fbe44a4",
-                item_type: ItemType::Armor,
-                name: "Tattered Cape",
-                order_priority: 155,
-                max_quantity: 255,
-                buy_price: 92,
-                sell_price: 23,
-                equippable_by: Some(&[
-                    PlayerPartyCharacter::Garl,
-                    PlayerPartyCharacter::Serai,
-                    PlayerPartyCharacter::Reshan,
-                ]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 26,
-                magical_defense: 33,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "ecf26467374cebc4b812538e7fbe44a4",
-            Item {
-                guid: "ecf26467374cebc4b812538e7fbe44a4",
-                item_type: ItemType::Armor,
-                name: "Tattered Cape",
-                order_priority: 155,
-                max_quantity: 255,
-                buy_price: 92,
-                sell_price: 23,
-                equippable_by: Some(&[
-                    PlayerPartyCharacter::Garl,
-                    PlayerPartyCharacter::Serai,
-                    PlayerPartyCharacter::Reshan,
-                ]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 26,
-                magical_defense: 33,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // WEAPON_AMBER_STAFF_NAME
-        m.insert(
-            "Teal Amber Staff",
-            Item {
-                guid: "e27094f36cb7bb140b614b89fde60550",
-                item_type: ItemType::Weapon,
-                name: "Teal Amber Staff",
-                order_priority: 20,
-                max_quantity: 255,
-                buy_price: 48,
-                sell_price: 12,
-                equippable_by: Some(&[PlayerPartyCharacter::Valere]),
-                physical_attack: 11,
-                magical_attack: 6,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "e27094f36cb7bb140b614b89fde60550",
-            Item {
-                guid: "e27094f36cb7bb140b614b89fde60550",
-                item_type: ItemType::Weapon,
-                name: "Teal Amber Staff",
-                order_priority: 20,
-                max_quantity: 255,
-                buy_price: 48,
-                sell_price: 12,
-                equippable_by: Some(&[PlayerPartyCharacter::Valere]),
-                physical_attack: 11,
-                magical_attack: 6,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // INGREDIENT_TESTINGREDIENT_NAME
-        m.insert(
-            "Test Ingredient",
-            Item {
-                guid: "8c9604711530463408f53774a8c44177",
-                item_type: ItemType::Ingredient,
-                name: "Test Ingredient",
-                order_priority: 0,
-                max_quantity: 255,
-                buy_price: 10,
-                sell_price: 5,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "8c9604711530463408f53774a8c44177",
-            Item {
-                guid: "8c9604711530463408f53774a8c44177",
-                item_type: ItemType::Ingredient,
-                name: "Test Ingredient",
-                order_priority: 0,
-                max_quantity: 255,
-                buy_price: 10,
-                sell_price: 5,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // ARMOR_THALASSICCLOAK_NAME
-        m.insert(
-            "Thalassic Cloak",
-            Item {
-                guid: "0e08751170c68ca4faae2b08ea913275",
-                item_type: ItemType::Armor,
-                name: "Thalassic Cloak",
-                order_priority: 150,
-                max_quantity: 255,
-                buy_price: 96,
-                sell_price: 24,
-                equippable_by: Some(&[PlayerPartyCharacter::Serai, PlayerPartyCharacter::Reshan]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 25,
-                magical_defense: 33,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "0e08751170c68ca4faae2b08ea913275",
-            Item {
-                guid: "0e08751170c68ca4faae2b08ea913275",
-                item_type: ItemType::Armor,
-                name: "Thalassic Cloak",
-                order_priority: 150,
-                max_quantity: 255,
-                buy_price: 96,
-                sell_price: 24,
-                equippable_by: Some(&[PlayerPartyCharacter::Serai, PlayerPartyCharacter::Reshan]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 25,
-                magical_defense: 33,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // WEAPON_MOONGIRL_NAME
-        m.insert(
-            "Training Staff",
-            Item {
-                guid: "40b7062ac812c5d47bb1ff0df4987e8e",
-                item_type: ItemType::Weapon,
-                name: "Training Staff",
-                order_priority: 1,
-                max_quantity: 255,
-                buy_price: 10,
-                sell_price: 5,
-                equippable_by: Some(&[PlayerPartyCharacter::Valere]),
-                physical_attack: 3,
-                magical_attack: 1,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "40b7062ac812c5d47bb1ff0df4987e8e",
-            Item {
-                guid: "40b7062ac812c5d47bb1ff0df4987e8e",
-                item_type: ItemType::Weapon,
-                name: "Training Staff",
-                order_priority: 1,
-                max_quantity: 255,
-                buy_price: 10,
-                sell_price: 5,
-                equippable_by: Some(&[PlayerPartyCharacter::Valere]),
-                physical_attack: 3,
-                magical_attack: 1,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // WEAPON_SUNBOY_NAME
-        m.insert(
-            "Training Sword",
-            Item {
-                guid: "e3098c0169021924a97713b57a009928",
-                item_type: ItemType::Weapon,
-                name: "Training Sword",
-                order_priority: 0,
-                max_quantity: 255,
-                buy_price: 10,
-                sell_price: 5,
-                equippable_by: Some(&[PlayerPartyCharacter::Zale]),
-                physical_attack: 1,
-                magical_attack: 3,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "e3098c0169021924a97713b57a009928",
-            Item {
-                guid: "e3098c0169021924a97713b57a009928",
-                item_type: ItemType::Weapon,
-                name: "Training Sword",
-                order_priority: 0,
-                max_quantity: 255,
-                buy_price: 10,
-                sell_price: 5,
-                equippable_by: Some(&[PlayerPartyCharacter::Zale]),
-                physical_attack: 1,
-                magical_attack: 3,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // WEAPON_TRUESILVERDAGGERS_NAME
-        m.insert(
-            "Truesilver Daggers",
-            Item {
-                guid: "0d86cee64cf8be44985fcee7a34c49f2",
-                item_type: ItemType::Weapon,
-                name: "Truesilver Daggers",
-                order_priority: 125,
-                max_quantity: 255,
-                buy_price: 168,
-                sell_price: 42,
-                equippable_by: Some(&[PlayerPartyCharacter::Serai]),
-                physical_attack: 27,
-                magical_attack: 29,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "0d86cee64cf8be44985fcee7a34c49f2",
-            Item {
-                guid: "0d86cee64cf8be44985fcee7a34c49f2",
-                item_type: ItemType::Weapon,
-                name: "Truesilver Daggers",
-                order_priority: 125,
-                max_quantity: 255,
-                buy_price: 168,
-                sell_price: 42,
-                equippable_by: Some(&[PlayerPartyCharacter::Serai]),
-                physical_attack: 27,
-                magical_attack: 29,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // STORYARTIFACT_SKYGIANTANDKHUKKAR_NAME
-        m.insert(
-            "Cloudy Shard",
-            Item {
-                guid: "bcedb2e46cfcb9a45a9736062dbd6e47",
-                item_type: ItemType::StoryArtifact,
-                name: "Cloudy Shard",
-                order_priority: 730,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "bcedb2e46cfcb9a45a9736062dbd6e47",
-            Item {
-                guid: "bcedb2e46cfcb9a45a9736062dbd6e47",
-                item_type: ItemType::StoryArtifact,
-                name: "Cloudy Shard",
-                order_priority: 730,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // VALUABLEITEM_ADAMANTITEORE_NAME
-        m.insert(
-            "Adamantite Ore",
-            Item {
-                guid: "77a0a1cac957b4b4d8cfbb1ee9b2548c",
-                item_type: ItemType::Valuable,
-                name: "Adamantite Ore",
-                order_priority: 0,
-                max_quantity: 255,
-                buy_price: 0,
-                sell_price: 8,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "77a0a1cac957b4b4d8cfbb1ee9b2548c",
-            Item {
-                guid: "77a0a1cac957b4b4d8cfbb1ee9b2548c",
-                item_type: ItemType::Valuable,
-                name: "Adamantite Ore",
-                order_priority: 0,
-                max_quantity: 255,
-                buy_price: 0,
-                sell_price: 8,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // VALUABLEITEM_ALUMNITOKEN_NAME
-        m.insert(
-            "Alumni Token",
-            Item {
-                guid: "c067bbcbb9deb85488d779cf334e50db",
-                item_type: ItemType::Valuable,
-                name: "Alumni Token",
-                order_priority: 0,
-                max_quantity: 255,
-                buy_price: 0,
-                sell_price: 1,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "c067bbcbb9deb85488d779cf334e50db",
-            Item {
-                guid: "c067bbcbb9deb85488d779cf334e50db",
-                item_type: ItemType::Valuable,
-                name: "Alumni Token",
-                order_priority: 0,
-                max_quantity: 255,
-                buy_price: 0,
-                sell_price: 1,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // VALUABLEITEM_OBSIDIANINGOT_NAME
-        m.insert(
-            "Obsidian Ingot",
-            Item {
-                guid: "4717dc86cf98f2d4794b40e910b63e61",
-                item_type: ItemType::Valuable,
-                name: "Obsidian Ingot",
-                order_priority: 985,
-                max_quantity: 255,
-                buy_price: 0,
-                sell_price: 120,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "4717dc86cf98f2d4794b40e910b63e61",
-            Item {
-                guid: "4717dc86cf98f2d4794b40e910b63e61",
-                item_type: ItemType::Valuable,
-                name: "Obsidian Ingot",
-                order_priority: 985,
-                max_quantity: 255,
-                buy_price: 0,
-                sell_price: 120,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // VALUABLEITEM_OBSIDIANORE_NAME
-        m.insert(
-            "Obsidian Ore",
-            Item {
-                guid: "7a9b2938fabc5434da21134b18b4e0ee",
-                item_type: ItemType::Valuable,
-                name: "Obsidian Ore",
-                order_priority: 990,
-                max_quantity: 255,
-                buy_price: 0,
-                sell_price: 45,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "7a9b2938fabc5434da21134b18b4e0ee",
-            Item {
-                guid: "7a9b2938fabc5434da21134b18b4e0ee",
-                item_type: ItemType::Valuable,
-                name: "Obsidian Ore",
-                order_priority: 990,
-                max_quantity: 255,
-                buy_price: 0,
-                sell_price: 45,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // VALUABLEITEM_SAPPHIREINGOT_NAME
-        m.insert(
-            "Sapphire Ingot",
-            Item {
-                guid: "79b159a1b2b69834a96cd56d5e02058c",
-                item_type: ItemType::Valuable,
-                name: "Sapphire Ingot",
-                order_priority: 975,
-                max_quantity: 255,
-                buy_price: 0,
-                sell_price: 140,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "79b159a1b2b69834a96cd56d5e02058c",
-            Item {
-                guid: "79b159a1b2b69834a96cd56d5e02058c",
-                item_type: ItemType::Valuable,
-                name: "Sapphire Ingot",
-                order_priority: 975,
-                max_quantity: 255,
-                buy_price: 0,
-                sell_price: 140,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // VALUABLEITEM_SAPPHIREORE_NAME
-        m.insert(
-            "Sapphire Ore",
-            Item {
-                guid: "c43421b626574174e9b5156141213250",
-                item_type: ItemType::Valuable,
-                name: "Sapphire Ore",
-                order_priority: 980,
-                max_quantity: 255,
-                buy_price: 0,
-                sell_price: 55,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "c43421b626574174e9b5156141213250",
-            Item {
-                guid: "c43421b626574174e9b5156141213250",
-                item_type: ItemType::Valuable,
-                name: "Sapphire Ore",
-                order_priority: 980,
-                max_quantity: 255,
-                buy_price: 0,
-                sell_price: 55,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // VALUABLEITEM_TEALAMBERORE_NAME
-        m.insert(
-            "Teal Amber Ore",
-            Item {
-                guid: "33e568f23e2581d448041ac97fb8358d",
-                item_type: ItemType::Valuable,
-                name: "Teal Amber Ore",
-                order_priority: 995,
-                max_quantity: 255,
-                buy_price: 0,
-                sell_price: 35,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "33e568f23e2581d448041ac97fb8358d",
-            Item {
-                guid: "33e568f23e2581d448041ac97fb8358d",
-                item_type: ItemType::Valuable,
-                name: "Teal Amber Ore",
-                order_priority: 995,
-                max_quantity: 255,
-                buy_price: 0,
-                sell_price: 35,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // VALUABLEITEM_SHINYPEARL_NAME
-        m.insert(
-            "Shiny Pearl",
-            Item {
-                guid: "7337dc21759feae4a92aba8200c42898",
-                item_type: ItemType::Valuable,
-                name: "Shiny Pearl",
-                order_priority: 1000,
-                max_quantity: 255,
-                buy_price: 0,
-                sell_price: 20,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "7337dc21759feae4a92aba8200c42898",
-            Item {
-                guid: "7337dc21759feae4a92aba8200c42898",
-                item_type: ItemType::Valuable,
-                name: "Shiny Pearl",
-                order_priority: 1000,
-                max_quantity: 255,
-                buy_price: 0,
-                sell_price: 20,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // ARMOR_VITRICSIMULACRUM_NAME
-        m.insert(
-            "Vitric Simulacrum",
-            Item {
-                guid: "ebe89a4a81e46c245bd98a337df06eb8",
-                item_type: ItemType::Armor,
-                name: "Vitric Simulacrum",
-                order_priority: 220,
-                max_quantity: 255,
-                buy_price: 144,
-                sell_price: 36,
-                equippable_by: Some(&[PlayerPartyCharacter::Bst]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 53,
-                magical_defense: 51,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "ebe89a4a81e46c245bd98a337df06eb8",
-            Item {
-                guid: "ebe89a4a81e46c245bd98a337df06eb8",
-                item_type: ItemType::Armor,
-                name: "Vitric Simulacrum",
-                order_priority: 220,
-                max_quantity: 255,
-                buy_price: 144,
-                sell_price: 36,
-                equippable_by: Some(&[PlayerPartyCharacter::Bst]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 53,
-                magical_defense: 51,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // ARMOR_VOLCANICARMOR_NAME
-        m.insert(
-            "Volcanic Armor",
-            Item {
-                guid: "0c8b9c021791a734892aaafde3b847b6",
-                item_type: ItemType::Armor,
-                name: "Volcanic Armor",
-                order_priority: 175,
-                max_quantity: 255,
-                buy_price: 136,
-                sell_price: 34,
-                equippable_by: Some(&[PlayerPartyCharacter::Valere]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 40,
-                magical_defense: 32,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "0c8b9c021791a734892aaafde3b847b6",
-            Item {
-                guid: "0c8b9c021791a734892aaafde3b847b6",
-                item_type: ItemType::Armor,
-                name: "Volcanic Armor",
-                order_priority: 175,
-                max_quantity: 255,
-                buy_price: 136,
-                sell_price: 34,
-                equippable_by: Some(&[PlayerPartyCharacter::Valere]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 40,
-                magical_defense: 32,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // WEAPON_WALNUTCORK_NAME
-        m.insert(
-            "Walnut Cork",
-            Item {
-                guid: "c3b22a46f99faba498bfbc7519cce88c",
-                item_type: ItemType::Weapon,
-                name: "Walnut Cork",
-                order_priority: 150,
-                max_quantity: 255,
-                buy_price: 172,
-                sell_price: 43,
-                equippable_by: Some(&[PlayerPartyCharacter::Reshan]),
-                physical_attack: 29,
-                magical_attack: 39,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "c3b22a46f99faba498bfbc7519cce88c",
-            Item {
-                guid: "c3b22a46f99faba498bfbc7519cce88c",
-                item_type: ItemType::Weapon,
-                name: "Walnut Cork",
-                order_priority: 150,
-                max_quantity: 255,
-                buy_price: 172,
-                sell_price: 43,
-                equippable_by: Some(&[PlayerPartyCharacter::Reshan]),
-                physical_attack: 29,
-                magical_attack: 39,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // WEAPON_WITHEREDCORK_NAME
-        m.insert(
-            "Withered Cork",
-            Item {
-                guid: "441bec8771714944eb32ff53c082f8da",
-                item_type: ItemType::Weapon,
-                name: "Withered Cork",
-                order_priority: 95,
-                max_quantity: 255,
-                buy_price: 112,
-                sell_price: 28,
-                equippable_by: Some(&[PlayerPartyCharacter::Reshan]),
-                physical_attack: 17,
-                magical_attack: 18,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "441bec8771714944eb32ff53c082f8da",
-            Item {
-                guid: "441bec8771714944eb32ff53c082f8da",
-                item_type: ItemType::Weapon,
-                name: "Withered Cork",
-                order_priority: 95,
-                max_quantity: 255,
-                buy_price: 112,
-                sell_price: 28,
-                equippable_by: Some(&[PlayerPartyCharacter::Reshan]),
-                physical_attack: 17,
-                magical_attack: 18,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // RELIC_DUBIOUS_DARE_NAME
         m.insert(
             "Dubious Dare",
@@ -14733,59 +14892,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 item_type: ItemType::Relic,
                 name: "Dubious Dare",
                 order_priority: 20,
-                max_quantity: 1,
-                buy_price: 150,
-                sell_price: 120,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // RELIC_EXTRA_POCKETS_NAME
-        m.insert(
-            "Hidden Pockets",
-            Item {
-                guid: "4e0db461b8b133c4ab2536bc1016cf93",
-                item_type: ItemType::Relic,
-                name: "Hidden Pockets",
-                order_priority: 945,
-                max_quantity: 1,
-                buy_price: 150,
-                sell_price: 120,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "4e0db461b8b133c4ab2536bc1016cf93",
-            Item {
-                guid: "4e0db461b8b133c4ab2536bc1016cf93",
-                item_type: ItemType::Relic,
-                name: "Hidden Pockets",
-                order_priority: 945,
                 max_quantity: 1,
                 buy_price: 150,
                 sell_price: 120,
@@ -14900,59 +15006,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 magical_attack: 0,
                 physical_defense: 0,
                 magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // ARMOR_WIREPLATEARMOR_NAME
-        m.insert(
-            "Wireplate Armor",
-            Item {
-                guid: "67e51219a3a7ea14fa14e9eb4e8643e4",
-                item_type: ItemType::Armor,
-                name: "Wireplate Armor",
-                order_priority: 185,
-                max_quantity: 255,
-                buy_price: 152,
-                sell_price: 38,
-                equippable_by: Some(&[PlayerPartyCharacter::Zale, PlayerPartyCharacter::Valere]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 43,
-                magical_defense: 36,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "67e51219a3a7ea14fa14e9eb4e8643e4",
-            Item {
-                guid: "67e51219a3a7ea14fa14e9eb4e8643e4",
-                item_type: ItemType::Armor,
-                name: "Wireplate Armor",
-                order_priority: 185,
-                max_quantity: 255,
-                buy_price: 152,
-                sell_price: 38,
-                equippable_by: Some(&[PlayerPartyCharacter::Zale, PlayerPartyCharacter::Valere]),
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 43,
-                magical_defense: 36,
                 hp_to_restore: 0,
                 mp_to_restore: 0,
                 // Restore mode
@@ -15157,6 +15210,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 item_type: ItemType::Relic,
                 name: "Tome of Knowledge",
                 order_priority: 975,
+                max_quantity: 1,
+                buy_price: 150,
+                sell_price: 120,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // RELIC_LVLUP_AUTOHEAL_NAME
+        m.insert(
+            "Volitional Spirit",
+            Item {
+                guid: "a5ea1b6b42b349444bb6c7ac480ee1df",
+                item_type: ItemType::Relic,
+                name: "Volitional Spirit",
+                order_priority: 998,
+                max_quantity: 1,
+                buy_price: 150,
+                sell_price: 120,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "a5ea1b6b42b349444bb6c7ac480ee1df",
+            Item {
+                guid: "a5ea1b6b42b349444bb6c7ac480ee1df",
+                item_type: ItemType::Relic,
+                name: "Volitional Spirit",
+                order_priority: 998,
                 max_quantity: 1,
                 buy_price: 150,
                 sell_price: 120,
@@ -15388,112 +15494,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // RELIC_SOLSTICEDIPLOMA_NAME
-        m.insert(
-            "Solstice Diploma",
-            Item {
-                guid: "28e41ac6234015840a9c976425d74ee9",
-                item_type: ItemType::Relic,
-                name: "Solstice Diploma",
-                order_priority: 1010,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "28e41ac6234015840a9c976425d74ee9",
-            Item {
-                guid: "28e41ac6234015840a9c976425d74ee9",
-                item_type: ItemType::Relic,
-                name: "Solstice Diploma",
-                order_priority: 1010,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 0,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        // RELIC_SOLSTICEDOCTORATE_NAME
-        m.insert(
-            "Solstice Doctorate",
-            Item {
-                guid: "d804d17171feb8949927b61e871fc746",
-                item_type: ItemType::Relic,
-                name: "Solstice Doctorate",
-                order_priority: 11,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 120,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "d804d17171feb8949927b61e871fc746",
-            Item {
-                guid: "d804d17171feb8949927b61e871fc746",
-                item_type: ItemType::Relic,
-                name: "Solstice Doctorate",
-                order_priority: 11,
-                max_quantity: 1,
-                buy_price: 0,
-                sell_price: 120,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // RELIC_SPEEDRUN_NAME
         m.insert(
             "Mark of the Speedrunner",
@@ -15653,59 +15653,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // WEAPON_ROCK_LID_NAME
-        m.insert(
-            "Rock Lid",
-            Item {
-                guid: "7694b5b801204a74c888d67a49f06d42",
-                item_type: ItemType::Weapon,
-                name: "Rock Lid",
-                order_priority: 30,
-                max_quantity: 255,
-                buy_price: 44,
-                sell_price: 11,
-                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
-                physical_attack: 10,
-                magical_attack: 9,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
-        m.insert(
-            "7694b5b801204a74c888d67a49f06d42",
-            Item {
-                guid: "7694b5b801204a74c888d67a49f06d42",
-                item_type: ItemType::Weapon,
-                name: "Rock Lid",
-                order_priority: 30,
-                max_quantity: 255,
-                buy_price: 44,
-                sell_price: 11,
-                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
-                physical_attack: 10,
-                magical_attack: 9,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 0,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 0.0,
-                mp_percent_to_restore: 0.0,
-            },
-        );
-
         // ARMOR_REVENANTARMOR_NAME
         m.insert(
             "Revenant Armor",
@@ -15748,6 +15695,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 magical_attack: 0,
                 physical_defense: 23,
                 magical_defense: 25,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // WEAPON_ROCK_LID_NAME
+        m.insert(
+            "Rock Lid",
+            Item {
+                guid: "7694b5b801204a74c888d67a49f06d42",
+                item_type: ItemType::Weapon,
+                name: "Rock Lid",
+                order_priority: 30,
+                max_quantity: 255,
+                buy_price: 44,
+                sell_price: 11,
+                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
+                physical_attack: 10,
+                magical_attack: 9,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "7694b5b801204a74c888d67a49f06d42",
+            Item {
+                guid: "7694b5b801204a74c888d67a49f06d42",
+                item_type: ItemType::Weapon,
+                name: "Rock Lid",
+                order_priority: 30,
+                max_quantity: 255,
+                buy_price: 44,
+                sell_price: 11,
+                equippable_by: Some(&[PlayerPartyCharacter::Garl]),
+                physical_attack: 10,
+                magical_attack: 9,
+                physical_defense: 0,
+                magical_defense: 0,
                 hp_to_restore: 0,
                 mp_to_restore: 0,
                 // Restore mode
@@ -16381,7 +16381,7 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 max_quantity: 255,
                 buy_price: 136,
                 sell_price: 34,
-                equippable_by: Some(&[PlayerPartyCharacter::Zale]),
+                equippable_by: Some(&[PlayerPartyCharacter::Zale, PlayerPartyCharacter::Valere]),
                 physical_attack: 0,
                 magical_attack: 0,
                 physical_defense: 38,
@@ -16407,7 +16407,7 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 max_quantity: 255,
                 buy_price: 136,
                 sell_price: 34,
-                equippable_by: Some(&[PlayerPartyCharacter::Zale]),
+                equippable_by: Some(&[PlayerPartyCharacter::Zale, PlayerPartyCharacter::Valere]),
                 physical_attack: 0,
                 magical_attack: 0,
                 physical_defense: 38,
@@ -16688,59 +16688,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // SNACK_APPLEPIE_NAME
-        m.insert(
-            "Croustade",
-            Item {
-                guid: "46bfb5ae7593f8f4bb870c9644635a99",
-                item_type: ItemType::Snack,
-                name: "Croustade",
-                order_priority: 47,
-                max_quantity: 255,
-                buy_price: 64,
-                sell_price: 32,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 80,
-                mp_to_restore: 7,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 1.0,
-                mp_percent_to_restore: 1.0,
-            },
-        );
-
-        m.insert(
-            "46bfb5ae7593f8f4bb870c9644635a99",
-            Item {
-                guid: "46bfb5ae7593f8f4bb870c9644635a99",
-                item_type: ItemType::Snack,
-                name: "Croustade",
-                order_priority: 47,
-                max_quantity: 255,
-                buy_price: 64,
-                sell_price: 32,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 80,
-                mp_to_restore: 7,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 1.0,
-                mp_percent_to_restore: 1.0,
-            },
-        );
-
         // SNACK_CHAUDRÉE_NAME
         m.insert(
             "Chaudrée",
@@ -16785,6 +16732,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 magical_defense: 0,
                 hp_to_restore: 0,
                 mp_to_restore: 8,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 1.0,
+                mp_percent_to_restore: 1.0,
+            },
+        );
+
+        // SNACK_APPLEPIE_NAME
+        m.insert(
+            "Croustade",
+            Item {
+                guid: "46bfb5ae7593f8f4bb870c9644635a99",
+                item_type: ItemType::Snack,
+                name: "Croustade",
+                order_priority: 47,
+                max_quantity: 255,
+                buy_price: 64,
+                sell_price: 32,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 80,
+                mp_to_restore: 7,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 1.0,
+                mp_percent_to_restore: 1.0,
+            },
+        );
+
+        m.insert(
+            "46bfb5ae7593f8f4bb870c9644635a99",
+            Item {
+                guid: "46bfb5ae7593f8f4bb870c9644635a99",
+                item_type: ItemType::Snack,
+                name: "Croustade",
+                order_priority: 47,
+                max_quantity: 255,
+                buy_price: 64,
+                sell_price: 32,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 80,
+                mp_to_restore: 7,
                 // Restore mode
                 hp_use_percent: 0,
                 mp_use_percent: 0,
@@ -16900,59 +16900,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // SNACK_HERBEDFILET_NAME
-        m.insert(
-            "Herbed Filet",
-            Item {
-                guid: "88bc64e502aab364f800ff8b94427f5f",
-                item_type: ItemType::Snack,
-                name: "Herbed Filet",
-                order_priority: 25,
-                max_quantity: 255,
-                buy_price: 8,
-                sell_price: 4,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 50,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 1.0,
-                mp_percent_to_restore: 1.0,
-            },
-        );
-
-        m.insert(
-            "88bc64e502aab364f800ff8b94427f5f",
-            Item {
-                guid: "88bc64e502aab364f800ff8b94427f5f",
-                item_type: ItemType::Snack,
-                name: "Herbed Filet",
-                order_priority: 25,
-                max_quantity: 255,
-                buy_price: 8,
-                sell_price: 4,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 50,
-                mp_to_restore: 0,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 1.0,
-                mp_percent_to_restore: 1.0,
-            },
-        );
-
         // SNACK_HEARTYSTEW_NAME
         m.insert(
             "Hearty Stew",
@@ -16996,6 +16943,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 physical_defense: 0,
                 magical_defense: 0,
                 hp_to_restore: 90,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 1.0,
+                mp_percent_to_restore: 1.0,
+            },
+        );
+
+        // SNACK_HERBEDFILET_NAME
+        m.insert(
+            "Herbed Filet",
+            Item {
+                guid: "88bc64e502aab364f800ff8b94427f5f",
+                item_type: ItemType::Snack,
+                name: "Herbed Filet",
+                order_priority: 25,
+                max_quantity: 255,
+                buy_price: 8,
+                sell_price: 4,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 50,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 1.0,
+                mp_percent_to_restore: 1.0,
+            },
+        );
+
+        m.insert(
+            "88bc64e502aab364f800ff8b94427f5f",
+            Item {
+                guid: "88bc64e502aab364f800ff8b94427f5f",
+                item_type: ItemType::Snack,
+                name: "Herbed Filet",
+                order_priority: 25,
+                max_quantity: 255,
+                buy_price: 8,
+                sell_price: 4,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 50,
                 mp_to_restore: 0,
                 // Restore mode
                 hp_use_percent: 0,
@@ -17059,59 +17059,6 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             },
         );
 
-        // SNACK_MUSHROOMSCRAMBLE_NAME
-        m.insert(
-            "Mushroom Scramble",
-            Item {
-                guid: "c1866d6de70d4834b951c06d4ae23306",
-                item_type: ItemType::Snack,
-                name: "Mushroom Scramble",
-                order_priority: 21,
-                max_quantity: 255,
-                buy_price: 18,
-                sell_price: 9,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 35,
-                mp_to_restore: 5,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 1.0,
-                mp_percent_to_restore: 1.0,
-            },
-        );
-
-        m.insert(
-            "c1866d6de70d4834b951c06d4ae23306",
-            Item {
-                guid: "c1866d6de70d4834b951c06d4ae23306",
-                item_type: ItemType::Snack,
-                name: "Mushroom Scramble",
-                order_priority: 21,
-                max_quantity: 255,
-                buy_price: 18,
-                sell_price: 9,
-                equippable_by: None,
-                physical_attack: 0,
-                magical_attack: 0,
-                physical_defense: 0,
-                magical_defense: 0,
-                hp_to_restore: 35,
-                mp_to_restore: 5,
-                // Restore mode
-                hp_use_percent: 0,
-                mp_use_percent: 0,
-                // 0.0-1.0
-                hp_percent_to_restore: 1.0,
-                mp_percent_to_restore: 1.0,
-            },
-        );
-
         // SNACK_LEGENDARYFEAST_NAME
         m.insert(
             "Legendary Feast",
@@ -17159,6 +17106,59 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 // Restore mode
                 hp_use_percent: 1,
                 mp_use_percent: 1,
+                // 0.0-1.0
+                hp_percent_to_restore: 1.0,
+                mp_percent_to_restore: 1.0,
+            },
+        );
+
+        // SNACK_MUSHROOMSCRAMBLE_NAME
+        m.insert(
+            "Mushroom Scramble",
+            Item {
+                guid: "c1866d6de70d4834b951c06d4ae23306",
+                item_type: ItemType::Snack,
+                name: "Mushroom Scramble",
+                order_priority: 21,
+                max_quantity: 255,
+                buy_price: 18,
+                sell_price: 9,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 35,
+                mp_to_restore: 5,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 1.0,
+                mp_percent_to_restore: 1.0,
+            },
+        );
+
+        m.insert(
+            "c1866d6de70d4834b951c06d4ae23306",
+            Item {
+                guid: "c1866d6de70d4834b951c06d4ae23306",
+                item_type: ItemType::Snack,
+                name: "Mushroom Scramble",
+                order_priority: 21,
+                max_quantity: 255,
+                buy_price: 18,
+                sell_price: 9,
+                equippable_by: None,
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 35,
+                mp_to_restore: 5,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
                 // 0.0-1.0
                 hp_percent_to_restore: 1.0,
                 mp_percent_to_restore: 1.0,
@@ -17644,11 +17644,11 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
 
         // SNACK_TATAKI_NAME
         m.insert(
-            "Tataki",
+            "Surf & Turf Tataki",
             Item {
                 guid: "b504e699b3af5ab4faa0b252ff7d49f6",
                 item_type: ItemType::Snack,
-                name: "Tataki",
+                name: "Surf & Turf Tataki",
                 order_priority: 65,
                 max_quantity: 255,
                 buy_price: 48,
@@ -17674,7 +17674,7 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
             Item {
                 guid: "b504e699b3af5ab4faa0b252ff7d49f6",
                 item_type: ItemType::Snack,
-                name: "Tataki",
+                name: "Surf & Turf Tataki",
                 order_priority: 65,
                 max_quantity: 255,
                 buy_price: 48,
@@ -17843,6 +17843,165 @@ pub fn all_items() -> &'static HashMap<&'static str, Item> {
                 magical_attack: 35,
                 physical_defense: 0,
                 magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // GROUP_TRINKET_SOLSTICE_MAGE_RING_NAME
+        m.insert(
+            "Solstice Mage Ring",
+            Item {
+                guid: "c7eb103c76a21974c844159ab0f5a0d2",
+                item_type: ItemType::GroupTrinket,
+                name: "Solstice Mage Ring",
+                order_priority: 5,
+                max_quantity: 1,
+                buy_price: 999,
+                sell_price: 125,
+                equippable_by: Some(&[PlayerPartyCharacter::Zale, PlayerPartyCharacter::Valere]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "c7eb103c76a21974c844159ab0f5a0d2",
+            Item {
+                guid: "c7eb103c76a21974c844159ab0f5a0d2",
+                item_type: ItemType::GroupTrinket,
+                name: "Solstice Mage Ring",
+                order_priority: 5,
+                max_quantity: 1,
+                buy_price: 999,
+                sell_price: 125,
+                equippable_by: Some(&[PlayerPartyCharacter::Zale, PlayerPartyCharacter::Valere]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // TRINKET_SOLSTICESASH_NAME
+        m.insert(
+            "Solstice Sash",
+            Item {
+                guid: "076aaeb73b8283748accfb24f68a5c64",
+                item_type: ItemType::Trinket,
+                name: "Solstice Sash",
+                order_priority: 35,
+                max_quantity: 255,
+                buy_price: 220,
+                sell_price: 55,
+                equippable_by: Some(&[PlayerPartyCharacter::Zale, PlayerPartyCharacter::Valere]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "076aaeb73b8283748accfb24f68a5c64",
+            Item {
+                guid: "076aaeb73b8283748accfb24f68a5c64",
+                item_type: ItemType::Trinket,
+                name: "Solstice Sash",
+                order_priority: 35,
+                max_quantity: 255,
+                buy_price: 220,
+                sell_price: 55,
+                equippable_by: Some(&[PlayerPartyCharacter::Zale, PlayerPartyCharacter::Valere]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 0,
+                magical_defense: 0,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        // ARMOR_SPARKMESHARMOR_NAME
+        m.insert(
+            "Sparkmesh Armor",
+            Item {
+                guid: "ccc69fb007cbda342844f25126c90377",
+                item_type: ItemType::Armor,
+                name: "Sparkmesh Armor",
+                order_priority: 200,
+                max_quantity: 255,
+                buy_price: 152,
+                sell_price: 38,
+                equippable_by: Some(&[PlayerPartyCharacter::Zale, PlayerPartyCharacter::Valere]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 46,
+                magical_defense: 41,
+                hp_to_restore: 0,
+                mp_to_restore: 0,
+                // Restore mode
+                hp_use_percent: 0,
+                mp_use_percent: 0,
+                // 0.0-1.0
+                hp_percent_to_restore: 0.0,
+                mp_percent_to_restore: 0.0,
+            },
+        );
+
+        m.insert(
+            "ccc69fb007cbda342844f25126c90377",
+            Item {
+                guid: "ccc69fb007cbda342844f25126c90377",
+                item_type: ItemType::Armor,
+                name: "Sparkmesh Armor",
+                order_priority: 200,
+                max_quantity: 255,
+                buy_price: 152,
+                sell_price: 38,
+                equippable_by: Some(&[PlayerPartyCharacter::Zale, PlayerPartyCharacter::Valere]),
+                physical_attack: 0,
+                magical_attack: 0,
+                physical_defense: 46,
+                magical_defense: 41,
                 hp_to_restore: 0,
                 mp_to_restore: 0,
                 // Restore mode
