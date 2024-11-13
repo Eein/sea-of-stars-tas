@@ -61,14 +61,8 @@ impl CutsceneManagerData {
         &mut self,
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
-        if let Ok(is_in_cutscene) =
-            memory_context.follow_fields::<u8>(&["<IsInCutscene>k__BackingField"])
-        {
-            match is_in_cutscene {
-                1 => self.is_in_cutscene = true,
-                0 => self.is_in_cutscene = false,
-                _ => self.is_in_cutscene = false,
-            }
+        if let Ok(cutscene_count) = memory_context.follow_fields::<u8>(&["cutsceneCount"]) {
+            self.is_in_cutscene = cutscene_count > 0;
         }
 
         Ok(())
