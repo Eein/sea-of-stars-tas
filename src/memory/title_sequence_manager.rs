@@ -13,9 +13,9 @@ use memory::string::{ArrayCString, ArrayWString};
 
 #[derive(Default, Debug)]
 pub enum Difficulty {
-    Easy,
-    Normal,
-    Hard,
+    Story,
+    Adventure,
+    Challenge,
     #[default]
     None,
 }
@@ -184,9 +184,9 @@ impl TitleSequenceManagerData {
                 .follow_fields::<u8>(&["difficultySelectionScreen", "selectedDifficulty"])
             {
                 self.selected_difficulty = match selected_difficulty {
-                    2 => Difficulty::Easy,
-                    4 => Difficulty::Normal,
-                    8 => Difficulty::Hard,
+                    2 => Difficulty::Story,
+                    4 => Difficulty::Adventure,
+                    8 => Difficulty::Challenge,
                     _ => Difficulty::None,
                 };
             }
