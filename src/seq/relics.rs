@@ -12,6 +12,7 @@ use crate::seq::button::ButtonPress;
 #[derive(Default, Debug)]
 enum RelicScreenFSM {
     #[default]
+    WaitOnScreen,
     Eval,
     PressButton,
 }
@@ -26,7 +27,6 @@ pub struct SeqRelicList {
 }
 
 impl SeqRelicList {
-    #[allow(dead_code)]
     pub fn create() -> Box<Self> {
         Box::new(Self::default())
     }
@@ -57,6 +57,15 @@ impl SeqRelicList {
             action: SosAction::Confirm,
             press_time: 0.1,
             release_time: 0.1,
+            ..Default::default()
+        };
+    }
+
+    // Open the relics menu from the difficulty screen
+    fn open_relics(&mut self) {
+        self.fsm = RelicScreenFSM::PressButton;
+        self.btn = ButtonPress {
+            action: SosAction::Menu,
             ..Default::default()
         };
     }
@@ -104,6 +113,13 @@ impl Node<GameState, GameEvent> for SeqRelicList {
         let tsmd = &state.memory_managers.title_sequence_manager.data;
 
         match self.fsm {
+            RelicScreenFSM::WaitOnScreen => {
+                // Wait until difficulty selection screen is active
+                if tsmd.selected_difficulty.is_some() {
+                    // Note, actual difficulty selection not needed if we are doing relics
+                    self.open_relics();
+                }
+            }
             RelicScreenFSM::Eval => {
                 // Check if we can get the currently selected relic
                 if let Some(cur_relic) = self.get_current_relic(tsmd) {

@@ -1,7 +1,7 @@
 use seq::prelude::*;
 
 use crate::game_manager::GameManager;
-// use crate::seq::relics::SeqRelicList;
+use crate::seq::relics::SeqRelicList;
 use crate::seq::title::SeqTitleScreen;
 
 use super::evermist_island;
@@ -13,7 +13,7 @@ pub fn create_tas() -> GameManager {
         vec![
             SeqLog::create("SEQ START"),
             SeqTitleScreen::create(),
-            // SeqRelicList::create(),
+            SeqRelicList::create(),
             evermist_island::create(),
             sleeper_island::create(),
             SeqLog::create("SEQ DONE"),
