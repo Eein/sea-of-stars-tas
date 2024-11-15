@@ -125,7 +125,7 @@ impl GuiHelper for DebugHelper {
 
         ui.separator();
         ui.label("SPP Manager");
-        for player in sppmd.players.items.iter() {
+        for (idx, player) in sppmd.players.items.iter().enumerate() {
             ui.label(format!("Name: {}", player.name));
             ui.label(format!("Character: {:?}", player.character));
             ui.label(format!("First Player: {:?}", player.first_player));
@@ -138,6 +138,16 @@ impl GuiHelper for DebugHelper {
                 player.bubble_fill_amount
             ));
             ui.label(format!("In Bubble: {:?}", player.in_bubble));
+            egui::CollapsingHeader::new(format!("High Five: {:?}", idx))
+                .default_open(false)
+                .show(ui, |ui| {
+                    ui.label(format!("Has Boost: {:?}", player.has_boost));
+                    ui.label(format!("Doing High Five: {:?}", player.is_doing_high_five));
+                    ui.label(format!(
+                        "Can Replenish Boost: {:?}",
+                        player.can_replenish_boost
+                    ));
+                });
             ui.label("Controller Pos:");
             MovementGui::draw_coord(ui, &player.position);
             ui.label("Gameobject Pos:");
