@@ -22,6 +22,9 @@ pub struct Player {
     pub playing: bool,
     pub character: PlayerPartyCharacter,
     pub bubble_fill_amount: f32, // 0.0-1.0
+    pub has_boost: bool,
+    pub is_doing_high_five: bool,
+    pub can_replenish_boost: bool,
     pub in_bubble: bool,
 }
 
@@ -133,6 +136,30 @@ impl UnityItem for Player {
             PlayerPartyCharacter::None
         };
 
+        let has_boost = if let Ok(boost_bool) =
+            process.read_pointer_path::<u8>(item_ptr, &[0x88, 0x128, 0xF0])
+        {
+            matches!(boost_bool, 1)
+        } else {
+            false
+        };
+
+        let is_doing_high_five = if let Ok(high_five_bool) =
+            process.read_pointer_path::<u8>(item_ptr, &[0x88, 0x128, 0xC1])
+        {
+            matches!(high_five_bool, 1)
+        } else {
+            false
+        };
+
+        let can_replenish_boost = if let Ok(replenish_bool) =
+            process.read_pointer_path::<u8>(item_ptr, &[0x88, 0x128, 0xF1])
+        {
+            matches!(replenish_bool, 1)
+        } else {
+            false
+        };
+
         let bubble_fill_amount =
             if let Ok(bubble_handler_ptr) = process.read_pointer_path::<u64>(item_ptr, &[0x58]) {
                 // safely exit if the handler is missing
@@ -174,6 +201,9 @@ impl UnityItem for Player {
             character,
             bubble_fill_amount,
             in_bubble,
+            has_boost,
+            is_doing_high_five,
+            can_replenish_boost,
         })
     }
 }
