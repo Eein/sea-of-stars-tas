@@ -3,7 +3,6 @@ use std::fmt::Display;
 use crate::control::SosAction;
 use crate::memory::title_sequence_manager::{RelicButton, TitleSequenceManagerData};
 use crate::state::{GameEvent, GameState};
-use joystick::prelude::*;
 use log::{info, warn};
 use seq::prelude::*;
 
@@ -106,7 +105,7 @@ impl Display for SeqRelicList {
 
 impl Node<GameState, GameEvent> for SeqRelicList {
     fn enter(&mut self, state: &mut GameState) {
-        state.gamepad.release_all();
+        state.release_all();
     }
 
     fn execute(&mut self, state: &mut GameState, delta: f64) -> bool {
@@ -146,7 +145,7 @@ impl Node<GameState, GameEvent> for SeqRelicList {
                 }
             }
             RelicScreenFSM::PressButton => {
-                if self.btn.update(&mut state.gamepad, delta) {
+                if self.btn.update(&mut state.gamepads[0], delta) {
                     if self.done {
                         return true;
                     }

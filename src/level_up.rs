@@ -53,7 +53,7 @@ impl LevelUpManager {
 
         match self.fsm {
             LevelUpFsm::Select => {
-                if self.btn.update(&mut state.gamepad, dt) {
+                if self.btn.update(&mut state.gamepads[0], dt) {
                     self.btn = ButtonPress::new(SosAction::MenuRight);
                 }
                 for upgrade in &lumd.current_upgrades.items {
@@ -65,7 +65,7 @@ impl LevelUpManager {
                 }
             }
             LevelUpFsm::Press => {
-                if self.btn.update(&mut state.gamepad, dt) {
+                if self.btn.update(&mut state.gamepads[0], dt) {
                     self.btn = ButtonPress::new(SosAction::MenuRight);
                     self.fsm = LevelUpFsm::Select;
                     info!("LevelUp: selecting {:?} for {:?}", best_option, active_char);

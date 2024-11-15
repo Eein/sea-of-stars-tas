@@ -58,6 +58,7 @@ pub struct SeqMove {
     step: usize,
     btn: Option<ButtonPress>,
     timer: f64,
+    player: usize, // Note: refactor this to allow for coordinated movement
 }
 
 impl SeqMove {
@@ -68,6 +69,7 @@ impl SeqMove {
             step: 0,
             timer: 0.0,
             btn: None,
+            player: 0,
         })
     }
 
@@ -120,7 +122,7 @@ impl SeqMove {
         let mut diff_time = target_time - cur_time;
         // Check if done
         if diff_time.abs() < TIME_EPSILON {
-            state.gamepad.release_all();
+            state.gamepads[self.player].release_all();
             self.step += 1;
         } else {
             // Adjust time to be in the range 0-24
@@ -129,11 +131,11 @@ impl SeqMove {
             }
             // If diff is in range 0-12, hold RT
             if diff_time < MIDDAY {
-                state.gamepad.press(&SosAction::TimeInc);
-                state.gamepad.release(&SosAction::TimeDec);
+                state.gamepads[self.player].press(&SosAction::TimeInc);
+                state.gamepads[self.player].release(&SosAction::TimeDec);
             } else {
-                state.gamepad.press(&SosAction::TimeDec);
-                state.gamepad.release(&SosAction::TimeInc);
+                state.gamepads[self.player].press(&SosAction::TimeDec);
+                state.gamepads[self.player].release(&SosAction::TimeInc);
             }
         }
     }
@@ -160,12 +162,12 @@ impl SeqMove {
                 let target = Vector3::new(target[0], target[1], target[2]);
                 let anchor = Vector3::new(anchor[0], anchor[1], anchor[2]);
                 let joy_dir = SeqMove::get_dir(player, &anchor, false);
-                state.gamepad.set_ljoy(joy_dir);
+                state.gamepads[self.player].set_ljoy(joy_dir);
                 if mash {
-                    self.mash(&mut state.gamepad, delta);
+                    self.mash(&mut state.gamepads[self.player], delta);
                 }
                 if SeqMove::is_close(player, &target, Some(1.0)) {
-                    state.gamepad.release_all();
+                    state.gamepads[self.player].release_all();
                     self.btn = None;
                     self.step += 1;
                 }
@@ -174,7 +176,7 @@ impl SeqMove {
             Move::To(x, y, z) => {
                 let target = Vector3::new(x, y, z);
                 let joy_dir = SeqMove::get_dir(player, &target, false);
-                state.gamepad.set_ljoy(joy_dir);
+                state.gamepads[self.player].set_ljoy(joy_dir);
                 if SeqMove::is_close(player, &target, None) {
                     self.step += 1;
                 }
@@ -183,10 +185,10 @@ impl SeqMove {
             Move::Climb(x, y, z) => {
                 let target = Vector3::new(x, y, z);
                 let joy_dir = SeqMove::get_dir(player, &target, true);
-                state.gamepad.set_ljoy(joy_dir);
-                self.mash(&mut state.gamepad, delta);
+                state.gamepads[self.player].set_ljoy(joy_dir);
+                self.mash(&mut state.gamepads[self.player], delta);
                 if SeqMove::is_close(player, &target, None) {
-                    state.gamepad.release_all();
+                    state.gamepads[self.player].release_all();
                     self.btn = None;
                     self.step += 1;
                 }
@@ -195,24 +197,24 @@ impl SeqMove {
             Move::Interact(x, y, z) => {
                 let target = Vector3::new(x, y, z);
                 let joy_dir = SeqMove::get_dir(player, &target, false);
-                state.gamepad.set_ljoy(joy_dir);
+                state.gamepads[self.player].set_ljoy(joy_dir);
                 // If we are close to target, stop mashing to prevent unintended jumps
                 const INTERACT_PRECISION: f64 = 1.0;
                 if !SeqMove::is_close(player, &target, Some(INTERACT_PRECISION)) {
-                    self.mash(&mut state.gamepad, delta);
+                    self.mash(&mut state.gamepads[self.player], delta);
                 } else {
-                    state.gamepad.release(&SosAction::Confirm);
+                    state.gamepads[self.player].release(&SosAction::Confirm);
                 }
                 // If we are even closer, proceed.
                 if SeqMove::is_close(player, &target, None) {
-                    state.gamepad.release_all();
+                    state.gamepads[self.player].release_all();
                     self.btn = None;
                     self.step += 1;
                 }
             }
             // Hold still for a period of time
             Move::WaitFor(timeout) => {
-                state.gamepad.set_ljoy([0.0, 0.0]); // Make sure we're standing still
+                state.gamepads[self.player].set_ljoy([0.0, 0.0]); // Make sure we're standing still
                 self.timer += delta;
                 if self.timer >= timeout {
                     self.timer = 0.0;
@@ -224,20 +226,20 @@ impl SeqMove {
                 let target = Vector3::new(x, y, z);
                 let world_pos = &ppmd.position;
                 let joy_dir = SeqMove::get_dir(world_pos, &target, false);
-                state.gamepad.set_ljoy(joy_dir);
+                state.gamepads[self.player].set_ljoy(joy_dir);
                 if SeqMove::is_close(world_pos, &target, None) {
                     self.step += 1;
                 }
             }
             Move::HoldDir(dir, target) => {
-                state.gamepad.set_ljoy(dir);
+                state.gamepads[self.player].set_ljoy(dir);
                 let target = Vector3::new(target[0], target[1], target[2]);
                 if SeqMove::is_close(player, &target, Some(1.0)) {
                     self.step += 1;
                 }
             }
             Move::HoldDirWorld(dir, target) => {
-                state.gamepad.set_ljoy(dir);
+                state.gamepads[self.player].set_ljoy(dir);
                 let target = Vector3::new(target[0], target[1], target[2]);
                 let world_pos = &ppmd.position;
                 if SeqMove::is_close(world_pos, &target, Some(1.0)) {
@@ -249,15 +251,15 @@ impl SeqMove {
             // Press confirm once
             Move::Confirm => {
                 if let Some(btn) = self.btn.as_mut() {
-                    if btn.update(&mut state.gamepad, delta) {
+                    if btn.update(&mut state.gamepads[self.player], delta) {
                         self.btn = None;
                         self.step += 1;
-                        state.gamepad.release_all();
+                        state.gamepads[self.player].release_all();
                     }
                 } else {
-                    state.gamepad.release_all(); // Release held joystick direction
+                    state.gamepads[self.player].release_all(); // Release held joystick direction
                     self.setup_confirm();
-                    state.gamepad.press(&SosAction::Turbo);
+                    state.gamepads[self.player].press(&SosAction::Turbo);
                 }
             }
         }
@@ -281,7 +283,7 @@ impl Display for SeqMove {
 
 impl Node<GameState, GameEvent> for SeqMove {
     fn enter(&mut self, state: &mut GameState) {
-        state.gamepad.release_all();
+        state.release_all();
     }
 
     fn on_event(&mut self, _state: &mut GameState, event: &GameEvent) {
@@ -319,6 +321,6 @@ impl Node<GameState, GameEvent> for SeqMove {
     }
 
     fn exit(&self, state: &mut GameState) {
-        state.gamepad.release_all();
+        state.release_all();
     }
 }

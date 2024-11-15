@@ -5,6 +5,7 @@ use crate::seq::button::ButtonPress;
 use crate::state::{GameEvent, GameState};
 
 use joystick::prelude::*;
+
 use seq::prelude::*;
 
 #[derive(Default, Debug)]
@@ -49,7 +50,7 @@ impl Display for SeqSelectOption {
 
 impl Node<GameState, GameEvent> for SeqSelectOption {
     fn enter(&mut self, state: &mut GameState) {
-        state.gamepad.release_all();
+        state.release_all();
     }
 
     fn cutscene_control(&self) -> bool {
@@ -59,15 +60,15 @@ impl Node<GameState, GameEvent> for SeqSelectOption {
     fn execute(&mut self, state: &mut GameState, delta: f64) -> bool {
         match self.fsm {
             SelectFsm::Approach => {
-                if self.btn.update(&mut state.gamepad, delta) {
+                if self.btn.update(&mut state.gamepads[0], delta) {
                     self.fsm = SelectFsm::WaitForDialog;
                 }
             }
             SelectFsm::WaitForDialog => {
                 let ndmd = &state.memory_managers.new_dialog_manager.data;
                 if ndmd.dialog_visible || self.skip_dialog_check {
-                    state.gamepad.press(&SosAction::Turbo);
-                    state.gamepad.press(&SosAction::Confirm);
+                    state.gamepads[0].press(&SosAction::Turbo);
+                    state.gamepads[0].press(&SosAction::Confirm);
                     self.fsm = SelectFsm::ClearPrompt;
                 }
             }
@@ -76,7 +77,7 @@ impl Node<GameState, GameEvent> for SeqSelectOption {
                 if self.timer >= HOLD_TIME {
                     self.fsm = SelectFsm::ToAnswer(0);
                     self.btn = ButtonPress::new(SosAction::MenuDown);
-                    state.gamepad.release_all();
+                    state.release_all();
                 }
             }
             SelectFsm::ToAnswer(option) => {
@@ -84,7 +85,7 @@ impl Node<GameState, GameEvent> for SeqSelectOption {
                     if option == *opt {
                         self.fsm = SelectFsm::Answer;
                         self.btn = ButtonPress::new(SosAction::Confirm);
-                    } else if self.btn.update(&mut state.gamepad, delta) {
+                    } else if self.btn.update(&mut state.gamepads[0], delta) {
                         self.fsm = SelectFsm::ToAnswer(option + 1);
                         self.btn = ButtonPress::new(SosAction::MenuDown);
                     }
@@ -93,7 +94,7 @@ impl Node<GameState, GameEvent> for SeqSelectOption {
                 }
             }
             SelectFsm::Answer => {
-                if self.btn.update(&mut state.gamepad, delta) {
+                if self.btn.update(&mut state.gamepads[0], delta) {
                     self.step += 1;
                     self.fsm = SelectFsm::ToAnswer(0);
                     self.btn = ButtonPress::new(SosAction::MenuDown);
@@ -104,6 +105,6 @@ impl Node<GameState, GameEvent> for SeqSelectOption {
     }
 
     fn exit(&self, state: &mut GameState) {
-        state.gamepad.release_all();
+        state.release_all();
     }
 }
