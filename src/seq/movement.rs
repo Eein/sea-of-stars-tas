@@ -13,6 +13,8 @@ use vec3_rs::Vector3;
 
 #[derive(Clone, Debug)]
 pub enum Move {
+    Join,
+    Leave,
     To(f32, f32, f32),
     ToWorld(f32, f32, f32),
     Towards([f32; 3], [f32; 3], bool),
@@ -32,6 +34,8 @@ pub enum Move {
 impl Display for Move {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
+            Move::Join => write!(f, "Move::Join"),
+            Move::Leave => write!(f, "Move::Leave"),
             Move::To(x, y, z) => write!(f, "Move::To({:.3}, {:.3}, {:.3})", x, y, z),
             Move::ToWorld(x, y, z) => write!(f, "Move::ToWorld({:.3}, {:.3}, {:.3})", x, y, z),
             Move::Towards(target, anchor, mash) => {
@@ -137,11 +141,13 @@ impl MovePath {
         let todm = &state.memory_managers.time_of_day_manager.data;
         let cur_time = todm.current_time;
 
+        let gamepad = &mut state.gamepads[self.player];
+
         // Difference in time
         let mut diff_time = target_time - cur_time;
         // Check if done
         if diff_time.abs() < TIME_EPSILON {
-            state.gamepads[self.player].release_all();
+            gamepad.release_all();
             self.step += 1;
         } else {
             // Adjust time to be in the range 0-24
@@ -150,11 +156,11 @@ impl MovePath {
             }
             // If diff is in range 0-12, hold RT
             if diff_time < MIDDAY {
-                state.gamepads[self.player].press(&SosAction::TimeInc);
-                state.gamepads[self.player].release(&SosAction::TimeDec);
+                gamepad.press(&SosAction::TimeInc);
+                gamepad.release(&SosAction::TimeDec);
             } else {
-                state.gamepads[self.player].press(&SosAction::TimeDec);
-                state.gamepads[self.player].release(&SosAction::TimeInc);
+                gamepad.press(&SosAction::TimeDec);
+                gamepad.release(&SosAction::TimeInc);
             }
         }
     }
@@ -162,6 +168,8 @@ impl MovePath {
     fn handle_coord(&mut self, state: &mut GameState, coord: Move, delta: f64) -> PathStatus {
         let sppmd = &state.memory_managers.single_player_plus_manager.data;
         let player = &sppmd.players.items[self.player].gameobject_position;
+
+        let gamepad = &mut state.gamepads[self.player];
 
         match coord {
             // Run the inner command
@@ -171,8 +179,48 @@ impl MovePath {
             Move::AwaitCutscene(inner) => {
                 return self.handle_coord(state, *inner, delta);
             }
+            // Leave/Join
+            Move::Join => {
+                if let Some(btn) = self.btn.as_mut() {
+                    if btn.update(gamepad, delta) {
+                        self.btn = None;
+                        self.step += 1;
+                        gamepad.release_all();
+                    }
+                } else {
+                    gamepad.release_all();
+                    const PRESS_TIMEOUT: f64 = 0.3;
+                    const RELEASE_TIMEOUT: f64 = 0.3;
+                    self.btn = Some(ButtonPress {
+                        action: SosAction::Join,
+                        press_time: PRESS_TIMEOUT,
+                        release_time: RELEASE_TIMEOUT,
+                        ..Default::default()
+                    });
+                }
+            }
+            Move::Leave => {
+                if let Some(btn) = self.btn.as_mut() {
+                    if btn.update(gamepad, delta) {
+                        self.btn = None;
+                        self.step += 1;
+                        gamepad.release_all();
+                    }
+                } else {
+                    gamepad.release_all();
+                    const PRESS_TIMEOUT: f64 = 2.0;
+                    const RELEASE_TIMEOUT: f64 = 2.5;
+                    self.btn = Some(ButtonPress {
+                        action: SosAction::Leave,
+                        press_time: PRESS_TIMEOUT,
+                        release_time: RELEASE_TIMEOUT,
+                        ..Default::default()
+                    });
+                }
+            }
             // Synchronize with a list of other players
             Move::AwaitSync(list) => {
+                gamepad.release_all();
                 if !self.sent_signal {
                     self.sent_signal = true;
                     return PathStatus::Sync(list.clone());
@@ -206,12 +254,12 @@ impl MovePath {
                 let target = Vector3::new(target[0], target[1], target[2]);
                 let anchor = Vector3::new(anchor[0], anchor[1], anchor[2]);
                 let joy_dir = MovePath::get_dir(player, &anchor, false);
-                state.gamepads[self.player].set_ljoy(joy_dir);
+                gamepad.set_ljoy(joy_dir);
                 if mash {
-                    self.mash(&mut state.gamepads[self.player], delta);
+                    self.mash(gamepad, delta);
                 }
                 if MovePath::is_close(player, &target, Some(1.0)) {
-                    state.gamepads[self.player].release_all();
+                    gamepad.release_all();
                     self.btn = None;
                     self.step += 1;
                 }
@@ -220,7 +268,7 @@ impl MovePath {
             Move::To(x, y, z) => {
                 let target = Vector3::new(x, y, z);
                 let joy_dir = MovePath::get_dir(player, &target, false);
-                state.gamepads[self.player].set_ljoy(joy_dir);
+                gamepad.set_ljoy(joy_dir);
                 if MovePath::is_close(player, &target, None) {
                     self.step += 1;
                 }
@@ -229,10 +277,10 @@ impl MovePath {
             Move::Climb(x, y, z) => {
                 let target = Vector3::new(x, y, z);
                 let joy_dir = MovePath::get_dir(player, &target, true);
-                state.gamepads[self.player].set_ljoy(joy_dir);
-                self.mash(&mut state.gamepads[self.player], delta);
+                gamepad.set_ljoy(joy_dir);
+                self.mash(gamepad, delta);
                 if MovePath::is_close(player, &target, None) {
-                    state.gamepads[self.player].release_all();
+                    gamepad.release_all();
                     self.btn = None;
                     self.step += 1;
                 }
@@ -241,24 +289,24 @@ impl MovePath {
             Move::Interact(x, y, z) => {
                 let target = Vector3::new(x, y, z);
                 let joy_dir = MovePath::get_dir(player, &target, false);
-                state.gamepads[self.player].set_ljoy(joy_dir);
+                gamepad.set_ljoy(joy_dir);
                 // If we are close to target, stop mashing to prevent unintended jumps
                 const INTERACT_PRECISION: f64 = 1.0;
                 if !MovePath::is_close(player, &target, Some(INTERACT_PRECISION)) {
-                    self.mash(&mut state.gamepads[self.player], delta);
+                    self.mash(gamepad, delta);
                 } else {
-                    state.gamepads[self.player].release(&SosAction::Confirm);
+                    gamepad.release(&SosAction::Confirm);
                 }
                 // If we are even closer, proceed.
                 if MovePath::is_close(player, &target, None) {
-                    state.gamepads[self.player].release_all();
+                    gamepad.release_all();
                     self.btn = None;
                     self.step += 1;
                 }
             }
             // Hold still for a period of time
             Move::WaitFor(timeout) => {
-                state.gamepads[self.player].set_ljoy([0.0, 0.0]); // Make sure we're standing still
+                gamepad.set_ljoy([0.0, 0.0]); // Make sure we're standing still
                 self.timer += delta;
                 if self.timer >= timeout {
                     self.timer = 0.0;
@@ -270,20 +318,20 @@ impl MovePath {
                 let target = Vector3::new(x, y, z);
                 let world_pos = &sppmd.players.items[self.player].position;
                 let joy_dir = MovePath::get_dir(world_pos, &target, false);
-                state.gamepads[self.player].set_ljoy(joy_dir);
+                gamepad.set_ljoy(joy_dir);
                 if MovePath::is_close(world_pos, &target, None) {
                     self.step += 1;
                 }
             }
             Move::HoldDir(dir, target) => {
-                state.gamepads[self.player].set_ljoy(dir);
+                gamepad.set_ljoy(dir);
                 let target = Vector3::new(target[0], target[1], target[2]);
                 if MovePath::is_close(player, &target, Some(1.0)) {
                     self.step += 1;
                 }
             }
             Move::HoldDirWorld(dir, target) => {
-                state.gamepads[self.player].set_ljoy(dir);
+                gamepad.set_ljoy(dir);
                 let target = Vector3::new(target[0], target[1], target[2]);
                 let world_pos = &sppmd.players.items[self.player].position;
                 if MovePath::is_close(world_pos, &target, Some(1.0)) {
@@ -295,15 +343,15 @@ impl MovePath {
             // Press confirm once
             Move::Confirm => {
                 if let Some(btn) = self.btn.as_mut() {
-                    if btn.update(&mut state.gamepads[self.player], delta) {
+                    if btn.update(gamepad, delta) {
                         self.btn = None;
                         self.step += 1;
-                        state.gamepads[self.player].release_all();
+                        gamepad.release_all();
                     }
                 } else {
-                    state.gamepads[self.player].release_all(); // Release held joystick direction
+                    gamepad.release_all(); // Release held joystick direction
                     self.setup_confirm();
-                    state.gamepads[self.player].press(&SosAction::Turbo);
+                    gamepad.press(&SosAction::Turbo);
                 }
             }
         }
@@ -374,7 +422,6 @@ impl SeqMove {
         })
     }
 
-    #[allow(dead_code)]
     pub fn create_coop(name: &'static str, paths: Vec<Vec<Move>>) -> Box<Self> {
         let mut ret = Self {
             name,
