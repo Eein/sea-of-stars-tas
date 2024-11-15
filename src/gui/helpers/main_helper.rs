@@ -53,6 +53,10 @@ impl MainHelper {
 
         ui.label("Title Screen Active");
         match tsmd.current_screen_name.as_str() {
+            "DifficultySelection" => {
+                ui.label("Difficulty Selection");
+                ui.label(format!("Selected: {:?}", tsmd.selected_difficulty));
+            }
             "TitleScreen" => {
                 if tsmd.pressed_start {
                     ui.label(format!(
