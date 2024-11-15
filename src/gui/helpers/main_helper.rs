@@ -55,7 +55,11 @@ impl MainHelper {
         match tsmd.current_screen_name.as_str() {
             "DifficultySelection" => {
                 ui.label("Difficulty Selection");
-                ui.label(format!("Selected: {:?}", tsmd.selected_difficulty));
+                if let Some(difficulty) = &tsmd.selected_difficulty {
+                    ui.label(format!("Selected: {:?}", difficulty));
+                } else {
+                    ui.label("Screen inactive");
+                }
             }
             "TitleScreen" => {
                 if tsmd.pressed_start {
