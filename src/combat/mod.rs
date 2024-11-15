@@ -43,7 +43,7 @@ impl CombatManager {
             self.controller = Self::encounter_factory(state)
         }
 
-        if self.btn.update(&mut state.gamepad, dt) {
+        if self.btn.update(&mut state.gamepads[0], dt) {
             self.btn = ButtonPress {
                 action: SosAction::Confirm,
                 press_time: 0.1,

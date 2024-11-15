@@ -29,10 +29,17 @@ pub struct StateGui {
 // Anything the sequencer needs to access has to go in here
 #[derive(Default)]
 pub struct GameState {
-    // TODO(orkaboy): Create multiple gamepads, one for each player
-    pub gamepad: GenericJoystick,
+    pub gamepads: [GenericJoystick; 3],
     pub memory_managers: MemoryManagers,
     pub config: Config,
+}
+
+impl GameState {
+    pub fn release_all(&mut self) {
+        for gamepad in self.gamepads.iter_mut() {
+            gamepad.release_all();
+        }
+    }
 }
 
 #[derive(Default)]
@@ -98,7 +105,11 @@ impl State {
                 fps: FpsClock::new(100),
             },
             game_state: GameState {
-                gamepad: GenericJoystick::default(),
+                gamepads: [
+                    GenericJoystick::default(),
+                    GenericJoystick::default(),
+                    GenericJoystick::default(),
+                ],
                 memory_managers: MemoryManagers::default(),
                 config: conf,
             },

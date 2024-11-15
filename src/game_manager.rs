@@ -66,7 +66,7 @@ impl GameManager {
         let dt = self.timer.mark_secs();
 
         if self.paused {
-            context.gamepad.release_all();
+            context.release_all();
             return false;
         }
 
@@ -78,7 +78,9 @@ impl GameManager {
         // TODO(orkaboy): detect level up screen
         if cmd.encounter_active {
             // Stop whatever we're doing and enter combat controller
-            context.gamepad.release_all();
+            for gamepad in context.gamepads.iter_mut() {
+                gamepad.release_all();
+            }
             self.fsm = GameFsm::Combat;
         } else if lumd.active {
             self.fsm = GameFsm::LevelUp;
@@ -89,7 +91,7 @@ impl GameManager {
                 // TODO(orkaboy): actually handle combat. For now, mash!
 
                 if !cmd.encounter_active {
-                    context.gamepad.release_all();
+                    context.release_all();
                     self.combat_manager = None;
                     self.fsm = GameFsm::Route;
                     // Signal return to sequencer
@@ -100,7 +102,7 @@ impl GameManager {
                         self.fsm = GameFsm::Route;
                     }
                 } else {
-                    context.gamepad.release_all();
+                    context.release_all();
                     self.combat_manager = Some(CombatManager::default());
                 }
             }
@@ -111,7 +113,7 @@ impl GameManager {
                         self.fsm = GameFsm::Route;
                     }
                 } else {
-                    context.gamepad.release_all();
+                    context.release_all();
                     self.level_up = Some(LevelUpManager::default());
                 }
             }
@@ -124,13 +126,13 @@ impl GameManager {
                 }
             }
             GameFsm::Cutscene => {
-                context.gamepad.press(&SosAction::Cancel);
-                context.gamepad.press(&SosAction::Turbo);
-                if self.btn.update(&mut context.gamepad, dt) {
+                context.gamepads[0].press(&SosAction::Cancel);
+                context.gamepads[0].press(&SosAction::Turbo);
+                if self.btn.update(&mut context.gamepads[0], dt) {
                     self.btn = ButtonPress::new(SosAction::Confirm);
                 }
                 if !csmd.is_in_cutscene {
-                    context.gamepad.release_all();
+                    context.release_all();
                     self.fsm = GameFsm::Route;
                     // Signal return to sequencer
                     self.sequencer.on_event(context, &GameEvent::Cutscene);

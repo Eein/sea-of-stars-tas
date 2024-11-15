@@ -100,7 +100,7 @@ impl Display for SeqTitleScreen {
 
 impl Node<GameState, GameEvent> for SeqTitleScreen {
     fn enter(&mut self, state: &mut GameState) {
-        state.gamepad.release_all();
+        state.release_all();
         info!("Starting TAS! Focus the Sea of Stars window before the timer expires.");
     }
 
@@ -125,17 +125,17 @@ impl Node<GameState, GameEvent> for SeqTitleScreen {
                 }
             }
             TitleScreenFSM::Konami => {
-                if self.kc.update(&mut state.gamepad, delta) {
+                if self.kc.update(&mut state.gamepads[0], delta) {
                     self.fsm = TitleScreenFSM::ToMenu;
                     self.btn = ButtonPress::new(SosAction::Start);
                 }
             }
             TitleScreenFSM::ToMenu => {
-                self.btn.update(&mut state.gamepad, delta);
+                self.btn.update(&mut state.gamepads[0], delta);
                 if tsmd.pressed_start {
                     self.fsm = TitleScreenFSM::NewGame;
                     self.btn = ButtonPress::new(SosAction::MenuDown);
-                    state.gamepad.release_all();
+                    state.release_all();
                     info!("Entering main menu");
                 }
             }
@@ -143,14 +143,14 @@ impl Node<GameState, GameEvent> for SeqTitleScreen {
                 if tsmd.title_menu_option_selected == TitleMenuOption::NewGame {
                     self.btn = ButtonPress::new(SosAction::Confirm);
                     self.fsm = TitleScreenFSM::PressNewGame;
-                    state.gamepad.release_all();
+                    state.release_all();
                     info!("Selecting New Game");
-                } else if self.btn.update(&mut state.gamepad, delta) {
+                } else if self.btn.update(&mut state.gamepads[0], delta) {
                     self.btn = ButtonPress::new(SosAction::MenuDown);
                 }
             }
             TitleScreenFSM::PressNewGame => {
-                if self.btn.update(&mut state.gamepad, delta) {
+                if self.btn.update(&mut state.gamepads[0], delta) {
                     self.fsm = TitleScreenFSM::WaitSelectHero;
                 }
             }
@@ -167,12 +167,12 @@ impl Node<GameState, GameEvent> for SeqTitleScreen {
                 if ngc.selected == PlayerPartyCharacter::Valere {
                     self.btn = ButtonPress::new(SosAction::Confirm);
                     self.fsm = TitleScreenFSM::PressSelectHero;
-                } else if self.btn.update(&mut state.gamepad, delta) {
+                } else if self.btn.update(&mut state.gamepads[0], delta) {
                     self.fsm = TitleScreenFSM::WaitSelectHero;
                 }
             }
             TitleScreenFSM::PressSelectHero => {
-                if self.btn.update(&mut state.gamepad, delta) {
+                if self.btn.update(&mut state.gamepads[0], delta) {
                     info!("Selected Valere");
                     return true;
                 }
@@ -182,6 +182,6 @@ impl Node<GameState, GameEvent> for SeqTitleScreen {
     }
 
     fn exit(&self, state: &mut GameState) {
-        state.gamepad.release_all();
+        state.release_all();
     }
 }
