@@ -49,10 +49,10 @@ impl MovementGui {
 
         ui.label(format!("Coord type: {:?}", self.coord_fsm));
         match self.coord_fsm {
-            CoordFsm::GameObj => self.draw_coord(ui, &ppmd.gameobject_position),
-            CoordFsm::World => self.draw_coord(ui, &ppmd.position),
+            CoordFsm::GameObj => Self::draw_coord(ui, &ppmd.gameobject_position),
+            CoordFsm::World => Self::draw_coord(ui, &ppmd.position),
             CoordFsm::Boat => {
-                self.draw_coord(ui, &bmd.position);
+                Self::draw_coord(ui, &bmd.position);
                 ui.label(format!("Rot (yaw): {:?}", &bmd.rotation.to_yaw()));
                 ui.label(format!("speed: {:.3}/{:.3}", bmd.speed, bmd.max_speed));
             }
@@ -63,7 +63,7 @@ impl MovementGui {
         self.last_boat = bmd.position;
     }
 
-    fn draw_coord(&self, ui: &mut egui::Ui, pos: &Vector3<f32>) {
+    pub fn draw_coord(ui: &mut egui::Ui, pos: &Vector3<f32>) {
         ui.label(format!(
             "{:.3}, {:.3}, {:.3}",
             pos.get_x(),
@@ -116,11 +116,31 @@ impl GuiHelper for DebugHelper {
         let cutscene_manager = &game_state.memory_managers.cutscene_manager.data;
         let speedrun_manager = &game_state.memory_managers.speedrun_manager.data;
         let ppmd = &game_state.memory_managers.player_party_manager.data;
+        let sppmd = &game_state.memory_managers.single_player_plus_manager.data;
 
         ui.label(format!("Leader: {:?}", ppmd.leader_character));
         ui.label(format!("Movement State: {:?}", ppmd.movement_state));
 
         self.m_gui.draw(game_state, ui);
+
+        ui.separator();
+        ui.label("SPP Manager");
+        for player in sppmd.players.items.iter() {
+            ui.label(format!("Name: {}", player.name));
+            ui.label(format!("Character: {:?}", player.character));
+            ui.label(format!("First Player: {:?}", player.first_player));
+            ui.label(format!("Index: {:?}", player.index));
+            ui.label(format!("Can Join/Leave: {:?}", player.can_join_leave));
+            ui.label(format!("Playing: {:?}", player.playing));
+            ui.label(format!("State: {}", player.state));
+            ui.label(format!(
+                "Bubble Fill Amount: {:.3}",
+                player.bubble_fill_amount
+            ));
+            ui.label(format!("In Bubble: {:?}", player.in_bubble));
+            MovementGui::draw_coord(ui, &player.gameobject_position);
+            ui.label("");
+        }
 
         ui.separator();
 

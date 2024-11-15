@@ -9,6 +9,7 @@ pub mod memory_context;
 pub mod new_dialog_manager;
 pub mod player_party_manager;
 pub mod shop_manager;
+pub mod single_player_plus_manager;
 pub mod speedrun_manager;
 pub mod time_of_day_manager;
 pub mod title_sequence_manager;
@@ -29,6 +30,7 @@ use memory::process::MemoryError;
 use new_dialog_manager::NewDialogManagerData;
 use player_party_manager::PlayerPartyManagerData;
 use shop_manager::ShopManagerData;
+use single_player_plus_manager::SinglePlayerPlusManagerData;
 use speedrun_manager::SpeedrunManagerData;
 use time_of_day_manager::TimeOfDayManagerData;
 use title_sequence_manager::TitleSequenceManagerData;
@@ -62,6 +64,7 @@ pub struct MemoryManagers {
     pub speedrun_manager: MemoryManager<SpeedrunManagerData>,
     pub inventory_manager: MemoryManager<InventoryManagerData>,
     pub level_up_manager: MemoryManager<LevelUpManagerData>,
+    pub single_player_plus_manager: MemoryManager<SinglePlayerPlusManagerData>,
 }
 
 impl MemoryManagers {
@@ -80,6 +83,7 @@ impl MemoryManagers {
             self.speedrun_manager.update(ctx);
             self.inventory_manager.update(ctx);
             self.level_up_manager.update(ctx);
+            self.single_player_plus_manager.update(ctx);
         }
     }
     pub fn ready_for_updates(&mut self, ctx: &StateContext) -> bool {
