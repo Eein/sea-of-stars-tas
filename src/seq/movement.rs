@@ -52,8 +52,8 @@ impl Display for Move {
     }
 }
 
-pub struct SeqMove {
-    name: &'static str,
+pub struct MovePath {
+    name: String,
     coords: Vec<Move>,
     step: usize,
     btn: Option<ButtonPress>,
@@ -61,16 +61,16 @@ pub struct SeqMove {
     player: usize, // Note: refactor this to allow for coordinated movement
 }
 
-impl SeqMove {
-    pub fn create(name: &'static str, coords: Vec<Move>) -> Box<Self> {
-        Box::new(Self {
+impl MovePath {
+    pub fn new(name: String, player: usize, coords: Vec<Move>) -> Self {
+        Self {
             name,
             coords,
             step: 0,
             timer: 0.0,
             btn: None,
-            player: 0,
-        })
+            player,
+        }
     }
 
     fn is_close(player: &Vector3<f32>, target: &Vector3<f32>, precision: Option<f64>) -> bool {
@@ -161,12 +161,12 @@ impl SeqMove {
             Move::Towards(target, anchor, mash) => {
                 let target = Vector3::new(target[0], target[1], target[2]);
                 let anchor = Vector3::new(anchor[0], anchor[1], anchor[2]);
-                let joy_dir = SeqMove::get_dir(player, &anchor, false);
+                let joy_dir = MovePath::get_dir(player, &anchor, false);
                 state.gamepads[self.player].set_ljoy(joy_dir);
                 if mash {
                     self.mash(&mut state.gamepads[self.player], delta);
                 }
-                if SeqMove::is_close(player, &target, Some(1.0)) {
+                if MovePath::is_close(player, &target, Some(1.0)) {
                     state.gamepads[self.player].release_all();
                     self.btn = None;
                     self.step += 1;
@@ -175,19 +175,19 @@ impl SeqMove {
             // Move towards the target coordinate until it's reached
             Move::To(x, y, z) => {
                 let target = Vector3::new(x, y, z);
-                let joy_dir = SeqMove::get_dir(player, &target, false);
+                let joy_dir = MovePath::get_dir(player, &target, false);
                 state.gamepads[self.player].set_ljoy(joy_dir);
-                if SeqMove::is_close(player, &target, None) {
+                if MovePath::is_close(player, &target, None) {
                     self.step += 1;
                 }
             }
             // Climb towards the target coordinate until it's reached (mash to get on wall)
             Move::Climb(x, y, z) => {
                 let target = Vector3::new(x, y, z);
-                let joy_dir = SeqMove::get_dir(player, &target, true);
+                let joy_dir = MovePath::get_dir(player, &target, true);
                 state.gamepads[self.player].set_ljoy(joy_dir);
                 self.mash(&mut state.gamepads[self.player], delta);
-                if SeqMove::is_close(player, &target, None) {
+                if MovePath::is_close(player, &target, None) {
                     state.gamepads[self.player].release_all();
                     self.btn = None;
                     self.step += 1;
@@ -196,17 +196,17 @@ impl SeqMove {
             // Move towards the target while mashing
             Move::Interact(x, y, z) => {
                 let target = Vector3::new(x, y, z);
-                let joy_dir = SeqMove::get_dir(player, &target, false);
+                let joy_dir = MovePath::get_dir(player, &target, false);
                 state.gamepads[self.player].set_ljoy(joy_dir);
                 // If we are close to target, stop mashing to prevent unintended jumps
                 const INTERACT_PRECISION: f64 = 1.0;
-                if !SeqMove::is_close(player, &target, Some(INTERACT_PRECISION)) {
+                if !MovePath::is_close(player, &target, Some(INTERACT_PRECISION)) {
                     self.mash(&mut state.gamepads[self.player], delta);
                 } else {
                     state.gamepads[self.player].release(&SosAction::Confirm);
                 }
                 // If we are even closer, proceed.
-                if SeqMove::is_close(player, &target, None) {
+                if MovePath::is_close(player, &target, None) {
                     state.gamepads[self.player].release_all();
                     self.btn = None;
                     self.step += 1;
@@ -225,16 +225,16 @@ impl SeqMove {
             Move::ToWorld(x, y, z) => {
                 let target = Vector3::new(x, y, z);
                 let world_pos = &ppmd.position;
-                let joy_dir = SeqMove::get_dir(world_pos, &target, false);
+                let joy_dir = MovePath::get_dir(world_pos, &target, false);
                 state.gamepads[self.player].set_ljoy(joy_dir);
-                if SeqMove::is_close(world_pos, &target, None) {
+                if MovePath::is_close(world_pos, &target, None) {
                     self.step += 1;
                 }
             }
             Move::HoldDir(dir, target) => {
                 state.gamepads[self.player].set_ljoy(dir);
                 let target = Vector3::new(target[0], target[1], target[2]);
-                if SeqMove::is_close(player, &target, Some(1.0)) {
+                if MovePath::is_close(player, &target, Some(1.0)) {
                     self.step += 1;
                 }
             }
@@ -242,7 +242,7 @@ impl SeqMove {
                 state.gamepads[self.player].set_ljoy(dir);
                 let target = Vector3::new(target[0], target[1], target[2]);
                 let world_pos = &ppmd.position;
-                if SeqMove::is_close(world_pos, &target, Some(1.0)) {
+                if MovePath::is_close(world_pos, &target, Some(1.0)) {
                     self.step += 1;
                 }
             }
@@ -266,26 +266,22 @@ impl SeqMove {
     }
 }
 
-impl Display for SeqMove {
+impl Display for MovePath {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut ret = format!(
-            "SeqMove({}) [{}/{}]",
-            self.name,
-            self.step + 1,
-            self.coords.len()
-        );
+        let mut ret = String::new();
         if self.step < self.coords.len() {
-            ret = format!("{}\n-> {}", ret, self.coords[self.step]);
+            ret = format!(
+                "[{}/{}] -> {}",
+                self.step + 1,
+                self.coords.len(),
+                self.coords[self.step]
+            );
         }
         write!(f, "{}", ret)
     }
 }
 
-impl Node<GameState, GameEvent> for SeqMove {
-    fn enter(&mut self, state: &mut GameState) {
-        state.release_all();
-    }
-
+impl Node<GameState, GameEvent> for MovePath {
     fn on_event(&mut self, _state: &mut GameState, event: &GameEvent) {
         if self.step >= self.coords.len() {
             return;
@@ -318,6 +314,64 @@ impl Node<GameState, GameEvent> for SeqMove {
         self.handle_coord(state, coord, delta);
 
         false
+    }
+}
+
+pub struct SeqMove {
+    name: &'static str,
+    paths: Vec<MovePath>,
+}
+
+impl SeqMove {
+    pub fn create(name: &'static str, coords: Vec<Move>) -> Box<Self> {
+        Box::new(Self {
+            name,
+            paths: vec![MovePath::new(name.to_owned(), 0, coords)],
+        })
+    }
+
+    pub fn create_coop(name: &'static str, paths: Vec<Vec<Move>>) -> Box<Self> {
+        let mut ret = Self {
+            name,
+            paths: vec![],
+        };
+        for (i, path) in paths.iter().enumerate() {
+            ret.paths
+                .push(MovePath::new(format!("{}[{}]", name, i), i, path.clone()));
+        }
+
+        Box::new(ret)
+    }
+}
+
+impl Display for SeqMove {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut ret = format!("SeqMove({})", self.name);
+        for path in &self.paths {
+            ret = format!("{}\n{}", ret, path);
+        }
+        write!(f, "{}", ret)
+    }
+}
+
+impl Node<GameState, GameEvent> for SeqMove {
+    fn enter(&mut self, state: &mut GameState) {
+        state.release_all();
+    }
+
+    fn on_event(&mut self, state: &mut GameState, event: &GameEvent) {
+        for path in &mut self.paths {
+            path.on_event(state, event);
+        }
+    }
+
+    fn execute(&mut self, state: &mut GameState, delta: f64) -> bool {
+        let mut done = true;
+        // Require all paths to return true (done)
+        for path in &mut self.paths {
+            done &= path.execute(state, delta);
+        }
+        done
     }
 
     fn exit(&self, state: &mut GameState) {
