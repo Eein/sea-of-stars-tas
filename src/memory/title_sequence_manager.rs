@@ -17,7 +17,7 @@ pub enum Difficulty {
     Adventure,
     Challenge,
     #[default]
-    None,
+    NoSelection,
 }
 
 #[derive(Default, Debug)]
@@ -37,7 +37,7 @@ pub struct TitleSequenceManagerData {
     /// If the player has pressed start on the intro screen.
     pub pressed_start: bool,
     /// The selected difficulty - only when the screen is active or else None
-    pub selected_difficulty: Difficulty,
+    pub selected_difficulty: Option<Difficulty>,
 }
 
 impl Default for MemoryManager<TitleSequenceManagerData> {
@@ -178,16 +178,16 @@ impl TitleSequenceManagerData {
             memory_context.follow_fields::<u8>(&["difficultySelectionScreen", "active"])
         {
             if active != 1 {
-                self.selected_difficulty = Difficulty::None;
+                self.selected_difficulty = None;
                 return Ok(());
             } else if let Ok(selected_difficulty) = memory_context
                 .follow_fields::<u8>(&["difficultySelectionScreen", "selectedDifficulty"])
             {
                 self.selected_difficulty = match selected_difficulty {
-                    2 => Difficulty::Story,
-                    4 => Difficulty::Adventure,
-                    8 => Difficulty::Challenge,
-                    _ => Difficulty::None,
+                    2 => Some(Difficulty::Story),
+                    4 => Some(Difficulty::Adventure),
+                    8 => Some(Difficulty::Challenge),
+                    _ => Some(Difficulty::NoSelection),
                 };
             }
         }

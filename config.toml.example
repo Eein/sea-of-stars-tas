@@ -9,15 +9,19 @@ persist_tab_state = true
 konami_code = true
 
 [relics]
-"Solstice Diploma" = false
+"Solstice Diploma" = true
 "Amulet of Storytelling" = true
+"Tourist's Provision" = true
+"Volitional Spirit" = true
+"Signifying Glass" = false
 "Guardian Aura" = true
-"Sequent Flare" = false
-"Truestrike Pendant" = false
-"Tome of Knowledge" = false
+"Sequent Flare" = true
+"Truestrike Pendant" = true
+"Tome of Knowledge" = true
 "Falcon-eyed Parrot" = false
 "Salient Sails" = false
 "Gold Tooth" = false
+"Chef's Knife" = false
 "Sixth Sense" = false
 "Adamant Shard" = false
 "Hidden Pockets" = false
