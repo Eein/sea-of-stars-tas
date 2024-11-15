@@ -26,6 +26,7 @@ pub enum Move {
     ChangeTime(f32),          // 0.0-24.0
     AwaitCombat(Box<Move>),   // Break inner Move when combat is done
     AwaitCutscene(Box<Move>), // Break inner Move when cutscene is done
+    AwaitSync(Vec<usize>),    // Await GameEvent::CoopSync from list of player IDs
 }
 
 impl Display for Move {
@@ -48,6 +49,7 @@ impl Display for Move {
             Move::ChangeTime(time) => write!(f, "Move::ChangeTime({:.3})", time),
             Move::AwaitCombat(inner) => write!(f, "Move::AwaitCombat(Box::new({}))", inner),
             Move::AwaitCutscene(inner) => write!(f, "Move::AwaitCutscene(Box::new({}))", inner),
+            Move::AwaitSync(list) => write!(f, "Move::AwaitSync({:?})", list),
         }
     }
 }
@@ -58,7 +60,16 @@ pub struct MovePath {
     step: usize,
     btn: Option<ButtonPress>,
     timer: f64,
-    player: usize, // Note: refactor this to allow for coordinated movement
+    player: usize,
+    // Sync stuff
+    semaphore: Vec<usize>,
+    sent_signal: bool,
+}
+
+enum PathStatus {
+    Running,
+    Sync(Vec<usize>), // Signal to others when we reach an AwaitSync
+    Done,
 }
 
 impl MovePath {
@@ -76,6 +87,8 @@ impl MovePath {
             timer: 0.0,
             btn: None,
             player,
+            semaphore: vec![],
+            sent_signal: false,
         }
     }
 
@@ -146,17 +159,42 @@ impl MovePath {
         }
     }
 
-    fn handle_coord(&mut self, state: &mut GameState, coord: Move, delta: f64) {
+    fn handle_coord(&mut self, state: &mut GameState, coord: Move, delta: f64) -> PathStatus {
         let sppmd = &state.memory_managers.single_player_plus_manager.data;
         let player = &sppmd.players.items[self.player].gameobject_position;
 
         match coord {
             // Run the inner command
             Move::AwaitCombat(inner) => {
-                self.handle_coord(state, *inner, delta);
+                return self.handle_coord(state, *inner, delta);
             }
             Move::AwaitCutscene(inner) => {
-                self.handle_coord(state, *inner, delta);
+                return self.handle_coord(state, *inner, delta);
+            }
+            // Synchronize with a list of other players
+            Move::AwaitSync(list) => {
+                if !self.sent_signal {
+                    self.sent_signal = true;
+                    return PathStatus::Sync(list.clone());
+                }
+                // First, check if all the players we are waiting for have signalled us
+                let mut wait_done = true;
+                for c in &list {
+                    if !self.semaphore.contains(c) {
+                        wait_done = false;
+                        break;
+                    }
+                }
+                if wait_done {
+                    self.step += 1;
+                    self.sent_signal = false;
+                    // Remove the players we were waiting on from the semaphore list
+                    for c in list {
+                        if let Some(pos) = self.semaphore.iter().position(|x| *x == c) {
+                            self.semaphore.swap_remove(pos);
+                        }
+                    }
+                }
             }
             // Put text entry in log
             Move::Log(text) => {
@@ -269,25 +307,9 @@ impl MovePath {
                 }
             }
         }
+        PathStatus::Running
     }
-}
 
-impl Display for MovePath {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut ret = String::new();
-        if self.step < self.coords.len() {
-            ret = format!(
-                "[{}/{}] -> {}",
-                self.step + 1,
-                self.coords.len(),
-                self.coords[self.step]
-            );
-        }
-        write!(f, "{}", ret)
-    }
-}
-
-impl Node<GameState, GameEvent> for MovePath {
     fn on_event(&mut self, _state: &mut GameState, event: &GameEvent) {
         if self.step >= self.coords.len() {
             return;
@@ -308,18 +330,34 @@ impl Node<GameState, GameEvent> for MovePath {
                     self.step += 1;
                 }
             }
+            GameEvent::CoopSync(player) => {
+                self.semaphore.push(*player);
+            }
         }
     }
 
-    fn execute(&mut self, state: &mut GameState, delta: f64) -> bool {
+    fn execute(&mut self, state: &mut GameState, delta: f64) -> PathStatus {
         if self.step >= self.coords.len() {
-            return true;
+            return PathStatus::Done;
         }
 
         let coord = self.coords[self.step].clone();
-        self.handle_coord(state, coord, delta);
+        self.handle_coord(state, coord, delta)
+    }
+}
 
-        false
+impl Display for MovePath {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut ret = String::new();
+        if self.step < self.coords.len() {
+            ret = format!(
+                "[{}/{}] -> {}",
+                self.step + 1,
+                self.coords.len(),
+                self.coords[self.step]
+            );
+        }
+        write!(f, "{}", ret)
     }
 }
 
@@ -374,9 +412,23 @@ impl Node<GameState, GameEvent> for SeqMove {
 
     fn execute(&mut self, state: &mut GameState, delta: f64) -> bool {
         let mut done = true;
+        let mut sync_signals: Vec<(usize, Vec<usize>)> = Vec::new();
         // Require all paths to return true (done)
-        for path in &mut self.paths {
-            done &= path.execute(state, delta);
+        for (player, path) in self.paths.iter_mut().enumerate() {
+            done &= match path.execute(state, delta) {
+                PathStatus::Done => true,
+                PathStatus::Sync(list) => {
+                    sync_signals.push((player, list));
+                    false
+                }
+                _ => false,
+            }
+        }
+        // Signal to any waiting players
+        for (player, list) in sync_signals {
+            for p in list {
+                self.paths[p].on_event(state, &GameEvent::CoopSync(player));
+            }
         }
         done
     }

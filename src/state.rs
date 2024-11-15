@@ -47,6 +47,7 @@ pub enum GameEvent {
     #[default]
     Cutscene,
     Combat,
+    CoopSync(usize), // Param is player ID that originated signal
 }
 
 pub struct State {
