@@ -64,7 +64,10 @@ pub struct MovePath {
 impl MovePath {
     pub fn new(name: String, player: usize, coords: Vec<Move>) -> Self {
         if player > 2 {
-            panic!("MovePath({}) initialized with a player index > 2: {}!", name, player);
+            panic!(
+                "MovePath({}) initialized with a player index > 2: {}!",
+                name, player
+            );
         }
         Self {
             name,
@@ -144,7 +147,6 @@ impl MovePath {
     }
 
     fn handle_coord(&mut self, state: &mut GameState, coord: Move, delta: f64) {
-        let ppmd = &state.memory_managers.player_party_manager.data;
         let sppmd = &state.memory_managers.single_player_plus_manager.data;
         let player = &sppmd.players.items[self.player].gameobject_position;
 
@@ -228,8 +230,7 @@ impl MovePath {
             // Move towards the target coordinate until it's reached (World map, uses different coords)
             Move::ToWorld(x, y, z) => {
                 let target = Vector3::new(x, y, z);
-                // TODO: Multiple players?
-                let world_pos = &ppmd.position;
+                let world_pos = &sppmd.players.items[self.player].position;
                 let joy_dir = MovePath::get_dir(world_pos, &target, false);
                 state.gamepads[self.player].set_ljoy(joy_dir);
                 if MovePath::is_close(world_pos, &target, None) {
@@ -246,8 +247,7 @@ impl MovePath {
             Move::HoldDirWorld(dir, target) => {
                 state.gamepads[self.player].set_ljoy(dir);
                 let target = Vector3::new(target[0], target[1], target[2]);
-                // TODO: Multiple players?
-                let world_pos = &ppmd.position;
+                let world_pos = &sppmd.players.items[self.player].position;
                 if MovePath::is_close(world_pos, &target, Some(1.0)) {
                     self.step += 1;
                 }
@@ -336,6 +336,7 @@ impl SeqMove {
         })
     }
 
+    #[allow(dead_code)]
     pub fn create_coop(name: &'static str, paths: Vec<Vec<Move>>) -> Box<Self> {
         let mut ret = Self {
             name,

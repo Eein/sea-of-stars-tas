@@ -26,7 +26,7 @@ impl GuiHelper for RouteHelperV1 {
         ui: &mut egui::Ui,
         _tab: &mut String,
     ) {
-        let ppmd = &game_state.memory_managers.player_party_manager.data;
+        let sppmd = &game_state.memory_managers.single_player_plus_manager.data;
 
         self.m_gui.draw(game_state, ui);
         ui.separator();
@@ -45,8 +45,8 @@ impl GuiHelper for RouteHelperV1 {
             ui.separator();
         }
 
-        let world_pos = ppmd.position;
-        let pos = ppmd.gameobject_position;
+        let world_pos = sppmd.players.items[0].position;
+        let pos = sppmd.players.items[0].gameobject_position;
 
         ui.horizontal(|ui| {
             if ui.button("To").clicked() {

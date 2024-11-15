@@ -31,17 +31,20 @@ impl MovementGui {
     }
 
     pub fn draw(&mut self, game_state: &GameState, ui: &mut egui::Ui) {
-        let ppmd = &game_state.memory_managers.player_party_manager.data;
+        let sppmd = &game_state.memory_managers.single_player_plus_manager.data;
         let bmd = &game_state.memory_managers.boat_manager.data;
+
+        let gameobject_position = sppmd.players.items[0].gameobject_position;
+        let position = sppmd.players.items[0].position;
 
         const EPSILON: f64 = 0.01;
 
         if !self
             .last_game_obj
-            .fuzzy_equal(&ppmd.gameobject_position, EPSILON)
+            .fuzzy_equal(&gameobject_position, EPSILON)
         {
             self.coord_fsm = CoordFsm::GameObj;
-        } else if !self.last_world.fuzzy_equal(&ppmd.position, EPSILON) {
+        } else if !self.last_world.fuzzy_equal(&position, EPSILON) {
             self.coord_fsm = CoordFsm::World;
         } else if !self.last_boat.fuzzy_equal(&bmd.position, EPSILON) {
             self.coord_fsm = CoordFsm::Boat;
@@ -49,8 +52,8 @@ impl MovementGui {
 
         ui.label(format!("Coord type: {:?}", self.coord_fsm));
         match self.coord_fsm {
-            CoordFsm::GameObj => Self::draw_coord(ui, &ppmd.gameobject_position),
-            CoordFsm::World => Self::draw_coord(ui, &ppmd.position),
+            CoordFsm::GameObj => Self::draw_coord(ui, &gameobject_position),
+            CoordFsm::World => Self::draw_coord(ui, &position),
             CoordFsm::Boat => {
                 Self::draw_coord(ui, &bmd.position);
                 ui.label(format!("Rot (yaw): {:?}", &bmd.rotation.to_yaw()));
@@ -58,8 +61,8 @@ impl MovementGui {
             }
         }
 
-        self.last_game_obj = ppmd.gameobject_position;
-        self.last_world = ppmd.position;
+        self.last_game_obj = gameobject_position;
+        self.last_world = position;
         self.last_boat = bmd.position;
     }
 
