@@ -12,6 +12,15 @@ use memory::process::Process;
 use memory::string::{ArrayCString, ArrayWString};
 
 #[derive(Default, Debug)]
+pub enum Difficulty {
+    Easy,
+    Normal,
+    Hard,
+    #[default]
+    None,
+}
+
+#[derive(Default, Debug)]
 pub struct TitleSequenceManagerData {
     /// True if singleton is not 0x0
     pub active: bool,
@@ -27,6 +36,8 @@ pub struct TitleSequenceManagerData {
     pub load_save_done: bool,
     /// If the player has pressed start on the intro screen.
     pub pressed_start: bool,
+    /// The selected difficulty - only when the screen is active or else None
+    pub selected_difficulty: Difficulty,
 }
 
 impl Default for MemoryManager<TitleSequenceManagerData> {
@@ -58,6 +69,10 @@ impl MemoryManagerUpdate for TitleSequenceManagerData {
         if self.pressed_start && self.current_screen_name == "TitleScreen" {
             self.update_load_save_done(&memory_context)?;
             self.update_title_menu(&memory_context)?;
+        }
+
+        if self.current_screen_name == "DifficultySelection" {
+            self.update_difficulty_selection(&memory_context)?;
         }
 
         if self.current_screen_name == "RelicSelection" {
@@ -151,6 +166,30 @@ impl TitleSequenceManagerData {
             == Some(1)
         {
             self.title_menu_option_selected = TitleMenuOption::QuitGame
+        }
+        Ok(())
+    }
+
+    pub fn update_difficulty_selection(
+        &mut self,
+        memory_context: &MemoryContext,
+    ) -> Result<(), MemoryError> {
+        if let Ok(active) =
+            memory_context.follow_fields::<u8>(&["difficultySelectionScreen", "active"])
+        {
+            if active != 1 {
+                self.selected_difficulty = Difficulty::None;
+                return Ok(());
+            } else if let Ok(selected_difficulty) = memory_context
+                .follow_fields::<u8>(&["difficultySelectionScreen", "selectedDifficulty"])
+            {
+                self.selected_difficulty = match selected_difficulty {
+                    2 => Difficulty::Easy,
+                    4 => Difficulty::Normal,
+                    8 => Difficulty::Hard,
+                    _ => Difficulty::None,
+                };
+            }
         }
         Ok(())
     }
