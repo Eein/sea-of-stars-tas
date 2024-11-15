@@ -138,6 +138,9 @@ impl GuiHelper for DebugHelper {
                 player.bubble_fill_amount
             ));
             ui.label(format!("In Bubble: {:?}", player.in_bubble));
+            ui.label("Controller Pos:");
+            MovementGui::draw_coord(ui, &player.position);
+            ui.label("Gameobject Pos:");
             MovementGui::draw_coord(ui, &player.gameobject_position);
             ui.label("");
         }
