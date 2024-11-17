@@ -14,7 +14,7 @@ use vec3_rs::Vector3;
 #[derive(Clone, Debug)]
 pub enum Move {
     Join,
-    Leave,
+    Leave([f32; 2]), // Argument is a joystick direction to hold
     To(f32, f32, f32),
     ToWorld(f32, f32, f32),
     Towards([f32; 3], [f32; 3], bool),
@@ -35,7 +35,7 @@ impl Display for Move {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
             Move::Join => write!(f, "Move::Join"),
-            Move::Leave => write!(f, "Move::Leave"),
+            Move::Leave(joy) => write!(f, "Move::Leave({:?})", joy),
             Move::To(x, y, z) => write!(f, "Move::To({:.3}, {:.3}, {:.3})", x, y, z),
             Move::ToWorld(x, y, z) => write!(f, "Move::ToWorld({:.3}, {:.3}, {:.3})", x, y, z),
             Move::Towards(target, anchor, mash) => {
@@ -199,7 +199,7 @@ impl MovePath {
                     });
                 }
             }
-            Move::Leave => {
+            Move::Leave(joy) => {
                 if let Some(btn) = self.btn.as_mut() {
                     if btn.update(gamepad, delta) {
                         self.btn = None;
@@ -207,7 +207,7 @@ impl MovePath {
                         gamepad.release_all();
                     }
                 } else {
-                    gamepad.release_all();
+                    gamepad.set_ljoy(joy);
                     const PRESS_TIMEOUT: f64 = 2.0;
                     const RELEASE_TIMEOUT: f64 = 2.5;
                     self.btn = Some(ButtonPress {

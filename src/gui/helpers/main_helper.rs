@@ -337,14 +337,6 @@ impl GuiHelper for MainHelper {
                 }
                 *game_manager = Some(gm);
             }
-
-            // TODO: Temp
-            if ui
-                .add_enabled(!running, egui::Button::new("Start Coop Test"))
-                .clicked()
-            {
-                *game_manager = Some(tas::create_coop_test());
-            }
         }
 
         if let Some(gm) = game_manager {
