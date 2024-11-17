@@ -26,7 +26,7 @@ pub struct GameManager {
     level_up: Option<LevelUpManager>,
     combat_manager: Option<CombatManager>,
     fsm: GameFsm,
-    btn: ButtonPress,
+    btn: [ButtonPress; 3],
     timer: Timer,
     paused: bool,
 }
@@ -42,7 +42,11 @@ impl GameManager {
         Self {
             sequencer: Sequencer::new(root),
             fsm: GameFsm::default(),
-            btn: ButtonPress::default(),
+            btn: [
+                ButtonPress::default(),
+                ButtonPress::default(),
+                ButtonPress::default(),
+            ],
             timer: delta::Timer::new(),
             paused: false,
             level_up: None,
@@ -126,10 +130,12 @@ impl GameManager {
                 }
             }
             GameFsm::Cutscene => {
-                context.gamepads[0].press(&SosAction::Cancel);
-                context.gamepads[0].press(&SosAction::Turbo);
-                if self.btn.update(&mut context.gamepads[0], dt) {
-                    self.btn = ButtonPress::new(SosAction::Confirm);
+                for player in 0..self.btn.len() {
+                    context.gamepads[player].press(&SosAction::Cancel);
+                    context.gamepads[player].press(&SosAction::Turbo);
+                    if self.btn[player].update(&mut context.gamepads[player], dt) {
+                        self.btn[player] = ButtonPress::new(SosAction::Confirm);
+                    }
                 }
                 if !csmd.is_in_cutscene {
                     context.release_all();

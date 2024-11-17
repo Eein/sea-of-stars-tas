@@ -347,7 +347,7 @@ impl MovePath {
                 } else {
                     gamepad.release_all(); // Release held joystick direction
                     self.setup_confirm();
-                    gamepad.press(&SosAction::Turbo);
+                    //TODO: gamepad.press(&SosAction::Turbo);
                 }
             }
         }
