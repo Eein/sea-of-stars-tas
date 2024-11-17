@@ -29,7 +29,7 @@ pub enum Move {
     AwaitCombat(Box<Move>),   // Break inner Move when combat is done
     AwaitCutscene(Box<Move>), // Break inner Move when cutscene is done
     AwaitSync(Vec<usize>),    // Await GameEvent::CoopSync from list of player IDs
-    SpeedBoost,               // Note: Need to sync with another player to trigger
+    SpeedBoost(Vec<usize>),   // Note: Need to sync with another player to trigger
 }
 
 impl Display for Move {
@@ -55,7 +55,7 @@ impl Display for Move {
             Move::AwaitCombat(inner) => write!(f, "Move::AwaitCombat(Box::new({}))", inner),
             Move::AwaitCutscene(inner) => write!(f, "Move::AwaitCutscene(Box::new({}))", inner),
             Move::AwaitSync(list) => write!(f, "Move::AwaitSync({:?})", list),
-            Move::SpeedBoost => write!(f, "Move::SpeedBoost"),
+            Move::SpeedBoost(list) => write!(f, "Move::SpeedBoost({:?})", list),
         }
     }
 }
@@ -183,49 +183,27 @@ impl MovePath {
             }
             // Leave/Join
             Move::Join => {
-                if self.player == 0 {
+                if sppmd.players.items[self.player].playing {
                     gamepad.release_all();
                     self.step += 1;
-                }
-                else if let Some(btn) = self.btn.as_mut() {
-                    if btn.update(gamepad, delta) {
-                        self.btn = None;
-                        self.step += 1;
-                        gamepad.release_all();
-                    }
                 } else {
-                    gamepad.release_all();
-                    const PRESS_TIMEOUT: f64 = 0.3;
-                    const RELEASE_TIMEOUT: f64 = 0.3;
-                    self.btn = Some(ButtonPress {
-                        action: SosAction::Join,
-                        press_time: PRESS_TIMEOUT,
-                        release_time: RELEASE_TIMEOUT,
-                        ..Default::default()
-                    });
+                    self.timer += delta;
+                    // Stagger join by means of a timer
+                    if self.timer >= (self.player as f64 - 1.0) * 1.0 {
+                        self.timer = 0.0;
+                        gamepad.press(&SosAction::Join);
+                    }
                 }
             }
             Move::Leave(joy) => {
                 if self.player == 0 {
-                    gamepad.release_all();
                     self.step += 1;
-                }
-                else if let Some(btn) = self.btn.as_mut() {
-                    if btn.update(gamepad, delta) {
-                        self.btn = None;
-                        self.step += 1;
-                        gamepad.release_all();
-                    }
+                } else if !sppmd.players.items[self.player].playing {
+                    gamepad.release_all();
+                    self.step = self.coords.len();
                 } else {
                     gamepad.set_ljoy(joy);
-                    const PRESS_TIMEOUT: f64 = 2.0;
-                    const RELEASE_TIMEOUT: f64 = 2.5;
-                    self.btn = Some(ButtonPress {
-                        action: SosAction::Leave,
-                        press_time: PRESS_TIMEOUT,
-                        release_time: RELEASE_TIMEOUT,
-                        ..Default::default()
-                    });
+                    gamepad.press(&SosAction::Leave);
                 }
             }
             // Synchronize with a list of other players
@@ -254,11 +232,12 @@ impl MovePath {
                     }
                 }
             }
-            Move::SpeedBoost => {
-                gamepad.press(&SosAction::HiFive);
-                if sppmd.players.items[self.player].has_boost {
+            Move::SpeedBoost(list) => {
+                if !list.contains(&self.player) || sppmd.players.items[self.player].has_boost{
                     gamepad.release_all();
                     self.step += 1;
+                } else {
+                    gamepad.press(&SosAction::HiFive);
                 }
             }
             // Put text entry in log
@@ -488,17 +467,19 @@ impl Node<GameState, GameEvent> for SeqMove {
     }
 
     fn execute(&mut self, state: &mut GameState, delta: f64) -> bool {
-        let mut done = true;
         let mut sync_signals: Vec<(usize, Vec<usize>)> = Vec::new();
-        // Require all paths to return true (done)
         for (player, path) in self.paths.iter_mut().enumerate() {
-            done &= match path.execute(state, delta) {
+            let done = match path.execute(state, delta) {
                 PathStatus::Done => true,
                 PathStatus::Sync(list) => {
                     sync_signals.push((player, list));
                     false
                 }
                 _ => false,
+            };
+            // Require main path to return true (done)
+            if player == 0 && done {
+                return true;
             }
         }
         // Signal to any waiting players
@@ -507,7 +488,7 @@ impl Node<GameState, GameEvent> for SeqMove {
                 self.paths[p].on_event(state, &GameEvent::CoopSync(player));
             }
         }
-        done
+        false
     }
 
     fn exit(&self, state: &mut GameState) {

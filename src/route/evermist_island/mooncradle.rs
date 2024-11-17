@@ -42,10 +42,10 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                 "Mooncradle intro",
                 vec![
                     Move::Join,
-                    Move::SpeedBoost,
                     Move::Log("Move to cliff"),
                     Move::To(-69.005, -10.998, 24.871),
                     Move::HoldDir([0.0, -1.0], [-13.969002, -11.998001, 36.68851]),
+                    Move::SpeedBoost(vec![1, 2]),
                     Move::To(-12.039, -11.998, 35.009),
                     Move::Interact(-9.407, -10.998, 35.009),
                     Move::Interact(-9.375, -6.998, 37.092),
@@ -53,7 +53,7 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                     Move::To(-13.446, -5.998, 40.543),
                     Move::Interact(-13.500, -0.998, 41.967),
                 ],
-                2,
+                3,
             ),
             // Up to Diploma
             SeqIf::create(
@@ -77,7 +77,7 @@ fn skip_intro() -> Box<dyn Node<GameState, GameEvent>> {
                     Move::To(-12.353, -0.998, 49.594),
                     Move::Leave([0.0, 0.0]),
                 ],
-                2,
+                3,
             ),
             // Trigger Solstice Diploma
             SeqSelectOption::create(vec![0], false),
@@ -92,16 +92,22 @@ fn flashback() -> Box<dyn Node<GameState, GameEvent>> {
             SeqMove::create_parallel(
                 "Mooncradle intro",
                 vec![
-                    Move::SpeedBoost,
+                    Move::SpeedBoost(vec![1, 2]),
                     Move::Log("Move to cutscene"),
                     Move::To(-9.222, -0.820, 53.985),
                     Move::To(-7.318, 1.010, 62.634),
-                    Move::SpeedBoost,
+                    Move::SpeedBoost(vec![1, 2]),
                     Move::To(3.432, 1.002, 73.327),
                     Move::To(17.958, 1.002, 76.578),
                     Move::AwaitCutscene(Box::new(Move::HoldDir([1.0, 0.2], [0.0, 0.0, 0.0]))),
-                    Move::Log("Move to Forbidden Cave"),
-                    Move::SpeedBoost,
+                ],
+                3,
+            ),
+            SeqMove::create_parallel(
+                "Mooncradle intro",
+                vec![
+                    Move::SpeedBoost(vec![1, 2]),
+                    Move::Leave([0.0, 0.0]),
                     Move::To(31.373, 1.002, 89.671),
                     Move::To(31.471, 1.002, 114.862),
                     // Enter world map
@@ -111,26 +117,26 @@ fn flashback() -> Box<dyn Node<GameState, GameEvent>> {
                     Move::ToWorld(108.000, 2.002, 66.500),
                     Move::Log("Enter Forbidden Cave"),
                     Move::Confirm,
-                    Move::Leave([0.0, 0.0]),
                 ],
-                2,
+                3,
             ),
-            SeqMove::create(
+            SeqMove::create_parallel(
                 "Mooncradle intro",
                 vec![
                     Move::To(14.000, 1.002, 17.396),
                     // Door
                     Move::Confirm,
+                    Move::AwaitCutscene(Box::new(Move::HoldDir([0.0, 1.0], [0.0, 0.0, 0.0]))),
                 ],
+                3,
             ),
             SeqMove::create_parallel(
                 "Mooncradle intro",
                 vec![
-                    Move::Join,
-                    Move::SpeedBoost,
-                    Move::AwaitCutscene(Box::new(Move::HoldDir([0.0, 1.0], [0.0, 0.0, 0.0]))),
                     Move::Log("Move to dorms"),
-                    Move::SpeedBoost,
+                    Move::Join,
+                    Move::SpeedBoost(vec![0, 1]),
+                    Move::Leave([0.0, 0.0]),
                     Move::To(48.690, -8.990, -136.717),
                     Move::HoldDir([1.0, 1.0], [285.500, 5.002, 58.000]),
                     Move::To(290.419, 5.002, 61.872),
@@ -138,7 +144,7 @@ fn flashback() -> Box<dyn Node<GameState, GameEvent>> {
                     Move::HoldDir([1.0, 1.0], [72.657, -7.998, -133.640]),
                     Move::To(82.104, -7.998, -129.590),
                     Move::To(94.005, -11.998, -129.590),
-                    Move::Leave([0.0, 0.0]),
+                    Move::To(94.005, -11.998, -133.576),
                 ],
                 2,
             ),
