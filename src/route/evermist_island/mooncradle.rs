@@ -73,10 +73,7 @@ fn skip_intro() -> Box<dyn Node<GameState, GameEvent>> {
         vec![
             SeqMove::create_parallel(
                 "Move to Solstice Diploma",
-                vec![
-                    Move::To(-12.353, -0.998, 49.594),
-                    Move::Leave([0.0, 0.0]),
-                ],
+                vec![Move::To(-12.353, -0.998, 49.594), Move::Leave([0.0, 0.0])],
                 3,
             ),
             // Trigger Solstice Diploma
@@ -196,7 +193,7 @@ fn flashback() -> Box<dyn Node<GameState, GameEvent>> {
                     Move::AwaitCutscene(Box::new(Move::HoldDir([0.0, -1.0], [0.0, 0.0, 0.0]))),
                     Move::Log("Train with Erlina"),
                 ],
-                2
+                2,
             ),
             looms_to_center(),
             SeqMove::create(

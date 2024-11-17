@@ -233,7 +233,7 @@ impl MovePath {
                 }
             }
             Move::SpeedBoost(list) => {
-                if !list.contains(&self.player) || sppmd.players.items[self.player].has_boost{
+                if !list.contains(&self.player) || sppmd.players.items[self.player].has_boost {
                     gamepad.release_all();
                     self.step += 1;
                 } else {
