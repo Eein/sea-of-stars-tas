@@ -7,9 +7,9 @@ persist_tab_state = true
 
 # Speedrun related parameters
 konami_code = true
+solstice_diploma = true
 
 [relics]
-"Solstice Diploma" = true
 "Amulet of Storytelling" = true
 "Tourist's Provision" = true
 "Volitional Spirit" = true

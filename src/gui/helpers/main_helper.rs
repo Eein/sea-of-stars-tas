@@ -299,6 +299,7 @@ impl GuiHelper for MainHelper {
             ui.label("TAS Option".to_string());
 
             ui.checkbox(&mut game_state.config.konami_code, "Konami Code");
+            ui.checkbox(&mut game_state.config.solstice_diploma, "Solstice Diploma");
 
             ui.separator();
 

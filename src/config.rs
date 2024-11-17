@@ -5,9 +5,11 @@ use std::error::Error;
 use std::fs;
 
 /*
-pub const RELIC_NAMES: [&str; 21] = [
-    "Solstice Diploma",
+pub const RELIC_NAMES: [&str; 24] = [
     "Amulet of Storytelling",
+    "Tourist's Provision",
+    "Volitional Spirit",
+    "Signifying Glass",
     "Guardian Aura",
     "Sequent Flare",
     "Truestrike Pendant",
@@ -15,6 +17,7 @@ pub const RELIC_NAMES: [&str; 21] = [
     "Falcon-eyed Parrot",
     "Salient Sails",
     "Gold Tooth",
+    "Chef's Knife",
     "Sixth Sense",
     "Adamant Shard",
     "Hidden Pockets",
@@ -34,6 +37,7 @@ pub const RELIC_NAMES: [&str; 21] = [
 pub struct Config {
     pub persist_tab_state: bool,
     pub konami_code: bool,
+    pub solstice_diploma: bool,
     pub relics: HashMap<String, bool>,
 }
 

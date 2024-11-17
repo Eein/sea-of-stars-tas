@@ -21,14 +21,18 @@ enum CombatFsm {
 
 pub struct CombatManager {
     fsm: CombatFsm,
-    btn: ButtonPress,
+    btn: [ButtonPress; 3],
     controller: Option<Box<dyn EncounterController>>,
 }
 
 impl Default for CombatManager {
     fn default() -> Self {
         Self {
-            btn: ButtonPress::new(SosAction::Confirm),
+            btn: [
+                ButtonPress::new(SosAction::Confirm),
+                ButtonPress::new(SosAction::Confirm),
+                ButtonPress::new(SosAction::Confirm),
+            ],
             fsm: CombatFsm::Idle,
             controller: None,
         }
@@ -43,13 +47,15 @@ impl CombatManager {
             self.controller = Self::encounter_factory(state)
         }
 
-        if self.btn.update(&mut state.gamepads[0], dt) {
-            self.btn = ButtonPress {
-                action: SosAction::Confirm,
-                press_time: 0.1,
-                release_time: 0.2,
-                ..Default::default()
-            };
+        for i in 0..3 {
+            if self.btn[i].update(&mut state.gamepads[i], dt) {
+                self.btn[i] = ButtonPress {
+                    action: SosAction::Confirm,
+                    press_time: 0.1,
+                    release_time: 0.2,
+                    ..Default::default()
+                };
+            }
         }
 
         // Execute Different states if controller is active

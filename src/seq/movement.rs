@@ -29,6 +29,7 @@ pub enum Move {
     AwaitCombat(Box<Move>),   // Break inner Move when combat is done
     AwaitCutscene(Box<Move>), // Break inner Move when cutscene is done
     AwaitSync(Vec<usize>),    // Await GameEvent::CoopSync from list of player IDs
+    SpeedBoost,               // Note: Need to sync with another player to trigger
 }
 
 impl Display for Move {
@@ -54,6 +55,7 @@ impl Display for Move {
             Move::AwaitCombat(inner) => write!(f, "Move::AwaitCombat(Box::new({}))", inner),
             Move::AwaitCutscene(inner) => write!(f, "Move::AwaitCutscene(Box::new({}))", inner),
             Move::AwaitSync(list) => write!(f, "Move::AwaitSync({:?})", list),
+            Move::SpeedBoost => write!(f, "Move::SpeedBoost"),
         }
     }
 }
@@ -181,7 +183,11 @@ impl MovePath {
             }
             // Leave/Join
             Move::Join => {
-                if let Some(btn) = self.btn.as_mut() {
+                if self.player == 0 {
+                    gamepad.release_all();
+                    self.step += 1;
+                }
+                else if let Some(btn) = self.btn.as_mut() {
                     if btn.update(gamepad, delta) {
                         self.btn = None;
                         self.step += 1;
@@ -200,7 +206,11 @@ impl MovePath {
                 }
             }
             Move::Leave(joy) => {
-                if let Some(btn) = self.btn.as_mut() {
+                if self.player == 0 {
+                    gamepad.release_all();
+                    self.step += 1;
+                }
+                else if let Some(btn) = self.btn.as_mut() {
                     if btn.update(gamepad, delta) {
                         self.btn = None;
                         self.step += 1;
@@ -242,6 +252,13 @@ impl MovePath {
                             self.semaphore.swap_remove(pos);
                         }
                     }
+                }
+            }
+            Move::SpeedBoost => {
+                gamepad.press(&SosAction::HiFive);
+                if sppmd.players.items[self.player].has_boost {
+                    gamepad.release_all();
+                    self.step += 1;
                 }
             }
             // Put text entry in log
@@ -420,6 +437,19 @@ impl SeqMove {
             name,
             paths: vec![MovePath::new(name.to_owned(), 0, coords)],
         })
+    }
+
+    pub fn create_parallel(name: &'static str, coords: Vec<Move>, players: usize) -> Box<Self> {
+        let mut ret = Self {
+            name,
+            paths: vec![],
+        };
+        for i in 0..players {
+            ret.paths
+                .push(MovePath::new(format!("{}[{}]", name, i), i, coords.clone()));
+        }
+
+        Box::new(ret)
     }
 
     pub fn create_coop(name: &'static str, paths: Vec<Vec<Move>>) -> Box<Self> {

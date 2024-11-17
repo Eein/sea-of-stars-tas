@@ -34,3 +34,12 @@ impl SeqCondition<GameState> for CondRelic {
         }
     }
 }
+
+#[derive(Default)]
+pub struct CondDiploma;
+
+impl SeqCondition<GameState> for CondDiploma {
+    fn evaluate(&self, state: &GameState) -> bool {
+        state.config.solstice_diploma
+    }
+}
