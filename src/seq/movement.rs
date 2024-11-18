@@ -13,6 +13,8 @@ use vec3_rs::Vector3;
 
 #[derive(Clone, Debug)]
 pub enum Move {
+    Join,
+    Leave([f32; 2]), // Argument is a joystick direction to hold
     To(f32, f32, f32),
     ToWorld(f32, f32, f32),
     Towards([f32; 3], [f32; 3], bool),
@@ -26,11 +28,15 @@ pub enum Move {
     ChangeTime(f32),          // 0.0-24.0
     AwaitCombat(Box<Move>),   // Break inner Move when combat is done
     AwaitCutscene(Box<Move>), // Break inner Move when cutscene is done
+    AwaitSync(Vec<usize>),    // Await GameEvent::CoopSync from list of player IDs
+    SpeedBoost(Vec<usize>),   // Note: Need to sync with another player to trigger
 }
 
 impl Display for Move {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
+            Move::Join => write!(f, "Move::Join"),
+            Move::Leave(joy) => write!(f, "Move::Leave({:?})", joy),
             Move::To(x, y, z) => write!(f, "Move::To({:.3}, {:.3}, {:.3})", x, y, z),
             Move::ToWorld(x, y, z) => write!(f, "Move::ToWorld({:.3}, {:.3}, {:.3})", x, y, z),
             Move::Towards(target, anchor, mash) => {
@@ -48,29 +54,48 @@ impl Display for Move {
             Move::ChangeTime(time) => write!(f, "Move::ChangeTime({:.3})", time),
             Move::AwaitCombat(inner) => write!(f, "Move::AwaitCombat(Box::new({}))", inner),
             Move::AwaitCutscene(inner) => write!(f, "Move::AwaitCutscene(Box::new({}))", inner),
+            Move::AwaitSync(list) => write!(f, "Move::AwaitSync({:?})", list),
+            Move::SpeedBoost(list) => write!(f, "Move::SpeedBoost({:?})", list),
         }
     }
 }
 
-pub struct SeqMove {
-    name: &'static str,
+pub struct MovePath {
+    name: String,
     coords: Vec<Move>,
     step: usize,
     btn: Option<ButtonPress>,
     timer: f64,
-    player: usize, // Note: refactor this to allow for coordinated movement
+    player: usize,
+    // Sync stuff
+    semaphore: Vec<usize>,
+    sent_signal: bool,
 }
 
-impl SeqMove {
-    pub fn create(name: &'static str, coords: Vec<Move>) -> Box<Self> {
-        Box::new(Self {
+enum PathStatus {
+    Running,
+    Sync(Vec<usize>), // Signal to others when we reach an AwaitSync
+    Done,
+}
+
+impl MovePath {
+    pub fn new(name: String, player: usize, coords: Vec<Move>) -> Self {
+        if player > 2 {
+            panic!(
+                "MovePath({}) initialized with a player index > 2: {}!",
+                name, player
+            );
+        }
+        Self {
             name,
             coords,
             step: 0,
             timer: 0.0,
             btn: None,
-            player: 0,
-        })
+            player,
+            semaphore: vec![],
+            sent_signal: false,
+        }
     }
 
     fn is_close(player: &Vector3<f32>, target: &Vector3<f32>, precision: Option<f64>) -> bool {
@@ -118,11 +143,13 @@ impl SeqMove {
         let todm = &state.memory_managers.time_of_day_manager.data;
         let cur_time = todm.current_time;
 
+        let gamepad = &mut state.gamepads[self.player];
+
         // Difference in time
         let mut diff_time = target_time - cur_time;
         // Check if done
         if diff_time.abs() < TIME_EPSILON {
-            state.gamepads[self.player].release_all();
+            gamepad.release_all();
             self.step += 1;
         } else {
             // Adjust time to be in the range 0-24
@@ -131,26 +158,87 @@ impl SeqMove {
             }
             // If diff is in range 0-12, hold RT
             if diff_time < MIDDAY {
-                state.gamepads[self.player].press(&SosAction::TimeInc);
-                state.gamepads[self.player].release(&SosAction::TimeDec);
+                gamepad.press(&SosAction::TimeInc);
+                gamepad.release(&SosAction::TimeDec);
             } else {
-                state.gamepads[self.player].press(&SosAction::TimeDec);
-                state.gamepads[self.player].release(&SosAction::TimeInc);
+                gamepad.press(&SosAction::TimeDec);
+                gamepad.release(&SosAction::TimeInc);
             }
         }
     }
 
-    fn handle_coord(&mut self, state: &mut GameState, coord: Move, delta: f64) {
-        let ppmd = &state.memory_managers.player_party_manager.data;
-        let player = &ppmd.gameobject_position;
+    fn handle_coord(&mut self, state: &mut GameState, coord: Move, delta: f64) -> PathStatus {
+        let sppmd = &state.memory_managers.single_player_plus_manager.data;
+        let player = &sppmd.players.items[self.player].gameobject_position;
+
+        let gamepad = &mut state.gamepads[self.player];
 
         match coord {
             // Run the inner command
             Move::AwaitCombat(inner) => {
-                self.handle_coord(state, *inner, delta);
+                return self.handle_coord(state, *inner, delta);
             }
             Move::AwaitCutscene(inner) => {
-                self.handle_coord(state, *inner, delta);
+                return self.handle_coord(state, *inner, delta);
+            }
+            // Leave/Join
+            Move::Join => {
+                if sppmd.players.items[self.player].playing {
+                    gamepad.release_all();
+                    self.step += 1;
+                } else {
+                    self.timer += delta;
+                    // Stagger join by means of a timer
+                    if self.timer >= (self.player as f64 - 1.0) * 1.0 {
+                        self.timer = 0.0;
+                        gamepad.press(&SosAction::Join);
+                    }
+                }
+            }
+            Move::Leave(joy) => {
+                if self.player == 0 {
+                    self.step += 1;
+                } else if !sppmd.players.items[self.player].playing {
+                    gamepad.release_all();
+                    self.step = self.coords.len();
+                } else {
+                    gamepad.set_ljoy(joy);
+                    gamepad.press(&SosAction::Leave);
+                }
+            }
+            // Synchronize with a list of other players
+            Move::AwaitSync(list) => {
+                gamepad.release_all();
+                if !self.sent_signal {
+                    self.sent_signal = true;
+                    return PathStatus::Sync(list.clone());
+                }
+                // First, check if all the players we are waiting for have signalled us
+                let mut wait_done = true;
+                for c in &list {
+                    if !self.semaphore.contains(c) {
+                        wait_done = false;
+                        break;
+                    }
+                }
+                if wait_done {
+                    self.step += 1;
+                    self.sent_signal = false;
+                    // Remove the players we were waiting on from the semaphore list
+                    for c in list {
+                        if let Some(pos) = self.semaphore.iter().position(|x| *x == c) {
+                            self.semaphore.swap_remove(pos);
+                        }
+                    }
+                }
+            }
+            Move::SpeedBoost(list) => {
+                if !list.contains(&self.player) || sppmd.players.items[self.player].has_boost {
+                    gamepad.release_all();
+                    self.step += 1;
+                } else {
+                    gamepad.press(&SosAction::HiFive);
+                }
             }
             // Put text entry in log
             Move::Log(text) => {
@@ -161,13 +249,13 @@ impl SeqMove {
             Move::Towards(target, anchor, mash) => {
                 let target = Vector3::new(target[0], target[1], target[2]);
                 let anchor = Vector3::new(anchor[0], anchor[1], anchor[2]);
-                let joy_dir = SeqMove::get_dir(player, &anchor, false);
-                state.gamepads[self.player].set_ljoy(joy_dir);
+                let joy_dir = MovePath::get_dir(player, &anchor, false);
+                gamepad.set_ljoy(joy_dir);
                 if mash {
-                    self.mash(&mut state.gamepads[self.player], delta);
+                    self.mash(gamepad, delta);
                 }
-                if SeqMove::is_close(player, &target, Some(1.0)) {
-                    state.gamepads[self.player].release_all();
+                if MovePath::is_close(player, &target, Some(1.0)) {
+                    gamepad.release_all();
                     self.btn = None;
                     self.step += 1;
                 }
@@ -175,20 +263,20 @@ impl SeqMove {
             // Move towards the target coordinate until it's reached
             Move::To(x, y, z) => {
                 let target = Vector3::new(x, y, z);
-                let joy_dir = SeqMove::get_dir(player, &target, false);
-                state.gamepads[self.player].set_ljoy(joy_dir);
-                if SeqMove::is_close(player, &target, None) {
+                let joy_dir = MovePath::get_dir(player, &target, false);
+                gamepad.set_ljoy(joy_dir);
+                if MovePath::is_close(player, &target, None) {
                     self.step += 1;
                 }
             }
             // Climb towards the target coordinate until it's reached (mash to get on wall)
             Move::Climb(x, y, z) => {
                 let target = Vector3::new(x, y, z);
-                let joy_dir = SeqMove::get_dir(player, &target, true);
-                state.gamepads[self.player].set_ljoy(joy_dir);
-                self.mash(&mut state.gamepads[self.player], delta);
-                if SeqMove::is_close(player, &target, None) {
-                    state.gamepads[self.player].release_all();
+                let joy_dir = MovePath::get_dir(player, &target, true);
+                gamepad.set_ljoy(joy_dir);
+                self.mash(gamepad, delta);
+                if MovePath::is_close(player, &target, None) {
+                    gamepad.release_all();
                     self.btn = None;
                     self.step += 1;
                 }
@@ -196,25 +284,25 @@ impl SeqMove {
             // Move towards the target while mashing
             Move::Interact(x, y, z) => {
                 let target = Vector3::new(x, y, z);
-                let joy_dir = SeqMove::get_dir(player, &target, false);
-                state.gamepads[self.player].set_ljoy(joy_dir);
+                let joy_dir = MovePath::get_dir(player, &target, false);
+                gamepad.set_ljoy(joy_dir);
                 // If we are close to target, stop mashing to prevent unintended jumps
                 const INTERACT_PRECISION: f64 = 1.0;
-                if !SeqMove::is_close(player, &target, Some(INTERACT_PRECISION)) {
-                    self.mash(&mut state.gamepads[self.player], delta);
+                if !MovePath::is_close(player, &target, Some(INTERACT_PRECISION)) {
+                    self.mash(gamepad, delta);
                 } else {
-                    state.gamepads[self.player].release(&SosAction::Confirm);
+                    gamepad.release(&SosAction::Confirm);
                 }
                 // If we are even closer, proceed.
-                if SeqMove::is_close(player, &target, None) {
-                    state.gamepads[self.player].release_all();
+                if MovePath::is_close(player, &target, None) {
+                    gamepad.release_all();
                     self.btn = None;
                     self.step += 1;
                 }
             }
             // Hold still for a period of time
             Move::WaitFor(timeout) => {
-                state.gamepads[self.player].set_ljoy([0.0, 0.0]); // Make sure we're standing still
+                gamepad.set_ljoy([0.0, 0.0]); // Make sure we're standing still
                 self.timer += delta;
                 if self.timer >= timeout {
                     self.timer = 0.0;
@@ -224,25 +312,25 @@ impl SeqMove {
             // Move towards the target coordinate until it's reached (World map, uses different coords)
             Move::ToWorld(x, y, z) => {
                 let target = Vector3::new(x, y, z);
-                let world_pos = &ppmd.position;
-                let joy_dir = SeqMove::get_dir(world_pos, &target, false);
-                state.gamepads[self.player].set_ljoy(joy_dir);
-                if SeqMove::is_close(world_pos, &target, None) {
+                let world_pos = &sppmd.players.items[self.player].position;
+                let joy_dir = MovePath::get_dir(world_pos, &target, false);
+                gamepad.set_ljoy(joy_dir);
+                if MovePath::is_close(world_pos, &target, None) {
                     self.step += 1;
                 }
             }
             Move::HoldDir(dir, target) => {
-                state.gamepads[self.player].set_ljoy(dir);
+                gamepad.set_ljoy(dir);
                 let target = Vector3::new(target[0], target[1], target[2]);
-                if SeqMove::is_close(player, &target, Some(1.0)) {
+                if MovePath::is_close(player, &target, Some(1.0)) {
                     self.step += 1;
                 }
             }
             Move::HoldDirWorld(dir, target) => {
-                state.gamepads[self.player].set_ljoy(dir);
+                gamepad.set_ljoy(dir);
                 let target = Vector3::new(target[0], target[1], target[2]);
-                let world_pos = &ppmd.position;
-                if SeqMove::is_close(world_pos, &target, Some(1.0)) {
+                let world_pos = &sppmd.players.items[self.player].position;
+                if MovePath::is_close(world_pos, &target, Some(1.0)) {
                     self.step += 1;
                 }
             }
@@ -251,39 +339,19 @@ impl SeqMove {
             // Press confirm once
             Move::Confirm => {
                 if let Some(btn) = self.btn.as_mut() {
-                    if btn.update(&mut state.gamepads[self.player], delta) {
+                    if btn.update(gamepad, delta) {
                         self.btn = None;
                         self.step += 1;
-                        state.gamepads[self.player].release_all();
+                        gamepad.release_all();
                     }
                 } else {
-                    state.gamepads[self.player].release_all(); // Release held joystick direction
+                    gamepad.release_all(); // Release held joystick direction
                     self.setup_confirm();
-                    state.gamepads[self.player].press(&SosAction::Turbo);
+                    //TODO: gamepad.press(&SosAction::Turbo);
                 }
             }
         }
-    }
-}
-
-impl Display for SeqMove {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut ret = format!(
-            "SeqMove({}) [{}/{}]",
-            self.name,
-            self.step + 1,
-            self.coords.len()
-        );
-        if self.step < self.coords.len() {
-            ret = format!("{}\n-> {}", ret, self.coords[self.step]);
-        }
-        write!(f, "{}", ret)
-    }
-}
-
-impl Node<GameState, GameEvent> for SeqMove {
-    fn enter(&mut self, state: &mut GameState) {
-        state.release_all();
+        PathStatus::Running
     }
 
     fn on_event(&mut self, _state: &mut GameState, event: &GameEvent) {
@@ -306,17 +374,120 @@ impl Node<GameState, GameEvent> for SeqMove {
                     self.step += 1;
                 }
             }
+            GameEvent::CoopSync(player) => {
+                self.semaphore.push(*player);
+            }
+        }
+    }
+
+    fn execute(&mut self, state: &mut GameState, delta: f64) -> PathStatus {
+        if self.step >= self.coords.len() {
+            return PathStatus::Done;
+        }
+
+        let coord = self.coords[self.step].clone();
+        self.handle_coord(state, coord, delta)
+    }
+}
+
+impl Display for MovePath {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut ret = String::new();
+        if self.step < self.coords.len() {
+            ret = format!(
+                "[{}/{}] -> {}",
+                self.step + 1,
+                self.coords.len(),
+                self.coords[self.step]
+            );
+        }
+        write!(f, "{}", ret)
+    }
+}
+
+pub struct SeqMove {
+    name: &'static str,
+    paths: Vec<MovePath>,
+}
+
+impl SeqMove {
+    pub fn create(name: &'static str, coords: Vec<Move>) -> Box<Self> {
+        Box::new(Self {
+            name,
+            paths: vec![MovePath::new(name.to_owned(), 0, coords)],
+        })
+    }
+
+    pub fn create_parallel(name: &'static str, coords: Vec<Move>, players: usize) -> Box<Self> {
+        let mut ret = Self {
+            name,
+            paths: vec![],
+        };
+        for i in 0..players {
+            ret.paths
+                .push(MovePath::new(format!("{}[{}]", name, i), i, coords.clone()));
+        }
+
+        Box::new(ret)
+    }
+
+    pub fn create_coop(name: &'static str, paths: Vec<Vec<Move>>) -> Box<Self> {
+        let mut ret = Self {
+            name,
+            paths: vec![],
+        };
+        for (i, path) in paths.iter().enumerate() {
+            ret.paths
+                .push(MovePath::new(format!("{}[{}]", name, i), i, path.clone()));
+        }
+
+        Box::new(ret)
+    }
+}
+
+impl Display for SeqMove {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut ret = format!("SeqMove({})", self.name);
+        for path in &self.paths {
+            ret = format!("{}\n{}", ret, path);
+        }
+        write!(f, "{}", ret)
+    }
+}
+
+impl Node<GameState, GameEvent> for SeqMove {
+    fn enter(&mut self, state: &mut GameState) {
+        state.release_all();
+    }
+
+    fn on_event(&mut self, state: &mut GameState, event: &GameEvent) {
+        for path in &mut self.paths {
+            path.on_event(state, event);
         }
     }
 
     fn execute(&mut self, state: &mut GameState, delta: f64) -> bool {
-        if self.step >= self.coords.len() {
-            return true;
+        let mut sync_signals: Vec<(usize, Vec<usize>)> = Vec::new();
+        for (player, path) in self.paths.iter_mut().enumerate() {
+            let done = match path.execute(state, delta) {
+                PathStatus::Done => true,
+                PathStatus::Sync(list) => {
+                    sync_signals.push((player, list));
+                    false
+                }
+                _ => false,
+            };
+            // Require main path to return true (done)
+            if player == 0 && done {
+                return true;
+            }
         }
-
-        let coord = self.coords[self.step].clone();
-        self.handle_coord(state, coord, delta);
-
+        // Signal to any waiting players
+        for (player, list) in sync_signals {
+            for p in list {
+                self.paths[p].on_event(state, &GameEvent::CoopSync(player));
+            }
+        }
         false
     }
 
