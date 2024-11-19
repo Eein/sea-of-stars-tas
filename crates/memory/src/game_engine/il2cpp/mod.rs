@@ -5,7 +5,7 @@ pub mod unity_serializable_dictionary;
 use crate::pe;
 use crate::process::MemoryError;
 use crate::process::Process;
-use crate::signature::Signature;
+use crate::signature::{Signature, SignatureScanner};
 use crate::string::ArrayCString;
 use bytemuck::Pod;
 use core::iter;
@@ -15,6 +15,7 @@ const CSTR: usize = 128;
 /// Represents access to a Unity game that is using the IL2CPP backend.
 #[derive(Debug)]
 pub struct Module {
+    pub mono_module: (u64, u64),
     offsets: &'static Offsets,
     assemblies: u64,
     type_info_definition_table: u64,
@@ -40,7 +41,7 @@ impl Module {
             const ASSEMBLIES_TRG_SIG: Signature<12> =
                 Signature::new("48 FF C5 80 3C ?? 00 75 ?? 48 8B 1D");
 
-            let scan = ASSEMBLIES_TRG_SIG.scan_process_range(process, mono_module)?;
+            let scan = ASSEMBLIES_TRG_SIG.scan(process, mono_module)?;
             let addr = scan + 12;
 
             addr + 0x4 + process.read::<i32>(addr).ok()? as u64
@@ -51,7 +52,7 @@ impl Module {
                 Signature::new("48 83 3C ?? 00 75 ?? 8B C? E8");
 
             let addr = TYPE_INFO_DEFINITION_TABLE_TRG_SIG
-                .scan_process_range(process, mono_module)?
+                .scan(process, mono_module)?
                 .checked_add_signed(-4)
                 .unwrap();
 
@@ -62,6 +63,7 @@ impl Module {
         };
 
         Some(Self {
+            mono_module,
             offsets,
             assemblies,
             type_info_definition_table,

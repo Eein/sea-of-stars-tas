@@ -120,6 +120,15 @@ impl GuiHelper for DebugHelper {
         let speedrun_manager = &game_state.memory_managers.speedrun_manager.data;
         let ppmd = &game_state.memory_managers.player_party_manager.data;
         let sppmd = &game_state.memory_managers.single_player_plus_manager.data;
+        let cmd = &game_state.memory_managers.combat_manager.data;
+
+        ui.label("Enemy Positions");
+        for e in cmd.enemy_positions.clone() {
+            ui.label(format!("Name: {:?}", e.name));
+            MovementGui::draw_coord(ui, &e.position);
+        }
+
+        ui.separator();
 
         ui.label(format!("Leader: {:?}", ppmd.leader_character));
         ui.label(format!("Movement State: {:?}", ppmd.movement_state));

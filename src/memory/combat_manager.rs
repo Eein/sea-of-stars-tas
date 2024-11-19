@@ -1,15 +1,20 @@
 use crate::memory::memory_context::MemoryContext;
 use crate::memory::{MemoryManager, MemoryManagerUpdate};
 use crate::state::StateContext;
+use memory::signature::{Signature, SignatureScanner};
+
 use data::prelude::{armor, trinkets, weapons, PlayerPartyCharacter};
 use data::Item;
 use log::info;
+
 use memory::game_engine::il2cpp::unity_list::*;
 use memory::game_engine::il2cpp::unity_serializable_dictionary::*;
 use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
 use memory::process::Process;
 use memory::string::*;
+
+use vec3_rs::Vector3;
 
 #[derive(Default, Debug)]
 pub enum CombatControllerType {
@@ -125,6 +130,12 @@ pub struct CombatEnemy {
     pub live_mana_spawn_quantity: u32,
 }
 
+#[derive(Default, Debug, Clone)]
+pub struct EnemyPosition {
+    pub name: String,
+    pub position: Vector3<f32>,
+}
+
 #[derive(Default, Debug)]
 pub struct CombatManagerData {
     pub encounter_active: bool,
@@ -135,6 +146,8 @@ pub struct CombatManagerData {
     pub ultimate_progress: f32,
     pub enemies: UnityList<CombatEnemy>,
     pub players: UnityList<CombatPlayer>,
+    pub enemy_game_objects: Vec<u64>,
+    pub enemy_positions: Vec<EnemyPosition>,
 }
 
 impl Default for MemoryManager<CombatManagerData> {
@@ -167,13 +180,93 @@ impl MemoryManagerUpdate for CombatManagerData {
             self.update_combo_points_and_ultimates(&memory_context)?;
             self.update_enemies(&memory_context)?;
             self.update_players(&memory_context)?;
+        } else if self.enemy_game_objects.is_empty() {
+            self.update_enemy_game_objects(&memory_context)?;
+        } else {
+            self.update_enemy_positions(&memory_context)?;
         }
 
         Ok(())
     }
 }
 
+const SIG_GAME_OBJECTS: Signature<32> = Signature::new("70 D7 45 69 00 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? 00 00 00 ?? ?? ?? ?? ?? 00 00 00");
+
 impl CombatManagerData {
+    pub fn update_enemy_positions(
+        &mut self,
+        memory_context: &MemoryContext,
+    ) -> Result<(), MemoryError> {
+        let mut enemy_positions = vec![];
+
+        for obj_addr in self.enemy_game_objects.clone() {
+            // println!("0x{:x}", obj_addr);
+            //TODO:  if 0x88 is 0 then continue
+
+            if let Ok(m_pos_data) = memory_context
+                .process
+                .read_pointer_path::<u64>(obj_addr, &[0x30, 0x48])
+            {
+                // println!("mPosData: 0x{:x}", m_posData);
+                if m_pos_data == 0x0 {
+                    continue;
+                }
+            }
+
+            if let Ok(current_position_ptr) = memory_context
+                .process
+                .read_pointer_path_without_read(obj_addr, &[0x30, 0x48, 0x1C])
+            {
+                // println!("CPP: 0x{:x}", current_position_ptr);
+                // Some objects that aren't on screen may not have a position
+                // This just checks to make sure there isnt dead data here.
+                // not sure what these objects are but the game hates them
+                if current_position_ptr == 0x1C || current_position_ptr == 0x600000022 {
+                    continue;
+                }
+                let x = memory_context.read_pointer::<f32>(current_position_ptr)?;
+                let y = memory_context.read_pointer::<f32>(current_position_ptr + 0x4)?;
+                let z = memory_context.read_pointer::<f32>(current_position_ptr + 0x8)?;
+
+                let position = Vector3::new(x, y, z);
+                // println!("{:?}", position);
+                if let Ok(name_cstr) = memory_context
+                    .process
+                    .read_pointer_path::<ArrayCString<200>>(
+                        obj_addr,
+                        &[0x30, 0x38, 0x10, 0x60, 0x0],
+                    )
+                {
+                    if let Ok(name) = name_cstr.validate_utf8() {
+                        // println!("NAME: {}", name);
+                        enemy_positions.push(EnemyPosition {
+                            name: name.to_string(),
+                            position,
+                        });
+                    }
+                }
+            }
+        }
+
+        self.enemy_positions = enemy_positions;
+        // println!("COUNT: {}", self.enemy_positions.len());
+
+        Ok(())
+    }
+
+    pub fn update_enemy_game_objects(
+        &mut self,
+        memory_context: &MemoryContext,
+    ) -> Result<(), MemoryError> {
+        let mono_module = memory_context.module.mono_module;
+        let address_range =
+            SIG_GAME_OBJECTS.scan_process_range(memory_context.process, (0x40000000, 0x100000000));
+
+        self.enemy_game_objects = address_range.collect();
+
+        Ok(())
+    }
+
     pub fn update_encounter_active(
         &mut self,
         memory_context: &MemoryContext,
