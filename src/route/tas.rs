@@ -2,7 +2,7 @@ use seq::prelude::*;
 
 use crate::game_manager::GameManager;
 use crate::seq::relics::SeqRelicList;
-use crate::seq::title::{SeqTitleScreen, SeqLoadGame};
+use crate::seq::title::{SeqLoadGame, SeqTitleScreen};
 
 use super::evermist_island;
 use super::sleeper_island;
@@ -22,7 +22,5 @@ pub fn create_tas() -> GameManager {
 }
 
 pub fn create_load_sequence(save_slot: usize, auto_save_present: bool) -> GameManager {
-    GameManager::new(
-        SeqLoadGame::new(save_slot, auto_save_present)
-    )
+    GameManager::new(SeqLoadGame::new(save_slot, auto_save_present))
 }

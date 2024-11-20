@@ -340,16 +340,15 @@ impl GuiHelper for MainHelper {
                         .selected_text(self.save_slot.to_string())
                         .show_ui(ui, |ui| {
                             for value in 1..=9 {
-                                ui.selectable_value(
-                                    &mut self.save_slot,
-                                    value,
-                                    value.to_string()
-                                );
+                                ui.selectable_value(&mut self.save_slot, value, value.to_string());
                             }
                         });
                     ui.checkbox(&mut self.auto_save_present, "Auto save present");
                     if ui.button("Run Load Sequence").clicked() {
-                        *game_manager = Some(tas::create_load_sequence(self.save_slot, self.auto_save_present));
+                        *game_manager = Some(tas::create_load_sequence(
+                            self.save_slot,
+                            self.auto_save_present,
+                        ));
                     }
 
                     ui.separator();

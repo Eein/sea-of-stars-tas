@@ -186,7 +186,6 @@ impl Node<GameState, GameEvent> for SeqTitleScreen {
     }
 }
 
-
 #[derive(Debug)]
 enum LoadGameFSM {
     Countdown,
@@ -228,7 +227,9 @@ impl Display for SeqLoadGame {
 impl Node<GameState, GameEvent> for SeqLoadGame {
     fn enter(&mut self, state: &mut GameState) {
         state.release_all();
-        info!("Loading TAS from checkpoint! Focus the Sea of Stars window before the timer expires.");
+        info!(
+            "Loading TAS from checkpoint! Focus the Sea of Stars window before the timer expires."
+        );
     }
 
     fn execute(&mut self, state: &mut GameState, delta: f64) -> bool {
@@ -291,7 +292,8 @@ impl Node<GameState, GameEvent> for SeqLoadGame {
                     if self.auto_save_present {
                         self.btn = ButtonPress::new(SosAction::MenuDown);
                         self.fsm = LoadGameFSM::ManualSlot;
-                    } else { // Done
+                    } else {
+                        // Done
                         self.btn = ButtonPress::new(SosAction::Confirm);
                         self.fsm = LoadGameFSM::ConfirmLoad;
                     }
