@@ -11,6 +11,8 @@ pub const NAME: &str = "Main Helper";
 #[derive(Debug)]
 pub struct MainHelper {
     checkpoint: Option<String>,
+    save_slot: usize,
+    auto_save_present: bool,
 }
 
 fn damage_type_image(ui: &mut egui::Ui, damage_type: &CombatDamageType) {
@@ -45,7 +47,11 @@ fn stat_image(ui: &mut egui::Ui, upgrade: &LevelUpUpgrade, selected: bool) -> eg
 
 impl MainHelper {
     pub fn create() -> Box<Self> {
-        Box::new(Self { checkpoint: None })
+        Box::new(Self {
+            checkpoint: None,
+            save_slot: 1,
+            auto_save_present: true,
+        })
     }
 
     fn draw_title(&self, game_state: &GameState, ui: &mut egui::Ui) {
@@ -327,6 +333,28 @@ impl GuiHelper for MainHelper {
                         );
                     }
                 });
+
+            if let Some(checkpoint) = &self.checkpoint {
+                if !running && checkpoint != "New Game" {
+                    egui::ComboBox::from_label("Save slot")
+                        .selected_text(self.save_slot.to_string())
+                        .show_ui(ui, |ui| {
+                            for value in 1..=9 {
+                                ui.selectable_value(
+                                    &mut self.save_slot,
+                                    value,
+                                    value.to_string()
+                                );
+                            }
+                        });
+                    ui.checkbox(&mut self.auto_save_present, "Auto save present");
+                    if ui.button("Run Load Sequence").clicked() {
+                        *game_manager = Some(tas::create_load_sequence(self.save_slot, self.auto_save_present));
+                    }
+
+                    ui.separator();
+                }
+            }
 
             if ui
                 .add_enabled(!running, egui::Button::new("Start TAS"))
