@@ -185,3 +185,137 @@ impl Node<GameState, GameEvent> for SeqTitleScreen {
         state.release_all();
     }
 }
+
+#[derive(Debug)]
+enum LoadGameFSM {
+    Countdown,
+    ToMenu,
+    LoadGame,
+    PressLoadGame,
+    SelectSlot,
+    SelectSlotPress,
+    ManualSlot,
+    ConfirmLoad,
+}
+
+pub struct SeqLoadGame {
+    fsm: LoadGameFSM,
+    btn: ButtonPress,
+    timer: f64,
+    save_slot: usize,
+    auto_save_present: bool,
+}
+
+impl SeqLoadGame {
+    pub fn new(save_slot: usize, auto_save_present: bool) -> Box<Self> {
+        Box::new(Self {
+            fsm: LoadGameFSM::Countdown,
+            btn: ButtonPress::new(SosAction::Start),
+            timer: COUNTDOWN_TIMEOUT,
+            save_slot,
+            auto_save_present,
+        })
+    }
+}
+
+impl Display for SeqLoadGame {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "LoadGame(Slot {}): {:?}", self.save_slot, self.fsm)
+    }
+}
+
+impl Node<GameState, GameEvent> for SeqLoadGame {
+    fn enter(&mut self, state: &mut GameState) {
+        state.release_all();
+        info!(
+            "Loading TAS from checkpoint! Focus the Sea of Stars window before the timer expires."
+        );
+    }
+
+    fn execute(&mut self, state: &mut GameState, delta: f64) -> bool {
+        let tsmd = &state.memory_managers.title_sequence_manager.data;
+        match self.fsm {
+            LoadGameFSM::Countdown => {
+                if self.timer.floor() != (self.timer - delta).floor() {
+                    info!("Counting down to TAS start: {}", self.timer.floor());
+                }
+                self.timer -= delta;
+                if self.timer <= 0.0 {
+                    self.fsm = LoadGameFSM::ToMenu;
+                    self.btn = ButtonPress::new(SosAction::Start);
+                }
+            }
+            LoadGameFSM::ToMenu => {
+                self.btn.update(&mut state.gamepads[0], delta);
+                if tsmd.pressed_start {
+                    self.fsm = LoadGameFSM::LoadGame;
+                    self.btn = ButtonPress::new(SosAction::MenuDown);
+                    state.release_all();
+                    info!("Entering main menu");
+                }
+            }
+            LoadGameFSM::LoadGame => {
+                if tsmd.title_menu_option_selected == TitleMenuOption::LoadGame {
+                    self.btn = ButtonPress::new(SosAction::Confirm);
+                    self.fsm = LoadGameFSM::PressLoadGame;
+                    state.release_all();
+                    info!("Selecting Load Game");
+                } else if self.btn.update(&mut state.gamepads[0], delta) {
+                    self.btn = ButtonPress::new(SosAction::MenuDown);
+                }
+            }
+            LoadGameFSM::PressLoadGame => {
+                if self.btn.update(&mut state.gamepads[0], delta) {
+                    self.fsm = LoadGameFSM::SelectSlot;
+                }
+            }
+            LoadGameFSM::SelectSlot => {
+                let page = (self.save_slot - 1) / 3;
+                if page > 0 {
+                    self.save_slot -= 3;
+                    self.btn = ButtonPress::new(SosAction::ShiftRight);
+                    self.fsm = LoadGameFSM::PressLoadGame;
+                } else {
+                    let vertical = (self.save_slot - 1) % 3;
+                    if vertical > 0 {
+                        self.save_slot -= 1;
+                        self.btn = ButtonPress::new(SosAction::MenuDown);
+                        self.fsm = LoadGameFSM::PressLoadGame;
+                    } else {
+                        self.btn = ButtonPress::new(SosAction::Confirm);
+                        self.fsm = LoadGameFSM::SelectSlotPress;
+                    }
+                }
+            }
+            LoadGameFSM::SelectSlotPress => {
+                if self.btn.update(&mut state.gamepads[0], delta) {
+                    if self.auto_save_present {
+                        self.btn = ButtonPress::new(SosAction::MenuDown);
+                        self.fsm = LoadGameFSM::ManualSlot;
+                    } else {
+                        // Done
+                        self.btn = ButtonPress::new(SosAction::Confirm);
+                        self.fsm = LoadGameFSM::ConfirmLoad;
+                    }
+                }
+            }
+            LoadGameFSM::ManualSlot => {
+                if self.btn.update(&mut state.gamepads[0], delta) {
+                    self.auto_save_present = false;
+                    self.fsm = LoadGameFSM::SelectSlot;
+                }
+            }
+            LoadGameFSM::ConfirmLoad => {
+                if self.btn.update(&mut state.gamepads[0], delta) {
+                    return true;
+                }
+            }
+        }
+
+        false
+    }
+
+    fn exit(&self, state: &mut GameState) {
+        state.release_all();
+    }
+}
