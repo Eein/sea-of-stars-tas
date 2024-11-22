@@ -46,7 +46,7 @@ members = [
   "crates/data",
   "crates/joystick",
   "crates/memory"
-]
+, "crates/utility"]
 
 [profile.dev]
 opt-level = 1
