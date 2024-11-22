@@ -18,7 +18,7 @@ impl Value {
 
 impl std::fmt::Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Value({})", self.value)
+        write!(f, "Value({:.3})", self.value)
     }
 }
 
@@ -29,7 +29,7 @@ impl<Context> Appraisal<Context> for Value {
 
     #[cfg(feature = "egui")]
     fn render(&self, _context: &Context, ui: &mut egui::Ui) {
-        ui.label(format!("Value = {}", self.value));
+        ui.label(format!("Value = {:.3}", self.value));
     }
 }
 
@@ -71,20 +71,8 @@ impl<Context> Appraisal<Context> for Product<Context> {
 
     #[cfg(feature = "egui")]
     fn render(&self, context: &Context, ui: &mut egui::Ui) {
-        let mut text = "Product(".to_string();
-        let mut first = true;
-        for child in &self.children {
-            let value = child.evaluate(context);
-            if first {
-                text += &format!("\n{}", value);
-                first = false;
-            } else {
-                text += &format!(",\n{}", value);
-            }
-        }
-        text += &format!("\n) = {}", self.evaluate(context));
-        ui.label(text);
-        egui::CollapsingHeader::new("Children:")
+        let text = format!("Product({:.3})", self.evaluate(context));
+        egui::CollapsingHeader::new(text)
             .default_open(false)
             .show(ui, |ui| {
                 for child in &self.children {
@@ -142,23 +130,13 @@ impl<Context> Appraisal<Context> for WeightedSum<Context> {
 
     #[cfg(feature = "egui")]
     fn render(&self, context: &Context, ui: &mut egui::Ui) {
-        let mut text = "WeightedSum(".to_string();
-        let mut first = true;
-        for (weight, child) in &self.children {
-            let value = child.evaluate(context);
-            if first {
-                text += &format!("\n{} * {}", weight, value);
-                first = false;
-            } else {
-                text += &format!(",\n{} * {}", weight, value);
-            }
-        }
-        text += &format!("\n) = {}", self.evaluate(context));
-        ui.label(text);
-        egui::CollapsingHeader::new("Children:")
+        let normalize = if self.normalize { ", normalized" } else { "" };
+        let text = format!("WeightedSum({:.3}{})", self.evaluate(context), normalize);
+        egui::CollapsingHeader::new(text)
             .default_open(false)
             .show(ui, |ui| {
-                for (_, child) in &self.children {
+                for (weight, child) in &self.children {
+                    ui.label(format!("Weight: {}", weight));
                     child.render(context, ui);
                 }
             });
@@ -205,7 +183,7 @@ where
 
     #[cfg(feature = "egui")]
     fn render(&self, context: &Context, ui: &mut egui::Ui) {
-        ui.label(format!("Lambda(ctx) = {}", self.evaluate(context)));
+        ui.label(format!("Lambda(ctx) = {:.3}", self.evaluate(context)));
     }
 }
 
@@ -232,7 +210,7 @@ where
     F: Fn(f64) -> f64,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Curve({})", self.child)
+        write!(f, "Curve({:.3})", self.child)
     }
 }
 
@@ -246,16 +224,15 @@ where
 
     #[cfg(feature = "egui")]
     fn render(&self, context: &Context, ui: &mut egui::Ui) {
-        ui.label(format!(
-            "Curve({}) = {}",
+        egui::CollapsingHeader::new(format!(
+            "Curve({:.3}) = {:.3}",
             self.child.evaluate(context),
             self.evaluate(context)
-        ));
-        egui::CollapsingHeader::new("Inner:")
-            .default_open(false)
-            .show(ui, |ui| {
-                self.child.render(context, ui);
-            });
+        ))
+        .default_open(false)
+        .show(ui, |ui| {
+            self.child.render(context, ui);
+        });
     }
 }
 
