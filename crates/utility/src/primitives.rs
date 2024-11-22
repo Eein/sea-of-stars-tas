@@ -29,7 +29,7 @@ impl<Context> Appraisal<Context> for Value {
 
     #[cfg(feature = "egui")]
     fn render(&self, _context: &Context, ui: &mut egui::Ui) {
-        ui.label(format!("Value({})", self.value));
+        ui.label(format!("Value = {}", self.value));
     }
 }
 
@@ -205,7 +205,7 @@ where
 
     #[cfg(feature = "egui")]
     fn render(&self, context: &Context, ui: &mut egui::Ui) {
-        ui.label(format!("Lambda({})", self.evaluate(context)));
+        ui.label(format!("Lambda(ctx) = {}", self.evaluate(context)));
     }
 }
 
