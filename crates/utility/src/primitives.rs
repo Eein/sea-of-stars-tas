@@ -1,6 +1,8 @@
 /* An Appraisal is a part of a Utility calculation, that can be evaluated. */
 pub trait Appraisal<Context>: std::fmt::Display {
     fn evaluate(&self, context: &Context) -> f64;
+    #[cfg(feature = "egui")]
+    fn render(&self, context: &Context, ui: &mut egui::Ui);
 }
 
 /* A Value is a constant that can be used as part of a Utility calculation. */
@@ -23,6 +25,11 @@ impl std::fmt::Display for Value {
 impl<Context> Appraisal<Context> for Value {
     fn evaluate(&self, _context: &Context) -> f64 {
         self.value
+    }
+
+    #[cfg(feature = "egui")]
+    fn render(&self, _context: &Context, ui: &mut egui::Ui) {
+        ui.label(format!("Value({})", self.value));
     }
 }
 
@@ -60,6 +67,30 @@ impl<Context> Appraisal<Context> for Product<Context> {
             value *= child.evaluate(context);
         }
         value
+    }
+
+    #[cfg(feature = "egui")]
+    fn render(&self, context: &Context, ui: &mut egui::Ui) {
+        let mut text = "Product(".to_string();
+        let mut first = true;
+        for child in &self.children {
+            let value = child.evaluate(context);
+            if first {
+                text += &format!("\n{}", value);
+                first = false;
+            } else {
+                text += &format!(",\n{}", value);
+            }
+        }
+        text += &format!("\n) = {}", self.evaluate(context));
+        ui.label(text);
+        egui::CollapsingHeader::new("Children:")
+            .default_open(false)
+            .show(ui, |ui| {
+                for child in &self.children {
+                    child.render(context, ui);
+                }
+            });
     }
 }
 
@@ -108,6 +139,30 @@ impl<Context> Appraisal<Context> for WeightedSum<Context> {
         }
         sum
     }
+
+    #[cfg(feature = "egui")]
+    fn render(&self, context: &Context, ui: &mut egui::Ui) {
+        let mut text = "WeightedSum(".to_string();
+        let mut first = true;
+        for (weight, child) in &self.children {
+            let value = child.evaluate(context);
+            if first {
+                text += &format!("\n{} * {}", weight, value);
+                first = false;
+            } else {
+                text += &format!(",\n{} * {}", weight, value);
+            }
+        }
+        text += &format!("\n) = {}", self.evaluate(context));
+        ui.label(text);
+        egui::CollapsingHeader::new("Children:")
+            .default_open(false)
+            .show(ui, |ui| {
+                for (_, child) in &self.children {
+                    child.render(context, ui);
+                }
+            });
+    }
 }
 
 /* A Lambda expression that can evaluate or fetch something within the Context. This is a leaf node. */
@@ -147,6 +202,11 @@ where
     fn evaluate(&self, context: &Context) -> f64 {
         (self.func)(context)
     }
+
+    #[cfg(feature = "egui")]
+    fn render(&self, context: &Context, ui: &mut egui::Ui) {
+        ui.label(format!("Lambda({})", self.evaluate(context)));
+    }
 }
 
 /* An expression that can apply to a Utility value. */
@@ -182,6 +242,20 @@ where
 {
     fn evaluate(&self, context: &Context) -> f64 {
         (self.func)(self.child.evaluate(context))
+    }
+
+    #[cfg(feature = "egui")]
+    fn render(&self, context: &Context, ui: &mut egui::Ui) {
+        ui.label(format!(
+            "Curve({}) = {}",
+            self.child.evaluate(context),
+            self.evaluate(context)
+        ));
+        egui::CollapsingHeader::new("Inner:")
+            .default_open(false)
+            .show(ui, |ui| {
+                self.child.render(context, ui);
+            });
     }
 }
 
