@@ -2740,6 +2740,7 @@ dependencies = [
  "sysinfo",
  "toml",
  "toml_edit",
+ "utility",
  "vec2",
  "vec3-rs",
  "winit",

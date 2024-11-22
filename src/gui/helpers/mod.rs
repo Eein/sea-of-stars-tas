@@ -3,11 +3,13 @@ mod inventory_helper;
 mod main_helper;
 mod route_helper_v1;
 mod shop_helper;
+mod utility_helper;
 
 use std::collections::HashMap;
 
 use self::{
     debug_helper::*, inventory_helper::*, main_helper::*, route_helper_v1::*, shop_helper::*,
+    utility_helper::*,
 };
 
 use crate::{game_manager::GameManager, state::GameState};
@@ -24,6 +26,7 @@ impl Default for GuiHelpers {
         helpers.insert(shop_helper::NAME.to_owned(), ShopHelper::create());
         helpers.insert(inventory_helper::NAME.to_owned(), InventoryHelper::create());
         helpers.insert(route_helper_v1::NAME.to_owned(), RouteHelperV1::create());
+        helpers.insert(utility_helper::NAME.to_owned(), UtilityHelper::create());
         Self { helpers }
     }
 }
