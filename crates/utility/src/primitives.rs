@@ -1,5 +1,5 @@
 /* An Appraisal is a part of a Utility calculation, that can be evaluated. */
-pub trait Appraisal<Context> : std::fmt::Display {
+pub trait Appraisal<Context>: std::fmt::Display {
     fn evaluate(&self, context: &Context) -> f64;
 }
 
@@ -10,9 +10,7 @@ pub struct Value {
 
 impl Value {
     pub fn new(value: f64) -> Box<Self> {
-        Box::new(Self {
-            value,
-        })
+        Box::new(Self { value })
     }
 }
 
@@ -35,9 +33,7 @@ pub struct Product<Context> {
 
 impl<Context> Product<Context> {
     pub fn new(children: Vec<Box<dyn Appraisal<Context>>>) -> Box<Self> {
-        Box::new(Self {
-            children,
-        })
+        Box::new(Self { children })
     }
 }
 
@@ -115,12 +111,18 @@ impl<Context> Appraisal<Context> for WeightedSum<Context> {
 }
 
 /* A Lambda expression that can evaluate or fetch something within the Context. This is a leaf node. */
-pub struct Lambda<F, Context> where F: Fn(&Context) -> f64 {
+pub struct Lambda<F, Context>
+where
+    F: Fn(&Context) -> f64,
+{
     func: F,
     marker: std::marker::PhantomData<Context>,
 }
 
-impl<F, Context> Lambda<F, Context> where F: Fn(&Context) -> f64 {
+impl<F, Context> Lambda<F, Context>
+where
+    F: Fn(&Context) -> f64,
+{
     pub fn new(func: F) -> Box<Self> {
         Box::new(Self {
             func,
@@ -129,50 +131,59 @@ impl<F, Context> Lambda<F, Context> where F: Fn(&Context) -> f64 {
     }
 }
 
-impl<F, Context> std::fmt::Display for Lambda<F, Context> where F: Fn(&Context) -> f64 {
+impl<F, Context> std::fmt::Display for Lambda<F, Context>
+where
+    F: Fn(&Context) -> f64,
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Lambda")
     }
 }
 
-impl<Context, F> Appraisal<Context> for Lambda<F, Context> where F: Fn(&Context) -> f64 {
+impl<Context, F> Appraisal<Context> for Lambda<F, Context>
+where
+    F: Fn(&Context) -> f64,
+{
     fn evaluate(&self, context: &Context) -> f64 {
         (self.func)(context)
     }
 }
 
 /* An expression that can apply to a Utility value. */
-pub struct Curve<F, Context> where F: Fn(f64) -> f64 {
+pub struct Curve<F, Context>
+where
+    F: Fn(f64) -> f64,
+{
     child: Box<dyn Appraisal<Context>>,
     func: F,
 }
 
-impl<Context, F> Curve<F, Context> where F: Fn(f64) -> f64 {
+impl<Context, F> Curve<F, Context>
+where
+    F: Fn(f64) -> f64,
+{
     pub fn new(func: F, child: Box<dyn Appraisal<Context>>) -> Box<Self> {
-        Box::new(Self {
-            child,
-            func,
-        })
+        Box::new(Self { child, func })
     }
 }
 
-impl<F, Context> std::fmt::Display for Curve<F, Context> where F: Fn(f64) -> f64 {
+impl<F, Context> std::fmt::Display for Curve<F, Context>
+where
+    F: Fn(f64) -> f64,
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Curve({})", self.child)
     }
 }
 
-impl<Context, F> Appraisal<Context> for Curve<F, Context> where F: Fn(f64) -> f64 {
+impl<Context, F> Appraisal<Context> for Curve<F, Context>
+where
+    F: Fn(f64) -> f64,
+{
     fn evaluate(&self, context: &Context) -> f64 {
         (self.func)(self.child.evaluate(context))
     }
 }
-
-
-
-
-
-
 
 #[cfg(test)]
 mod tests {
@@ -187,17 +198,17 @@ mod tests {
         }
 
         // Declare a number of different contexts (these are equivalent to game states)
-        let ctx1 = TestCtx{
+        let ctx1 = TestCtx {
             value1: 1.0,
             value2: 1.0,
             value3: 1.0,
         };
-        let ctx2 = TestCtx{
+        let ctx2 = TestCtx {
             value1: 1.0,
             value2: 2.0,
             value3: 3.0,
         };
-        let ctx3 = TestCtx{
+        let ctx3 = TestCtx {
             value1: 4.0,
             value2: 2.0,
             value3: 2.0,
@@ -206,21 +217,23 @@ mod tests {
         // Declare a number of different Appraisals (these are equivalent to utility formulas for actions)
 
         // Appraisal 1: A combination of weighted sums, products, values and lambdas
-        let app1 = WeightedSum::<TestCtx>::new(vec![
-            (1.0, Value::new(5.0)),
-            (2.0, Lambda::<_, TestCtx>::new(|ctx| ctx.value1)),
-            (3.0, Product::<TestCtx>::new(
-                vec![
-                    Lambda::<_, TestCtx>::new(|ctx| ctx.value2),
-                    Lambda::<_, TestCtx>::new(|ctx| ctx.value3),
-                ],
-            )),
-        ], false);
-        // Appraisal 2: A curve function applied to a lambda
-        let app2 = Curve::<_, TestCtx>::new(
-            |val| 5.0 - val,
-            Lambda::<_, TestCtx>::new(|ctx| ctx.value3),
+        let app1 = WeightedSum::<TestCtx>::new(
+            vec![
+                (1.0, Value::new(5.0)),
+                (2.0, Lambda::<_, TestCtx>::new(|ctx| ctx.value1)),
+                (
+                    3.0,
+                    Product::<TestCtx>::new(vec![
+                        Lambda::<_, TestCtx>::new(|ctx| ctx.value2),
+                        Lambda::<_, TestCtx>::new(|ctx| ctx.value3),
+                    ]),
+                ),
+            ],
+            false,
         );
+        // Appraisal 2: A curve function applied to a lambda
+        let app2 =
+            Curve::<_, TestCtx>::new(|val| 5.0 - val, Lambda::<_, TestCtx>::new(|ctx| ctx.value3));
 
         // Evaluate the different utility formulas with different contexts
         assert_eq!(app1.evaluate(&ctx1), 10.0);
@@ -244,28 +257,28 @@ mod tests {
         }
 
         // Declare a number of different contexts (these are equivalent to game states/targets)
-        let ctx1 = GameCtx{
+        let ctx1 = GameCtx {
             attack_power: 25.0,
             enemy_cur_health: 65.0,
             enemy_max_health: 100.0,
             enemy_threat: 1.0,
         };
         // Same enemy, more powerful attack
-        let ctx2 = GameCtx{
+        let ctx2 = GameCtx {
             attack_power: 60.0,
             enemy_cur_health: 65.0,
             enemy_max_health: 100.0,
             enemy_threat: 1.0,
         };
         // Same attack, less dangerous enemy
-        let ctx3 = GameCtx{
+        let ctx3 = GameCtx {
             attack_power: 25.0,
             enemy_cur_health: 65.0,
             enemy_max_health: 100.0,
             enemy_threat: 0.1,
         };
         // Same attack, enemy closer to death
-        let ctx4 = GameCtx{
+        let ctx4 = GameCtx {
             attack_power: 25.0,
             enemy_cur_health: 10.0,
             enemy_max_health: 100.0,
@@ -275,21 +288,19 @@ mod tests {
         // Declare an attack evaluation Appraisal
 
         // Appraisal 1: A combination of weighted sums, products, values and lambdas
-        let app1 = Product::<GameCtx>::new(
-            vec![
-                // The higher threat enemy should get higher priority
-                Lambda::<_, GameCtx>::new(|ctx| ctx.enemy_threat),
-                // The more powerful attack should get higher priority
-                Lambda::<_, GameCtx>::new(|ctx| ctx.attack_power),
-                // Attacks against enemies with low health should get higher priority
-                Curve::<_, GameCtx>::new(
-                    // Invert curve so that low % has higher priority
-                    |value| 1.0 - value,
-                    // Calculate how much life the enemy has in %
-                    Lambda::<_,GameCtx>::new(|ctx| ctx.enemy_cur_health / ctx.enemy_max_health),
-                ),
-            ],
-        );
+        let app1 = Product::<GameCtx>::new(vec![
+            // The higher threat enemy should get higher priority
+            Lambda::<_, GameCtx>::new(|ctx| ctx.enemy_threat),
+            // The more powerful attack should get higher priority
+            Lambda::<_, GameCtx>::new(|ctx| ctx.attack_power),
+            // Attacks against enemies with low health should get higher priority
+            Curve::<_, GameCtx>::new(
+                // Invert curve so that low % has higher priority
+                |value| 1.0 - value,
+                // Calculate how much life the enemy has in %
+                Lambda::<_, GameCtx>::new(|ctx| ctx.enemy_cur_health / ctx.enemy_max_health),
+            ),
+        ]);
 
         // Evaluate the different utility formulas with different contexts
         // In this example here, each context represents a particular attack + enemy combination
