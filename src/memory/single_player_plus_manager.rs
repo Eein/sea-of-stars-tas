@@ -30,6 +30,7 @@ pub struct Player {
 
 #[derive(Default, Debug)]
 pub struct SinglePlayerPlusManagerData {
+    pub interacting_characters: Vec<PlayerPartyCharacter>,
     pub players: UnityList<Player>,
 }
 
@@ -54,12 +55,33 @@ impl MemoryManagerUpdate for SinglePlayerPlusManagerData {
         let memory_context = MemoryContext::create(ctx, manager)?;
 
         self.update_players(&memory_context)?;
+        self.update_interacting_characters(&memory_context)?;
 
         Ok(())
     }
 }
 
 impl SinglePlayerPlusManagerData {
+    pub fn update_interacting_characters(
+        &mut self,
+        _memory_context: &MemoryContext,
+    ) -> Result<(), MemoryError> {
+        let mut interacting_characters = vec![];
+        for player in &self.players.items {
+            match player.state.as_str() {
+                "SinglePlayerPlusInteractState" => {
+                    interacting_characters.push(player.character.clone())
+                }
+                "PressurePlateSinglePlayerPlusInteractState" => {
+                    interacting_characters.push(player.character.clone())
+                }
+                _ => (),
+            }
+        }
+        self.interacting_characters = interacting_characters;
+
+        Ok(())
+    }
     pub fn update_players(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
         if let Ok(players) = memory_context.follow_fields::<u64>(&["allPlayers"]) {
             let players = UnityList::<Player>::read(memory_context.process, players)?;
