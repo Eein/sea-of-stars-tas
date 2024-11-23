@@ -73,7 +73,7 @@ impl<Context> Appraisal<Context> for Product<Context> {
     fn render(&self, context: &Context, ui: &mut egui::Ui) {
         let text = format!("Product({:.3})", self.evaluate(context));
         egui::CollapsingHeader::new(text)
-            .default_open(false)
+            .default_open(true)
             .show(ui, |ui| {
                 for child in &self.children {
                     child.render(context, ui);
@@ -133,7 +133,7 @@ impl<Context> Appraisal<Context> for WeightedSum<Context> {
         let normalize = if self.normalize { ", normalized" } else { "" };
         let text = format!("WeightedSum({:.3}{})", self.evaluate(context), normalize);
         egui::CollapsingHeader::new(text)
-            .default_open(false)
+            .default_open(true)
             .show(ui, |ui| {
                 for (weight, child) in &self.children {
                     ui.label(format!("Weight: {}", weight));
@@ -229,7 +229,7 @@ where
             self.child.evaluate(context),
             self.evaluate(context)
         ))
-        .default_open(false)
+        .default_open(true)
         .show(ui, |ui| {
             self.child.render(context, ui);
         });

@@ -46,13 +46,15 @@ impl GuiHelper for UtilityHelper {
             true,
         );
 
-        for enemy in &cmd.enemies.items {
+        for (i, enemy) in cmd.enemies.items.iter().enumerate() {
             let ctx = GameContext {
                 combo_points: cmd.combo_points,
                 enemy_cur_hp: enemy.current_hp,
                 enemy_max_hp: enemy.max_hp,
             };
-            appraisal.render(&ctx, ui);
+            ui.push_id(i, |ui| {
+                appraisal.render(&ctx, ui);
+            });
         }
     }
 }
