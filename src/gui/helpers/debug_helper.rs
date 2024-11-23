@@ -128,6 +128,17 @@ impl GuiHelper for DebugHelper {
 
         ui.separator();
         ui.label("SPP Manager");
+        ui.label("Interacting Characters");
+        let interacting_characters = sppmd.interacting_characters.clone();
+        if interacting_characters.is_empty() {
+            ui.label("None");
+        } else {
+            for player in sppmd.interacting_characters.clone() {
+                ui.label(format!("{:?}", player));
+            }
+        }
+
+        ui.separator();
         for (idx, player) in sppmd.players.items.iter().enumerate() {
             ui.label(format!("Name: {}", player.name));
             ui.label(format!("Character: {:?}", player.character));
