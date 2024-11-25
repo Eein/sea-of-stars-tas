@@ -63,6 +63,7 @@ impl Display for Move {
 pub struct MovePath {
     name: String,
     coords: Vec<Move>,
+    dir: Option<Vector3<f32>>,
     step: usize,
     btn: Option<ButtonPress>,
     timer: f64,
@@ -89,12 +90,29 @@ impl MovePath {
         Self {
             name,
             coords,
+            dir: None,
             step: 0,
             timer: 0.0,
             btn: None,
             player,
             semaphore: vec![],
             sent_signal: false,
+        }
+    }
+
+    // Checks if we've overshot the movement target by comparing our directional vector
+    // to the one originally calculated at the start of the Move segment.
+    fn check_overshoot(&mut self, player: &Vector3<f32>, target: &Vector3<f32>) -> bool {
+        let v1 = *target - *player;
+        if let Some(v2) = &self.dir {
+            let dot_product = v1.dot(v2);
+            // The dot product is > 0 when the vectors are pointing in the same direction,
+            // and < 0 when they are pointing more than 90 degrees away from each other.
+            dot_product < 0.0
+        } else {
+            // First iteration on this segment, assign dir to the vector between the player and target.
+            self.dir = Some(v1);
+            false
         }
     }
 
@@ -249,43 +267,53 @@ impl MovePath {
             Move::Towards(target, anchor, mash) => {
                 let target = Vector3::new(target[0], target[1], target[2]);
                 let anchor = Vector3::new(anchor[0], anchor[1], anchor[2]);
-                let joy_dir = MovePath::get_dir(player, &anchor, false);
-                gamepad.set_ljoy(joy_dir);
                 if mash {
                     self.mash(gamepad, delta);
                 }
-                if MovePath::is_close(player, &target, Some(1.0)) {
+                if MovePath::is_close(player, &target, Some(1.0))
+                    || self.check_overshoot(player, &target)
+                {
                     gamepad.release_all();
                     self.btn = None;
                     self.step += 1;
+                    self.dir = None;
+                } else {
+                    let joy_dir = MovePath::get_dir(player, &anchor, false);
+                    gamepad.set_ljoy(joy_dir);
                 }
             }
             // Move towards the target coordinate until it's reached
             Move::To(x, y, z) => {
                 let target = Vector3::new(x, y, z);
-                let joy_dir = MovePath::get_dir(player, &target, false);
-                gamepad.set_ljoy(joy_dir);
-                if MovePath::is_close(player, &target, None) {
+                if MovePath::is_close(player, &target, None)
+                    || self.check_overshoot(player, &target)
+                {
                     self.step += 1;
+                    self.dir = None;
+                } else {
+                    let joy_dir = MovePath::get_dir(player, &target, false);
+                    gamepad.set_ljoy(joy_dir);
                 }
             }
             // Climb towards the target coordinate until it's reached (mash to get on wall)
             Move::Climb(x, y, z) => {
                 let target = Vector3::new(x, y, z);
-                let joy_dir = MovePath::get_dir(player, &target, true);
-                gamepad.set_ljoy(joy_dir);
                 self.mash(gamepad, delta);
-                if MovePath::is_close(player, &target, None) {
+                if MovePath::is_close(player, &target, None)
+                    || self.check_overshoot(player, &target)
+                {
                     gamepad.release_all();
                     self.btn = None;
                     self.step += 1;
+                    self.dir = None;
+                } else {
+                    let joy_dir = MovePath::get_dir(player, &target, true);
+                    gamepad.set_ljoy(joy_dir);
                 }
             }
             // Move towards the target while mashing
             Move::Interact(x, y, z) => {
                 let target = Vector3::new(x, y, z);
-                let joy_dir = MovePath::get_dir(player, &target, false);
-                gamepad.set_ljoy(joy_dir);
                 // If we are close to target, stop mashing to prevent unintended jumps
                 const INTERACT_PRECISION: f64 = 1.0;
                 if !MovePath::is_close(player, &target, Some(INTERACT_PRECISION)) {
@@ -294,10 +322,16 @@ impl MovePath {
                     gamepad.release(&SosAction::Confirm);
                 }
                 // If we are even closer, proceed.
-                if MovePath::is_close(player, &target, None) {
+                if MovePath::is_close(player, &target, None)
+                    || self.check_overshoot(player, &target)
+                {
                     gamepad.release_all();
                     self.btn = None;
                     self.step += 1;
+                    self.dir = None;
+                } else {
+                    let joy_dir = MovePath::get_dir(player, &target, false);
+                    gamepad.set_ljoy(joy_dir);
                 }
             }
             // Hold still for a period of time
@@ -313,25 +347,35 @@ impl MovePath {
             Move::ToWorld(x, y, z) => {
                 let target = Vector3::new(x, y, z);
                 let world_pos = &sppmd.players.items[self.player].position;
-                let joy_dir = MovePath::get_dir(world_pos, &target, false);
-                gamepad.set_ljoy(joy_dir);
-                if MovePath::is_close(world_pos, &target, None) {
+                if MovePath::is_close(world_pos, &target, None)
+                    || self.check_overshoot(player, &target)
+                {
                     self.step += 1;
+                    self.dir = None;
+                } else {
+                    let joy_dir = MovePath::get_dir(world_pos, &target, false);
+                    gamepad.set_ljoy(joy_dir);
                 }
             }
             Move::HoldDir(dir, target) => {
                 gamepad.set_ljoy(dir);
                 let target = Vector3::new(target[0], target[1], target[2]);
-                if MovePath::is_close(player, &target, Some(1.0)) {
+                if MovePath::is_close(player, &target, Some(1.0))
+                    || self.check_overshoot(player, &target)
+                {
                     self.step += 1;
+                    self.dir = None;
                 }
             }
             Move::HoldDirWorld(dir, target) => {
                 gamepad.set_ljoy(dir);
                 let target = Vector3::new(target[0], target[1], target[2]);
                 let world_pos = &sppmd.players.items[self.player].position;
-                if MovePath::is_close(world_pos, &target, Some(1.0)) {
+                if MovePath::is_close(world_pos, &target, Some(1.0))
+                    || self.check_overshoot(player, &target)
+                {
                     self.step += 1;
+                    self.dir = None;
                 }
             }
             // Change Time of Day
@@ -493,5 +537,42 @@ impl Node<GameState, GameEvent> for SeqMove {
 
     fn exit(&self, state: &mut GameState) {
         state.release_all();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::MovePath;
+    use vec3_rs::Vector3;
+
+    #[test]
+    fn overshoot_test() -> std::io::Result<()> {
+        // Set up dummy move path (coords are not used)
+        let mut m1 = MovePath::new("test".to_owned(), 0, vec![]);
+        // Set up target position and initial player position
+        let target_pos = Vector3::<f32>::new(100.0, 10.0, 0.0);
+        let mut player_pos = Vector3::<f32>::new(0.0, 0.0, 0.0);
+        // Initially, dir should be uninitialized
+        assert!(m1.dir.is_none());
+        assert!(!m1.check_overshoot(&player_pos, &target_pos));
+        // After checking overshoot, dir should be initialized to Some(target - player)
+        assert!(m1.dir.is_some());
+        if let Some(dir) = &m1.dir {
+            // Since player starts at (0,0,0), dir should be target
+            assert_eq!(dir, &target_pos);
+        }
+        // Move the player and test
+        player_pos = Vector3::<f32>::new(50.0, 5.0, 0.0);
+        assert!(!m1.check_overshoot(&player_pos, &target_pos));
+        // Move the player and test
+        player_pos = Vector3::<f32>::new(10.0, 50.0, 0.0);
+        assert!(!m1.check_overshoot(&player_pos, &target_pos));
+        // Move the player and test
+        player_pos = Vector3::<f32>::new(0.0, -5.0, 30.0);
+        assert!(!m1.check_overshoot(&player_pos, &target_pos));
+        // Try to move the player "behind" the target
+        player_pos = Vector3::<f32>::new(110.0, 20.0, 4.0);
+        assert!(m1.check_overshoot(&player_pos, &target_pos));
+        Ok(())
     }
 }
