@@ -1,3 +1,5 @@
+use vec3_rs::Vector3;
+
 use super::{GuiHelper, MovementGui};
 use crate::{game_manager::GameManager, seq::movement::Move, state::GameState};
 
@@ -45,8 +47,12 @@ impl GuiHelper for RouteHelperV1 {
             ui.separator();
         }
 
-        let world_pos = sppmd.players.items[0].position;
-        let pos = sppmd.players.items[0].gameobject_position;
+        let world_pos = sppmd.players.items[0]
+            .position
+            .unwrap_or(Vector3::new(0.0, 0.0, 0.0));
+        let pos = sppmd.players.items[0]
+            .gameobject_position
+            .unwrap_or(Vector3::new(0.0, 0.0, 0.0));
 
         ui.horizontal(|ui| {
             if ui.button("To").clicked() {

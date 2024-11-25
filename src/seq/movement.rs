@@ -5,7 +5,7 @@ use crate::seq::button::ButtonPress;
 use crate::state::{GameEvent, GameState};
 
 use joystick::prelude::*;
-use log::info;
+use log::{info, warn};
 use seq::prelude::*;
 
 use vec2;
@@ -108,6 +108,9 @@ impl MovePath {
             let dot_product = v1.dot(v2);
             // The dot product is > 0 when the vectors are pointing in the same direction,
             // and < 0 when they are pointing more than 90 degrees away from each other.
+            if dot_product < 0.0 {
+                warn!("Overshoot! {}", self.coords[self.step]);
+            }
             dot_product < 0.0
         } else {
             // First iteration on this segment, assign dir to the vector between the player and target.
@@ -270,68 +273,73 @@ impl MovePath {
                 if mash {
                     self.mash(gamepad, delta);
                 }
-                if MovePath::is_close(player, &target, Some(1.0))
-                    || self.check_overshoot(player, &target)
-                {
-                    gamepad.release_all();
-                    self.btn = None;
-                    self.step += 1;
-                    self.dir = None;
-                } else {
-                    let joy_dir = MovePath::get_dir(player, &anchor, false);
-                    gamepad.set_ljoy(joy_dir);
+                if let Some(player) = player {
+                    if MovePath::is_close(player, &target, Some(1.0)) {
+                        gamepad.release_all();
+                        self.btn = None;
+                        self.step += 1;
+                    } else {
+                        let joy_dir = MovePath::get_dir(player, &anchor, false);
+                        gamepad.set_ljoy(joy_dir);
+                    }
                 }
             }
             // Move towards the target coordinate until it's reached
             Move::To(x, y, z) => {
                 let target = Vector3::new(x, y, z);
-                if MovePath::is_close(player, &target, None)
-                    || self.check_overshoot(player, &target)
-                {
-                    self.step += 1;
-                    self.dir = None;
-                } else {
-                    let joy_dir = MovePath::get_dir(player, &target, false);
-                    gamepad.set_ljoy(joy_dir);
+                if let Some(player) = player {
+                    if MovePath::is_close(player, &target, None)
+                        || self.check_overshoot(player, &target)
+                    {
+                        self.step += 1;
+                        self.dir = None;
+                    } else {
+                        let joy_dir = MovePath::get_dir(player, &target, false);
+                        gamepad.set_ljoy(joy_dir);
+                    }
                 }
             }
             // Climb towards the target coordinate until it's reached (mash to get on wall)
             Move::Climb(x, y, z) => {
                 let target = Vector3::new(x, y, z);
                 self.mash(gamepad, delta);
-                if MovePath::is_close(player, &target, None)
-                    || self.check_overshoot(player, &target)
-                {
-                    gamepad.release_all();
-                    self.btn = None;
-                    self.step += 1;
-                    self.dir = None;
-                } else {
-                    let joy_dir = MovePath::get_dir(player, &target, true);
-                    gamepad.set_ljoy(joy_dir);
+                if let Some(player) = player {
+                    if MovePath::is_close(player, &target, None)
+                        || self.check_overshoot(player, &target)
+                    {
+                        gamepad.release_all();
+                        self.btn = None;
+                        self.step += 1;
+                        self.dir = None;
+                    } else {
+                        let joy_dir = MovePath::get_dir(player, &target, true);
+                        gamepad.set_ljoy(joy_dir);
+                    }
                 }
             }
             // Move towards the target while mashing
             Move::Interact(x, y, z) => {
                 let target = Vector3::new(x, y, z);
                 // If we are close to target, stop mashing to prevent unintended jumps
-                const INTERACT_PRECISION: f64 = 1.0;
-                if !MovePath::is_close(player, &target, Some(INTERACT_PRECISION)) {
-                    self.mash(gamepad, delta);
-                } else {
-                    gamepad.release(&SosAction::Confirm);
-                }
-                // If we are even closer, proceed.
-                if MovePath::is_close(player, &target, None)
-                    || self.check_overshoot(player, &target)
-                {
-                    gamepad.release_all();
-                    self.btn = None;
-                    self.step += 1;
-                    self.dir = None;
-                } else {
-                    let joy_dir = MovePath::get_dir(player, &target, false);
-                    gamepad.set_ljoy(joy_dir);
+                if let Some(player) = player {
+                    const INTERACT_PRECISION: f64 = 1.0;
+                    if !MovePath::is_close(player, &target, Some(INTERACT_PRECISION)) {
+                        self.mash(gamepad, delta);
+                    } else {
+                        gamepad.release(&SosAction::Confirm);
+                    }
+                    // If we are even closer, proceed.
+                    if MovePath::is_close(player, &target, None)
+                        || self.check_overshoot(player, &target)
+                    {
+                        gamepad.release_all();
+                        self.btn = None;
+                        self.step += 1;
+                        self.dir = None;
+                    } else {
+                        let joy_dir = MovePath::get_dir(player, &target, false);
+                        gamepad.set_ljoy(joy_dir);
+                    }
                 }
             }
             // Hold still for a period of time
@@ -347,35 +355,35 @@ impl MovePath {
             Move::ToWorld(x, y, z) => {
                 let target = Vector3::new(x, y, z);
                 let world_pos = &sppmd.players.items[self.player].position;
-                if MovePath::is_close(world_pos, &target, None)
-                    || self.check_overshoot(player, &target)
-                {
-                    self.step += 1;
-                    self.dir = None;
-                } else {
-                    let joy_dir = MovePath::get_dir(world_pos, &target, false);
-                    gamepad.set_ljoy(joy_dir);
+                if let Some(world_pos) = world_pos {
+                    if MovePath::is_close(world_pos, &target, None)
+                        || self.check_overshoot(world_pos, &target)
+                    {
+                        self.step += 1;
+                        self.dir = None;
+                    } else {
+                        let joy_dir = MovePath::get_dir(world_pos, &target, false);
+                        gamepad.set_ljoy(joy_dir);
+                    }
                 }
             }
             Move::HoldDir(dir, target) => {
                 gamepad.set_ljoy(dir);
                 let target = Vector3::new(target[0], target[1], target[2]);
-                if MovePath::is_close(player, &target, Some(1.0))
-                    || self.check_overshoot(player, &target)
-                {
-                    self.step += 1;
-                    self.dir = None;
+                if let Some(player) = player {
+                    if MovePath::is_close(player, &target, Some(1.0)) {
+                        self.step += 1;
+                    }
                 }
             }
             Move::HoldDirWorld(dir, target) => {
                 gamepad.set_ljoy(dir);
                 let target = Vector3::new(target[0], target[1], target[2]);
                 let world_pos = &sppmd.players.items[self.player].position;
-                if MovePath::is_close(world_pos, &target, Some(1.0))
-                    || self.check_overshoot(player, &target)
-                {
-                    self.step += 1;
-                    self.dir = None;
+                if let Some(world_pos) = world_pos {
+                    if MovePath::is_close(world_pos, &target, Some(1.0)) {
+                        self.step += 1;
+                    }
                 }
             }
             // Change Time of Day
@@ -514,7 +522,11 @@ impl Node<GameState, GameEvent> for SeqMove {
         let mut sync_signals: Vec<(usize, Vec<usize>)> = Vec::new();
         for (player, path) in self.paths.iter_mut().enumerate() {
             let done = match path.execute(state, delta) {
-                PathStatus::Done => true,
+                // Signal all paths on done, in case we skipped ending AwaitSync with Leave
+                PathStatus::Done => {
+                    sync_signals.push((player, vec![0, 1, 2]));
+                    true
+                }
                 PathStatus::Sync(list) => {
                     sync_signals.push((player, list));
                     false

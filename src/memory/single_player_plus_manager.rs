@@ -15,8 +15,8 @@ pub struct Player {
     pub name: String,
     pub state: String,
     pub first_player: bool,
-    pub position: Vector3<f32>,
-    pub gameobject_position: Vector3<f32>,
+    pub position: Option<Vector3<f32>>,
+    pub gameobject_position: Option<Vector3<f32>>,
     pub index: i32,
     pub can_join_leave: bool,
     pub playing: bool,
@@ -116,9 +116,9 @@ impl UnityItem for Player {
             let x = process.read_pointer::<f32>(position_ptr)?;
             let y = process.read_pointer::<f32>(position_ptr + 0x4)?;
             let z = process.read_pointer::<f32>(position_ptr + 0x8)?;
-            Vector3::new(x, y, z)
+            Some(Vector3::new(x, y, z))
         } else {
-            Vector3::new(0.0, 0.0, 0.0)
+            None
         };
 
         let gameobject_position = if let Ok(gameobject_ptr) =
@@ -127,9 +127,9 @@ impl UnityItem for Player {
             let x = process.read_pointer::<f32>(gameobject_ptr)?;
             let y = process.read_pointer::<f32>(gameobject_ptr + 0x4)?;
             let z = process.read_pointer::<f32>(gameobject_ptr + 0x8)?;
-            Vector3::new(x, y, z)
+            Some(Vector3::new(x, y, z))
         } else {
-            Vector3::new(0.0, 0.0, 0.0)
+            None
         };
         let index = process.read_pointer_path::<i32>(item_ptr, &[0x80])?;
 
