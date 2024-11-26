@@ -54,6 +54,10 @@ impl GameManager {
         }
     }
 
+    pub fn start(&mut self, context: &mut GameState) {
+        self.sequencer.start(context);
+    }
+
     pub fn pause(&mut self, paused: bool) {
         self.paused = paused;
     }

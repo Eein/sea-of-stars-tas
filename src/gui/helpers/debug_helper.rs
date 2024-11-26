@@ -33,6 +33,9 @@ impl MovementGui {
     pub fn draw(&mut self, game_state: &GameState, ui: &mut egui::Ui) {
         let sppmd = &game_state.memory_managers.single_player_plus_manager.data;
         let bmd = &game_state.memory_managers.boat_manager.data;
+        if sppmd.players.items.is_empty() {
+            return;
+        }
 
         let gameobject_position = sppmd.players.items[0]
             .gameobject_position

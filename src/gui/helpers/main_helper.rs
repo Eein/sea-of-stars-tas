@@ -6,6 +6,9 @@ use crate::assets::ASSETS;
 use crate::memory::combat_manager::CombatDamageType;
 use crate::memory::level_up_manager::LevelUpUpgrade;
 
+use delta::Timer;
+use log::info;
+
 pub const NAME: &str = "Main Helper";
 
 #[derive(Debug)]
@@ -13,6 +16,8 @@ pub struct MainHelper {
     checkpoint: Option<String>,
     save_slot: usize,
     auto_save_present: bool,
+    timer: Timer,
+    countdown: Option<f64>,
 }
 
 fn damage_type_image(ui: &mut egui::Ui, damage_type: &CombatDamageType) {
@@ -45,13 +50,32 @@ fn stat_image(ui: &mut egui::Ui, upgrade: &LevelUpUpgrade, selected: bool) -> eg
     }
 }
 
+const COUNTDOWN_TIMEOUT: f64 = 5.0;
+
 impl MainHelper {
     pub fn create() -> Box<Self> {
         Box::new(Self {
             checkpoint: None,
             save_slot: 1,
             auto_save_present: true,
+            timer: delta::Timer::new(),
+            countdown: None,
         })
+    }
+
+    fn handle_countdown(&mut self) -> bool {
+        let dt = self.timer.mark_secs();
+        if let Some(timer) = self.countdown.as_mut() {
+            if timer.floor() != (*timer - dt).floor() {
+                info!("Counting down to TAS start: {}", timer.floor());
+            }
+            *timer -= dt;
+            if *timer <= 0.0 {
+                self.countdown = None;
+                return true;
+            }
+        }
+        false
     }
 
     fn draw_title(&self, game_state: &GameState, ui: &mut egui::Ui) {
@@ -298,10 +322,17 @@ impl GuiHelper for MainHelper {
     ) {
         let mut running = false;
         if let Some(gm) = game_manager {
+            let countdown_finished = self.handle_countdown();
+            if countdown_finished {
+                gm.start(game_state);
+            }
+
             running = gm.is_running();
         }
 
-        if !running {
+        if let Some(countdown) = self.countdown {
+            ui.label(format!("Counting down... {:.3}", countdown));
+        } else if !running {
             ui.label("TAS Option".to_string());
 
             ui.checkbox(&mut game_state.config.konami_code, "Konami Code");
@@ -335,7 +366,7 @@ impl GuiHelper for MainHelper {
                 });
 
             if let Some(checkpoint) = &self.checkpoint {
-                if !running && checkpoint != "New Game" {
+                if checkpoint != "New Game" {
                     egui::ComboBox::from_label("Save slot")
                         .selected_text(self.save_slot.to_string())
                         .show_ui(ui, |ui| {
@@ -349,6 +380,7 @@ impl GuiHelper for MainHelper {
                             self.save_slot,
                             self.auto_save_present,
                         ));
+                        self.countdown = Some(COUNTDOWN_TIMEOUT);
                     }
 
                     ui.separator();
@@ -364,6 +396,7 @@ impl GuiHelper for MainHelper {
                     gm.advance_to_checkpoint(game_state, checkpoint);
                 }
                 *game_manager = Some(gm);
+                self.countdown = Some(COUNTDOWN_TIMEOUT);
             }
         }
 

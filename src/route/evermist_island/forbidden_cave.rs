@@ -6,13 +6,63 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
     SeqList::create(
         "Forbidden Cave",
         vec![
+            /* TODO: WIP Coop-routing
+            SeqMove::create(
+                "Open door",
+                vec![
+                    Move::To(14.000, 1.002, 14.367),
+                    Move::To(14.000, 1.002, 17.396),
+                    Move::Confirm, // Open door to cave
+                ],
+            ),
+            SeqMove::create_parallel(
+                "Caverns",
+                vec![
+                    Move::Join,
+                    Move::SpeedBoost(vec![0, 1]),
+                    Move::HoldDir([0.0, 1.0], [14.05, -0.9979999, 66.074]),
+                    Move::To(13.767, -0.998, 99.172),
+                    Move::To(13.767, -0.998, 118.380),
+                    Move::To(6.529, -0.998, 128.951),
+                    Move::HoldDir([-1.0, 1.0], [-25.0, 5.002, 128.0]),
+                    Move::To(-27.532, 5.002, 129.789),
+                    Move::To(-37.004, 5.002, 129.789),
+                    Move::SpeedBoost(vec![0, 1]),
+                    Move::Interact(-44.481, 5.002, 129.789),
+                ],
+                2,
+            ),
+            SeqMove::create_coop(
+                "Juking",
+                vec![
+                    vec![
+                        Move::Log("Starting juke"),
+                        Move::To(-46.045, 5.002, 131.619),
+                        Move::To(-46.045, 5.002, 136.619),
+                        Move::To(-47.045, 5.002, 136.619),
+                        Move::Interact(-48.045, 6.002, 140.055),
+                        Move::AwaitSync(vec![1]),
+                    ],
+                    vec![
+                        Move::WaitFor(0.1),
+                        Move::To(-49.132, 5.002, 128.443),
+                        Move::To(-54.201, 5.002, 128.443),
+                        Move::To(-57.069, 5.002, 135.847),
+                        Move::Interact(-57.069, 15.002, 139.134),
+                        Move::To(-54.681, 15.002, 140.454),
+                        // TODO: Fails to juke the last snail
+                        Move::Interact(-50.052, 7.002, 140.454),
+                        Move::AwaitSync(vec![0]),
+                    ],
+                ],
+            ),
+             */
             SeqMove::create(
                 "Caverns",
                 vec![
                     Move::To(14.000, 1.002, 14.367),
                     Move::To(14.000, 1.002, 17.396),
                     Move::Confirm, // Open door to cave
-                    Move::To(14.000, 1.002, 17.396),
                     Move::HoldDir([0.0, 1.0], [14.050, -0.998, 69.499]),
                     Move::To(14.050, -0.998, 120.905),
                     Move::To(6.759, -0.998, 128.605),
