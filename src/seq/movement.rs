@@ -356,11 +356,8 @@ impl MovePath {
                 let target = Vector3::new(x, y, z);
                 let world_pos = &sppmd.players.items[self.player].position;
                 if let Some(world_pos) = world_pos {
-                    if MovePath::is_close(world_pos, &target, None)
-                        || self.check_overshoot(world_pos, &target)
-                    {
+                    if MovePath::is_close(world_pos, &target, None) {
                         self.step += 1;
-                        self.dir = None;
                     } else {
                         let joy_dir = MovePath::get_dir(world_pos, &target, false);
                         gamepad.set_ljoy(joy_dir);
@@ -520,11 +517,16 @@ impl Node<GameState, GameEvent> for SeqMove {
 
     fn execute(&mut self, state: &mut GameState, delta: f64) -> bool {
         let mut sync_signals: Vec<(usize, Vec<usize>)> = Vec::new();
+        let paths_len = self.paths.len();
         for (player, path) in self.paths.iter_mut().enumerate() {
             let done = match path.execute(state, delta) {
                 // Signal all paths on done, in case we skipped ending AwaitSync with Leave
                 PathStatus::Done => {
-                    sync_signals.push((player, vec![0, 1, 2]));
+                    let mut players = Vec::new();
+                    for i in 0..paths_len {
+                        players.push(i);
+                    }
+                    sync_signals.push((player, players));
                     true
                 }
                 PathStatus::Sync(list) => {
