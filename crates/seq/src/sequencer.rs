@@ -3,8 +3,8 @@ use std::fmt::Display;
 
 pub struct Sequencer<T, E> {
     root: Box<dyn Node<T, E>>,
-    initialized: bool,
     finished: bool,
+    started: bool,
 }
 
 impl<T, E> Display for Sequencer<T, E> {
@@ -17,13 +17,18 @@ impl<T, E> Sequencer<T, E> {
     pub fn new(root: Box<dyn Node<T, E>>) -> Self {
         Sequencer {
             root,
-            initialized: false,
             finished: false,
+            started: false,
         }
     }
 
+    pub fn start(&mut self, context: &mut T) {
+        self.started = true;
+        self.root.enter(context);
+    }
+
     pub fn is_running(&self) -> bool {
-        !self.finished
+        !self.finished && self.started
     }
 
     pub fn cutscene_control(&self) -> bool {
@@ -41,11 +46,6 @@ impl<T, E> Sequencer<T, E> {
         // Return early if the sequencer already finished
         if self.finished {
             return true;
-        }
-        // Perform initialization if needed
-        if !self.initialized {
-            self.initialized = true;
-            self.root.enter(context);
         }
         // Update the sequencer root
         if self.root.execute(context, delta) {
@@ -222,6 +222,7 @@ mod tests {
 
         let mut state = State { value: 0 };
 
+        sequencer.start(&mut state);
         // Run the sequence until it's done
         loop {
             if sequencer.run(&mut state, 0.1) {

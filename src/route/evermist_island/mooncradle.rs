@@ -73,7 +73,11 @@ fn skip_intro() -> Box<dyn Node<GameState, GameEvent>> {
         vec![
             SeqMove::create_parallel(
                 "Move to Solstice Diploma",
-                vec![Move::To(-12.353, -0.998, 49.594), Move::Leave([0.0, 0.0])],
+                vec![
+                    Move::Leave([0.0, 0.0]),
+                    Move::To(-12.353, -0.998, 49.594),
+                    Move::AwaitSync(vec![0, 1, 2]),
+                ],
                 3,
             ),
             // Trigger Solstice Diploma

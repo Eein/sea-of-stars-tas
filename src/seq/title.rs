@@ -61,7 +61,6 @@ impl KonamiCode {
 
 #[derive(Debug)]
 enum TitleScreenFSM {
-    Countdown,
     Konami,
     ToMenu,
     NewGame,
@@ -75,19 +74,14 @@ pub struct SeqTitleScreen {
     fsm: TitleScreenFSM,
     btn: ButtonPress,
     kc: KonamiCode,
-    timer: f64,
 }
-
-// ! Countdown to let the user focus the TAS window
-const COUNTDOWN_TIMEOUT: f64 = 5.0;
 
 impl SeqTitleScreen {
     pub fn create() -> Box<Self> {
         Box::new(Self {
-            fsm: TitleScreenFSM::Countdown,
+            fsm: TitleScreenFSM::Konami,
             btn: ButtonPress::default(),
             kc: KonamiCode::default(),
-            timer: COUNTDOWN_TIMEOUT,
         })
     }
 }
@@ -109,23 +103,13 @@ impl Node<GameState, GameEvent> for SeqTitleScreen {
         let ngc = &tsmd.new_game_characters;
 
         match self.fsm {
-            TitleScreenFSM::Countdown => {
-                if self.timer.floor() != (self.timer - delta).floor() {
-                    info!("Counting down to TAS start: {}", self.timer.floor());
-                }
-                self.timer -= delta;
-                if self.timer <= 0.0 {
-                    if state.config.konami_code {
-                        self.fsm = TitleScreenFSM::Konami;
-                        info!("Entering Konami code");
-                    } else {
+            TitleScreenFSM::Konami => {
+                if state.config.konami_code {
+                    if self.kc.update(&mut state.gamepads[0], delta) {
                         self.fsm = TitleScreenFSM::ToMenu;
                         self.btn = ButtonPress::new(SosAction::Start);
                     }
-                }
-            }
-            TitleScreenFSM::Konami => {
-                if self.kc.update(&mut state.gamepads[0], delta) {
+                } else {
                     self.fsm = TitleScreenFSM::ToMenu;
                     self.btn = ButtonPress::new(SosAction::Start);
                 }
@@ -188,7 +172,6 @@ impl Node<GameState, GameEvent> for SeqTitleScreen {
 
 #[derive(Debug)]
 enum LoadGameFSM {
-    Countdown,
     ToMenu,
     LoadGame,
     PressLoadGame,
@@ -201,7 +184,6 @@ enum LoadGameFSM {
 pub struct SeqLoadGame {
     fsm: LoadGameFSM,
     btn: ButtonPress,
-    timer: f64,
     save_slot: usize,
     auto_save_present: bool,
 }
@@ -209,9 +191,8 @@ pub struct SeqLoadGame {
 impl SeqLoadGame {
     pub fn new(save_slot: usize, auto_save_present: bool) -> Box<Self> {
         Box::new(Self {
-            fsm: LoadGameFSM::Countdown,
+            fsm: LoadGameFSM::ToMenu,
             btn: ButtonPress::new(SosAction::Start),
-            timer: COUNTDOWN_TIMEOUT,
             save_slot,
             auto_save_present,
         })
@@ -235,16 +216,6 @@ impl Node<GameState, GameEvent> for SeqLoadGame {
     fn execute(&mut self, state: &mut GameState, delta: f64) -> bool {
         let tsmd = &state.memory_managers.title_sequence_manager.data;
         match self.fsm {
-            LoadGameFSM::Countdown => {
-                if self.timer.floor() != (self.timer - delta).floor() {
-                    info!("Counting down to TAS start: {}", self.timer.floor());
-                }
-                self.timer -= delta;
-                if self.timer <= 0.0 {
-                    self.fsm = LoadGameFSM::ToMenu;
-                    self.btn = ButtonPress::new(SosAction::Start);
-                }
-            }
             LoadGameFSM::ToMenu => {
                 self.btn.update(&mut state.gamepads[0], delta);
                 if tsmd.pressed_start {

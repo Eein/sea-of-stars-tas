@@ -33,9 +33,16 @@ impl MovementGui {
     pub fn draw(&mut self, game_state: &GameState, ui: &mut egui::Ui) {
         let sppmd = &game_state.memory_managers.single_player_plus_manager.data;
         let bmd = &game_state.memory_managers.boat_manager.data;
+        if sppmd.players.items.is_empty() {
+            return;
+        }
 
-        let gameobject_position = sppmd.players.items[0].gameobject_position;
-        let position = sppmd.players.items[0].position;
+        let gameobject_position = sppmd.players.items[0]
+            .gameobject_position
+            .unwrap_or(Vector3::new(0.0, 0.0, 0.0));
+        let position = sppmd.players.items[0]
+            .position
+            .unwrap_or(Vector3::new(0.0, 0.0, 0.0));
 
         const EPSILON: f64 = 0.01;
 
@@ -163,9 +170,14 @@ impl GuiHelper for DebugHelper {
                     ));
                 });
             ui.label("Controller Pos:");
-            MovementGui::draw_coord(ui, &player.position);
+            MovementGui::draw_coord(ui, &player.position.unwrap_or(Vector3::new(0.0, 0.0, 0.0)));
             ui.label("Gameobject Pos:");
-            MovementGui::draw_coord(ui, &player.gameobject_position);
+            MovementGui::draw_coord(
+                ui,
+                &player
+                    .gameobject_position
+                    .unwrap_or(Vector3::new(0.0, 0.0, 0.0)),
+            );
             ui.label("");
         }
 
