@@ -26,8 +26,9 @@ let output_sum = ""
 tables.forEach((table) => {
   let name = camel_to_snake(table.m_Name)
   console.log(name)
-  // let summed_name = camel_to_snake(table.m_Name) + `_sum`
-  fs.writeFileSync(`./output/${name}.rs`, output)
+  const output_file_path = `./output/${name}.rs`
+
+  fs.writeFileSync(output_file_path, output)
 
   // level 1 stats
      output = `// Level 1
@@ -56,7 +57,7 @@ m.insert(${index+2}, LevelUpStats {
 
   });
   // 
-  fs.writeFileSync(`./output/${name}.rs`, output, {flag: 'a' }, err => {
+  fs.writeFileSync(output_file_path, output, {flag: 'a' }, err => {
     if (err) {
       console.error(err);
     } else {
@@ -69,8 +70,9 @@ m.insert(${index+2}, LevelUpStats {
 
 tables.forEach((table) => {
   let name = camel_to_snake(table.m_Name) + "_sum"
-  console.log(name)
-  fs.writeFileSync(`./output/${name}.rs`, output)
+  const output_file_path = `./output/${name}.rs`
+
+  fs.writeFileSync(output_file_path, output)
 
   let hp = 0
   let sp = 0
@@ -112,7 +114,7 @@ m.insert(${index+2}, LevelUpStats {
 
   });
   // 
-  fs.writeFileSync(`./output/${name}.rs`, output_sum, {flag: 'a' }, err => {
+  fs.writeFileSync(output_file_path, output_sum, {flag: 'a' }, err => {
     if (err) {
       console.error(err);
     } else {
