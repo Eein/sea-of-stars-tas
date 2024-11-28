@@ -49,7 +49,7 @@ fs.readdir('./input/', function(err, filenames) {
       let guid = json?.guid
       if (guid == undefined) { 
         // These are snacks and stuff, skip!
-        console.log("SKIPPING GUID UNDEFINED")
+        // console.log("SKIPPING GUID UNDEFINED")
         return
       }
       let physicalAttack = json?.basePhysicalAttack || 0
@@ -61,6 +61,7 @@ fs.readdir('./input/', function(err, filenames) {
       let liveManaSpawnQuantity = json?.liveManaSpawnQuantity || 0
       let enemyLevel = json?.enemyLevel || 0
       let fleshmancerMinion = json?.fleshmancerMinion || 0
+      let damageTypeModifiers = json?.damageTypeModifiers || { keys: [], values: [] }
 
       // TODO:
       // qualifiers
@@ -266,7 +267,106 @@ fs.readdir('./input/', function(err, filenames) {
         }
         
       }
+      // Damage Type Modifiers
+      // struct DamageTypeModifier {
+      //   type: CombatDamageType,
+      //   modifier: f32,
+      // }
 
+      // match value {
+      //     0 => CombatDamageType::None,
+      //     1 => CombatDamageType::Any,
+      //     2 => CombatDamageType::Sword,
+      //     4 => CombatDamageType::Sun,
+      //     8 => CombatDamageType::Moon,
+      //     16 => CombatDamageType::Eclipse,
+      //     32 => CombatDamageType::Poison,
+      //     64 => CombatDamageType::Arcane,
+      //     128 => CombatDamageType::Stun,
+      //     256 => CombatDamageType::Blunt,
+      //     252 => CombatDamageType::Magical,
+      //     _ => CombatDamageType::None,
+      // }
+      //
+      // "damageTypeModifiers": {
+      //   "keys": [
+      //     4,
+      //     8
+      //   ],
+      //   "values": [
+      //     1.5,
+      //     1.5
+      //   ]
+      // },
+      //
+      const parseDamageTypeModifiers = (modifiers) => {
+
+        output = ''
+        // console.log('len', modifiers?.keys.length, modifiers)
+        if(modifiers?.keys.length === 0){
+          return 'None'
+          // or Some(&[])
+        }
+        output += `Some(&[
+        `
+
+        let damage_modifier_pairs = modifiers.keys.map((val, i) => {
+          return [val, modifiers.values[i]]
+        })
+        console.log(damage_modifier_pairs)
+
+
+        damage_modifier_pairs.forEach((mod) => {
+          type = "DamageType::None"
+          switch (mod[0]) {
+            case 0:
+              type = "CombatDamageType::None"
+              break
+            case 1:
+              type = "CombatDamageType::Any"
+              break
+            case 2:
+              type = "CombatDamageType::Sword"
+              break
+            case 4:
+              type = "CombatDamageType::Sun"
+              break
+            case 8:
+              type = "CombatDamageType::Moon"
+              break
+            case 16:
+              type = "CombatDamageType::Eclipse"
+              break
+            case 32:
+              type = "CombatDamageType::Poison"
+              break
+            case 64:
+              type = "CombatDamageType::Arcane"
+              break
+            case 128:
+              type = "CombatDamageType::Stun"
+              break
+            case 256:
+              type = "CombatDamageType::Blunt"
+              break
+            case 252:
+              type = "CombatDamageType::Magical"
+              break
+            default: 
+              type = "CombatDamageType::None"
+          }
+
+          output += `DamageTypeModifier { type: ${type}, modifier: ${Number.parseFloat(mod[1])} },
+        `
+        })
+
+        output += `])`
+        console.log(output)
+        return output
+      }
+
+      let dtmods = parseDamageTypeModifiers(damageTypeModifiers)
+      
       names.push(name)
       // console.log(name)
       
@@ -276,9 +376,10 @@ m.insert("${name}", Enemy {
   name: "${name}",
   hp: ${hp},
   speed: ${speed},
-  liveManaSpawnQuantity: ${liveManaSpawnQuantity},
-  enemyLevel: ${enemyLevel},
-  fleshmancerMinion: ${fleshmancerMinion},
+  damage_type_modifiers: ${dtmods},
+  live_mana_spawn_quantity: ${liveManaSpawnQuantity},
+  level: ${enemyLevel},
+  fleshmancer_minion: ${fleshmancerMinion},
   physical_attack: ${physicalAttack},
   magical_attack: ${magicalAttack},
   physical_defense: ${physicalDefense},
@@ -290,9 +391,10 @@ m.insert("${guid}", Enemy {
   name: "${name}",
   hp: ${hp},
   speed: ${speed},
-  liveManaSpawnQuantity: ${liveManaSpawnQuantity},
-  enemyLevel: ${enemyLevel},
-  fleshmancerMinion: ${fleshmancerMinion},
+  damage_type_modifiers: ${dtmods},
+  live_mana_spawn_quantity: ${liveManaSpawnQuantity},
+  level: ${enemyLevel},
+  fleshmancer_minion: ${fleshmancerMinion},
   physical_attack: ${physicalAttack},
   magical_attack: ${magicalAttack},
   physical_defense: ${physicalDefense},
