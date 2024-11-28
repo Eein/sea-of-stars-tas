@@ -1,4 +1,5 @@
 const fs = require('node:fs')
+const output_file_path = './output/output.rs'
 
 const locale_kv = require('./locale/Inventory-CAB-18cc0a97ed3fba0abaeabffc8cbc6c92--8004240389874202174.json')
 const locale_definition = require('./locale/Inventory_EN-CAB-18cc0a97ed3fba0abaeabffc8cbc6c92--2619762323296537302.json')
@@ -79,7 +80,7 @@ const parseItemType = (type) => {
 let output = ""
 
 // Reset the current output file
-fs.writeFileSync('./output/output.rs', output)
+fs.writeFileSync(output_file_path, output)
 
 fs.readdir('./input/', function(err, filenames) {
   if (err) {
@@ -180,7 +181,7 @@ m.insert("${guid}", Item {
 
 `
 
-        fs.writeFile('./output/output.rs', out, {flag: 'a' }, err => {
+        fs.writeFile(output_file_path, out, {flag: 'a' }, err => {
           if (err) {
             console.error(err);
           } else {

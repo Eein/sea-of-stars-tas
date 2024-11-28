@@ -1,4 +1,5 @@
 const fs = require('node:fs')
+const output_file_path = './output/output.rs'
 
 const enemy_locale_kv = require('./locale/Enemies-CAB-18cc0a97ed3fba0abaeabffc8cbc6c92-8020956684977417460.json')
 const enemy_locale_definition = require('./locale/Enemies_EN-CAB-18cc0a97ed3fba0abaeabffc8cbc6c92--9219550977792058189.json')
@@ -29,7 +30,7 @@ let output = ""
 let names = []
 
 // Reset the current output file
-fs.writeFileSync('./output/output.rs', output)
+fs.writeFileSync(output_file_path, output)
 
 fs.readdir('./input/', function(err, filenames) {
   if (err) {
@@ -267,38 +268,7 @@ fs.readdir('./input/', function(err, filenames) {
         }
         
       }
-      // Damage Type Modifiers
-      // struct DamageTypeModifier {
-      //   type: CombatDamageType,
-      //   modifier: f32,
-      // }
 
-      // match value {
-      //     0 => CombatDamageType::None,
-      //     1 => CombatDamageType::Any,
-      //     2 => CombatDamageType::Sword,
-      //     4 => CombatDamageType::Sun,
-      //     8 => CombatDamageType::Moon,
-      //     16 => CombatDamageType::Eclipse,
-      //     32 => CombatDamageType::Poison,
-      //     64 => CombatDamageType::Arcane,
-      //     128 => CombatDamageType::Stun,
-      //     256 => CombatDamageType::Blunt,
-      //     252 => CombatDamageType::Magical,
-      //     _ => CombatDamageType::None,
-      // }
-      //
-      // "damageTypeModifiers": {
-      //   "keys": [
-      //     4,
-      //     8
-      //   ],
-      //   "values": [
-      //     1.5,
-      //     1.5
-      //   ]
-      // },
-      //
       const parseDamageTypeModifiers = (modifiers) => {
 
         output = ''
@@ -313,7 +283,7 @@ fs.readdir('./input/', function(err, filenames) {
         let damage_modifier_pairs = modifiers.keys.map((val, i) => {
           return [val, modifiers.values[i]]
         })
-        console.log(damage_modifier_pairs)
+        // console.log(damage_modifier_pairs)
 
 
         damage_modifier_pairs.forEach((mod) => {
@@ -361,7 +331,7 @@ fs.readdir('./input/', function(err, filenames) {
         })
 
         output += `])`
-        console.log(output)
+        // console.log(output)
         return output
       }
 
@@ -403,7 +373,7 @@ m.insert("${guid}", Enemy {
 
 `
 
-        fs.writeFile('./output/output.rs', out, {flag: 'a' }, err => {
+        fs.writeFile(output_file_path, out, {flag: 'a' }, err => {
           if (err) {
             console.error(err);
           } else {
