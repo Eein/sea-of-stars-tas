@@ -1,4 +1,4 @@
-# Item Parser
+# Enemy Parser
 
 - Copy extracted inventory json files into `./input`
 - Copy extracted locale files into `./locale` - the name of the files can be found in the script
