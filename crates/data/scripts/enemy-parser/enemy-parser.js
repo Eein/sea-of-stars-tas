@@ -57,6 +57,17 @@ fs.readdir('./input/', function(err, filenames) {
       let physicalDefense = json?.basePhysicalDefense || 0
       let magicalDefense = json?.baseMagicalDefense || 0
       let hp = json?.hp || 0
+      let speed = json?.speed || 0
+      let liveManaSpawnQuantity = json?.liveManaSpawnQuantity || 0
+      let enemyLevel = json?.enemyLevel || 0
+      let fleshmancerMinion = json?.fleshmancerMinion || 0
+
+      // TODO:
+      // qualifiers
+      // damage type modifiers
+
+
+
       // Temporary = pull in localization file
       let localeKey = json?.nameLocalizationId?.locId
       let name = getFromLocale(json?.nameLocalizationId?.locId.toUpperCase())
@@ -264,6 +275,10 @@ m.insert("${name}", Enemy {
   guid: "${guid}",
   name: "${name}",
   hp: ${hp},
+  speed: ${speed},
+  liveManaSpawnQuantity: ${liveManaSpawnQuantity},
+  enemyLevel: ${enemyLevel},
+  fleshmancerMinion: ${fleshmancerMinion},
   physical_attack: ${physicalAttack},
   magical_attack: ${magicalAttack},
   physical_defense: ${physicalDefense},
@@ -274,6 +289,10 @@ m.insert("${guid}", Enemy {
   guid: "${guid}",
   name: "${name}",
   hp: ${hp},
+  speed: ${speed},
+  liveManaSpawnQuantity: ${liveManaSpawnQuantity},
+  enemyLevel: ${enemyLevel},
+  fleshmancerMinion: ${fleshmancerMinion},
   physical_attack: ${physicalAttack},
   magical_attack: ${magicalAttack},
   physical_defense: ${physicalDefense},
