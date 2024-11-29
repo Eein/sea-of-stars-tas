@@ -156,7 +156,7 @@ mod tests {
         value: u32,
     }
 
-    impl SeqCondition<State> for CondGt {
+    impl SeqCondition<State, Event> for CondGt {
         fn evaluate(&self, state: &State) -> bool {
             state.value > self.value
         }

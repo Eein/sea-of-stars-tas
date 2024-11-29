@@ -1,3 +1,4 @@
+use crate::seq::branch::CondCombat;
 use crate::seq::movement::*;
 use crate::state::{GameEvent, GameState};
 use seq::prelude::*;
@@ -31,44 +32,64 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                 ],
                 2,
             ),
-            SeqMove::create_coop(
-                "Juking",
-                vec![
+            SeqFallback::create(
+                "Attempt juke",
+                CondCombat,
+                // Primary path
+                SeqMove::create_coop(
+                    "Juking",
                     vec![
-                        Move::Interact(-44.481, 5.002, 129.789),
-                        Move::Log("Starting juke"),
-                        Move::To(-46.045, 5.002, 131.619),
-                        Move::To(-46.045, 5.002, 136.619),
-                        Move::Interact(-46.543, 6.002, 138.189),
-                        Move::To(-42.460, 6.002, 138.189),
-                        Move::To(-42.542, 6.002, 140.120),
-                        Move::AwaitSync(vec![1]),
-                        Move::To(-42.542, 6.002, 138.386),
-                        Move::To(-46.408, 6.002, 138.386),
-                        Move::Interact(-48.746, 5.002, 137.631),
-                        Move::To(-53.007, 5.002, 134.197),
-                        Move::To(-55.275, 5.002, 134.197),
-                        Move::To(-56.972, 5.002, 135.895),
-                        Move::Interact(-56.972, 15.002, 138.460),
-                        Move::To(-54.460, 15.002, 140.063),
-                        Move::Interact(-50.185, 14.0, 140.222),
-                        Move::To(-50.185, 10.0, 140.222),
+                        vec![
+                            Move::Interact(-44.481, 5.002, 129.789),
+                            Move::Log("Starting juke"),
+                            Move::To(-46.045, 5.002, 131.619),
+                            Move::To(-46.045, 5.002, 136.619),
+                            Move::Interact(-46.543, 6.002, 138.189),
+                            Move::To(-42.460, 6.002, 138.189),
+                            Move::To(-42.542, 6.002, 140.120),
+                            Move::AwaitSync(vec![1]),
+                            Move::To(-42.542, 6.002, 138.386),
+                            Move::To(-46.408, 6.002, 138.386),
+                            Move::Interact(-48.746, 5.002, 137.631),
+                            Move::To(-53.007, 5.002, 134.197),
+                            Move::To(-55.275, 5.002, 134.197),
+                            Move::To(-56.972, 5.002, 135.895),
+                            Move::Interact(-56.972, 15.002, 138.460),
+                            Move::To(-54.460, 15.002, 140.063),
+                            Move::Interact(-50.185, 14.0, 140.222),
+                            Move::To(-50.185, 10.0, 140.222),
+                        ],
+                        vec![
+                            Move::WaitFor(0.1),
+                            Move::Interact(-44.481, 5.002, 129.789),
+                            Move::To(-49.132, 5.002, 128.443),
+                            Move::To(-54.201, 5.002, 128.443),
+                            Move::To(-54.550, 5.002, 131.811),
+                            Move::To(-47.688, 5.002, 128.923),
+                            Move::To(-44.481, 5.002, 129.789),
+                            // TODO: Sometimes works, sometimes doesn't
+                            //Move::To(-46.481, 5.002, 130.789),
+                            Move::AwaitSync(vec![0]),
+                            Move::Interact(-40.481, 5.002, 129.789),
+                            Move::Leave([0.0, 0.0]),
+                        ],
                     ],
+                ),
+                // Fallback if juke fails
+                SeqMove::create_coop(
+                    "Juking",
                     vec![
-                        Move::WaitFor(0.1),
-                        Move::Interact(-44.481, 5.002, 129.789),
-                        Move::To(-49.132, 5.002, 128.443),
-                        Move::To(-54.201, 5.002, 128.443),
-                        Move::To(-54.550, 5.002, 131.811),
-                        Move::To(-47.688, 5.002, 128.923),
-                        Move::To(-44.481, 5.002, 129.789),
-                        // TODO: Sometimes works, sometimes doesn't
-                        //Move::To(-46.481, 5.002, 130.789),
-                        Move::AwaitSync(vec![0]),
-                        Move::Interact(-40.481, 5.002, 129.789),
-                        Move::Leave([0.0, 0.0]),
+                        vec![
+                            // Move to and climb cliff
+                            Move::To(-56.972, 5.002, 135.895),
+                            Move::Interact(-56.972, 15.002, 138.460),
+                            Move::To(-54.460, 15.002, 140.063),
+                            Move::Interact(-50.185, 14.0, 140.222),
+                            Move::To(-50.185, 10.0, 140.222),
+                        ],
+                        vec![Move::To(-56.972, 5.002, 135.895), Move::Leave([0.0, 0.0])],
                     ],
-                ],
+                ),
             ),
             SeqMove::create_coop(
                 "Depressing platform",

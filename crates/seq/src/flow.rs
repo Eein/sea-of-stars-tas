@@ -1,9 +1,9 @@
 use std::fmt::Display;
 
 use crate::Node;
-use log::{debug, info};
+use log::{debug, info, warn};
 
-pub struct SeqIf<State, Event, Cond: SeqCondition<State>> {
+pub struct SeqIf<State, Event, Cond: SeqCondition<State, Event>> {
     name: String,
     on_true: Option<Box<dyn Node<State, Event>>>,
     on_false: Option<Box<dyn Node<State, Event>>>,
@@ -12,7 +12,7 @@ pub struct SeqIf<State, Event, Cond: SeqCondition<State>> {
     default_selection: bool,
 }
 
-impl<State, Event, Cond: SeqCondition<State>> SeqIf<State, Event, Cond> {
+impl<State, Event, Cond: SeqCondition<State, Event>> SeqIf<State, Event, Cond> {
     pub fn create(
         name: &str,
         condition: Cond,
@@ -31,7 +31,7 @@ impl<State, Event, Cond: SeqCondition<State>> SeqIf<State, Event, Cond> {
     }
 }
 
-impl<State, Event, Cond: SeqCondition<State>> Display for SeqIf<State, Event, Cond> {
+impl<State, Event, Cond: SeqCondition<State, Event>> Display for SeqIf<State, Event, Cond> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut ret = format!("SeqIf({}), selecting path: {}", self.name, self.selection);
         match self.selection {
@@ -50,7 +50,9 @@ impl<State, Event, Cond: SeqCondition<State>> Display for SeqIf<State, Event, Co
     }
 }
 
-impl<State, Event, Cond: SeqCondition<State>> Node<State, Event> for SeqIf<State, Event, Cond> {
+impl<State, Event, Cond: SeqCondition<State, Event>> Node<State, Event>
+    for SeqIf<State, Event, Cond>
+{
     // When first entering the node, evaluate the conditional
     fn enter(&mut self, state: &mut State) {
         self.selection = self.condition.evaluate(state);
@@ -149,9 +151,114 @@ impl<State, Event, Cond: SeqCondition<State>> Node<State, Event> for SeqIf<State
     }
 }
 
-pub trait SeqCondition<State> {
+pub struct SeqFallback<State, Event, Cond: SeqCondition<State, Event>> {
+    name: String,
+    primary: Box<dyn Node<State, Event>>,
+    fallback: Box<dyn Node<State, Event>>,
+    condition: Cond,
+    fallback_triggered: bool,
+}
+
+impl<State, Event, Cond: SeqCondition<State, Event>> SeqFallback<State, Event, Cond> {
+    pub fn create(
+        name: &str,
+        condition: Cond,
+        primary: Box<dyn Node<State, Event>>,
+        fallback: Box<dyn Node<State, Event>>,
+    ) -> Box<Self> {
+        Box::new(SeqFallback {
+            name: name.to_owned(),
+            condition,
+            primary,
+            fallback,
+            fallback_triggered: false,
+        })
+    }
+}
+
+impl<State, Event, Cond: SeqCondition<State, Event>> Display for SeqFallback<State, Event, Cond> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut ret = format!(
+            "SeqFallback({}), fallback triggered: {}",
+            self.name, self.fallback_triggered
+        );
+        ret = if self.fallback_triggered {
+            format!("{}\n-> {}", ret, self.fallback)
+        } else {
+            format!("{}\n-> {}", ret, self.primary)
+        };
+        write!(f, "{}", ret)
+    }
+}
+
+impl<State, Event, Cond: SeqCondition<State, Event>> Node<State, Event>
+    for SeqFallback<State, Event, Cond>
+{
+    // When first entering the node, run enter of the primary path
+    fn enter(&mut self, state: &mut State) {
+        self.primary.enter(state);
+    }
+    fn on_event(&mut self, state: &mut State, event: &Event) {
+        match self.fallback_triggered {
+            false => self.primary.on_event(state, event),
+            true => self.fallback.on_event(state, event),
+        }
+        if !self.fallback_triggered {
+            self.fallback_triggered = self.condition.on_event(event);
+            // If triggered, exit the primary state and enter the fallback state
+            if self.fallback_triggered {
+                warn!("SeqFallback({}) Fallback triggered!", self.name);
+                self.primary.exit(state);
+                self.fallback.enter(state);
+            }
+        }
+    }
+    // Execute primary path until it terminates, or fallback condition triggers
+    fn execute(&mut self, state: &mut State, delta: f64) -> bool {
+        match self.fallback_triggered {
+            true => self.fallback.execute(state, delta),
+            false => {
+                // Check condition on each frame
+                self.fallback_triggered = self.condition.evaluate(state);
+                // If triggered, exit the primary state and enter the fallback state
+                if self.fallback_triggered {
+                    warn!("SeqFallback({}) Fallback triggered!", self.name);
+                    self.primary.exit(state);
+                    self.fallback.enter(state);
+                    false
+                } else {
+                    // Execute the primary state
+                    self.primary.execute(state, delta)
+                }
+            }
+        }
+    }
+    // If advancing past checkpoint, select the primary path
+    // TODO: Select based on data instead?
+    fn advance_to_checkpoint(&mut self, state: &mut State, checkpoint: &str) -> bool {
+        self.primary.advance_to_checkpoint(state, checkpoint)
+    }
+    fn cutscene_control(&self) -> bool {
+        match self.fallback_triggered {
+            true => self.fallback.cutscene_control(),
+            false => self.primary.cutscene_control(),
+        }
+    }
+    fn exit(&self, state: &mut State) {
+        match self.fallback_triggered {
+            true => self.fallback.exit(state),
+            false => self.primary.exit(state),
+        }
+    }
+}
+
+pub trait SeqCondition<State, Event> {
     // Override
     fn evaluate(&self, _state: &State) -> bool {
+        false
+    }
+
+    fn on_event(&self, _event: &Event) -> bool {
         false
     }
 }
