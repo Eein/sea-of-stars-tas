@@ -67,8 +67,6 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                             Move::To(-54.550, 5.002, 131.811),
                             Move::To(-47.688, 5.002, 128.923),
                             Move::To(-44.481, 5.002, 129.789),
-                            // TODO: Sometimes works, sometimes doesn't
-                            //Move::To(-46.481, 5.002, 130.789),
                             Move::AwaitSync(vec![0]),
                             Move::Interact(-40.481, 5.002, 129.789),
                             Move::Leave([0.0, 0.0]),
@@ -77,7 +75,7 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                 ),
                 // Fallback if juke fails
                 SeqMove::create_coop(
-                    "Juking",
+                    "Fallback",
                     vec![
                         vec![
                             // Move to and climb cliff
@@ -87,6 +85,8 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                             Move::Interact(-50.185, 14.0, 140.222),
                             Move::To(-50.185, 10.0, 140.222),
                         ],
+                        // Ensure that P2 leaves so they're not out of sync for next step.
+                        // Note, if they already left, SeqMove will move on when P1 finishes.
                         vec![Move::To(-56.972, 5.002, 135.895), Move::Leave([0.0, 0.0])],
                     ],
                 ),
