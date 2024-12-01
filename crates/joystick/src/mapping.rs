@@ -48,8 +48,8 @@ mod tests {
         Cancel,
         Fire,
         Jump,
-        LThumb,
-        RThumb,
+        HiFive,
+        Bubble,
         Aim(u8),
     }
 
@@ -60,8 +60,8 @@ mod tests {
                 Action::Cancel => Button::B,
                 Action::Fire => Button::X,
                 Action::Jump => Button::Y,
-                Action::LThumb => Button::LTHUMB,
-                Action::RThumb => Button::RTHUMB,
+                Action::Bubble => Button::LB,
+                Action::HiFive => Button::RB,
                 Action::Aim(val) => Button::RT(val),
             }
         }
@@ -133,51 +133,15 @@ mod tests {
 
         sleep(Duration::from_millis(500));
         for _ in 0..3 {
-            gamepad.press(&Action::LThumb);
+            gamepad.press(&Action::HiFive);
             sleep(Duration::from_millis(250));
-            gamepad.release(&Action::LThumb);
-            sleep(Duration::from_millis(250));
-        }
-        for _ in 0..3 {
-            gamepad.press(&Action::LThumb);
-            sleep(Duration::from_millis(250));
-            gamepad.release(&Action::LThumb);
+            gamepad.release(&Action::HiFive);
             sleep(Duration::from_millis(250));
         }
         for _ in 0..3 {
-            gamepad.press(&Action::LThumb);
+            gamepad.press(&Action::Bubble);
             sleep(Duration::from_millis(250));
-            gamepad.release(&Action::LThumb);
-            sleep(Duration::from_millis(250));
-        }
-        for _ in 0..3 {
-            gamepad.press(&Action::LThumb);
-            sleep(Duration::from_millis(250));
-            gamepad.release(&Action::LThumb);
-            sleep(Duration::from_millis(250));
-        }
-        for _ in 0..3 {
-            gamepad.press(&Action::RThumb);
-            sleep(Duration::from_millis(250));
-            gamepad.release(&Action::RThumb);
-            sleep(Duration::from_millis(250));
-        }
-        for _ in 0..3 {
-            gamepad.press(&Action::RThumb);
-            sleep(Duration::from_millis(250));
-            gamepad.release(&Action::RThumb);
-            sleep(Duration::from_millis(250));
-        }
-        for _ in 0..3 {
-            gamepad.press(&Action::RThumb);
-            sleep(Duration::from_millis(250));
-            gamepad.release(&Action::RThumb);
-            sleep(Duration::from_millis(250));
-        }
-        for _ in 0..3 {
-            gamepad.press(&Action::RThumb);
-            sleep(Duration::from_millis(250));
-            gamepad.release(&Action::RThumb);
+            gamepad.release(&Action::Bubble);
             sleep(Duration::from_millis(250));
         }
 
