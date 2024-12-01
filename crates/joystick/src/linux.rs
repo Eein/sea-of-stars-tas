@@ -86,12 +86,12 @@ impl Joystick {
             Button::B => KeyCode::BTN_EAST,
             Button::X => KeyCode::BTN_WEST,
             Button::Y => KeyCode::BTN_NORTH,
-            Button::LT(_) => KeyCode::BTN_TL,
-            Button::RT(_) => KeyCode::BTN_TR,
-            Button::LB => KeyCode::BTN_TL2,
-            Button::RB => KeyCode::BTN_TR2,
-            Button::LTHUMB => KeyCode::BTN_THUMB,
-            Button::RTHUMB => KeyCode::BTN_THUMB2,
+            Button::LT(_) => KeyCode::BTN_TL2,
+            Button::RT(_) => KeyCode::BTN_TR2,
+            Button::LB => KeyCode::BTN_TL,
+            Button::RB => KeyCode::BTN_TR,
+            Button::LTHUMB => KeyCode::BTN_THUMBL,
+            Button::RTHUMB => KeyCode::BTN_THUMBR,
             Button::SELECT => KeyCode::BTN_SELECT,
             Button::START => KeyCode::BTN_START,
             Button::UP => KeyCode::BTN_DPAD_UP,
@@ -125,8 +125,8 @@ impl Default for Joystick {
         keys.insert(KeyCode::BTN_WEST);
         keys.insert(KeyCode::BTN_START);
         keys.insert(KeyCode::BTN_SELECT);
-        keys.insert(KeyCode::BTN_THUMB);
-        keys.insert(KeyCode::BTN_THUMB2);
+        keys.insert(KeyCode::BTN_THUMBL);
+        keys.insert(KeyCode::BTN_THUMBR);
         keys.insert(KeyCode::BTN_TR);
         keys.insert(KeyCode::BTN_TL);
         keys.insert(KeyCode::BTN_TR2);
