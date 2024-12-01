@@ -48,6 +48,8 @@ mod tests {
         Cancel,
         Fire,
         Jump,
+        LThumb,
+        RThumb,
         Aim(u8),
     }
 
@@ -58,6 +60,8 @@ mod tests {
                 Action::Cancel => Button::B,
                 Action::Fire => Button::X,
                 Action::Jump => Button::Y,
+                Action::LThumb => Button::LTHUMB,
+                Action::RThumb => Button::RTHUMB,
                 Action::Aim(val) => Button::RT(val),
             }
         }
@@ -117,6 +121,64 @@ mod tests {
                 gamepad.set_rjoy(rdir);
                 sleep(Duration::from_millis(speed));
             }
+        }
+
+        Result::Ok(())
+    }
+
+    #[test]
+    fn test_speedboost() -> std::io::Result<()> {
+        sleep(Duration::from_millis(2000));
+        let mut gamepad = GenericJoystick::default();
+
+        sleep(Duration::from_millis(500));
+        for _ in 0..3 {
+            gamepad.press(&Action::LThumb);
+            sleep(Duration::from_millis(250));
+            gamepad.release(&Action::LThumb);
+            sleep(Duration::from_millis(250));
+        }
+        for _ in 0..3 {
+            gamepad.press(&Action::LThumb);
+            sleep(Duration::from_millis(250));
+            gamepad.release(&Action::LThumb);
+            sleep(Duration::from_millis(250));
+        }
+        for _ in 0..3 {
+            gamepad.press(&Action::LThumb);
+            sleep(Duration::from_millis(250));
+            gamepad.release(&Action::LThumb);
+            sleep(Duration::from_millis(250));
+        }
+        for _ in 0..3 {
+            gamepad.press(&Action::LThumb);
+            sleep(Duration::from_millis(250));
+            gamepad.release(&Action::LThumb);
+            sleep(Duration::from_millis(250));
+        }
+        for _ in 0..3 {
+            gamepad.press(&Action::RThumb);
+            sleep(Duration::from_millis(250));
+            gamepad.release(&Action::RThumb);
+            sleep(Duration::from_millis(250));
+        }
+        for _ in 0..3 {
+            gamepad.press(&Action::RThumb);
+            sleep(Duration::from_millis(250));
+            gamepad.release(&Action::RThumb);
+            sleep(Duration::from_millis(250));
+        }
+        for _ in 0..3 {
+            gamepad.press(&Action::RThumb);
+            sleep(Duration::from_millis(250));
+            gamepad.release(&Action::RThumb);
+            sleep(Duration::from_millis(250));
+        }
+        for _ in 0..3 {
+            gamepad.press(&Action::RThumb);
+            sleep(Duration::from_millis(250));
+            gamepad.release(&Action::RThumb);
+            sleep(Duration::from_millis(250));
         }
 
         Result::Ok(())
