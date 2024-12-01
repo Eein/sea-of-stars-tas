@@ -95,6 +95,7 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                 "Depressing platform",
                 vec![
                     vec![
+                        Move::SpeedBoost(vec![0, 1]),
                         Move::Interact(-46.460, 6.002, 139.457),
                         Move::To(-46.460, 6.002, 139.451),
                         Move::To(-46.540, 6.002, 138.577),
@@ -111,6 +112,7 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                     ],
                     vec![
                         Move::Join,
+                        Move::SpeedBoost(vec![0, 1]),
                         Move::To(-50.401, 7.002, 140.170),
                         Move::Leave([0.0, 0.0]),
                     ],
@@ -119,6 +121,7 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
             SeqMove::create(
                 "Navigate to second room",
                 vec![
+                    // TODO: Minor tweak needed here
                     Move::To(8.542, 5.002, 136.778),
                     Move::To(11.492, 5.002, 139.500),
                     Move::HoldDir([1.0, 1.0], [13.000, 5.002, 139.500]),
@@ -133,33 +136,33 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                     Move::Interact(59.744, 8.012, 143.916),
                     Move::To(60.543, 8.010, 147.706),
                     Move::To(62.759, 8.002, 147.706),
+                    Move::To(72.108, 10.002, 147.955),
+                    Move::To(73.240, 10.002, 144.689),
+                    Move::To(72.752, 10.002, 138.473),
+                    Move::Interact(69.421, 5.002, 138.381),
                 ],
             ),
-            // TODO: Splitting here doesn't work; both players need to be on the platform to depress it
             SeqMove::create_coop(
                 "Second room",
                 vec![
                     vec![
-                        Move::To(72.108, 10.002, 147.955),
-                        Move::To(73.240, 10.002, 144.689),
-                        Move::To(72.752, 10.002, 138.473),
-                        Move::Interact(69.421, 5.002, 138.381),
-                        Move::To(69.421, 3.002, 138.381),
-                        Move::Log("Wait for lock"),
-                        Move::WaitFor(0.2),
-                        Move::AwaitSync(vec![1]),
+                        Move::SpeedBoost(vec![0, 1]),
                         Move::Interact(69.476, 1.002, 141.125),
-                        Move::AwaitSync(vec![1]),
                         Move::To(64.308, 1.002, 145.400),
+                        Move::AwaitSync(vec![1]),
                         Move::Log("Pull lever"),
                         Move::Confirm,
+                        Move::AwaitSync(vec![1]),
                     ],
                     vec![
                         Move::Join,
-                        Move::To(60.806, 8.002, 147.458),
-                        Move::Interact(60.548, 8.002, 146.131),
-                        Move::Interact(55.732, 16.002, 144.331),
-                        Move::To(53.957, 16.002, 144.021),
+                        Move::SpeedBoost(vec![0, 1]),
+                        Move::Interact(61.050, 1.002, 138.381),
+                        Move::To(59.146, 1.002, 138.458),
+                        Move::Interact(56.907, 7.002, 140.756),
+                        Move::Interact(58.112, 10.002, 142.334),
+                        Move::Interact(55.871, 16.002, 144.339),
+                        Move::To(54.157, 16.002, 144.114),
                         Move::Log("Forbidden Cavern Key"),
                         Move::Confirm,
                         Move::AwaitSync(vec![0]),
@@ -204,6 +207,7 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                     Move::To(25.451, 20.002, 133.119),
                     Move::To(25.335, 20.002, 132.576),
                     Move::Interact(25.335, 1.010, 130.365),
+                    // TODO: Speedboost + juking
                     Move::Log("Wait for lock"),
                     Move::WaitFor(0.2),
                     Move::Interact(25.335, -0.990, 125.800),
