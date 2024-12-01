@@ -135,6 +135,7 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                     Move::To(62.759, 8.002, 147.706),
                 ],
             ),
+            // TODO: Splitting here doesn't work; both players need to be on the platform to depress it
             SeqMove::create_coop(
                 "Second room",
                 vec![
