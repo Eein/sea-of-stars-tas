@@ -8,6 +8,7 @@ use crate::memory::level_up_manager::LevelUpUpgrade;
 
 use delta::Timer;
 use log::info;
+use vec3_rs::Vector3;
 
 pub const NAME: &str = "Main Helper";
 
@@ -411,6 +412,16 @@ impl GuiHelper for MainHelper {
 
             if running {
                 ui.label(format!("{}", gm));
+
+                // Display player positions (game object)
+                ui.separator();
+                let sppmd = &game_state.memory_managers.single_player_plus_manager.data;
+                for (idx, player) in sppmd.players.items.iter().enumerate() {
+                    let gameobject_position = player
+                        .gameobject_position
+                        .unwrap_or(Vector3::new(0.0, 0.0, 0.0));
+                    ui.label(format!("P{} pos: {:?}", idx + 1, gameobject_position));
+                }
             }
         }
 

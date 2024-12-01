@@ -115,7 +115,9 @@ impl Node<GameState, GameEvent> for SeqTitleScreen {
                 }
             }
             TitleScreenFSM::ToMenu => {
-                self.btn.update(&mut state.gamepads[0], delta);
+                if self.btn.update(&mut state.gamepads[0], delta) {
+                    self.btn = ButtonPress::new(SosAction::Start);
+                }
                 if tsmd.pressed_start {
                     self.fsm = TitleScreenFSM::NewGame;
                     self.btn = ButtonPress::new(SosAction::MenuDown);
@@ -217,7 +219,9 @@ impl Node<GameState, GameEvent> for SeqLoadGame {
         let tsmd = &state.memory_managers.title_sequence_manager.data;
         match self.fsm {
             LoadGameFSM::ToMenu => {
-                self.btn.update(&mut state.gamepads[0], delta);
+                if self.btn.update(&mut state.gamepads[0], delta) {
+                    self.btn = ButtonPress::new(SosAction::Start);
+                }
                 if tsmd.pressed_start {
                     self.fsm = LoadGameFSM::LoadGame;
                     self.btn = ButtonPress::new(SosAction::MenuDown);

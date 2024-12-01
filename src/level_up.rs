@@ -1,4 +1,5 @@
 use crate::control::SosAction;
+use joystick::common::JoystickInterface;
 use log::info;
 
 use crate::{memory::level_up_manager::LevelUpUpgrade, seq::button::ButtonPress, state::GameState};
@@ -73,6 +74,9 @@ impl LevelUpManager {
             }
         }
 
+        if !lumd.active {
+            state.gamepads[0].release_all();
+        }
         !lumd.active
     }
 }

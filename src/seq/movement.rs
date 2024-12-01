@@ -415,12 +415,14 @@ impl MovePath {
                 if let Move::AwaitCombat(_) = coord {
                     self.btn = None;
                     self.step += 1;
+                    self.dir = None;
                 }
             }
             GameEvent::Cutscene => {
                 if let Move::AwaitCutscene(_) = coord {
                     self.btn = None;
                     self.step += 1;
+                    self.dir = None;
                 }
             }
             GameEvent::CoopSync(player) => {

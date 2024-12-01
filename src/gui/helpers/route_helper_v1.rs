@@ -29,6 +29,9 @@ impl GuiHelper for RouteHelperV1 {
         _tab: &mut String,
     ) {
         let sppmd = &game_state.memory_managers.single_player_plus_manager.data;
+        if sppmd.players.items.is_empty() {
+            return;
+        }
 
         self.m_gui.draw(game_state, ui);
         ui.separator();
