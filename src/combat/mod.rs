@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 mod controllers;
+mod skills;
 
 use crate::combat::controllers::basic_encounter_controller::BasicEncounterController;
 use crate::combat::controllers::EncounterController;
