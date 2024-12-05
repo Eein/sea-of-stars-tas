@@ -76,25 +76,16 @@ pub struct Skill {
     pub resource: SkillResource,
     pub battle_command: BattleCommand,
     pub cost: u32,
-    pub timing_controller: BasicAttack,
+    pub timing_controller: Box<dyn Timing>,
+}
+
+pub trait Timing {
+    fn execute_timing_sequence(&self, _ctx: GameState) -> bool;
 }
 
 pub struct BasicAttack;
-impl BasicAttack {
+impl Timing for BasicAttack {
     fn execute_timing_sequence(&self, _ctx: GameState) -> bool {
         true
     }
 }
-
-
-// ZaleBasicAttack {
-//     name: "Zale Basic Attack",
-//     internal_name: "Combat",
-//     timing_type: TimingType::MultiHit,
-//     resource: SkillResource::None,
-//     damage_types: &[CombatDamageType::Sword],
-//     battle_command: BattleCommand::Attack,
-//     cost: 0,
-// }
-
-

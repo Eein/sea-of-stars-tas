@@ -108,7 +108,7 @@ impl CombatManager {
                     resource: skills::SkillResource::None,
                     damage_types: [CombatDamageType::Sword].to_vec(),
                     battle_command: skills::BattleCommand::Attack,
-                    timing_controller: BasicAttack,
+                    timing_controller: Box::new(BasicAttack),
                     cost: 0 
                 });
 
