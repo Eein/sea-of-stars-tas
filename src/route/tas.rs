@@ -6,6 +6,7 @@ use crate::seq::title::{SeqLoadGame, SeqTitleScreen};
 
 use super::evermist_island;
 use super::sleeper_island;
+use super::combat;
 
 pub fn create_tas() -> GameManager {
     GameManager::new(SeqList::create(
@@ -17,6 +18,17 @@ pub fn create_tas() -> GameManager {
             evermist_island::create(),
             sleeper_island::create(),
             SeqLog::create("SEQ DONE"),
+        ],
+    ))
+}
+
+pub fn create_combat_test() -> GameManager {
+    GameManager::new(SeqList::create(
+        "TAS",
+        vec![
+            SeqLog::create("COMBAT START"),
+            combat::create(),
+            SeqLog::create("COMBAT DONE"),
         ],
     ))
 }

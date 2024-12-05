@@ -48,16 +48,16 @@ impl CombatManager {
             self.controller = Self::encounter_factory(state)
         }
 
-        for i in 0..3 {
-            if self.btn[i].update(&mut state.gamepads[i], dt) {
-                self.btn[i] = ButtonPress {
-                    action: SosAction::Confirm,
-                    press_time: 0.1,
-                    release_time: 0.2,
-                    ..Default::default()
-                };
-            }
-        }
+        // for i in 0..3 {
+        //     if self.btn[i].update(&mut state.gamepads[i], dt) {
+        //         self.btn[i] = ButtonPress {
+        //             action: SosAction::Confirm,
+        //             press_time: 0.1,
+        //             release_time: 0.2,
+        //             ..Default::default()
+        //         };
+        //     }
+        // }
 
         // Execute Different states if controller is active
         if let Some(ref controller) = self.controller {
