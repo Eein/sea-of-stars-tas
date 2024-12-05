@@ -30,7 +30,7 @@ pub trait Action {
     // fn execute_confirm_enemy_sequence(&self, _ctx: GameState) {}
     // // fn execute_selecting_player_sequence(&self, _ctx: GameState) {}
     // fn execute_complete(&self, _ctx: GameState) {}
-    
+
     // Returns true when timing sequence is done
     fn calculate_value(&self, _ctx: GameState) -> u32 {
         // We would do a check for the type of skill and process that or override if its spaghetti
@@ -76,16 +76,22 @@ pub struct Skill {
     pub resource: SkillResource,
     pub battle_command: BattleCommand,
     pub cost: u32,
-    pub timing_controller: Box<dyn Timing>,
+    pub timing_controller: Box<dyn ActionTiming>,
 }
 
-pub trait Timing {
-    fn execute_timing_sequence(&self, _ctx: GameState) -> bool;
+pub trait ActionTiming {
+    fn execute_timing_sequence(&self, character: PlayerPartyCharacter, _ctx: GameState) -> bool;
 }
 
 pub struct BasicAttack;
-impl Timing for BasicAttack {
-    fn execute_timing_sequence(&self, _ctx: GameState) -> bool {
-        true
+impl ActionTiming for BasicAttack {
+    fn execute_timing_sequence(&self, character: PlayerPartyCharacter, ctx: GameState) -> bool {
+        for player in ctx.memory_managers.combat_manager.data.players.items {
+            if character == player.character && player.timed_attack_ready {
+                return true;
+                // Todo: Press the button for timing attack
+            }
+        }
+        false
     }
 }

@@ -4,9 +4,9 @@ use crate::game_manager::GameManager;
 use crate::seq::relics::SeqRelicList;
 use crate::seq::title::{SeqLoadGame, SeqTitleScreen};
 
+use super::combat;
 use super::evermist_island;
 use super::sleeper_island;
-use super::combat;
 
 pub fn create_tas() -> GameManager {
     GameManager::new(SeqList::create(

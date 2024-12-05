@@ -4,7 +4,7 @@ mod controllers;
 mod skills;
 
 use data::prelude::PlayerPartyCharacter;
-use skills::{Skill, BasicAttack};
+use skills::{BasicAttack, Skill};
 
 use crate::combat::controllers::basic_encounter_controller::BasicEncounterController;
 use crate::combat::controllers::EncounterController;
@@ -49,7 +49,6 @@ impl CombatManager {
             self.controller = Self::encounter_factory(state)
         }
 
-
         // for (i, btn) in self.btn {
         //     if self.btn[i].update(&mut state.gamepads[i], dt) {
         //         self.btn[i] = ButtonPress {
@@ -77,20 +76,19 @@ impl CombatManager {
             CombatFsm::Idle => {
                 println!("idle");
                 if self.action.is_none() && combat_manager.selected_character.is_some() {
-                println!("setting action");
+                    println!("setting action");
                     self.fsm = CombatFsm::Action;
                 }
 
-        // if (
-        //     self.action is None
-        //     and not combat_manager.battle_command_has_focus
-        //     and combat_manager.selected_character is not PlayerPartyCharacter.NONE
-        // ):
-        //     logger.warn("In command menu - cancel action")
-        //     sos_ctrl().cancel()
-        //     return True
+                // if (
+                //     self.action is None
+                //     and not combat_manager.battle_command_has_focus
+                //     and combat_manager.selected_character is not PlayerPartyCharacter.NONE
+                // ):
+                //     logger.warn("In command menu - cancel action")
+                //     sos_ctrl().cancel()
+                //     return True
                 //
-
             }
             CombatFsm::Dialog => {
                 // this may not be needed - can probably handle this outside of combat
@@ -100,7 +98,7 @@ impl CombatManager {
             CombatFsm::Action => {
                 // Generate Action from Utility and select
                 println!("action");
-                self.action = Some(Skill { 
+                self.action = Some(Skill {
                     character: PlayerPartyCharacter::Zale,
                     internal_name: "ZaleBasicAttack",
                     timing_type: skills::TimingType::MultiHit,
@@ -109,7 +107,7 @@ impl CombatManager {
                     damage_types: [CombatDamageType::Sword].to_vec(),
                     battle_command: skills::BattleCommand::Attack,
                     timing_controller: Box::new(BasicAttack),
-                    cost: 0 
+                    cost: 0,
                 });
 
                 if self.action.is_some() {

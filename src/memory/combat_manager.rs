@@ -183,7 +183,7 @@ impl CombatManagerData {
         for player in self.players.items.clone() {
             if player.selected {
                 self.selected_character = Some(player.character);
-                return Ok(())
+                return Ok(());
             }
         }
         self.selected_character = None;
