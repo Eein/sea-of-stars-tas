@@ -3,10 +3,13 @@
 mod controllers;
 mod skills;
 
+use data::prelude::PlayerPartyCharacter;
+use skills::{Skill, ZaleBasicAttack};
+
 use crate::combat::controllers::basic_encounter_controller::BasicEncounterController;
 use crate::combat::controllers::EncounterController;
 use crate::control::SosAction;
-use crate::memory::combat_manager::CombatControllerType;
+use crate::memory::combat_manager::{CombatControllerType, CombatDamageType};
 use crate::seq::button::ButtonPress;
 use crate::state::GameState;
 
@@ -22,18 +25,16 @@ enum CombatFsm {
 
 pub struct CombatManager {
     fsm: CombatFsm,
-    btn: [ButtonPress; 3],
+    btn: ButtonPress,
     controller: Option<Box<dyn EncounterController>>,
+    action: Option<Skill>,
 }
 
 impl Default for CombatManager {
     fn default() -> Self {
         Self {
-            btn: [
-                ButtonPress::new(SosAction::Confirm),
-                ButtonPress::new(SosAction::Confirm),
-                ButtonPress::new(SosAction::Confirm),
-            ],
+            btn: ButtonPress::default(),
+            action: None,
             fsm: CombatFsm::Idle,
             controller: None,
         }
@@ -48,7 +49,8 @@ impl CombatManager {
             self.controller = Self::encounter_factory(state)
         }
 
-        // for i in 0..3 {
+
+        // for (i, btn) in self.btn {
         //     if self.btn[i].update(&mut state.gamepads[i], dt) {
         //         self.btn[i] = ButtonPress {
         //             action: SosAction::Confirm,
@@ -71,8 +73,24 @@ impl CombatManager {
         }
 
         match self.fsm {
+            // intended to wait for acceptable parameters
             CombatFsm::Idle => {
-                // intended to wait for acceptable parameters
+                println!("idle");
+                if self.action.is_none() && combat_manager.selected_character.is_some() {
+                println!("setting action");
+                    self.fsm = CombatFsm::Action;
+                }
+
+        // if (
+        //     self.action is None
+        //     and not combat_manager.battle_command_has_focus
+        //     and combat_manager.selected_character is not PlayerPartyCharacter.NONE
+        // ):
+        //     logger.warn("In command menu - cancel action")
+        //     sos_ctrl().cancel()
+        //     return True
+                //
+
             }
             CombatFsm::Dialog => {
                 // this may not be needed - can probably handle this outside of combat
@@ -80,13 +98,54 @@ impl CombatManager {
                 // TODO(eein): button press here
             }
             CombatFsm::Action => {
+                println!("action");
+                self.action = Some(Skill { 
+                    character: PlayerPartyCharacter::Zale,
+                    internal_name: "ZaleBasicAttack",
+                    timing_type: skills::TimingType::MultiHit,
+                    target_type: skills::TargetType::Enemy,
+                    resource: skills::SkillResource::None,
+                    damage_types: [CombatDamageType::Sword].to_vec(),
+                    battle_command: skills::BattleCommand::Attack,
+                    timing_controller: ZaleBasicAttack,
+                    cost: 0 
+                });
+
+                if self.action.is_some() {
+                    self.fsm = CombatFsm::Consideration;
+                }
                 // Generate Action
             }
             CombatFsm::Blocking => {
                 // Blocking Behaviour
             }
             CombatFsm::Consideration => {
-                // Execute Consideration from action
+                // Execute Consideration from action (selection)
+                if let Some(action) = &self.action {
+                    if combat_manager.selected_character != Some(action.character.clone()) {
+                        // press right if consideration is invalid
+                        // for (i, btn) in self.btn {
+                        //     if self.btn[i].update(&mut state.gamepads[i], dt) {
+                        //         self.btn[i] = ButtonPress {
+                        //             action: SosAction::Confirm,
+                        //             press_time: 0.1,
+                        //             release_time: 0.2,
+                        //             ..Default::default()
+                        //         };
+                        //     }
+                        // }
+                        //
+                        // TODO: Need thoughts here on how to make this simpler
+                        if self.btn.update(&mut state.gamepads[0], dt) {
+                            self.btn = ButtonPress {
+                                action: SosAction::MenuRight,
+                                press_time: 0.05,
+                                release_time: 0.05,
+                                ..Default::default()
+                            }
+                        }
+                    }
+                }
             }
             CombatFsm::Appraisal => {
                 // Execute Appraisal

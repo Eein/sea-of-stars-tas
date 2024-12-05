@@ -135,6 +135,7 @@ pub struct CombatManagerData {
     pub ultimate_progress: f32,
     pub enemies: UnityList<CombatEnemy>,
     pub players: UnityList<CombatPlayer>,
+    pub selected_character: Option<PlayerPartyCharacter>,
 }
 
 impl Default for MemoryManager<CombatManagerData> {
@@ -167,6 +168,7 @@ impl MemoryManagerUpdate for CombatManagerData {
             self.update_combo_points_and_ultimates(&memory_context)?;
             self.update_enemies(&memory_context)?;
             self.update_players(&memory_context)?;
+            self.update_selected_character(&memory_context)?;
         }
 
         Ok(())
@@ -174,6 +176,21 @@ impl MemoryManagerUpdate for CombatManagerData {
 }
 
 impl CombatManagerData {
+    pub fn update_selected_character(
+        &mut self,
+        _memory_context: &MemoryContext,
+    ) -> Result<(), MemoryError> {
+        for player in self.players.items.clone() {
+            if player.selected {
+                self.selected_character = Some(player.character);
+                return Ok(())
+            }
+        }
+        self.selected_character = None;
+
+        Ok(())
+    }
+
     pub fn update_encounter_active(
         &mut self,
         memory_context: &MemoryContext,
