@@ -404,7 +404,7 @@ impl GuiHelper for MainHelper {
                 .add_enabled(!running, egui::Button::new("Start Combat Test"))
                 .clicked()
             {
-                let mut gm = tas::create_combat_test();
+                let gm = tas::create_combat_test();
                 *game_manager = Some(gm);
                 self.countdown = Some(1.0);
             }
