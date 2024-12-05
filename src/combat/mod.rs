@@ -4,7 +4,7 @@ mod controllers;
 mod skills;
 
 use data::prelude::PlayerPartyCharacter;
-use skills::{Skill, ZaleBasicAttack};
+use skills::{Skill, BasicAttack};
 
 use crate::combat::controllers::basic_encounter_controller::BasicEncounterController;
 use crate::combat::controllers::EncounterController;
@@ -98,6 +98,7 @@ impl CombatManager {
                 // TODO(eein): button press here
             }
             CombatFsm::Action => {
+                // Generate Action from Utility and select
                 println!("action");
                 self.action = Some(Skill { 
                     character: PlayerPartyCharacter::Zale,
@@ -107,14 +108,13 @@ impl CombatManager {
                     resource: skills::SkillResource::None,
                     damage_types: [CombatDamageType::Sword].to_vec(),
                     battle_command: skills::BattleCommand::Attack,
-                    timing_controller: ZaleBasicAttack,
+                    timing_controller: BasicAttack,
                     cost: 0 
                 });
 
                 if self.action.is_some() {
                     self.fsm = CombatFsm::Consideration;
                 }
-                // Generate Action
             }
             CombatFsm::Blocking => {
                 // Blocking Behaviour
@@ -124,17 +124,6 @@ impl CombatManager {
                 if let Some(action) = &self.action {
                     if combat_manager.selected_character != Some(action.character.clone()) {
                         // press right if consideration is invalid
-                        // for (i, btn) in self.btn {
-                        //     if self.btn[i].update(&mut state.gamepads[i], dt) {
-                        //         self.btn[i] = ButtonPress {
-                        //             action: SosAction::Confirm,
-                        //             press_time: 0.1,
-                        //             release_time: 0.2,
-                        //             ..Default::default()
-                        //         };
-                        //     }
-                        // }
-                        //
                         // TODO: Need thoughts here on how to make this simpler
                         if self.btn.update(&mut state.gamepads[0], dt) {
                             self.btn = ButtonPress {
@@ -144,11 +133,14 @@ impl CombatManager {
                                 ..Default::default()
                             }
                         }
+                    } else {
+                        self.fsm = CombatFsm::Appraisal;
                     }
                 }
             }
             CombatFsm::Appraisal => {
                 // Execute Appraisal
+                //
             }
         }
 

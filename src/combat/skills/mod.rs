@@ -76,11 +76,11 @@ pub struct Skill {
     pub resource: SkillResource,
     pub battle_command: BattleCommand,
     pub cost: u32,
-    pub timing_controller: ZaleBasicAttack,
+    pub timing_controller: BasicAttack,
 }
 
-pub struct ZaleBasicAttack;
-impl ZaleBasicAttack {
+pub struct BasicAttack;
+impl BasicAttack {
     fn execute_timing_sequence(&self, _ctx: GameState) -> bool {
         true
     }
