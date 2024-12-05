@@ -140,6 +140,7 @@ impl MainHelper {
             "Combo: {}/3000 | Filled: {}/3 | Ultimate Progress: {:.3}%",
             cmd.combo_point_progress, cmd.combo_points, cmd.ultimate_progress
         ));
+        ui.label(format!("Selected Character: {:?}", cmd.selected_character));
         ui.separator();
         egui::CollapsingHeader::new("Enemies")
             .default_open(true)
@@ -405,7 +406,7 @@ impl GuiHelper for MainHelper {
             {
                 let mut gm = tas::create_combat_test();
                 *game_manager = Some(gm);
-                self.countdown = Some(COUNTDOWN_TIMEOUT);
+                self.countdown = Some(1.0);
             }
         }
 

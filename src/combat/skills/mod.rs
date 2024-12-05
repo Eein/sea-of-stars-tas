@@ -1,7 +1,9 @@
+use data::prelude::PlayerPartyCharacter;
+
 use crate::memory::combat_manager::CombatDamageType;
 use crate::state::GameState;
 
-trait Action {
+pub trait Action {
     fn is_usable(&self, _ctx: GameState) -> bool {
         false
     }
@@ -30,21 +32,20 @@ trait Action {
     // fn execute_complete(&self, _ctx: GameState) {}
     
     // Returns true when timing sequence is done
-    fn execute_timing_sequence(&self, _ctx: GameState) -> bool;
     fn calculate_value(&self, _ctx: GameState) -> u32 {
         // We would do a check for the type of skill and process that or override if its spaghetti
         0
     }
 }
 
-enum TimingType {
+pub enum TimingType {
     None,
     OneHit,
     Charge,
     MultiHit,
 }
 
-enum TargetType {
+pub enum TargetType {
     None,
     Player,
     Enemy,
@@ -52,40 +53,38 @@ enum TargetType {
     All,
 }
 
-enum SkillResource {
+pub enum SkillResource {
     None,
     Mana,
     ComboPoints,
     UltimateGuage,
 }
 
-enum BattleCommand {
+pub enum BattleCommand {
     Attack,
     Skill,
     Combo,
     Item,
 }
 
-struct Skill {
-    internal_name: &'static str,
-    timing_type: TimingType,
-    target_type: TargetType,
-    damage_types: Vec<CombatDamageType>,
-    resource: SkillResource,
-    battle_command: BattleCommand,
-    cost: u32,
+pub struct Skill {
+    pub character: PlayerPartyCharacter,
+    pub internal_name: &'static str,
+    pub timing_type: TimingType,
+    pub target_type: TargetType,
+    pub damage_types: Vec<CombatDamageType>,
+    pub resource: SkillResource,
+    pub battle_command: BattleCommand,
+    pub cost: u32,
+    pub timing_controller: ZaleBasicAttack,
 }
 
-struct ZaleBasicAttack {
-    data: Skill
-}
-
-impl Action for ZaleBasicAttack {
+pub struct ZaleBasicAttack;
+impl ZaleBasicAttack {
     fn execute_timing_sequence(&self, _ctx: GameState) -> bool {
         true
     }
 }
-
 
 
 // ZaleBasicAttack {
