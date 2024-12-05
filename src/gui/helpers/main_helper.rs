@@ -399,6 +399,14 @@ impl GuiHelper for MainHelper {
                 *game_manager = Some(gm);
                 self.countdown = Some(COUNTDOWN_TIMEOUT);
             }
+            if ui
+                .add_enabled(!running, egui::Button::new("Start Combat Test"))
+                .clicked()
+            {
+                let mut gm = tas::create_combat_test();
+                *game_manager = Some(gm);
+                self.countdown = Some(COUNTDOWN_TIMEOUT);
+            }
         }
 
         if let Some(gm) = game_manager {
