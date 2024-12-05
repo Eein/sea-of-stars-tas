@@ -80,14 +80,15 @@ pub struct Skill {
 }
 
 pub trait ActionTiming {
-    fn execute_timing_sequence(&self, character: PlayerPartyCharacter, _ctx: GameState) -> bool;
+    fn execute_timing_sequence(&self, _ctx: GameState) -> bool;
 }
 
 pub struct BasicAttack;
 impl ActionTiming for BasicAttack {
-    fn execute_timing_sequence(&self, character: PlayerPartyCharacter, ctx: GameState) -> bool {
-        for player in ctx.memory_managers.combat_manager.data.players.items {
-            if character == player.character && player.timed_attack_ready {
+    fn execute_timing_sequence(&self, ctx: GameState) -> bool {
+        let cmd = ctx.memory_managers.combat_manager.data;
+        for player in cmd.players.items {
+            if cmd.selected_character == Some(player.character) && player.timed_attack_ready {
                 return true;
                 // Todo: Press the button for timing attack
             }
