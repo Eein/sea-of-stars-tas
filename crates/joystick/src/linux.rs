@@ -84,8 +84,10 @@ impl Joystick {
         match button {
             Button::A => KeyCode::BTN_SOUTH,
             Button::B => KeyCode::BTN_EAST,
-            Button::X => KeyCode::BTN_WEST,
-            Button::Y => KeyCode::BTN_NORTH,
+            // On Linux, the game swaps the BTN_NORTH/BTN_WEST codes (the same
+            // evdev quirk handled for L/R and triggers), so X and Y are flipped.
+            Button::X => KeyCode::BTN_NORTH,
+            Button::Y => KeyCode::BTN_WEST,
             Button::LT(_) => KeyCode::BTN_TL2,
             Button::RT(_) => KeyCode::BTN_TR2,
             Button::LB => KeyCode::BTN_TL,

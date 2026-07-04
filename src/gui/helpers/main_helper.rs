@@ -408,6 +408,16 @@ impl GuiHelper for MainHelper {
                 *game_manager = Some(gm);
                 self.countdown = Some(1.0);
             }
+            // Debug: runs only the relic-selection sequence. Position the game on
+            // the Difficulty Selection screen before clicking.
+            if ui
+                .add_enabled(!running, egui::Button::new("Start Relic Test"))
+                .clicked()
+            {
+                let gm = tas::create_relic_test();
+                *game_manager = Some(gm);
+                self.countdown = Some(1.0);
+            }
         }
 
         if let Some(gm) = game_manager {
