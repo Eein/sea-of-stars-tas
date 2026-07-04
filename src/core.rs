@@ -92,7 +92,7 @@ impl TasCore {
     /// Attach to `GameAssembly.dll` once the process is known.
     pub fn register_module(&mut self) {
         if self.context.module.is_none() {
-            if let Some(ref mut process) = &mut self.context.process {
+            if let Some(process) = &mut self.context.process {
                 info!("- Loading Module");
                 self.context.module = Module::attach(process);
             }
