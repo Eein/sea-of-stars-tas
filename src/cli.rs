@@ -405,6 +405,8 @@ pub fn run(args: CliArgs) -> ExitCode {
     // Launch the game first if configured and it isn't already running.
     let start_command = core.game_state.config.game_start_command.clone();
     let launched = start_game_if_needed(&mut core, start_command.as_deref());
+    // Let the title sequence know it should wait out the intro animation.
+    core.game_state.game_launched_by_tas = launched;
 
     info!("Waiting to attach to {GAME_PROCESS_NAME}...");
     // If we just launched the game, wait for it to appear even without

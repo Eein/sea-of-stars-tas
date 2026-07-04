@@ -30,6 +30,10 @@ pub struct GameState {
     pub gamepads: [GenericJoystick; 3],
     pub memory_managers: MemoryManagers,
     pub config: Config,
+    /// True when the TAS launched the game itself (via `game_start_command`).
+    /// Used to add a settle delay on the title screen for the intro animation,
+    /// which is only relevant on a cold boot we triggered.
+    pub game_launched_by_tas: bool,
 }
 
 impl GameState {
