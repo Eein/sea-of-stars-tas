@@ -267,6 +267,58 @@ fn dump_state(core: &TasCore, format: LogFormat) {
     }
 }
 
+/// Minimal shell-quoting: wrap in double quotes only if the value needs it.
+fn shell_quote(s: &str) -> String {
+    if s.is_empty() || s.contains(char::is_whitespace) {
+        format!("\"{s}\"")
+    } else {
+        s.to_string()
+    }
+}
+
+/// Render a `tas-cli` command line that reproduces a run, so a GUI or CLI
+/// session can be replayed headlessly. Config-derived behavior (konami,
+/// solstice) is emitted explicitly so the command doesn't depend on the local
+/// `config.toml`. `--log-format json --start-delay 0` are canonical, agent
+/// friendly reproduction defaults.
+pub fn repro_command(
+    route: Route,
+    checkpoint: Option<&str>,
+    save_slot: usize,
+    auto_save_present: bool,
+    config: &Config,
+) -> String {
+    let route_name = route
+        .to_possible_value()
+        .map(|v| v.get_name().to_string())
+        .unwrap_or_else(|| "tas".to_string());
+
+    let mut parts = vec!["tas-cli".to_string(), format!("--route {route_name}")];
+
+    match route {
+        Route::Tas => {
+            if let Some(checkpoint) = checkpoint {
+                if checkpoint != "New Game" {
+                    parts.push(format!("--checkpoint {}", shell_quote(checkpoint)));
+                }
+            }
+        }
+        Route::Load => {
+            parts.push(format!("--save-slot {save_slot}"));
+            parts.push(format!("--auto-save-present {auto_save_present}"));
+        }
+        Route::Combat | Route::Relic => {}
+    }
+
+    parts.push(format!("--konami {}", config.konami_code));
+    parts.push(format!("--solstice {}", config.solstice_diploma));
+    parts.push("--wait-for-game".to_string());
+    parts.push("--log-format json".to_string());
+    parts.push("--start-delay 0".to_string());
+
+    parts.join(" ")
+}
+
 /// Build the requested game manager, applying route-specific options.
 fn build_game_manager(core: &mut TasCore, args: &CliArgs) {
     let gm = match args.route {
@@ -315,6 +367,17 @@ pub fn run(args: CliArgs) -> ExitCode {
         dump_state(&core, args.log_format);
         return ExitCode::from(exit::SUCCESS);
     }
+
+    info!(
+        "Reproduce this run with: {}",
+        repro_command(
+            args.route,
+            args.checkpoint.as_deref(),
+            args.save_slot,
+            args.auto_save_present,
+            &core.game_state.config,
+        )
+    );
 
     let code = run_sequence(&mut core, &args);
 
