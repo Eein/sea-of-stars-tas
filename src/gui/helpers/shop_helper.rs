@@ -29,7 +29,7 @@ impl GuiHelper for ShopHelper {
             .items
             .items
             .iter()
-            .map(|item| all_items().get(&item.guid as &str).unwrap())
+            .filter_map(|item| all_items().get(&item.guid as &str))
         {
             ui.label(format!("[{}g] {}", item.buy_price, item.name));
         }
