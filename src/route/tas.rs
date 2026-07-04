@@ -22,6 +22,20 @@ pub fn create_tas() -> GameManager {
     ))
 }
 
+/// Debug route that runs only the relic-selection sequence, assuming the game
+/// is already sitting on the Difficulty Selection screen. Useful for iterating
+/// on the relic screen logic without replaying the whole title sequence.
+pub fn create_relic_test() -> GameManager {
+    GameManager::new(SeqList::create(
+        "RELIC TEST",
+        vec![
+            SeqLog::create("RELIC TEST START"),
+            SeqRelicList::create(),
+            SeqLog::create("RELIC TEST DONE"),
+        ],
+    ))
+}
+
 pub fn create_combat_test() -> GameManager {
     GameManager::new(SeqList::create(
         "TAS",
