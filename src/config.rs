@@ -38,6 +38,10 @@ pub struct Config {
     pub persist_tab_state: bool,
     pub konami_code: bool,
     pub solstice_diploma: bool,
+    /// Shell command used to launch the game when it isn't already running.
+    /// Optional; when unset the game must be started manually.
+    #[serde(default)]
+    pub game_start_command: Option<String>,
     pub relics: HashMap<String, bool>,
 }
 

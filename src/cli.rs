@@ -91,6 +91,11 @@ pub struct CliArgs {
     #[arg(long)]
     pub solstice: Option<bool>,
 
+    /// Shell command used to launch the game if it isn't already running.
+    /// Overrides the `game_start_command` config setting.
+    #[arg(long)]
+    pub game_start_command: Option<String>,
+
     /// Wait for the game process to appear instead of exiting immediately.
     #[arg(long)]
     pub wait_for_game: bool,
@@ -191,22 +196,64 @@ fn resolve_config(args: &CliArgs) -> Config {
     if let Some(solstice) = args.solstice {
         config.solstice_diploma = solstice;
     }
+    if let Some(command) = &args.game_start_command {
+        config.game_start_command = Some(command.clone());
+    }
     config
 }
 
-/// Attach to the game, honoring `--wait-for-game` / `--attach-timeout`.
+/// Spawn the game via a shell so `game_start_command` can be an arbitrary
+/// command line. The child is left detached; we don't wait on it.
+fn launch_game(command: &str) -> std::io::Result<()> {
+    use std::process::Command;
+    #[cfg(unix)]
+    let mut cmd = {
+        let mut c = Command::new("sh");
+        c.arg("-c").arg(command);
+        c
+    };
+    #[cfg(windows)]
+    let mut cmd = {
+        let mut c = Command::new("cmd");
+        c.arg("/C").arg(command);
+        c
+    };
+    cmd.spawn().map(|_child| ())
+}
+
+/// Launch the game via `game_start_command` if it is configured and the game
+/// isn't already running. Returns `true` if we started it.
+fn start_game_if_needed(core: &mut TasCore, command: Option<&str>) -> bool {
+    let Some(command) = command else {
+        return false;
+    };
+    if core.is_game_running() {
+        info!("Game already running; not launching game_start_command.");
+        return false;
+    }
+    info!("Game not running; launching game_start_command: {command}");
+    match launch_game(command) {
+        Ok(()) => true,
+        Err(err) => {
+            error!("Failed to launch game_start_command: {err}");
+            false
+        }
+    }
+}
+
+/// Attach to the game, honoring `wait_for_game` / `--attach-timeout`.
 /// Returns `true` once attached, `false` if we gave up.
-fn attach(core: &mut TasCore, args: &CliArgs) -> bool {
+fn attach(core: &mut TasCore, wait_for_game: bool, attach_timeout: u64) -> bool {
     let start = Instant::now();
     loop {
         core.poll();
         if core.is_attached() {
             return true;
         }
-        if !args.wait_for_game {
+        if !wait_for_game {
             return false;
         }
-        if args.attach_timeout > 0 && start.elapsed().as_secs() >= args.attach_timeout {
+        if attach_timeout > 0 && start.elapsed().as_secs() >= attach_timeout {
             return false;
         }
         std::thread::sleep(Duration::from_millis(100));
@@ -313,6 +360,9 @@ pub fn repro_command(
 
     parts.push(format!("--konami {}", config.konami_code));
     parts.push(format!("--solstice {}", config.solstice_diploma));
+    if let Some(command) = &config.game_start_command {
+        parts.push(format!("--game-start-command {}", shell_quote(command)));
+    }
     parts.push("--wait-for-game".to_string());
     parts.push("--log-format json".to_string());
     parts.push("--start-delay 0".to_string());
@@ -352,8 +402,15 @@ pub fn run(args: CliArgs) -> ExitCode {
 
     let mut core = TasCore::new(config);
 
+    // Launch the game first if configured and it isn't already running.
+    let start_command = core.game_state.config.game_start_command.clone();
+    let launched = start_game_if_needed(&mut core, start_command.as_deref());
+
     info!("Waiting to attach to {GAME_PROCESS_NAME}...");
-    if !attach(&mut core, &args) {
+    // If we just launched the game, wait for it to appear even without
+    // --wait-for-game, since it won't be ready instantly.
+    let wait_for_game = args.wait_for_game || launched;
+    if !attach(&mut core, wait_for_game, args.attach_timeout) {
         error!("Could not attach to {GAME_PROCESS_NAME} (game not running?).");
         return ExitCode::from(exit::NO_GAME);
     }

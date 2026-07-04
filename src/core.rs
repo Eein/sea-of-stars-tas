@@ -55,6 +55,16 @@ impl TasCore {
         self.context.process.is_some()
     }
 
+    /// Whether the game process is currently running, without attaching to it.
+    /// Used to avoid launching a second instance via `game_start_command`.
+    pub fn is_game_running(&mut self) -> bool {
+        self.process_list.refresh();
+        self.process_list
+            .processes_by_name(GAME_PROCESS_NAME)
+            .next()
+            .is_some()
+    }
+
     /// Drop the process handle if the game is no longer running so that memory
     /// addresses don't hang onto a zombie process.
     pub fn maybe_deregister_process(&mut self) {
