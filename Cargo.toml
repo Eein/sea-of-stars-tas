@@ -10,40 +10,46 @@ joystick = { path = "crates/joystick", version = "0.1.0" }
 memory = { path = "crates/memory", version = "0.1.0" }
 data = { path = "crates/data", version = "0.1.0" }
 utility = { path = "crates/utility", version = "0.1.0" }
-bytemuck = { version = "1.18.0", features = ["min_const_generics"] }
+bytemuck = { version = "1.25.0", features = ["min_const_generics"] }
 seq = { path = "crates/seq", version = "0.1.0" }
-sysinfo = { version = "0.32.0", default-features = false, features = ["system", "multithread"] }
-egui = { version = "0.29", features = ["persistence"] }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-clap = { version = "4.5", features = ["derive"] }
-eframe = { version = "0.29", default-features = false, features = [
+sysinfo = { version = "0.39.5", default-features = false, features = ["system", "multithread"] }
+egui = { version = "0.34", features = ["persistence"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.150"
+clap = { version = "4.6.1", features = ["derive"] }
+eframe = { version = "0.34", default-features = false, features = [
     "default_fonts", # Embed the default egui fonts.
     "glow",          # Use the glow rendering backend. Alternative: "wgpu".
     "persistence",   # Enable restoring app state when restarting the app.
+    # Linux windowing backends. As of eframe 0.34 these also gate glutin's
+    # x11/wayland GL support, so without them glutin fails to create a context
+    # ("provided native window is not supported").
+    "wayland",
+    "x11",
 ] }
-egui_dock = { version = "0.14.0", features = ["serde"] }
-colog = "1.3.0"
-log = "0.4.22"
-puffin_egui = { git = "https://github.com/tedsteen/puffin", branch = "upgrade-egui" }
-puffin = { git = "https://github.com/tedsteen/puffin", branch = "upgrade-egui" }
-yaml-rust2 = "0.9.0"
-vec3-rs = "0.1.6"
-libm = "0.2.8"
-toml = "0.8.19"
-toml_edit = "0.22.22"
-itoa = "1.0.11"
+egui_dock = { version = "0.19.1", features = ["serde"] }
+colog = "1.4.0"
+log = "0.4.33"
+# puffin is only used by the (currently commented-out) profiler. The official
+# EmbarkStudios repo tracks egui 0.34; pinned to a commit for reproducibility.
+puffin_egui = { git = "https://github.com/EmbarkStudios/puffin", rev = "7e08a533f9debfb7d051547263d2ab84c666314f" }
+puffin = { git = "https://github.com/EmbarkStudios/puffin", rev = "7e08a533f9debfb7d051547263d2ab84c666314f" }
+yaml-rust2 = "0.11.0"
+vec3-rs = "0.4.1"
+libm = "0.2.16"
+toml = "1.1.2"
+toml_edit = "0.25.12"
+itoa = "1.0.18"
 delta = "0.2.1"
-itertools = "0.13.0"
+itertools = "0.15.0"
 fps_clock = "2.0.0"
-ron = "0.8.1"
+ron = "0.12.2"
 vec2 = "0.2.1"
-egui_extras = { version = "0.29", features = ["image"] }
-image = { version = "0.25", features = ["png"] }
+egui_extras = { version = "0.34", features = ["image"] }
+image = { version = "0.25.10", features = ["png"] }
 
 [dependencies.winit]
-# version = "*"
-version = "=0.30.5"
+version = "=0.30.13"
 features = ["default"]
 
 [workspace]
@@ -63,4 +69,3 @@ lto = true
 panic = "abort"
 codegen-units = 1
 strip = true
-

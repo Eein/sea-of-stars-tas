@@ -47,18 +47,19 @@ impl Gui {
         )
         .expect("Error loading application");
     }
-    pub fn update(state: &mut State, ctx: &egui::Context, frame: &mut eframe::Frame) {
+    pub fn update(state: &mut State, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
         match state.core.context.process.is_some() {
-            true => Self::active(state, ctx, frame),
-            false => Self::inactive(state, ctx, frame),
+            true => Self::active(state, ui, frame),
+            false => Self::inactive(state, ui, frame),
         }
     }
 
-    pub fn active(state: &mut State, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    pub fn active(state: &mut State, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        let ctx = ui.ctx().clone();
         let speedrun_manager = &state.core.game_state.memory_managers.speedrun_manager.data;
 
-        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            egui::menu::bar(ui, |ui| {
+        egui::Panel::top("top_panel").show_inside(ui, |ui| {
+            egui::MenuBar::new().ui(ui, |ui| {
                 ui.menu_button("File", |ui| {
                     if ui.button("Quit").clicked() {
                         ctx.send_viewport_cmd(egui::ViewportCommand::Close);
@@ -79,12 +80,13 @@ impl Gui {
             });
         });
 
-        egui::CentralPanel::default().show(ctx, |_ui| {
+        egui::CentralPanel::default().show_inside(ui, |ui| {
+            let style = Style::from_egui(ui.style().as_ref());
             DockArea::new(&mut state.gui.dock_state)
-                .style(Style::from_egui(ctx.style().as_ref()))
+                .style(style)
                 .show_close_buttons(false)
-                .show(
-                    ctx,
+                .show_inside(
+                    ui,
                     &mut TabViewer {
                         game_state: &mut state.core.game_state,
                         game_manager: &mut state.core.game_manager,
@@ -99,8 +101,8 @@ impl Gui {
         ctx.request_repaint();
     }
 
-    pub fn inactive(_state: &mut State, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        egui::CentralPanel::default().show(ctx, |ui| {
+    pub fn inactive(_state: &mut State, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        egui::CentralPanel::default().show_inside(ui, |ui| {
             ui.label("Game is not running...");
         });
     }

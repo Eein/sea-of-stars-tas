@@ -9,7 +9,6 @@ use crate::memory::level_up_manager::LevelUpUpgrade;
 
 use delta::Timer;
 use log::info;
-use vec3_rs::Vector3;
 
 pub const NAME: &str = "Main Helper";
 
@@ -467,7 +466,7 @@ impl GuiHelper for MainHelper {
                 for (idx, player) in sppmd.players.items.iter().enumerate() {
                     let gameobject_position = player
                         .gameobject_position
-                        .unwrap_or(Vector3::new(0.0, 0.0, 0.0));
+                        .unwrap_or_default();
                     ui.label(format!("P{} pos: {:?}", idx + 1, gameobject_position));
                 }
             }

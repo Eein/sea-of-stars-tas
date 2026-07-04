@@ -17,6 +17,7 @@ use log::{error, info, warn, LevelFilter, Metadata, Record};
 use crate::config::{load_config, Config};
 use crate::core::{TasCore, GAME_PROCESS_NAME};
 use crate::route::tas;
+use crate::util::vec3_ext::Vector3Ext;
 
 /// Process exit codes. Kept small and stable so callers/agents can branch on them.
 pub mod exit {

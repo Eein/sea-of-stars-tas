@@ -1,6 +1,5 @@
-use vec3_rs::Vector3;
-
 use super::{GuiHelper, MovementGui};
+use crate::util::vec3_ext::Vector3Ext;
 use crate::{game_manager::GameManager, seq::movement::Move, state::GameState};
 
 pub const NAME: &str = "Route Helper v1";
@@ -52,10 +51,10 @@ impl GuiHelper for RouteHelperV1 {
 
         let world_pos = sppmd.players.items[0]
             .position
-            .unwrap_or(Vector3::new(0.0, 0.0, 0.0));
+            .unwrap_or_default();
         let pos = sppmd.players.items[0]
             .gameobject_position
-            .unwrap_or(Vector3::new(0.0, 0.0, 0.0));
+            .unwrap_or_default();
 
         ui.horizontal(|ui| {
             if ui.button("To").clicked() {
@@ -114,7 +113,7 @@ impl GuiHelper for RouteHelperV1 {
             }
             text += "    ],
 ),";
-            ui.output_mut(|o| o.copied_text = text);
+            ui.ctx().copy_text(text);
         }
     }
 }

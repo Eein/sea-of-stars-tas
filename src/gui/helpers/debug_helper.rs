@@ -1,4 +1,5 @@
 use super::GuiHelper;
+use crate::util::vec3_ext::Vector3Ext;
 use crate::{game_manager::GameManager, memory::speedrun_manager::SpeedrunTimer, state::GameState};
 
 use vec3_rs::Vector3;
@@ -39,12 +40,12 @@ impl MovementGui {
 
         let gameobject_position = sppmd.players.items[0]
             .gameobject_position
-            .unwrap_or(Vector3::new(0.0, 0.0, 0.0));
+            .unwrap_or_default();
         let position = sppmd.players.items[0]
             .position
-            .unwrap_or(Vector3::new(0.0, 0.0, 0.0));
+            .unwrap_or_default();
 
-        const EPSILON: f64 = 0.01;
+        const EPSILON: f32 = 0.01;
 
         if !self
             .last_game_obj
@@ -81,10 +82,12 @@ impl MovementGui {
             pos.get_z()
         ));
         if ui.button("Copy to clipboard").clicked() {
-            ui.output_mut(|o| {
-                o.copied_text =
-                    format!("{:.3}, {:.3}, {:.3}", pos.get_x(), pos.get_y(), pos.get_z())
-            });
+            ui.ctx().copy_text(format!(
+                "{:.3}, {:.3}, {:.3}",
+                pos.get_x(),
+                pos.get_y(),
+                pos.get_z()
+            ));
         }
     }
 }
@@ -170,13 +173,13 @@ impl GuiHelper for DebugHelper {
                     ));
                 });
             ui.label("Controller Pos:");
-            MovementGui::draw_coord(ui, &player.position.unwrap_or(Vector3::new(0.0, 0.0, 0.0)));
+            MovementGui::draw_coord(ui, &player.position.unwrap_or_default());
             ui.label("Gameobject Pos:");
             MovementGui::draw_coord(
                 ui,
                 &player
                     .gameobject_position
-                    .unwrap_or(Vector3::new(0.0, 0.0, 0.0)),
+                    .unwrap_or_default(),
             );
             ui.label("");
         }
