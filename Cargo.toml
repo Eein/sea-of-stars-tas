@@ -1,7 +1,9 @@
 [package]
 name = "sea-of-stars-tas"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
+# `cargo run` launches the GUI; use `cargo run --bin tas-cli` for the headless runner.
+default-run = "sea-of-stars-tas"
 
 [dependencies]
 joystick = { path = "crates/joystick", version = "0.1.0" }
@@ -36,7 +38,7 @@ itertools = "0.13.0"
 fps_clock = "2.0.0"
 ron = "0.8.1"
 vec2 = "0.2.1"
-egui_extras = { version = "*", features = ["image"] }
+egui_extras = { version = "0.29", features = ["image"] }
 image = { version = "0.25", features = ["png"] }
 
 [dependencies.winit]
