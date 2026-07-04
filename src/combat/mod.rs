@@ -74,7 +74,7 @@ impl CombatManager {
         match self.fsm {
             // intended to wait for acceptable parameters
             CombatFsm::Idle => {
-                println!("idle");
+                // println!("idle");
                 if self.action.is_none() && combat_manager.selected_character.is_some() {
                     println!("setting action");
                     self.fsm = CombatFsm::Action;

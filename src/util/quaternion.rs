@@ -1,3 +1,4 @@
+use crate::util::vec3_ext::Vector3Ext;
 use libm::Libm;
 use std::f32::consts::PI;
 use vec3_rs::Vector3;

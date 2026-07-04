@@ -113,11 +113,15 @@ impl eframe::App for State {
     }
 
     /// Called each time the UI needs repainting, which may be many times per second.
-    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+    ///
+    /// eframe 0.34 renamed the old `update(ctx, ..)` entry point to `ui(ui, ..)`;
+    /// we build our own panels from the context, so we just pull it back out of
+    /// the provided `Ui`.
+    fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
         // Uncomment for puffin profiler
         // puffin::profile_function!();
         // puffin::set_scopes_on(true);
-        // puffin_egui::profiler_window(ctx);
+        // puffin_egui::profiler_window(ui.ctx());
 
         // Attach to the game (if needed) and refresh all memory managers.
         self.core.poll();
@@ -127,7 +131,7 @@ impl eframe::App for State {
         let _ = self.core.run_game_manager();
 
         // puffin::GlobalProfiler::lock().new_frame();
-        Gui::update(self, ctx, frame);
+        Gui::update(self, ui, frame);
         self.debug.fps.tick();
     }
 }

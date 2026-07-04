@@ -19,7 +19,7 @@ impl ProcessList {
     pub fn new() -> Self {
         Self {
             system: System::new_with_specifics(
-                RefreshKind::new().with_processes(ProcessRefreshKind::new()),
+                RefreshKind::nothing().with_processes(ProcessRefreshKind::nothing()),
             ),
             next_check: Instant::now() + Duration::from_secs(1),
         }
@@ -85,10 +85,10 @@ impl ProcessList {
 
 #[inline]
 fn multiple_processes() -> ProcessRefreshKind {
-    ProcessRefreshKind::new().with_exe(UpdateKind::OnlyIfNotSet)
+    ProcessRefreshKind::nothing().with_exe(UpdateKind::OnlyIfNotSet)
 }
 
 #[inline]
 fn single_process() -> ProcessRefreshKind {
-    ProcessRefreshKind::new()
+    ProcessRefreshKind::nothing()
 }

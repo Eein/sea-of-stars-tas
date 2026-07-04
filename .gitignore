@@ -5,3 +5,5 @@ crates/**/release
 flamegraph.svg
 perf.data*
 config.toml
+dump.json
+dump.txt

@@ -3,6 +3,7 @@ use std::fmt::{Display, Formatter, Result};
 use crate::control::SosAction;
 use crate::seq::button::ButtonPress;
 use crate::state::{GameEvent, GameState};
+use crate::util::vec3_ext::Vector3Ext;
 
 use joystick::prelude::*;
 use log::{info, warn};
@@ -122,7 +123,7 @@ impl MovePath {
     fn is_close(player: &Vector3<f32>, target: &Vector3<f32>, precision: Option<f64>) -> bool {
         const PRECISION: f64 = 0.2;
         let diff = *target - *player;
-        diff.magnitude() < precision.unwrap_or(PRECISION)
+        f64::from(diff.magnitude()) < precision.unwrap_or(PRECISION)
     }
 
     fn setup_confirm(&mut self) {
@@ -566,8 +567,8 @@ mod tests {
         // Set up dummy move path (coords are not used)
         let mut m1 = MovePath::new("test".to_owned(), 0, vec![]);
         // Set up target position and initial player position
-        let target_pos = Vector3::<f32>::new(100.0, 10.0, 0.0);
-        let mut player_pos = Vector3::<f32>::new(0.0, 0.0, 0.0);
+        let target_pos = Vector3::from((100.0_f32, 10.0, 0.0));
+        let mut player_pos = Vector3::from((0.0_f32, 0.0, 0.0));
         // Initially, dir should be uninitialized
         assert!(m1.dir.is_none());
         assert!(!m1.check_overshoot(&player_pos, &target_pos));
@@ -578,16 +579,16 @@ mod tests {
             assert_eq!(dir, &target_pos);
         }
         // Move the player and test
-        player_pos = Vector3::<f32>::new(50.0, 5.0, 0.0);
+        player_pos = Vector3::from((50.0_f32, 5.0, 0.0));
         assert!(!m1.check_overshoot(&player_pos, &target_pos));
         // Move the player and test
-        player_pos = Vector3::<f32>::new(10.0, 50.0, 0.0);
+        player_pos = Vector3::from((10.0_f32, 50.0, 0.0));
         assert!(!m1.check_overshoot(&player_pos, &target_pos));
         // Move the player and test
-        player_pos = Vector3::<f32>::new(0.0, -5.0, 30.0);
+        player_pos = Vector3::from((0.0_f32, -5.0, 30.0));
         assert!(!m1.check_overshoot(&player_pos, &target_pos));
         // Try to move the player "behind" the target
-        player_pos = Vector3::<f32>::new(110.0, 20.0, 4.0);
+        player_pos = Vector3::from((110.0_f32, 20.0, 4.0));
         assert!(m1.check_overshoot(&player_pos, &target_pos));
         Ok(())
     }
