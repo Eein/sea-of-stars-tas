@@ -178,12 +178,18 @@ impl Image {
             _ => None,
         };
 
-        let ptr = module.type_info_definition_table
-            + (metadata_handle.unwrap() as u64 * module.size_of_ptr());
+        let base_ptr = metadata_handle.map(|handle| {
+            module.type_info_definition_table + (handle as u64 * module.size_of_ptr())
+        });
 
-        let range = 0..type_count.unwrap_or_default() as u64;
+        // If we couldn't resolve the metadata handle (e.g. the image has no
+        // types yet, or the read failed), yield nothing instead of panicking.
+        let range = match base_ptr {
+            Some(_) => 0..type_count.unwrap_or_default() as u64,
+            None => 0..0,
+        };
         (range).filter_map(move |i| {
-            let ptr = ptr + (i * module.size_of_ptr());
+            let ptr = base_ptr? + (i * module.size_of_ptr());
             let class = process
                 .read_pointer::<u64>(ptr)
                 .ok()

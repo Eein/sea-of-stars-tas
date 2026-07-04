@@ -60,9 +60,8 @@ impl SeqRelicList {
         };
     }
 
-    // Open the relics menu from the difficulty screen
-    fn open_relics(&mut self) {
-        self.fsm = RelicScreenFSM::PressButton;
+    // Arm a (Y) press, used to open the relics menu from the difficulty screen.
+    fn press_open(&mut self) {
         self.btn = ButtonPress {
             action: SosAction::Menu,
             ..Default::default()
@@ -106,6 +105,8 @@ impl Display for SeqRelicList {
 impl Node<GameState, GameEvent> for SeqRelicList {
     fn enter(&mut self, state: &mut GameState) {
         state.release_all();
+        // Arm the first (Y) press so WaitOnScreen opens the relics menu.
+        self.press_open();
     }
 
     fn execute(&mut self, state: &mut GameState, delta: f64) -> bool {
@@ -113,10 +114,16 @@ impl Node<GameState, GameEvent> for SeqRelicList {
 
         match self.fsm {
             RelicScreenFSM::WaitOnScreen => {
-                // Wait until difficulty selection screen is active
-                if tsmd.selected_difficulty.is_some() {
-                    // Note, actual difficulty selection not needed if we are doing relics
-                    self.open_relics();
+                // Once we've actually reached the relic screen, start evaluating.
+                if tsmd.current_screen_name == "RelicSelection" {
+                    state.release_all();
+                    self.fsm = RelicScreenFSM::Eval;
+                } else if tsmd.selected_difficulty.is_some() {
+                    // On the difficulty screen (any difficulty): keep pressing (Y)
+                    // until the relic screen opens, re-arming after each press.
+                    if self.btn.update(&mut state.gamepads[0], delta) {
+                        self.press_open();
+                    }
                 }
             }
             RelicScreenFSM::Eval => {
