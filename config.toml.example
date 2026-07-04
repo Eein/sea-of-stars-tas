@@ -9,6 +9,21 @@ persist_tab_state = true
 konami_code = true
 solstice_diploma = true
 
+# Optional shell command used to launch the game if it is not already running.
+# Runs via `cmd /C` on Windows and `sh -c` on Unix. Leave commented out to disable.
+#
+# Windows (launch via Steam by app id):
+# game_start_command = "start steam://rungameid/1244090"
+#
+# Linux: let Steam launch it so it runs under the configured Proton version
+# (SeaOfStars.exe is a Windows binary and cannot be exec'd directly). Steam
+# must be running; this returns immediately and the game appears shortly after.
+# game_start_command = "steam -applaunch 1244090"
+#
+# Linux advanced: invoke Proton directly (no Steam UI), wrapped in the FHS env.
+# Adjust the Proton folder name to match your installed version.
+# game_start_command = "STEAM_COMPAT_CLIENT_INSTALL_PATH=~/.steam/steam STEAM_COMPAT_DATA_PATH=~/.steam/steam/steamapps/compatdata/1244090 steam-run ~/.steam/steam/steamapps/common/'Proton 9.0 (Beta)'/proton run ~/.steam/steam/steamapps/common/'Sea of Stars'/SeaOfStars.exe"
+
 [relics]
 "Amulet of Storytelling" = true
 "Tourist's Provision" = true
