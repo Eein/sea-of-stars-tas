@@ -116,24 +116,14 @@ impl Node<GameState, GameEvent> for SeqRelicList {
             RelicScreenFSM::WaitOnScreen => {
                 // Once we've actually reached the relic screen, start evaluating.
                 if tsmd.current_screen_name == "RelicSelection" {
-                    info!("Relics: reached relic screen, evaluating");
                     state.release_all();
                     self.fsm = RelicScreenFSM::Eval;
                 } else if tsmd.selected_difficulty.is_some() {
                     // On the difficulty screen (any difficulty): keep pressing (Y)
                     // until the relic screen opens, re-arming after each press.
                     if self.btn.update(&mut state.gamepads[0], delta) {
-                        info!(
-                            "Relics: pressed (Y) to open (screen='{}', difficulty={:?})",
-                            tsmd.current_screen_name, tsmd.selected_difficulty
-                        );
                         self.press_open();
                     }
-                } else {
-                    info!(
-                        "Relics: waiting (screen='{}', difficulty={:?})",
-                        tsmd.current_screen_name, tsmd.selected_difficulty
-                    );
                 }
             }
             RelicScreenFSM::Eval => {
