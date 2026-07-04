@@ -59,8 +59,15 @@ impl KonamiCode {
     }
 }
 
+/// Seconds to wait after the title screen appears before sending input, to let
+/// the intro animation finish. Only applied when the TAS launched the game
+/// itself (cold boot); a game already at the title screen needs no wait.
+const TITLE_SETTLE_SECS: f64 = 8.0;
+
 #[derive(Debug)]
 enum TitleScreenFSM {
+    WaitForTitle,
+    SettleAnimation,
     Konami,
     ToMenu,
     NewGame,
@@ -74,14 +81,16 @@ pub struct SeqTitleScreen {
     fsm: TitleScreenFSM,
     btn: ButtonPress,
     kc: KonamiCode,
+    settle_timer: f64,
 }
 
 impl SeqTitleScreen {
     pub fn create() -> Box<Self> {
         Box::new(Self {
-            fsm: TitleScreenFSM::Konami,
+            fsm: TitleScreenFSM::WaitForTitle,
             btn: ButtonPress::default(),
             kc: KonamiCode::default(),
+            settle_timer: 0.0,
         })
     }
 }
@@ -103,6 +112,30 @@ impl Node<GameState, GameEvent> for SeqTitleScreen {
         let ngc = &tsmd.new_game_characters;
 
         match self.fsm {
+            TitleScreenFSM::WaitForTitle => {
+                // Don't feed inputs until the title screen singleton exists and
+                // the title screen is actually showing. Otherwise the Konami
+                // code (and Start presses) land on boot/splash screens and are
+                // lost before the menu is interactive.
+                if tsmd.active && tsmd.current_screen_name == "TitleScreen" {
+                    if state.game_launched_by_tas {
+                        // On a cold boot we triggered, the title screen shows
+                        // before its intro animation finishes accepting input.
+                        info!("Title screen ready; waiting {TITLE_SETTLE_SECS}s for intro animation");
+                        self.fsm = TitleScreenFSM::SettleAnimation;
+                    } else {
+                        info!("Title screen ready");
+                        self.fsm = TitleScreenFSM::Konami;
+                    }
+                }
+            }
+            TitleScreenFSM::SettleAnimation => {
+                self.settle_timer += delta;
+                if self.settle_timer >= TITLE_SETTLE_SECS {
+                    info!("Intro animation settle complete");
+                    self.fsm = TitleScreenFSM::Konami;
+                }
+            }
             TitleScreenFSM::Konami => {
                 if state.config.konami_code {
                     if self.kc.update(&mut state.gamepads[0], delta) {

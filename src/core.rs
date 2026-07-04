@@ -45,6 +45,7 @@ impl TasCore {
                 ],
                 memory_managers: MemoryManagers::default(),
                 config,
+                game_launched_by_tas: false,
             },
             game_manager: None,
         }
