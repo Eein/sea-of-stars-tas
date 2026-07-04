@@ -48,14 +48,14 @@ impl Gui {
         .expect("Error loading application");
     }
     pub fn update(state: &mut State, ctx: &egui::Context, frame: &mut eframe::Frame) {
-        match state.context.process.is_some() {
+        match state.core.context.process.is_some() {
             true => Self::active(state, ctx, frame),
             false => Self::inactive(state, ctx, frame),
         }
     }
 
     pub fn active(state: &mut State, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        let speedrun_manager = &state.game_state.memory_managers.speedrun_manager.data;
+        let speedrun_manager = &state.core.game_state.memory_managers.speedrun_manager.data;
 
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
@@ -86,8 +86,8 @@ impl Gui {
                 .show(
                     ctx,
                     &mut TabViewer {
-                        game_state: &mut state.game_state,
-                        game_manager: &mut state.game_manager,
+                        game_state: &mut state.core.game_state,
+                        game_manager: &mut state.core.game_manager,
                         helpers: &mut state.gui.helpers,
                     },
                 );

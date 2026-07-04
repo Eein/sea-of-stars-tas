@@ -1,0 +1,377 @@
+//! Headless, script/AI-friendly runner for the Sea of Stars TAS.
+//!
+//! This module provides everything the `tas-cli` binary needs: argument
+//! parsing ([`CliArgs`]), a deterministic-ish structured logger
+//! ([`init_logger`]), a one-shot state snapshot ([`dump_state`]), and the
+//! headless run loop ([`run`]). No window is ever created, output goes to
+//! stdout/stderr as stable plaintext or JSON-lines, and the process exits with
+//! a well-defined [status code](ExitCodes).
+
+use std::process::ExitCode;
+use std::time::{Duration, Instant};
+
+use clap::{Parser, ValueEnum};
+use fps_clock::FpsClock;
+use log::{error, info, warn, LevelFilter, Metadata, Record};
+
+use crate::config::{load_config, Config};
+use crate::core::{TasCore, GAME_PROCESS_NAME};
+use crate::route::tas;
+
+/// Process exit codes. Kept small and stable so callers/agents can branch on them.
+pub mod exit {
+    /// Sequence finished, or one-shot command succeeded.
+    pub const SUCCESS: u8 = 0;
+    /// Bad usage / config error (clap handles most usage errors itself with 2).
+    pub const USAGE: u8 = 1;
+    /// Could not attach to the game process (not found / timed out / lost).
+    pub const NO_GAME: u8 = 2;
+    /// Aborted by the `--max-secs` watchdog before finishing.
+    pub const TIMEOUT: u8 = 3;
+}
+
+/// Which pre-built sequence to run.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, ValueEnum)]
+pub enum Route {
+    /// The full TAS route (title screen -> relics -> islands).
+    Tas,
+    /// Load an existing save and hand off to the route.
+    Load,
+    /// Combat-only test sequence.
+    Combat,
+    /// Relic-selection-only test sequence.
+    Relic,
+}
+
+/// Log output format.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, ValueEnum)]
+pub enum LogFormat {
+    /// Stable, uncolored `LEVEL target: message` lines. Greppable by default.
+    Plain,
+    /// One JSON object per line (`{"level":..,"target":..,"msg":..}`).
+    Json,
+}
+
+/// Headless runner arguments.
+#[derive(Parser, Debug)]
+#[command(
+    name = "tas-cli",
+    about = "Headless runner for the Sea of Stars TAS (no GUI).",
+    long_about = "Drives the Sea of Stars TAS without a window. Produces stable, \
+structured logs and deterministic exit codes so it can be scripted or driven by \
+an AI agent for debugging."
+)]
+pub struct CliArgs {
+    /// Which sequence to run.
+    #[arg(long, value_enum, default_value_t = Route::Tas)]
+    pub route: Route,
+
+    /// Advance to this checkpoint before running (only meaningful for `--route tas`).
+    #[arg(long)]
+    pub checkpoint: Option<String>,
+
+    /// Save slot to load (only for `--route load`).
+    #[arg(long, default_value_t = 1)]
+    pub save_slot: usize,
+
+    /// Whether an auto-save is present (only for `--route load`).
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
+    pub auto_save_present: bool,
+
+    /// Path to the config.toml file.
+    #[arg(long, default_value = "./config.toml")]
+    pub config: String,
+
+    /// Override the Konami Code config flag.
+    #[arg(long)]
+    pub konami: Option<bool>,
+
+    /// Override the Solstice Diploma config flag.
+    #[arg(long)]
+    pub solstice: Option<bool>,
+
+    /// Wait for the game process to appear instead of exiting immediately.
+    #[arg(long)]
+    pub wait_for_game: bool,
+
+    /// Give up waiting for the game after this many seconds (0 = wait forever).
+    #[arg(long, default_value_t = 30)]
+    pub attach_timeout: u64,
+
+    /// Seconds to wait after attaching before starting the sequence.
+    #[arg(long, default_value_t = 3.0)]
+    pub start_delay: f64,
+
+    /// Abort the run after this many seconds (0 = no limit). A watchdog for
+    /// unattended/AI runs so a stuck sequence can't hang forever.
+    #[arg(long, default_value_t = 0)]
+    pub max_secs: u64,
+
+    /// Target frames-per-second for the run loop.
+    #[arg(long, default_value_t = 60)]
+    pub fps: u32,
+
+    /// Log output format.
+    #[arg(long, value_enum, default_value_t = LogFormat::Plain)]
+    pub log_format: LogFormat,
+
+    /// Log level: error, warn, info, debug, or trace.
+    #[arg(long, default_value = "info")]
+    pub log_level: String,
+
+    /// Attach, print a one-shot state snapshot, and exit (does not run the TAS).
+    #[arg(long)]
+    pub dump_state: bool,
+
+    /// Print a final state snapshot when the run ends, whatever the reason
+    /// (finished, lost game, or `--max-secs` timeout). Useful for AI debugging.
+    #[arg(long)]
+    pub dump_on_close: bool,
+}
+
+/// A minimal `log` backend that emits stable, uncolored lines in either plain
+/// or JSON-lines format. No wall-clock timestamps, so identical runs produce
+/// diff-stable output.
+struct CliLogger {
+    format: LogFormat,
+}
+
+impl log::Log for CliLogger {
+    fn enabled(&self, _metadata: &Metadata) -> bool {
+        true
+    }
+
+    fn log(&self, record: &Record) {
+        if !self.enabled(record.metadata()) {
+            return;
+        }
+        let level = record.level();
+        let target = record.target();
+        let msg = record.args().to_string();
+        match self.format {
+            LogFormat::Plain => {
+                // e.g. "INFO  seq: SeqLog: SEQ START"
+                eprintln!("{:<5} {}: {}", level, target, msg);
+            }
+            LogFormat::Json => {
+                let obj = serde_json::json!({
+                    "level": level.as_str(),
+                    "target": target,
+                    "msg": msg,
+                });
+                eprintln!("{}", obj);
+            }
+        }
+    }
+
+    fn flush(&self) {}
+}
+
+/// Install the CLI logger. Call once, before any logging happens.
+pub fn init_logger(format: LogFormat, level: &str) {
+    let filter = level.parse::<LevelFilter>().unwrap_or(LevelFilter::Info);
+    // Ignore errors: a second install (e.g. in tests) is harmless.
+    let _ = log::set_boxed_logger(Box::new(CliLogger { format }));
+    log::set_max_level(filter);
+}
+
+/// Apply CLI config overrides on top of a loaded/default config.
+fn resolve_config(args: &CliArgs) -> Config {
+    let mut config = match load_config(&args.config) {
+        Ok(config) => config,
+        Err(_err) => {
+            warn!("No config loaded from {}, using defaults.", args.config);
+            Config::default()
+        }
+    };
+    if let Some(konami) = args.konami {
+        config.konami_code = konami;
+    }
+    if let Some(solstice) = args.solstice {
+        config.solstice_diploma = solstice;
+    }
+    config
+}
+
+/// Attach to the game, honoring `--wait-for-game` / `--attach-timeout`.
+/// Returns `true` once attached, `false` if we gave up.
+fn attach(core: &mut TasCore, args: &CliArgs) -> bool {
+    let start = Instant::now();
+    loop {
+        core.poll();
+        if core.is_attached() {
+            return true;
+        }
+        if !args.wait_for_game {
+            return false;
+        }
+        if args.attach_timeout > 0 && start.elapsed().as_secs() >= args.attach_timeout {
+            return false;
+        }
+        std::thread::sleep(Duration::from_millis(100));
+    }
+}
+
+/// Print a one-shot, structured snapshot of the current game state.
+fn dump_state(core: &TasCore, format: LogFormat) {
+    let mm = &core.game_state.memory_managers;
+    let title = &mm.title_sequence_manager.data;
+    let party = &mm.player_party_manager.data;
+    let combat = &mm.combat_manager.data;
+    let cutscene = &mm.cutscene_manager.data;
+    let level_up = &mm.level_up_manager.data;
+    let speedrun = &mm.speedrun_manager.data;
+
+    let pid = core
+        .context
+        .process
+        .as_ref()
+        .map(|p| p.pid.to_string())
+        .unwrap_or_else(|| "none".to_string());
+    let pos = &party.position;
+
+    let fields: Vec<(&str, String)> = vec![
+        ("attached", core.is_attached().to_string()),
+        ("pid", pid),
+        ("title_active", title.active.to_string()),
+        ("title_screen", title.current_screen_name.clone()),
+        ("leader", format!("{:?}", party.leader_character)),
+        ("movement_state", format!("{:?}", party.movement_state)),
+        (
+            "position",
+            format!("{:.2},{:.2},{:.2}", pos.get_x(), pos.get_y(), pos.get_z()),
+        ),
+        ("in_cutscene", cutscene.is_in_cutscene.to_string()),
+        ("encounter_active", combat.encounter_active.to_string()),
+        ("enemy_count", combat.enemies.items.len().to_string()),
+        ("player_count", combat.players.items.len().to_string()),
+        ("level_up_active", level_up.active.to_string()),
+        ("is_speedrunning", speedrun.is_speedrunning.to_string()),
+        ("speedrun_timer", format!("{}", speedrun.speedrun_timer)),
+    ];
+
+    match format {
+        LogFormat::Plain => {
+            println!("=== state snapshot ===");
+            for (key, value) in &fields {
+                println!("{key}: {value}");
+            }
+        }
+        LogFormat::Json => {
+            let map: serde_json::Map<String, serde_json::Value> = fields
+                .into_iter()
+                .map(|(k, v)| (k.to_string(), serde_json::Value::String(v)))
+                .collect();
+            println!("{}", serde_json::Value::Object(map));
+        }
+    }
+}
+
+/// Build the requested game manager, applying route-specific options.
+fn build_game_manager(core: &mut TasCore, args: &CliArgs) {
+    let gm = match args.route {
+        Route::Tas => {
+            let mut gm = tas::create_tas();
+            if let Some(checkpoint) = &args.checkpoint {
+                if checkpoint != "New Game" {
+                    info!("Advancing to checkpoint: {checkpoint}");
+                    gm.advance_to_checkpoint(&mut core.game_state, checkpoint);
+                }
+            }
+            gm
+        }
+        Route::Load => tas::create_load_sequence(args.save_slot, args.auto_save_present),
+        Route::Combat => tas::create_combat_test(),
+        Route::Relic => tas::create_relic_test(),
+    };
+    core.game_manager = Some(gm);
+}
+
+/// Run the headless TAS. Returns a process exit code.
+pub fn run(args: CliArgs) -> ExitCode {
+    init_logger(args.log_format, &args.log_level);
+
+    let config = resolve_config(&args);
+    info!(
+        "config: konami_code={} solstice_diploma={}",
+        config.konami_code, config.solstice_diploma
+    );
+
+    let mut core = TasCore::new(config);
+
+    info!("Waiting to attach to {GAME_PROCESS_NAME}...");
+    if !attach(&mut core, &args) {
+        error!("Could not attach to {GAME_PROCESS_NAME} (game not running?).");
+        return ExitCode::from(exit::NO_GAME);
+    }
+    info!("Attached to game process.");
+
+    if args.dump_state {
+        // Refresh a few frames so the managers have populated before we read.
+        for _ in 0..5 {
+            core.poll();
+            std::thread::sleep(Duration::from_millis(16));
+        }
+        dump_state(&core, args.log_format);
+        return ExitCode::from(exit::SUCCESS);
+    }
+
+    let code = run_sequence(&mut core, &args);
+
+    // Dump a final snapshot on close, whatever the exit reason, so an agent can
+    // inspect where the run ended up. Reads last-known manager data even if the
+    // game process has since vanished.
+    if args.dump_on_close {
+        info!("Dumping final state on close.");
+        dump_state(&core, args.log_format);
+    }
+
+    ExitCode::from(code)
+}
+
+/// Run the loaded route to completion (or until it errors/times out) and return
+/// the corresponding [exit] code. Split out from [`run`] so every exit path
+/// funnels through a single dump-on-close point.
+fn run_sequence(core: &mut TasCore, args: &CliArgs) -> u8 {
+    build_game_manager(core, args);
+
+    if args.start_delay > 0.0 {
+        info!("Starting sequence in {:.1}s...", args.start_delay);
+        let delay_start = Instant::now();
+        while delay_start.elapsed().as_secs_f64() < args.start_delay {
+            // Keep polling so we detect the game vanishing during the countdown.
+            core.poll();
+            if !core.is_attached() {
+                error!("Lost the game process during start delay.");
+                return exit::NO_GAME;
+            }
+            std::thread::sleep(Duration::from_millis(50));
+        }
+    }
+
+    info!("Starting sequence (route={:?}).", args.route);
+    core.start_game_manager();
+
+    let mut fps = FpsClock::new(args.fps);
+    let run_start = Instant::now();
+    loop {
+        core.poll();
+        core.run_game_manager();
+
+        if !core.game_manager_running() {
+            info!("Sequence finished.");
+            return exit::SUCCESS;
+        }
+        if !core.is_attached() {
+            error!("Lost the game process during the run.");
+            return exit::NO_GAME;
+        }
+        if args.max_secs > 0 && run_start.elapsed().as_secs() >= args.max_secs {
+            warn!("Aborting: exceeded --max-secs={}.", args.max_secs);
+            core.game_state.release_all();
+            return exit::TIMEOUT;
+        }
+
+        fps.tick();
+    }
+}

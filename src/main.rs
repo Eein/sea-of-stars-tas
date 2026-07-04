@@ -1,19 +1,10 @@
-mod assets;
-mod combat;
-mod config;
-mod control;
-mod game_manager;
-mod gui;
-mod level_up;
-mod memory;
-mod route;
-mod seq;
-mod state;
-mod util;
+//! GUI entry point for the Sea of Stars TAS.
+//!
+//! For the headless, AI/script-friendly runner see `src/bin/tas-cli.rs`.
 
-use crate::config::{load_config, Config};
-use crate::gui::Gui;
 use log::*;
+use sea_of_stars_tas::config::{load_config, Config};
+use sea_of_stars_tas::gui::Gui;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     colog::init();

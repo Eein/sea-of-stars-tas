@@ -1,5 +1,5 @@
 use super::memory::MemoryManagers;
-use crate::game_manager::GameManager;
+use crate::core::TasCore;
 use crate::gui::Gui;
 // use puffin_egui::puffin;
 
@@ -7,11 +7,9 @@ use crate::gui::helpers::*;
 // Move these to preludes later
 use memory::game_engine::il2cpp::{Image, Module};
 use memory::process::Process;
-use memory::process_list::ProcessList;
 
 use crate::config::Config;
 use egui_dock::DockState;
-use log::info;
 
 use joystick::prelude::*;
 
@@ -51,12 +49,10 @@ pub enum GameEvent {
 }
 
 pub struct State {
-    pub context: StateContext,
-    pub process_list: ProcessList,
+    /// GUI-free runtime core (process, memory managers, gamepads, game manager).
+    pub core: TasCore,
     pub debug: StateDebug,
     pub gui: StateGui,
-    pub game_state: GameState,
-    pub game_manager: Option<GameManager>,
 }
 #[derive(Default)]
 pub struct StateContext {
@@ -92,12 +88,7 @@ impl State {
         }
 
         Self {
-            context: StateContext {
-                process: None,
-                module: None,
-                image: None,
-            },
-            process_list: ProcessList::default(),
+            core: TasCore::new(conf),
             gui: StateGui {
                 helpers: gui_helpers,
                 dock_state,
@@ -105,86 +96,14 @@ impl State {
             debug: StateDebug {
                 fps: FpsClock::new(100),
             },
-            game_state: GameState {
-                gamepads: [
-                    GenericJoystick::default(),
-                    GenericJoystick::default(),
-                    GenericJoystick::default(),
-                ],
-                memory_managers: MemoryManagers::default(),
-                config: conf,
-            },
-            // TODO(orkaboy): Temp code, should not be here
-            // TODO(orkaboy): Where do we put sequencer.run()? Might need to refactor that as well.
-            game_manager: None,
         }
-    }
-
-    pub fn maybe_deregister_process(&mut self) {
-        if let Some(process) = &self.context.process {
-            if !&self
-                .process_list
-                .is_open(sysinfo::Pid::from(process.pid as usize))
-            {
-                self.context.process = None
-            }
-        }
-    }
-
-    pub fn register_process(&mut self) {
-        let process_name = "SeaOfStars.exe";
-        // Find the Process
-        if self.context.process.is_none() {
-            match Process::with_name(process_name, &mut self.process_list) {
-                Ok(process) => {
-                    // In case we change processes, default all the memory
-                    // managers so addresses dont hang onto zombie processes.
-                    // NOTE(eein): it may make more sense to do the entire
-                    // game_state here
-                    self.game_state.memory_managers = MemoryManagers::default();
-                    info!(
-                        "- Attaching Process\nFound {} at pid {}",
-                        process_name, process.pid
-                    );
-                    self.context.process = Some(process);
-                }
-                Err(_err) => {
-                    self.context = StateContext::default();
-                }
-            }
-        }
-    }
-
-    pub fn register_module(&mut self) {
-        if self.context.module.is_none() {
-            if let Some(ref mut process) = &mut self.context.process {
-                info!("- Loading Module");
-                // Attach to GameAssembly.dll
-                self.context.module = Module::attach(process);
-            }
-        }
-    }
-    pub fn register_image(&mut self) {
-        // If the module attached, set the default image (usually Assembly-Csharp)
-        if self.context.image.is_none() {
-            if let Some(process) = &self.context.process {
-                if let Some(module) = &self.context.module {
-                    info!("- Loading Image");
-                    self.context.image = module.get_default_image(process);
-                }
-            }
-        }
-    }
-
-    pub fn update_managers(&mut self) {
-        self.game_state.memory_managers.update(&self.context);
     }
 }
 
 impl eframe::App for State {
     /// Called by the frame work to save state before shutdown.
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
-        if self.game_state.config.persist_tab_state {
+        if self.core.game_state.config.persist_tab_state {
             eframe::set_value(storage, "dock_state", &self.gui.dock_state.main_surface());
         }
     }
@@ -200,23 +119,13 @@ impl eframe::App for State {
         // puffin::set_scopes_on(true);
         // puffin_egui::profiler_window(ctx);
 
-        // Deregister the project in state if its not running anymore
-        let _ = &self.maybe_deregister_process();
+        // Attach to the game (if needed) and refresh all memory managers.
+        self.core.poll();
 
-        // Register the process if its not in state
-        let _ = &self.register_process();
-        let _ = &self.register_module();
-        let _ = &self.register_image();
-
-        // Run self.update() on each manager
-        let _ = &self.update_managers();
-
+        // Advance the running game manager, if any.
         // TODO(orkaboy): Should probably not be here
-        if let Some(gm) = self.game_manager.as_mut() {
-            if gm.is_running() {
-                let _ = gm.run(&mut self.game_state);
-            }
-        }
+        let _ = self.core.run_game_manager();
+
         // puffin::GlobalProfiler::lock().new_frame();
         Gui::update(self, ctx, frame);
         self.debug.fps.tick();

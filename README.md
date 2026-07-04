@@ -15,6 +15,18 @@ Please join [our Discord](https://discord.gg/ebmfGDP) if you are interested in t
 - copy `config.toml.example` to `config.toml`
 - run `cargo run` or `cargo run --release`
 
+## Headless CLI
+
+A GUI-free runner (`tas-cli`) is available for scripting and AI-driven
+debugging: structured plaintext/JSON logs, scriptable flags, and deterministic
+exit codes.
+
+```sh
+cargo run --bin tas-cli -- --help
+```
+
+See [CLI.md](CLI.md) for flags, exit codes, and examples.
+
 ## Contribute
 
 If you want to contribute code, please join our discord!
