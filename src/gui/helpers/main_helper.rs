@@ -1,4 +1,5 @@
 use super::GuiHelper;
+use crate::cli::{repro_command, Route};
 use crate::route::tas;
 use crate::{game_manager::GameManager, state::GameState};
 
@@ -378,6 +379,16 @@ impl GuiHelper for MainHelper {
                         });
                     ui.checkbox(&mut self.auto_save_present, "Auto save present");
                     if ui.button("Run Load Sequence").clicked() {
+                        info!(
+                            "Reproduce this run with: {}",
+                            repro_command(
+                                Route::Load,
+                                None,
+                                self.save_slot,
+                                self.auto_save_present,
+                                &game_state.config,
+                            )
+                        );
                         *game_manager = Some(tas::create_load_sequence(
                             self.save_slot,
                             self.auto_save_present,
@@ -393,6 +404,16 @@ impl GuiHelper for MainHelper {
                 .add_enabled(!running, egui::Button::new("Start TAS"))
                 .clicked()
             {
+                info!(
+                    "Reproduce this run with: {}",
+                    repro_command(
+                        Route::Tas,
+                        self.checkpoint.as_deref(),
+                        self.save_slot,
+                        self.auto_save_present,
+                        &game_state.config,
+                    )
+                );
                 let mut gm = tas::create_tas();
                 if let Some(checkpoint) = &self.checkpoint {
                     gm.advance_to_checkpoint(game_state, checkpoint);
@@ -404,6 +425,10 @@ impl GuiHelper for MainHelper {
                 .add_enabled(!running, egui::Button::new("Start Combat Test"))
                 .clicked()
             {
+                info!(
+                    "Reproduce this run with: {}",
+                    repro_command(Route::Combat, None, 0, false, &game_state.config)
+                );
                 let gm = tas::create_combat_test();
                 *game_manager = Some(gm);
                 self.countdown = Some(1.0);
@@ -414,6 +439,10 @@ impl GuiHelper for MainHelper {
                 .add_enabled(!running, egui::Button::new("Start Relic Test"))
                 .clicked()
             {
+                info!(
+                    "Reproduce this run with: {}",
+                    repro_command(Route::Relic, None, 0, false, &game_state.config)
+                );
                 let gm = tas::create_relic_test();
                 *game_manager = Some(gm);
                 self.countdown = Some(1.0);
