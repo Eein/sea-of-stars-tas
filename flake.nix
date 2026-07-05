@@ -38,7 +38,7 @@
             rust-analyzer
             rustfmt
             # wasm-bindgen-cli
-            (rust-bin.nightly.latest.default.override {
+            (rust-bin.nightly."2026-04-01".default.override {
               # targets = [ "wasm32-unknown-unknown" ];
               extensions = ["rust-analyzer"];
             })
