@@ -613,7 +613,7 @@ impl UnityItem for EquippedTrinket {
 
 impl UnityItem for CombatDamageType {
     fn read(process: &Process, item_ptr: u64) -> Result<Self, MemoryError> {
-        let lock = process.read_pointer::<u32>(item_ptr + 0x40)?;
+        let lock = process.read_pointer::<u32>(item_ptr + 0x30)?;
         Ok(CombatDamageType::from_u32(lock))
     }
 }
