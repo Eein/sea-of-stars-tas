@@ -38,6 +38,8 @@
             rust-analyzer
             rustfmt
             # wasm-bindgen-cli
+            # Keep this version in sync with rust-toolchain.toml, which pins the
+            # same toolchain for rustup users (CI + non-nix contributors).
             (rust-bin.nightly."2026-04-01".default.override {
               # targets = [ "wasm32-unknown-unknown" ];
               extensions = ["rust-analyzer"];
