@@ -70,13 +70,9 @@ impl PlayerPartyManagerData {
     pub fn update_position(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
         let leader_offset = self.leader_offset.unwrap();
 
-        if let Ok(current_position_ptr) =
-            memory_context.read_pointer_path_without_read(&[leader_offset.into(), 0x90, 0x84])
+        if let Ok([x, y, z]) =
+            memory_context.read_pointer_path::<[f32; 3]>(&[leader_offset.into(), 0x90, 0x84])
         {
-            let x = memory_context.read_pointer::<f32>(current_position_ptr)?;
-            let y = memory_context.read_pointer::<f32>(current_position_ptr + 0x4)?;
-            let z = memory_context.read_pointer::<f32>(current_position_ptr + 0x8)?;
-
             self.position = Vector3::new(x, y, z);
         };
 
@@ -89,13 +85,9 @@ impl PlayerPartyManagerData {
     ) -> Result<(), MemoryError> {
         let leader_offset = self.leader_offset.unwrap();
 
-        if let Ok(gameobject_ptr) =
-            memory_context.read_pointer_path_without_read(&[leader_offset.into(), 0x30, 0x48, 0x1C])
+        if let Ok([x, y, z]) =
+            memory_context.read_pointer_path::<[f32; 3]>(&[leader_offset.into(), 0x30, 0x48, 0x1C])
         {
-            let x = memory_context.read_pointer::<f32>(gameobject_ptr)?;
-            let y = memory_context.read_pointer::<f32>(gameobject_ptr + 0x4)?;
-            let z = memory_context.read_pointer::<f32>(gameobject_ptr + 0x8)?;
-
             self.gameobject_position = Vector3::new(x, y, z);
         };
 

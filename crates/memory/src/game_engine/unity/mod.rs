@@ -339,47 +339,6 @@ impl Class {
         process.read_pointer::<T>(address.class)
     }
 
-    pub fn follow_fields_without_read(
-        &self,
-        singleton: Class,
-        process: &Process,
-        module: &Module,
-        fields: &[&str],
-    ) -> Result<u64, MemoryError> {
-        if fields.is_empty() {
-            return Err(MemoryError::InvalidParameters);
-        }
-
-        if singleton.class == 0 {
-            return Err(MemoryError::NullPointer);
-        }
-
-        let last = fields.last().unwrap();
-
-        let mut address = Class {
-            class: singleton.class,
-        };
-        let mut fields_base = Class { class: self.class };
-        for field in fields {
-            match fields_base.get_field_offset(process, module, field) {
-                Some(offset) => {
-                    if address.class == 0 {
-                        return Err(MemoryError::NullPointer);
-                    }
-                    if field == last {
-                        address.class += offset as u64;
-                    } else {
-                        address.class =
-                            process.read_pointer::<u64>(address.class + offset as u64)?;
-                        fields_base.class = process.read_pointer::<u64>(address.class)?;
-                    }
-                }
-                None => return Err(MemoryError::ReadError),
-            };
-        }
-        Ok(address.class)
-    }
-
     /// Tries to find the offset for a field with the specified name in the class.
     /// If it's a static field, the offset will be from the start of the static
     /// table.
