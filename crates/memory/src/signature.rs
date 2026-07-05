@@ -205,10 +205,10 @@ impl<const N: usize> Signature<N> {
             let end = (addr & !((4 << 10) - 1)) + (4 << 10).min(overall_end);
             let len = end - addr;
             let current_read_buf = &mut buf[..len as usize];
-            if let Ok(current_read_buf) = process.read_into_uninit_buf(addr, current_read_buf) {
-                if let Some(pos) = self.scan(current_read_buf) {
-                    return Some(addr + pos as u64);
-                }
+            if let Ok(current_read_buf) = process.read_into_uninit_buf(addr, current_read_buf)
+                && let Some(pos) = self.scan(current_read_buf)
+            {
+                return Some(addr + pos as u64);
             };
             addr = end;
         }

@@ -1,11 +1,11 @@
 use std::fmt::Display;
 
 pub mod prelude {
+    pub use crate::Node;
     pub use crate::flow::*;
     pub use crate::logging::*;
     pub use crate::sequencer::Sequencer;
     pub use crate::wait::*;
-    pub use crate::Node;
 }
 
 pub mod flow;

@@ -13,7 +13,6 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
         "Evermist Island",
         vec![
             mooncradle::create(),
-            SeqCheckpoint::create("Outside Forbidden Cavern"),
             forbidden_cave::create(),
             mountain_trail::create(),
             // TODO: Rest of mountain trail

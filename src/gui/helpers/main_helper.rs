@@ -1,5 +1,5 @@
 use super::GuiHelper;
-use crate::cli::{repro_command, Route};
+use crate::cli::{Route, repro_command};
 use crate::route::tas;
 use crate::{game_manager::GameManager, state::GameState};
 
@@ -117,7 +117,7 @@ impl MainHelper {
                         true => "👈 👈 👈",
                         false => "",
                     };
-                    let name = format!("{} {}", &relic.name, relic_selected);
+                    let name = format!("{} {}", relic.name, relic_selected);
                     ui.checkbox(&mut relic.enabled.clone(), name);
                 }
             }
@@ -194,13 +194,13 @@ impl MainHelper {
                             ui.horizontal(|ui| {
                                 for modifier in enemy.damage_type_modifiers.items.iter() {
                                     damage_type_image(ui, &modifier.0.key);
-                                    ui.label(format!("{}", &modifier.1.value));
+                                    ui.label(format!("{}", modifier.1.value));
                                 }
                             });
                             ui.horizontal(|ui| {
                                 for modifier in enemy.damage_type_modifiers_override.items.iter() {
                                     damage_type_image(ui, &modifier.0.key);
-                                    ui.label(format!("{}", &modifier.1.value));
+                                    ui.label(format!("{}", modifier.1.value));
                                 }
                             });
 
@@ -367,36 +367,36 @@ impl GuiHelper for MainHelper {
                     }
                 });
 
-            if let Some(checkpoint) = &self.checkpoint {
-                if checkpoint != "New Game" {
-                    egui::ComboBox::from_label("Save slot")
-                        .selected_text(self.save_slot.to_string())
-                        .show_ui(ui, |ui| {
-                            for value in 1..=9 {
-                                ui.selectable_value(&mut self.save_slot, value, value.to_string());
-                            }
-                        });
-                    ui.checkbox(&mut self.auto_save_present, "Auto save present");
-                    if ui.button("Run Load Sequence").clicked() {
-                        info!(
-                            "Reproduce this run with: {}",
-                            repro_command(
-                                Route::Load,
-                                None,
-                                self.save_slot,
-                                self.auto_save_present,
-                                &game_state.config,
-                            )
-                        );
-                        *game_manager = Some(tas::create_load_sequence(
-                            self.save_slot,
+            if let Some(checkpoint) = &self.checkpoint
+                && checkpoint != "New Game"
+            {
+                egui::ComboBox::from_label("Save slot")
+                    .selected_text(self.save_slot.to_string())
+                    .show_ui(ui, |ui| {
+                        for value in 1..=9 {
+                            ui.selectable_value(&mut self.save_slot, value, value.to_string());
+                        }
+                    });
+                ui.checkbox(&mut self.auto_save_present, "Auto save present");
+                if ui.button("Run Load Sequence").clicked() {
+                    info!(
+                        "Reproduce this run with: {}",
+                        repro_command(
+                            Route::Load,
+                            None,
+                            Some(self.save_slot),
                             self.auto_save_present,
-                        ));
-                        self.countdown = Some(COUNTDOWN_TIMEOUT);
-                    }
-
-                    ui.separator();
+                            &game_state.config,
+                        )
+                    );
+                    *game_manager = Some(tas::create_load_sequence(
+                        self.save_slot,
+                        self.auto_save_present,
+                    ));
+                    self.countdown = Some(COUNTDOWN_TIMEOUT);
                 }
+
+                ui.separator();
             }
 
             if ui
@@ -408,7 +408,11 @@ impl GuiHelper for MainHelper {
                     repro_command(
                         Route::Tas,
                         self.checkpoint.as_deref(),
-                        self.save_slot,
+                        // A real checkpoint resumes from a save; otherwise new game.
+                        self.checkpoint
+                            .as_deref()
+                            .filter(|c| *c != "New Game")
+                            .map(|_| self.save_slot),
                         self.auto_save_present,
                         &game_state.config,
                     )
@@ -426,7 +430,7 @@ impl GuiHelper for MainHelper {
             {
                 info!(
                     "Reproduce this run with: {}",
-                    repro_command(Route::Combat, None, 0, false, &game_state.config)
+                    repro_command(Route::Combat, None, None, false, &game_state.config)
                 );
                 let gm = tas::create_combat_test();
                 *game_manager = Some(gm);
@@ -440,7 +444,7 @@ impl GuiHelper for MainHelper {
             {
                 info!(
                     "Reproduce this run with: {}",
-                    repro_command(Route::Relic, None, 0, false, &game_state.config)
+                    repro_command(Route::Relic, None, None, false, &game_state.config)
                 );
                 let gm = tas::create_relic_test();
                 *game_manager = Some(gm);
@@ -464,9 +468,7 @@ impl GuiHelper for MainHelper {
                 ui.separator();
                 let sppmd = &game_state.memory_managers.single_player_plus_manager.data;
                 for (idx, player) in sppmd.players.items.iter().enumerate() {
-                    let gameobject_position = player
-                        .gameobject_position
-                        .unwrap_or_default();
+                    let gameobject_position = player.gameobject_position.unwrap_or_default();
                     ui.label(format!("P{} pos: {:?}", idx + 1, gameobject_position));
                 }
             }

@@ -3,7 +3,7 @@
 //! For the headless, AI/script-friendly runner see `src/bin/tas-cli.rs`.
 
 use log::*;
-use sea_of_stars_tas::config::{load_config, Config};
+use sea_of_stars_tas::config::{Config, load_config};
 use sea_of_stars_tas::gui::Gui;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

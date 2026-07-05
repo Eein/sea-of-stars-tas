@@ -49,9 +49,7 @@ impl GuiHelper for RouteHelperV1 {
             ui.separator();
         }
 
-        let world_pos = sppmd.players.items[0]
-            .position
-            .unwrap_or_default();
+        let world_pos = sppmd.players.items[0].position.unwrap_or_default();
         let pos = sppmd.players.items[0]
             .gameobject_position
             .unwrap_or_default();

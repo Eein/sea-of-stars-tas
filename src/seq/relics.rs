@@ -137,7 +137,7 @@ impl Node<GameState, GameEvent> for SeqRelicList {
                         match state.config.relics.get(&cur_relic.name) {
                             Some(relic) => {
                                 if *relic != cur_relic.enabled {
-                                    info!("Toggling relic '{}' to {}", &cur_relic.name, relic);
+                                    info!("Toggling relic '{}' to {}", cur_relic.name, relic);
                                     self.toggle_relic();
                                 } else {
                                     self.next_relic();

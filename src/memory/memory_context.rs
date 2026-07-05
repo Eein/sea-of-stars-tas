@@ -19,19 +19,17 @@ impl<'a> MemoryContext<'a> {
         ctx: &'a StateContext,
         manager: &'a mut UnityMemoryManager,
     ) -> Result<MemoryContext<'a>, MemoryError> {
-        if let Some(class) = &manager.class {
-            if let Some(process) = &ctx.process {
-                if let Some(module) = &ctx.module {
-                    if let Some(singleton) = &manager.singleton {
-                        return Ok(Self {
-                            class,
-                            process,
-                            module,
-                            singleton,
-                        });
-                    }
-                }
-            }
+        if let Some(class) = &manager.class
+            && let Some(process) = &ctx.process
+            && let Some(module) = &ctx.module
+            && let Some(singleton) = &manager.singleton
+        {
+            return Ok(Self {
+                class,
+                process,
+                module,
+                singleton,
+            });
         }
 
         Err(MemoryError::Unset)

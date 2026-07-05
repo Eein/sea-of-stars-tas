@@ -127,14 +127,12 @@ impl PlayerPartyManagerData {
         &mut self,
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
-        if let Some(leader_id) = memory_context.get_field_offset("leaderID") {
-            if let Ok(character) =
+        if let Some(leader_id) = memory_context.get_field_offset("leaderID")
+            && let Ok(character) =
                 memory_context.read_pointer_path::<ArrayWString<128>>(&[leader_id.into(), 0x14])
-            {
-                if let Ok(name) = String::from_utf16(character.as_slice()) {
-                    self.leader_character = PlayerPartyCharacter::parse(&name)
-                }
-            }
+            && let Ok(name) = String::from_utf16(character.as_slice())
+        {
+            self.leader_character = PlayerPartyCharacter::parse(&name)
         }
 
         Ok(())

@@ -382,8 +382,8 @@ impl Class {
         fields.get_offset(process, module)
     }
 
-    /// Tries to find the address of a static instance of the class based on its
-    /// field name. This waits until the field is not null.
+    // // Tries to find the address of a static instance of the class based on its
+    // // field name. This waits until the field is not null.
     // pub async fn wait_get_static_instance(
     //     &self,
     //     process: &Process,
@@ -446,10 +446,9 @@ impl Field {
     }
 
     fn get_offset(&self, process: &Process, module: &Module) -> Option<u32> {
-        match process.read(self.field + module.offsets.monoclassfield_offset as u64) {
-            Ok(value) => Some(value),
-            Err(_error) => None,
-        }
+        process
+            .read(self.field + module.offsets.monoclassfield_offset as u64)
+            .ok()
     }
 }
 

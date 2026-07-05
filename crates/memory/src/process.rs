@@ -84,7 +84,7 @@ impl Process {
         match self
             .modules
             .iter()
-            .find(|m| m.filename().map_or(false, |f| f.ends_with(module)))
+            .find(|m| m.filename().is_some_and(|f| f.ends_with(module)))
             .map(|m| m.start() as u64)
         {
             Some(module) => Ok(module),

@@ -62,10 +62,10 @@ impl<T, E> Sequencer<T, E> {
 
 #[cfg(test)]
 mod tests {
+    use crate::Node;
     use crate::flow::{SeqCheckpoint, SeqCondition, SeqIf, SeqList};
     use crate::logging::SeqLog;
     use crate::sequencer::Sequencer;
-    use crate::Node;
     use std::fmt::Display;
 
     // Example state

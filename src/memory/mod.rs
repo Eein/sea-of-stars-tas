@@ -2,6 +2,7 @@ pub mod boat_manager;
 pub mod combat_manager;
 pub mod currency_manager;
 pub mod cutscene_manager;
+pub mod encounter_players_manager;
 pub mod inventory_manager;
 pub mod level_manager;
 pub mod level_up_manager;
@@ -22,6 +23,7 @@ use boat_manager::BoatManagerData;
 use combat_manager::CombatManagerData;
 use currency_manager::CurrencyManagerData;
 use cutscene_manager::CutsceneManagerData;
+use encounter_players_manager::EncounterPlayersManagerData;
 use inventory_manager::InventoryManagerData;
 use level_manager::LevelManagerData;
 use level_up_manager::LevelUpManagerData;
@@ -65,6 +67,7 @@ pub struct MemoryManagers {
     pub inventory_manager: MemoryManager<InventoryManagerData>,
     pub level_up_manager: MemoryManager<LevelUpManagerData>,
     pub single_player_plus_manager: MemoryManager<SinglePlayerPlusManagerData>,
+    pub encounter_players_manager: MemoryManager<EncounterPlayersManagerData>,
 }
 
 impl MemoryManagers {
@@ -84,6 +87,7 @@ impl MemoryManagers {
             self.inventory_manager.update(ctx);
             self.level_up_manager.update(ctx);
             self.single_player_plus_manager.update(ctx);
+            self.encounter_players_manager.update(ctx);
         }
     }
     pub fn ready_for_updates(&mut self, ctx: &StateContext) -> bool {
@@ -97,12 +101,11 @@ impl<T: MemoryManagerUpdate> MemoryManager<T> {
     }
 
     fn update_manager(&mut self, ctx: &StateContext) {
-        if let Some(process) = &ctx.process {
-            if let Some(module) = &ctx.module {
-                if let Some(image) = &ctx.image {
-                    self.manager.update(process, module, image, &self.name);
-                }
-            }
+        if let Some(process) = &ctx.process
+            && let Some(module) = &ctx.module
+            && let Some(image) = &ctx.image
+        {
+            self.manager.update(process, module, image, &self.name);
         }
     }
 

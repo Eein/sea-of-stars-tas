@@ -78,16 +78,14 @@ impl State {
         let mut dock_state = DockState::new(tree_names);
 
         // Restore Dock State from Store
-        if conf.persist_tab_state {
-            if let Some(storage) = cc.storage {
-                if let Some(surface_store) = storage.get_string("dock_state") {
-                    let main_surface = dock_state.main_surface_mut();
-                    use egui_dock::Tree;
-                    if let Ok(deserialized_surface) = ron::from_str::<Tree<String>>(&surface_store)
-                    {
-                        *main_surface = deserialized_surface;
-                    }
-                }
+        if conf.persist_tab_state
+            && let Some(storage) = cc.storage
+            && let Some(surface_store) = storage.get_string("dock_state")
+        {
+            let main_surface = dock_state.main_surface_mut();
+            use egui_dock::Tree;
+            if let Ok(deserialized_surface) = ron::from_str::<Tree<String>>(&surface_store) {
+                *main_surface = deserialized_surface;
             }
         }
 

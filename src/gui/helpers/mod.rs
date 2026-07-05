@@ -47,7 +47,10 @@ impl GuiHelpers {
         match self.helpers.get_mut(tab.as_str()) {
             Some(helper) => helper.draw(game_state, game_manager, ui, tab),
             None => {
-                let label = format!("Tab: {} has not been initialized. Check gui/mod.rs and state.rs to initialize this tab.", tab.as_str());
+                let label = format!(
+                    "Tab: {} has not been initialized. Check gui/mod.rs and state.rs to initialize this tab.",
+                    tab.as_str()
+                );
                 ui.label(label);
             }
         }

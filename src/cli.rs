@@ -12,10 +12,10 @@ use std::time::{Duration, Instant};
 
 use clap::{Parser, ValueEnum};
 use fps_clock::FpsClock;
-use log::{error, info, warn, LevelFilter, Metadata, Record};
+use log::{LevelFilter, Metadata, Record, error, info, warn};
 
-use crate::config::{load_config, Config};
-use crate::core::{TasCore, GAME_PROCESS_NAME};
+use crate::config::{Config, load_config};
+use crate::core::{GAME_PROCESS_NAME, TasCore};
 use crate::route::tas;
 use crate::util::vec3_ext::Vector3Ext;
 
@@ -71,9 +71,9 @@ pub struct CliArgs {
     #[arg(long)]
     pub checkpoint: Option<String>,
 
-    /// Save slot to load (only for `--route load`).
-    #[arg(long, default_value_t = 1)]
-    pub save_slot: usize,
+    /// Save slot to load before running. When unset, starts a new game (no load).
+    #[arg(long)]
+    pub save_slot: Option<usize>,
 
     /// Whether an auto-save is present (only for `--route load`).
     #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
@@ -332,7 +332,7 @@ fn shell_quote(s: &str) -> String {
 pub fn repro_command(
     route: Route,
     checkpoint: Option<&str>,
-    save_slot: usize,
+    save_slot: Option<usize>,
     auto_save_present: bool,
     config: &Config,
 ) -> String {
@@ -345,14 +345,21 @@ pub fn repro_command(
 
     match route {
         Route::Tas => {
-            if let Some(checkpoint) = checkpoint {
-                if checkpoint != "New Game" {
-                    parts.push(format!("--checkpoint {}", shell_quote(checkpoint)));
-                }
+            if let Some(checkpoint) = checkpoint
+                && checkpoint != "New Game"
+            {
+                parts.push(format!("--checkpoint {}", shell_quote(checkpoint)));
+            }
+            // A save slot means we load before running; include the save options.
+            if let Some(slot) = save_slot {
+                parts.push(format!("--save-slot {slot}"));
+                parts.push(format!("--auto-save-present {auto_save_present}"));
             }
         }
         Route::Load => {
-            parts.push(format!("--save-slot {save_slot}"));
+            if let Some(slot) = save_slot {
+                parts.push(format!("--save-slot {slot}"));
+            }
             parts.push(format!("--auto-save-present {auto_save_present}"));
         }
         Route::Combat | Route::Relic => {}
@@ -375,15 +382,17 @@ fn build_game_manager(core: &mut TasCore, args: &CliArgs) {
     let gm = match args.route {
         Route::Tas => {
             let mut gm = tas::create_tas();
-            if let Some(checkpoint) = &args.checkpoint {
-                if checkpoint != "New Game" {
-                    info!("Advancing to checkpoint: {checkpoint}");
-                    gm.advance_to_checkpoint(&mut core.game_state, checkpoint);
-                }
+            if let Some(checkpoint) = &args.checkpoint
+                && checkpoint != "New Game"
+            {
+                info!("Advancing to checkpoint: {checkpoint}");
+                gm.advance_to_checkpoint(&mut core.game_state, checkpoint);
             }
             gm
         }
-        Route::Load => tas::create_load_sequence(args.save_slot, args.auto_save_present),
+        Route::Load => {
+            tas::create_load_sequence(args.save_slot.unwrap_or(1), args.auto_save_present)
+        }
         Route::Combat => tas::create_combat_test(),
         Route::Relic => tas::create_relic_test(),
     };
@@ -456,8 +465,6 @@ pub fn run(args: CliArgs) -> ExitCode {
 /// the corresponding [exit] code. Split out from [`run`] so every exit path
 /// funnels through a single dump-on-close point.
 fn run_sequence(core: &mut TasCore, args: &CliArgs) -> u8 {
-    build_game_manager(core, args);
-
     if args.start_delay > 0.0 {
         info!("Starting sequence in {:.1}s...", args.start_delay);
         let delay_start = Instant::now();
@@ -472,27 +479,53 @@ fn run_sequence(core: &mut TasCore, args: &CliArgs) -> u8 {
         }
     }
 
+    let run_start = Instant::now();
+
+    // A save slot means: load that save first, then run the route (the TAS route
+    // additionally advances to a checkpoint if given). No save slot = new game.
+    // `--route load` is itself the load, so it's excluded.
+    if args.route != Route::Load
+        && let Some(slot) = args.save_slot
+    {
+        info!("Loading save slot {slot}...");
+        core.game_manager = Some(tas::create_load_sequence(slot, args.auto_save_present));
+        core.start_game_manager();
+        if let Err(code) = run_active(core, args, run_start) {
+            return code;
+        }
+    }
+
+    // Build and run the requested route (TAS advances to the checkpoint if set).
+    build_game_manager(core, args);
     info!("Starting sequence (route={:?}).", args.route);
     core.start_game_manager();
+    match run_active(core, args, run_start) {
+        Ok(()) => exit::SUCCESS,
+        Err(code) => code,
+    }
+}
 
+/// Drive the currently-loaded game manager until it finishes. Returns `Ok(())`
+/// on normal completion, or `Err(exit_code)` if the game vanished or the
+/// `--max-secs` watchdog fired.
+fn run_active(core: &mut TasCore, args: &CliArgs, run_start: Instant) -> Result<(), u8> {
     let mut fps = FpsClock::new(args.fps);
-    let run_start = Instant::now();
     loop {
         core.poll();
         core.run_game_manager();
 
         if !core.game_manager_running() {
             info!("Sequence finished.");
-            return exit::SUCCESS;
+            return Ok(());
         }
         if !core.is_attached() {
             error!("Lost the game process during the run.");
-            return exit::NO_GAME;
+            return Err(exit::NO_GAME);
         }
         if args.max_secs > 0 && run_start.elapsed().as_secs() >= args.max_secs {
             warn!("Aborting: exceeded --max-secs={}.", args.max_secs);
             core.game_state.release_all();
-            return exit::TIMEOUT;
+            return Err(exit::TIMEOUT);
         }
 
         fps.tick();

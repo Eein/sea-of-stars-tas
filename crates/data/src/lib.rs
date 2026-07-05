@@ -53,7 +53,7 @@ pub struct Item {
 impl Item {
     fn equippable_by_character(self, character: PlayerPartyCharacter) -> bool {
         if let Some(characters) = self.equippable_by {
-            characters.iter().any(|c| *c == character)
+            characters.contains(&character)
         } else {
             false
         }

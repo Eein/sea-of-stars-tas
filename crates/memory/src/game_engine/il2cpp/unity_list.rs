@@ -11,15 +11,15 @@ const OFFSET: u64 = 0x8;
 const ITEMS_0_INDEX_BASE: u64 = 0x20;
 const COUNT_OFFSET: u64 = 0x18;
 
-///  UnityItems are laid out in the following format:
-///  ```
-///  field -> ptr
-///    0x10 items -> ptr
-///      0x08 count -> u32
-///      0x20 item[0] -> ptr
-///      0x28 item[1] -> ptr
-///      0x30 item[x] -> ptr
-///  ```
+// //  UnityItems are laid out in the following format:
+// //  ```
+// //  field -> ptr
+// //    0x10 items -> ptr
+// //      0x08 count -> u32
+// //      0x20 item[0] -> ptr
+// //      0x28 item[1] -> ptr
+// //      0x30 item[x] -> ptr
+// //  ```
 
 impl<T: UnityItem> UnityList<T> {
     pub fn read(process: &Process, addr: u64) -> Result<Self, MemoryError> {

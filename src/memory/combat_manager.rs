@@ -1,8 +1,8 @@
 use crate::memory::memory_context::MemoryContext;
 use crate::memory::{MemoryManager, MemoryManagerUpdate};
 use crate::state::StateContext;
-use data::prelude::{armor, trinkets, weapons, PlayerPartyCharacter};
 use data::Item;
+use data::prelude::{PlayerPartyCharacter, armor, trinkets, weapons};
 use log::info;
 use memory::game_engine::il2cpp::unity_list::*;
 use memory::game_engine::il2cpp::unity_serializable_dictionary::*;
@@ -158,11 +158,19 @@ impl MemoryManagerUpdate for CombatManagerData {
     ) -> Result<(), MemoryError> {
         let memory_context = MemoryContext::create(ctx, manager)?;
 
+        let was_active = self.encounter_active;
         self.update_encounter_active(&memory_context)?;
 
         // Check if the encounter is active, then run the rest
         // of the updates.
         if self.encounter_active {
+            // Log the CombatManager singleton address once when combat starts.
+            if !was_active {
+                info!(
+                    "Combat active. CombatManager address: {:#x}",
+                    memory_context.singleton.class
+                );
+            }
             self.update_combat_controller_type(&memory_context)?;
             self.update_live_mana(&memory_context)?;
             self.update_combo_points_and_ultimates(&memory_context)?;
@@ -218,23 +226,22 @@ impl CombatManagerData {
             // name
             if let Ok(controller_type_c_str) = memory_context
                 .read_pointer_path::<ArrayCString<200>>(&[controller.into(), 0x0, 0x10, 0x0])
+                && let Ok(controller_type) = controller_type_c_str.validate_utf8()
             {
-                if let Ok(controller_type) = controller_type_c_str.validate_utf8() {
-                    self.combat_controller_type = match controller_type {
-                        "EncounterController" => CombatControllerType::Basic,
-                        "FirstEncounter" => CombatControllerType::FirstEncounter,
-                        "SecondEncounter" => CombatControllerType::SecondEncounter,
-                        "DwellerOfStrife" => CombatControllerType::DwellerOfStrife,
-                        "DwellerOfDread" => CombatControllerType::DwellerOfDread,
-                        "KOTutorial" => CombatControllerType::KOTutorial,
-                        "LiveManaTutorial" => CombatControllerType::LiveManaTutorial,
-                        "ManaRegenTutorial" => CombatControllerType::ManaRegenTutorial,
-                        "RoundsTutorial" => CombatControllerType::RoundsTutorial,
-                        "SpellLockTutorial" => CombatControllerType::SpellLockTutorial,
-                        "TimedBlocksTutorial" => CombatControllerType::TimedBlocksTutorial,
-                        "TimedHitsTutorial" => CombatControllerType::TimedHitsTutorial,
-                        _ => CombatControllerType::Basic,
-                    }
+                self.combat_controller_type = match controller_type {
+                    "EncounterController" => CombatControllerType::Basic,
+                    "FirstEncounter" => CombatControllerType::FirstEncounter,
+                    "SecondEncounter" => CombatControllerType::SecondEncounter,
+                    "DwellerOfStrife" => CombatControllerType::DwellerOfStrife,
+                    "DwellerOfDread" => CombatControllerType::DwellerOfDread,
+                    "KOTutorial" => CombatControllerType::KOTutorial,
+                    "LiveManaTutorial" => CombatControllerType::LiveManaTutorial,
+                    "ManaRegenTutorial" => CombatControllerType::ManaRegenTutorial,
+                    "RoundsTutorial" => CombatControllerType::RoundsTutorial,
+                    "SpellLockTutorial" => CombatControllerType::SpellLockTutorial,
+                    "TimedBlocksTutorial" => CombatControllerType::TimedBlocksTutorial,
+                    "TimedHitsTutorial" => CombatControllerType::TimedHitsTutorial,
+                    _ => CombatControllerType::Basic,
                 }
             }
         }
@@ -340,7 +347,7 @@ impl UnityItem for CombatEnemy {
         // Top level pointers
         let enemy_data = process.read_pointer_path::<u64>(item_ptr, &[0x80, 0x108])?;
         let casting_data = process.read_pointer_path::<u64>(item_ptr, &[0x80, 0x120])?;
-        let current_hp = process.read_pointer_path::<u32>(item_ptr, &[0x94])?;
+        let current_hp = process.read_pointer_path::<u32>(item_ptr, &[0x9C])?;
         let guid_w_str =
             process.read_pointer_path::<ArrayWString<128>>(enemy_data, &[0x18, 0x14])?;
         let guid = String::from_utf16(guid_w_str.as_slice()).unwrap_or("Unknown".to_string());
@@ -350,21 +357,21 @@ impl UnityItem for CombatEnemy {
             .read_pointer_path::<ArrayWString<36>>(item_ptr, &[0x80, 0xF8, 0xF0, 0x18, 0x14])?;
         let unique_id =
             String::from_utf16(unique_id_w_str.as_slice()).unwrap_or("Unknown".to_string());
-        let max_hp = process.read_pointer::<u32>(enemy_data + 0x20)?;
-        let speed = process.read_pointer::<u32>(enemy_data + 0x24)?;
-        let physical_attack = process.read_pointer::<u32>(enemy_data + 0x2C)?;
-        let physical_defense = process.read_pointer::<u32>(enemy_data + 0x28)?;
-        let magical_attack = process.read_pointer::<u32>(enemy_data + 0x30)?;
-        let magical_defense = process.read_pointer::<u32>(enemy_data + 0x34)?;
+        let max_hp = process.read_pointer::<u32>(enemy_data + 0x30)?;
+        let speed = process.read_pointer::<u32>(enemy_data + 0x34)?;
+        let physical_attack = process.read_pointer::<u32>(enemy_data + 0x3C)?;
+        let physical_defense = process.read_pointer::<u32>(enemy_data + 0x38)?;
+        let magical_attack = process.read_pointer::<u32>(enemy_data + 0x40)?;
+        let magical_defense = process.read_pointer::<u32>(enemy_data + 0x44)?;
 
         // casting data
-        let turns_to_action = process.read_pointer::<u8>(casting_data + 0x24)?;
-        let total_spell_locks = process.read_pointer::<u8>(casting_data + 0x28)?;
+        let turns_to_action = process.read_pointer::<u8>(casting_data + 0x2C)?;
+        let total_spell_locks = process.read_pointer::<u8>(casting_data + 0x30)?;
 
         let mut spell_locks = UnityList::<CombatDamageType>::default();
 
         if turns_to_action > 0 && total_spell_locks > 0 {
-            spell_locks = if let Ok(locks) = process.read_pointer_path::<u64>(casting_data, &[0x18])
+            spell_locks = if let Ok(locks) = process.read_pointer_path::<u64>(casting_data, &[0x20])
             {
                 UnityList::<CombatDamageType>::read(process, locks)?
             } else {
@@ -373,7 +380,7 @@ impl UnityItem for CombatEnemy {
         }
 
         let damage_type_modifiers_ptr =
-            process.read_pointer_path::<u64>(item_ptr, &[0x80, 0x108, 0x38])?;
+            process.read_pointer_path::<u64>(item_ptr, &[0x80, 0x108, 0x20])?;
         let damage_type_modifiers = UnitySerializableDictionary::<
             DamageTypeModifierKey,
             DamageTypeModifierValue,
@@ -382,7 +389,7 @@ impl UnityItem for CombatEnemy {
         )?;
 
         let damage_type_modifiers_override_ptr =
-            process.read_pointer_path::<u64>(item_ptr, &[0x80, 0x108, 0x40])?;
+            process.read_pointer_path::<u64>(item_ptr, &[0x80, 0x108, 0x28])?;
         let damage_type_modifiers_override =
             UnitySerializableDictionary::<DamageTypeModifierKey, DamageTypeModifierValue>::read(
                 process,
@@ -427,33 +434,34 @@ impl UnityItem for CombatPlayer {
     fn read(process: &Process, item_ptr: u64) -> Result<Self, MemoryError> {
         // Top level pointers
         // max_hp/mp may be 0x58 instead of 0x50
-        let current_hp = process.read_pointer_path::<u32>(item_ptr, &[0x180, 0x28, 0x58])?;
-        let current_mp = process.read_pointer_path::<u32>(item_ptr, &[0x180, 0x30, 0x58])?;
+        let current_hp = process.read_pointer_path::<u32>(item_ptr, &[0x188, 0x28, 0x58])?;
+        let current_mp = process.read_pointer_path::<u32>(item_ptr, &[0x188, 0x30, 0x58])?;
 
-        let base_hp = process.read_pointer_path::<u32>(item_ptr, &[0x150, 0x30, 0x20])?;
-        let base_mp = process.read_pointer_path::<u32>(item_ptr, &[0x150, 0x30, 0x50])?;
+        let base_hp = process.read_pointer_path::<u32>(item_ptr, &[0x158, 0x30, 0x78, 0x20])?;
+        let base_mp = process.read_pointer_path::<u32>(item_ptr, &[0x158, 0x30, 0x78, 0x24])?;
 
         // this get the current level up upgrades + 1, so if they're level 2 they should
         // have one upgrade.
-        let level = process.read_pointer_path::<u32>(item_ptr, &[0x150, 0x30, 0x88, 0x18])? + 1;
+        let level =
+            process.read_pointer_path::<u32>(item_ptr, &[0x158, 0x30, 0x78, 0x120, 0x18])? + 1;
 
         let base_physical_defense =
-            process.read_pointer_path::<u32>(item_ptr, &[0x150, 0x30, 0x28])?;
+            process.read_pointer_path::<u32>(item_ptr, &[0x158, 0x38, 0x30])?;
         let base_physical_attack =
-            process.read_pointer_path::<u32>(item_ptr, &[0x150, 0x30, 0x2C])?;
+            process.read_pointer_path::<u32>(item_ptr, &[0x158, 0x38, 0x28])?;
         let base_magical_attack =
-            process.read_pointer_path::<u32>(item_ptr, &[0x150, 0x30, 0x30])?;
+            process.read_pointer_path::<u32>(item_ptr, &[0x158, 0x38, 0x2C])?;
         let base_magical_defense =
-            process.read_pointer_path::<u32>(item_ptr, &[0x150, 0x30, 0x34])?;
+            process.read_pointer_path::<u32>(item_ptr, &[0x158, 0x38, 0x30])?;
 
-        let selected = if let Ok(sel) = process.read_pointer_path::<u32>(item_ptr, &[0x180, 0x78]) {
+        let selected = if let Ok(sel) = process.read_pointer_path::<u32>(item_ptr, &[0x188, 0x78]) {
             matches!(sel, 1)
         } else {
             false
         };
 
         let character = if let Ok(char) =
-            process.read_pointer_path::<ArrayWString<128>>(item_ptr, &[0x180, 0x70, 0x14])
+            process.read_pointer_path::<ArrayWString<128>>(item_ptr, &[0x188, 0x70, 0x14])
         {
             if let Ok(name) = String::from_utf16(char.as_slice()) {
                 PlayerPartyCharacter::parse(&name)
@@ -465,7 +473,7 @@ impl UnityItem for CombatPlayer {
         };
 
         let timed_attack_ready =
-            if let Ok(tar) = process.read_pointer_path::<u8>(item_ptr, &[0x160, 0x3A]) {
+            if let Ok(tar) = process.read_pointer_path::<u8>(item_ptr, &[0x168, 0x3A]) {
                 matches!(tar, 1)
             } else {
                 false
@@ -478,16 +486,16 @@ impl UnityItem for CombatPlayer {
         };
 
         let enabled = if let Ok(char_enabled) =
-            process.read_pointer_path::<u8>(item_ptr, &[0x180, 0x68, 0x30])
+            process.read_pointer_path::<u8>(item_ptr, &[0x188, 0x68, 0x30])
         {
             matches!(char_enabled, 1)
         } else {
             false
         };
-        let mana_charge_count = process.read_pointer_path::<u32>(item_ptr, &[0x148, 0x58])?;
+        let mana_charge_count = process.read_pointer_path::<u32>(item_ptr, &[0x150, 0x58])?;
 
         let equipped_weapon = if let Ok(weapon_guid) = process
-            .read_pointer_path::<ArrayWString<128>>(item_ptr, &[0x150, 0x30, 0xA0, 0x18, 0x14])
+            .read_pointer_path::<ArrayWString<128>>(item_ptr, &[0x158, 0x38, 0xB0, 0x18, 0x14])
         {
             if let Ok(name) = String::from_utf16(weapon_guid.as_slice()) {
                 weapons().get(name.as_str()).cloned()
@@ -499,7 +507,7 @@ impl UnityItem for CombatPlayer {
         };
 
         let equipped_armor = if let Ok(armor_guid) = process
-            .read_pointer_path::<ArrayWString<128>>(item_ptr, &[0x150, 0x30, 0xA8, 0x18, 0x14])
+            .read_pointer_path::<ArrayWString<128>>(item_ptr, &[0x158, 0x38, 0xB8, 0x18, 0x14])
         {
             if let Ok(name) = String::from_utf16(armor_guid.as_slice()) {
                 armor().get(name.as_str()).cloned()
@@ -511,7 +519,7 @@ impl UnityItem for CombatPlayer {
         };
 
         let equipped_trinkets = if let Ok(equipped_trinkets_ptr) =
-            process.read_pointer_path::<u64>(item_ptr, &[0x150, 0x30, 0xB0])
+            process.read_pointer_path::<u64>(item_ptr, &[0x158, 0x38, 0xC0])
         {
             UnityList::<EquippedTrinket>::read(process, equipped_trinkets_ptr)?
         } else {

@@ -121,7 +121,9 @@ impl Node<GameState, GameEvent> for SeqTitleScreen {
                     if state.game_launched_by_tas {
                         // On a cold boot we triggered, the title screen shows
                         // before its intro animation finishes accepting input.
-                        info!("Title screen ready; waiting {TITLE_SETTLE_SECS}s for intro animation");
+                        info!(
+                            "Title screen ready; waiting {TITLE_SETTLE_SECS}s for intro animation"
+                        );
                         self.fsm = TitleScreenFSM::SettleAnimation;
                     } else {
                         info!("Title screen ready");

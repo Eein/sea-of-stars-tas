@@ -39,9 +39,9 @@ impl TasCore {
             process_list: ProcessList::default(),
             game_state: GameState {
                 gamepads: [
-                    GenericJoystick::default(),
-                    GenericJoystick::default(),
-                    GenericJoystick::default(),
+                    GenericJoystick::new(0),
+                    GenericJoystick::new(1),
+                    GenericJoystick::new(2),
                 ],
                 memory_managers: MemoryManagers::default(),
                 config,
@@ -69,13 +69,12 @@ impl TasCore {
     /// Drop the process handle if the game is no longer running so that memory
     /// addresses don't hang onto a zombie process.
     pub fn maybe_deregister_process(&mut self) {
-        if let Some(process) = &self.context.process {
-            if !self
+        if let Some(process) = &self.context.process
+            && !self
                 .process_list
                 .is_open(sysinfo::Pid::from(process.pid as usize))
-            {
-                self.context.process = None
-            }
+        {
+            self.context.process = None
         }
     }
 
@@ -102,23 +101,22 @@ impl TasCore {
 
     /// Attach to `GameAssembly.dll` once the process is known.
     pub fn register_module(&mut self) {
-        if self.context.module.is_none() {
-            if let Some(process) = &mut self.context.process {
-                info!("- Loading Module");
-                self.context.module = Module::attach(process);
-            }
+        if self.context.module.is_none()
+            && let Some(process) = &mut self.context.process
+        {
+            info!("- Loading Module");
+            self.context.module = Module::attach(process);
         }
     }
 
     /// Resolve the default IL2CPP image once the module is attached.
     pub fn register_image(&mut self) {
-        if self.context.image.is_none() {
-            if let Some(process) = &self.context.process {
-                if let Some(module) = &self.context.module {
-                    info!("- Loading Image");
-                    self.context.image = module.get_default_image(process);
-                }
-            }
+        if self.context.image.is_none()
+            && let Some(process) = &self.context.process
+            && let Some(module) = &self.context.module
+        {
+            info!("- Loading Image");
+            self.context.image = module.get_default_image(process);
         }
     }
 
@@ -148,18 +146,16 @@ impl TasCore {
     /// Advance the running game manager by one frame, if any. Returns `true` on
     /// the frame the sequencer finishes.
     pub fn run_game_manager(&mut self) -> bool {
-        if let Some(gm) = self.game_manager.as_mut() {
-            if gm.is_running() {
-                return gm.run(&mut self.game_state);
-            }
+        if let Some(gm) = self.game_manager.as_mut()
+            && gm.is_running()
+        {
+            return gm.run(&mut self.game_state);
         }
         false
     }
 
     /// Whether a game manager exists and its sequencer is still running.
     pub fn game_manager_running(&self) -> bool {
-        self.game_manager
-            .as_ref()
-            .is_some_and(|gm| gm.is_running())
+        self.game_manager.as_ref().is_some_and(|gm| gm.is_running())
     }
 }
