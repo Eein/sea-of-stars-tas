@@ -1,0 +1,6 @@
+# Pins the Rust toolchain for all rustup-based consumers: CI and any non-nix
+# contributors. Nix users get the equivalent toolchain from flake.nix instead
+# (nix ignores this file), so keep the version here in sync with flake.nix.
+[toolchain]
+channel = "nightly-2026-04-01"
+components = ["clippy", "rustfmt"]
