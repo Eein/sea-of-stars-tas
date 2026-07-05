@@ -12,43 +12,43 @@ const ENTRIES_OFFSET: u64 = 0x18;
 const ITEMS_0_INDEX_BASE: u64 = 0x20;
 const DICTIONARY_OFFSET: u64 = 0x20;
 
-///  UnitySerializableDictionary are laid out in the following format:
-///
-///  Example of [packed struct header, key, value]
-///  In this case: slot[]<key, value>
-///  ITEM_OFFSET: u64 = 0x18;
-///  KEY_OFFSET: u64 = 0x8;
-///  VALUE_OFFSET: u64 = 0x10;
-///  ```
-///  field -> ptr
-///    0x10 keys (unused)
-///    0x18 values (unused)
-///    0x20 dictionary -> ptr
-///      0x10 _buckets (unused)
-///      0x18 _entries
-///        0x20 metadata -> (unused)
-///        0x28 key -> ptr
-///        0x30 value -> ptr
-///  ```
-///
-///  Example of packed struct [4byte Enum, 4byte float]
-///  ITEM_OFFSET: u64 = 0x10;
-///  KEY_OFFSET: u64 = 0x8;
-///  VALUE_OFFSET: u64 = 0x10;
-///  ```
-///  field -> ptr
-///    0x10 keys (unused)
-///    0x18 values (unused)
-///    0x20 dictionary -> ptr
-///      0x10 _buckets (unused)
-///      0x18 _entries
-///        0x20 metadata -> (unused)
-///        0x28 key -> ptr
-///        0x29 value -> ptr
-///  ```
-///
-///  Note:
-///  Implementors will receive the pointer value, and must follow the pointer if desired.
+// //  UnitySerializableDictionary are laid out in the following format:
+// //
+// //  Example of [packed struct header, key, value]
+// //  In this case: slot[]<key, value>
+// //  ITEM_OFFSET: u64 = 0x18;
+// //  KEY_OFFSET: u64 = 0x8;
+// //  VALUE_OFFSET: u64 = 0x10;
+// //  ```
+// //  field -> ptr
+// //    0x10 keys (unused)
+// //    0x18 values (unused)
+// //    0x20 dictionary -> ptr
+// //      0x10 _buckets (unused)
+// //      0x18 _entries
+// //        0x20 metadata -> (unused)
+// //        0x28 key -> ptr
+// //        0x30 value -> ptr
+// //  ```
+// //
+// //  Example of packed struct [4byte Enum, 4byte float]
+// //  ITEM_OFFSET: u64 = 0x10;
+// //  KEY_OFFSET: u64 = 0x8;
+// //  VALUE_OFFSET: u64 = 0x10;
+// //  ```
+// //  field -> ptr
+// //    0x10 keys (unused)
+// //    0x18 values (unused)
+// //    0x20 dictionary -> ptr
+// //      0x10 _buckets (unused)
+// //      0x18 _entries
+// //        0x20 metadata -> (unused)
+// //        0x28 key -> ptr
+// //        0x29 value -> ptr
+// //  ```
+// //
+// //  Note:
+// //  Implementors will receive the pointer value, and must follow the pointer if desired.
 
 impl<K: UnitySerializableDictKey + Eq + Hash, V: UnitySerializableDictValue>
     UnitySerializableDictionary<K, V>

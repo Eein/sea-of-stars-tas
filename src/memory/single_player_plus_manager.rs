@@ -158,8 +158,11 @@ impl UnityItem for Player {
             PlayerPartyCharacter::None
         };
 
+        // highFiveHandler is at [0x88, 0x128]; the inner offsets shifted in a
+        // game update (hasBoost 0xF0->0x108, canReplenishBoost 0xF1->0x109,
+        // isDoingHighFive 0xC1->0xD1).
         let has_boost = if let Ok(boost_bool) =
-            process.read_pointer_path::<u8>(item_ptr, &[0x88, 0x128, 0xF0])
+            process.read_pointer_path::<u8>(item_ptr, &[0x88, 0x128, 0x108])
         {
             matches!(boost_bool, 1)
         } else {
@@ -167,7 +170,7 @@ impl UnityItem for Player {
         };
 
         let is_doing_high_five = if let Ok(high_five_bool) =
-            process.read_pointer_path::<u8>(item_ptr, &[0x88, 0x128, 0xC1])
+            process.read_pointer_path::<u8>(item_ptr, &[0x88, 0x128, 0xD1])
         {
             matches!(high_five_bool, 1)
         } else {
@@ -175,7 +178,7 @@ impl UnityItem for Player {
         };
 
         let can_replenish_boost = if let Ok(replenish_bool) =
-            process.read_pointer_path::<u8>(item_ptr, &[0x88, 0x128, 0xF1])
+            process.read_pointer_path::<u8>(item_ptr, &[0x88, 0x128, 0x109])
         {
             matches!(replenish_bool, 1)
         } else {

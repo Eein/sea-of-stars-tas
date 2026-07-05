@@ -4,6 +4,14 @@ use crate::joystick::Joystick;
 #[derive(Default)]
 pub struct GenericJoystick(Joystick);
 
+impl GenericJoystick {
+    /// Create a virtual controller with a unique identity per `index`, so the
+    /// game binds each pad to a distinct player.
+    pub fn new(index: usize) -> Self {
+        GenericJoystick(Joystick::new(index))
+    }
+}
+
 impl JoystickInterface for GenericJoystick {
     fn release_all(&mut self) {
         self.0.release_all();

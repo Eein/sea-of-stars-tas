@@ -7,10 +7,10 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
     SeqList::create(
         "Forbidden Cave",
         vec![
+            SeqCheckpoint::create("Outside Forbidden Cavern"),
             SeqMove::create(
                 "Open door",
                 vec![
-                    Move::To(14.000, 1.002, 14.367),
                     Move::To(14.000, 1.002, 17.396),
                     Move::Confirm, // Open door to cave
                 ],
@@ -97,12 +97,12 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                     vec![
                         Move::SpeedBoost(vec![0, 1]),
                         Move::Interact(-46.460, 6.002, 139.457),
-                        Move::To(-46.460, 6.002, 139.451),
-                        Move::To(-46.540, 6.002, 138.577),
-                        Move::To(-45.620, 6.002, 138.533),
-                        Move::Interact(-45.533, 9.002, 139.457),
-                        Move::Interact(-45.533, 15.002, 141.467),
-                        Move::To(-43.460, 15.002, 141.467),
+                        Move::To(-45.540, 9.002, 139.452),
+                        Move::To(-43.460, 9.002, 139.540),
+                        Move::Interact(-43.460, 9.002, 139.540),
+                        Move::Interact(-43.540, 11.002, 140.467),
+                        Move::Interact(-44.457, 12.002, 140.540),
+                        Move::Interact(-43.460, 15.002, 141.543),
                         Move::Climb(-43.460, 16.403, 141.530),
                         Move::Climb(-35.457, 16.403, 141.530),
                         Move::To(-35.379, 11.002, 140.272),
@@ -139,7 +139,9 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                     Move::To(72.108, 10.002, 147.955),
                     Move::To(73.240, 10.002, 144.689),
                     Move::To(72.752, 10.002, 138.473),
-                    Move::Interact(69.421, 5.002, 138.381),
+                    Move::Interact(71.0, 10.002, 138.398),
+                    Move::Log("Wait for lock"),
+                    Move::To(68.460, 3.002, 138.561),
                 ],
             ),
             SeqMove::create_coop(
@@ -147,6 +149,8 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                 vec![
                     vec![
                         Move::SpeedBoost(vec![0, 1]),
+                        Move::WaitFor(0.5),
+                        Move::AwaitSync(vec![1]),
                         Move::Interact(69.476, 1.002, 141.125),
                         Move::To(64.308, 1.002, 145.400),
                         Move::AwaitSync(vec![1]),

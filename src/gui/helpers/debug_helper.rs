@@ -41,9 +41,7 @@ impl MovementGui {
         let gameobject_position = sppmd.players.items[0]
             .gameobject_position
             .unwrap_or_default();
-        let position = sppmd.players.items[0]
-            .position
-            .unwrap_or_default();
+        let position = sppmd.players.items[0].position.unwrap_or_default();
 
         const EPSILON: f32 = 0.01;
 
@@ -64,7 +62,7 @@ impl MovementGui {
             CoordFsm::World => Self::draw_coord(ui, &position),
             CoordFsm::Boat => {
                 Self::draw_coord(ui, &bmd.position);
-                ui.label(format!("Rot (yaw): {:?}", &bmd.rotation.to_yaw()));
+                ui.label(format!("Rot (yaw): {:?}", bmd.rotation.to_yaw()));
                 ui.label(format!("speed: {:.3}/{:.3}", bmd.speed, bmd.max_speed));
             }
         }
@@ -130,6 +128,7 @@ impl GuiHelper for DebugHelper {
         let speedrun_manager = &game_state.memory_managers.speedrun_manager.data;
         let ppmd = &game_state.memory_managers.player_party_manager.data;
         let sppmd = &game_state.memory_managers.single_player_plus_manager.data;
+        let epmd = &game_state.memory_managers.encounter_players_manager.data;
 
         ui.label(format!("Leader: {:?}", ppmd.leader_character));
         ui.label(format!("Movement State: {:?}", ppmd.movement_state));
@@ -175,14 +174,27 @@ impl GuiHelper for DebugHelper {
             ui.label("Controller Pos:");
             MovementGui::draw_coord(ui, &player.position.unwrap_or_default());
             ui.label("Gameobject Pos:");
-            MovementGui::draw_coord(
-                ui,
-                &player
-                    .gameobject_position
-                    .unwrap_or_default(),
-            );
+            MovementGui::draw_coord(ui, &player.gameobject_position.unwrap_or_default());
             ui.label("");
         }
+
+        ui.separator();
+        egui::CollapsingHeader::new("Encounter Players")
+            .default_open(true)
+            .show(ui, |ui| {
+                ui.label(format!("Initialized: {}", epmd.initialized));
+                match epmd.current_player_index {
+                    Some(index) => ui.label(format!("Current Player index: {index}")),
+                    None => ui.label("Current Player: None"),
+                };
+                ui.label(format!("All Players: {}", epmd.all_players.items.len()));
+                for player in epmd.all_players.items.iter() {
+                    ui.label(format!(
+                        "  [{}] {} - {:?}",
+                        player.index, player.name, player.character
+                    ));
+                }
+            });
 
         ui.separator();
 

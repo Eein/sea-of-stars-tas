@@ -1,7 +1,7 @@
 use evdev::{
-    uinput::{VirtualDevice, VirtualDeviceBuilder},
     AbsInfo, AbsoluteAxisCode, AbsoluteAxisEvent, AttributeSet, BusType, EventType, InputEvent,
     InputId, KeyCode, UinputAbsSetup,
+    uinput::{VirtualDevice, VirtualDeviceBuilder},
 };
 
 use log::error;
@@ -106,7 +106,15 @@ impl Joystick {
 
 impl Default for Joystick {
     fn default() -> Self {
-        let name = "Future TAS Joystick Linux";
+        Self::new(0)
+    }
+}
+
+impl Joystick {
+    /// Create a virtual controller with a unique identity per `index` so the
+    /// game can distinguish multiple pads and assign them to distinct players.
+    pub fn new(index: usize) -> Self {
+        let name = format!("Future TAS Joystick Linux {index}");
         let center = ABS_MAX / 2;
         let abs_setup = AbsInfo::new(center, ABS_MIN, ABS_MAX, 20, 20, 1);
         let abs_x = UinputAbsSetup::new(AbsoluteAxisCode::ABS_X, abs_setup);
@@ -134,11 +142,12 @@ impl Default for Joystick {
         keys.insert(KeyCode::BTN_TR2);
         keys.insert(KeyCode::BTN_TL2);
 
-        let input_id = InputId::new(BusType::BUS_VIRTUAL, 1234, 5678, 1);
+        // Unique product id per index so the game sees distinct controllers.
+        let input_id = InputId::new(BusType::BUS_VIRTUAL, 1234, 5678 + index as u16, 1);
         let device = VirtualDeviceBuilder::new()
             .unwrap()
             .input_id(input_id)
-            .name(name)
+            .name(&name)
             .with_keys(&keys)
             .unwrap()
             .with_absolute_axis(&abs_x)

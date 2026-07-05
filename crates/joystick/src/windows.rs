@@ -11,6 +11,14 @@ pub struct Joystick {
 
 impl Default for Joystick {
     fn default() -> Self {
+        Self::new(0)
+    }
+}
+
+impl Joystick {
+    /// Create a virtual controller. `index` is accepted for API parity with the
+    /// Linux backend; ViGEm assigns distinct player slots automatically.
+    pub fn new(_index: usize) -> Self {
         let client = Client::connect().unwrap();
         let id = TargetId::XBOX360_WIRED;
         let mut device = Xbox360Wired::new(client, id);
@@ -23,9 +31,7 @@ impl Default for Joystick {
 
         Joystick { device, gamepad }
     }
-}
 
-impl Joystick {
     fn map_button(button: &Button) -> u16 {
         // Note, the left/right triggers are handled differently in XINPUT, they are u8 values.
         match button {

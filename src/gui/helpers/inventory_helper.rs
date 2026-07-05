@@ -41,7 +41,9 @@ impl GuiHelper for InventoryHelper {
             .items
             .iter()
             .filter_map(|(item, quantity)| {
-                all_items().get(&item.0 as &str).map(|item| (item, quantity))
+                all_items()
+                    .get(&item.0 as &str)
+                    .map(|item| (item, quantity))
             })
             .sorted_by_key(|(item, _quantity)| item.item_type.clone())
             .chunk_by(|(item, _quantity)| item.item_type.clone())

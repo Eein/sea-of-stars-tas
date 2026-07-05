@@ -44,11 +44,10 @@ impl LevelUpManager {
 
         for upgrade in &lumd.current_upgrades.items {
             if let Some(considered_index) = STAT_PRIORITY.iter().position(|u| *u == upgrade.upgrade)
+                && considered_index < best_index
             {
-                if considered_index < best_index {
-                    best_index = considered_index;
-                    best_option = upgrade.upgrade.clone();
-                }
+                best_index = considered_index;
+                best_option = upgrade.upgrade.clone();
             }
         }
 

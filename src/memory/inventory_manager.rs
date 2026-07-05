@@ -60,21 +60,19 @@ impl InventoryManagerData {
     const VALUE_OFFSET: u64 = 0x10;
     pub fn update_items(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
         // If currentInventory != 0x0
-        if let Ok(items_ptr) = memory_context.follow_fields::<u64>(&["ownedInventoryItems"]) {
-            if items_ptr != 0x0 {
-                if let Ok(items) =
-                    UnitySerializableDictionary::<InventoryItemName, InventoryItemQuantity>::read(
-                        memory_context.process,
-                        items_ptr,
-                        Self::ITEM_OFFSET,
-                        Self::KEY_OFFSET,
-                        Self::VALUE_OFFSET,
-                    )
-                {
-                    self.items = items
-                };
-            }
-        }
+        if let Ok(items_ptr) = memory_context.follow_fields::<u64>(&["ownedInventoryItems"])
+            && items_ptr != 0x0
+            && let Ok(items) =
+                UnitySerializableDictionary::<InventoryItemName, InventoryItemQuantity>::read(
+                    memory_context.process,
+                    items_ptr,
+                    Self::ITEM_OFFSET,
+                    Self::KEY_OFFSET,
+                    Self::VALUE_OFFSET,
+                )
+        {
+            self.items = items
+        };
 
         Ok(())
     }

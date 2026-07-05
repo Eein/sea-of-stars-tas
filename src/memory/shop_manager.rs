@@ -42,11 +42,10 @@ impl ShopManagerData {
     pub fn update_items(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
         // If currentShop != 0x0
         if let Ok(items_ptr) = memory_context.follow_fields::<u64>(&["currentShop", "itemsToSell"])
+            && items_ptr != 0x0
         {
-            if items_ptr != 0x0 {
-                let items = UnityList::<ShopItem>::read(memory_context.process, items_ptr)?;
-                self.items = items;
-            }
+            let items = UnityList::<ShopItem>::read(memory_context.process, items_ptr)?;
+            self.items = items;
         }
 
         Ok(())

@@ -209,12 +209,7 @@ impl MovePath {
                     gamepad.release_all();
                     self.step += 1;
                 } else {
-                    self.timer += delta;
-                    // Stagger join by means of a timer
-                    if self.timer >= (self.player as f64 - 1.0) * 1.0 {
-                        self.timer = 0.0;
-                        gamepad.press(&SosAction::Join);
-                    }
+                    gamepad.press(&SosAction::Join);
                 }
             }
             Move::Leave(joy) => {
@@ -368,20 +363,20 @@ impl MovePath {
             Move::HoldDir(dir, target) => {
                 gamepad.set_ljoy(dir);
                 let target = Vector3::new(target[0], target[1], target[2]);
-                if let Some(player) = player {
-                    if MovePath::is_close(player, &target, Some(1.0)) {
-                        self.step += 1;
-                    }
+                if let Some(player) = player
+                    && MovePath::is_close(player, &target, Some(1.0))
+                {
+                    self.step += 1;
                 }
             }
             Move::HoldDirWorld(dir, target) => {
                 gamepad.set_ljoy(dir);
                 let target = Vector3::new(target[0], target[1], target[2]);
                 let world_pos = &sppmd.players.items[self.player].position;
-                if let Some(world_pos) = world_pos {
-                    if MovePath::is_close(world_pos, &target, Some(1.0)) {
-                        self.step += 1;
-                    }
+                if let Some(world_pos) = world_pos
+                    && MovePath::is_close(world_pos, &target, Some(1.0))
+                {
+                    self.step += 1;
                 }
             }
             // Change Time of Day

@@ -55,7 +55,7 @@ impl Module {
         };
 
         let assemblies = process
-            .read_pointer::<u64>(assemblies_pointer as u64)
+            .read_pointer::<u64>(assemblies_pointer)
             .ok()
             .filter(|val| *val != 0)?;
 

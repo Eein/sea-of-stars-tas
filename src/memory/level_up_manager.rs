@@ -133,8 +133,7 @@ impl LevelUpManagerData {
                 .iter()
                 .enumerate()
                 .find(|(_i, u)| u.selected)
-                .map(|(i, _u)| i)
-                .take();
+                .map(|(i, _u)| i);
             if let Some(active_index) = active {
                 self.upgrade_index = active_index as u32;
             }
