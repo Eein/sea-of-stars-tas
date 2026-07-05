@@ -27,7 +27,7 @@ pub struct EncounterPlayersManagerData {
 impl Default for MemoryManager<EncounterPlayersManagerData> {
     fn default() -> Self {
         let manager = Self {
-            name: "EncounterPlayersManager".to_string(),
+            name: "EncounterPlayersManager",
             data: EncounterPlayersManagerData::default(),
             manager: UnityMemoryManager::default(),
         };
@@ -54,7 +54,7 @@ impl MemoryManagerUpdate for EncounterPlayersManagerData {
 
 impl EncounterPlayersManagerData {
     fn update_initialized(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
-        self.initialized = matches!(memory_context.follow_fields::<u8>(&["initialized"]), Ok(1));
+        self.initialized = matches!(memory_context.read::<u8>(&["initialized"]), Ok(1));
         Ok(())
     }
 
@@ -63,14 +63,14 @@ impl EncounterPlayersManagerData {
         // read from it. A null currentPlayer makes this fail, which we treat as
         // no active player.
         self.current_player_index = memory_context
-            .follow_fields::<i32>(&["currentPlayer", "index"])
+            .read::<i32>(&["currentPlayer", "index"])
             .ok();
 
         Ok(())
     }
 
     fn update_all_players(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
-        if let Ok(players) = memory_context.follow_fields::<u64>(&["allPlayers"])
+        if let Ok(players) = memory_context.read::<u64>(&["allPlayers"])
             && players != 0
         {
             self.all_players = UnityList::<Player>::read(memory_context.process, players)?;

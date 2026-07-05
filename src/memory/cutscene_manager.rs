@@ -30,7 +30,7 @@ pub struct CutsceneManagerData {
 impl Default for MemoryManager<CutsceneManagerData> {
     fn default() -> Self {
         let manager = Self {
-            name: "CutsceneManager".to_string(),
+            name: "CutsceneManager",
             data: CutsceneManagerData::default(),
             manager: UnityMemoryManager::default(),
         };
@@ -61,7 +61,7 @@ impl CutsceneManagerData {
         &mut self,
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
-        if let Ok(cutscene_count) = memory_context.follow_fields::<u8>(&["cutsceneCount"]) {
+        if let Ok(cutscene_count) = memory_context.read::<u8>(&["cutsceneCount"]) {
             self.is_in_cutscene = cutscene_count > 0;
         }
 
@@ -73,7 +73,7 @@ impl CutsceneManagerData {
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
         if let Ok(is_skipping_cutscene) =
-            memory_context.follow_fields::<u8>(&["isSkippingCutscene"])
+            memory_context.read::<u8>(&["isSkippingCutscene"])
         {
             match is_skipping_cutscene {
                 1 => self.is_skipping_cutscene = true,
@@ -90,7 +90,7 @@ impl CutsceneManagerData {
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
         if let Ok(skip_cutscene_locked) =
-            memory_context.follow_fields::<u8>(&["skipCutsceneLocked"])
+            memory_context.read::<u8>(&["skipCutsceneLocked"])
         {
             match skip_cutscene_locked {
                 1 => self.skip_cutscene_locked = true,
@@ -107,7 +107,7 @@ impl CutsceneManagerData {
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
         if let Ok(skip_cutscene_transition_screen) =
-            memory_context.follow_fields::<u64>(&["skipCutsceneTransitionScreen"])
+            memory_context.read::<u64>(&["skipCutsceneTransitionScreen"])
         {
             self.skip_cutscene_transition_screen = skip_cutscene_transition_screen;
         }

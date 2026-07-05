@@ -17,7 +17,7 @@ pub struct TimeOfDayManagerData {
 impl Default for MemoryManager<TimeOfDayManagerData> {
     fn default() -> Self {
         let manager = Self {
-            name: "AudioManager".to_string(),
+            name: "AudioManager",
             data: TimeOfDayManagerData::default(),
             manager: UnityMemoryManager::default(),
         };
@@ -45,7 +45,7 @@ impl TimeOfDayManagerData {
         &mut self,
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
-        if let Ok(current_time) = memory_context.follow_fields::<f32>(&["currentTimeOfDay"]) {
+        if let Ok(current_time) = memory_context.read::<f32>(&["currentTimeOfDay"]) {
             self.current_time = current_time;
         }
 

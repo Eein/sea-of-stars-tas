@@ -20,7 +20,7 @@ pub struct LevelUpManagerData {
 impl Default for MemoryManager<LevelUpManagerData> {
     fn default() -> Self {
         let manager = Self {
-            name: "LevelUpSceneController".to_string(),
+            name: "LevelUpSceneController",
             data: LevelUpManagerData::default(),
             manager: UnityMemoryManager::default(),
         };
@@ -87,7 +87,7 @@ impl LevelUpManagerData {
         &mut self,
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
-        if let Ok(active) = memory_context.follow_fields::<u64>(&["onLevelUpDone"]) {
+        if let Ok(active) = memory_context.read::<u64>(&["onLevelUpDone"]) {
             self.active = active != 0x0;
         }
         Ok(())
@@ -97,7 +97,7 @@ impl LevelUpManagerData {
         &mut self,
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
-        if let Ok(current_character_ptr) = memory_context.follow_fields::<u64>(&[
+        if let Ok(current_character_ptr) = memory_context.read::<u64>(&[
             "currentCharacter",
             "stateMachine",
             "currentState",
@@ -122,7 +122,7 @@ impl LevelUpManagerData {
         &mut self,
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
-        if let Ok(upgrades) = memory_context.follow_fields::<u64>(&["currentLevelUpUpgrades"]) {
+        if let Ok(upgrades) = memory_context.read::<u64>(&["currentLevelUpUpgrades"]) {
             let current_upgrades =
                 UnityList::<LevelUpUpgradeButton>::read(memory_context.process, upgrades)?;
             self.current_upgrades = current_upgrades;

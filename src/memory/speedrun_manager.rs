@@ -31,7 +31,7 @@ pub struct SpeedrunManagerData {
 impl Default for MemoryManager<SpeedrunManagerData> {
     fn default() -> Self {
         let manager = Self {
-            name: "SpeedrunManager".to_string(),
+            name: "SpeedrunManager",
             data: SpeedrunManagerData::default(),
             manager: UnityMemoryManager::default(),
         };
@@ -95,7 +95,7 @@ impl SpeedrunManagerData {
         &mut self,
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
-        if let Ok(current_time) = memory_context.follow_fields::<u8>(&["speedrunTimerPauseLock"]) {
+        if let Ok(current_time) = memory_context.read::<u8>(&["speedrunTimerPauseLock"]) {
             self.speedrun_timer_pause_lock = match current_time {
                 0 => false,
                 1 => true,
@@ -109,7 +109,7 @@ impl SpeedrunManagerData {
         &mut self,
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
-        if let Ok(current_time) = memory_context.follow_fields::<u8>(&["isSpeedRunning"]) {
+        if let Ok(current_time) = memory_context.read::<u8>(&["isSpeedRunning"]) {
             self.is_speedrunning = match current_time {
                 0 => false,
                 1 => true,
@@ -144,24 +144,24 @@ impl SpeedrunManagerData {
     }
     fn update_speedrun_timer_struct(
         memory_context: &MemoryContext,
-        field_name: &str,
+        field_name: &'static str,
     ) -> Result<SpeedrunTimer, MemoryError> {
         // Each read propagates its own error via `?`; callers use `if let Ok(..)`
         // and ignore the error, so no separate existence guard is needed.
-        let is_started = match memory_context.follow_fields::<u8>(&[field_name, "isStarted"])? {
+        let is_started = match memory_context.read::<u8>(&[field_name, "isStarted"])? {
             0 => false,
             1 => true,
             _ => false,
         };
-        let is_paused = match memory_context.follow_fields::<u8>(&[field_name, "isPaused"])? {
+        let is_paused = match memory_context.read::<u8>(&[field_name, "isPaused"])? {
             0 => false,
             1 => true,
             _ => false,
         };
         let timer_in_second =
-            memory_context.follow_fields::<f64>(&[field_name, "timerInSecond"])?;
+            memory_context.read::<f64>(&[field_name, "timerInSecond"])?;
         let realtime_delta_time =
-            memory_context.follow_fields::<f64>(&[field_name, "realtimeDeltaTime"])?;
+            memory_context.read::<f64>(&[field_name, "realtimeDeltaTime"])?;
 
         Ok(SpeedrunTimer {
             is_started,

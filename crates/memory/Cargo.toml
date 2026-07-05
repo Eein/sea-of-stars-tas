@@ -4,10 +4,12 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+# livesplit `asr` provides the native process reader + IL2CPP/UnityPointer stack.
+# Pinned to a local checkout on the `native-runtime` branch while we co-develop the
+# upstream contribution; this will point at a fork before landing.
+asr = { path = "../../../asr", features = ["unity"] }
 arrayvec = "0.7.8"
 bytemuck = { version = "1.25.0", features = ["min_const_generics", "derive"] }
 indexmap = "2.14.0"
 memchr = "2.8.2"
-proc-maps = "0.5.0"
-read-process-memory = "0.1.6"
 sysinfo = { version = "0.39.5", default-features = false, features = ["system", "multithread"] }

@@ -31,7 +31,7 @@ pub struct InventoryManagerData {
 impl Default for MemoryManager<InventoryManagerData> {
     fn default() -> Self {
         let manager = Self {
-            name: "InventoryManager".to_string(),
+            name: "InventoryManager",
             data: InventoryManagerData::default(),
             manager: UnityMemoryManager::default(),
         };
@@ -60,7 +60,7 @@ impl InventoryManagerData {
     const VALUE_OFFSET: u64 = 0x10;
     pub fn update_items(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
         // If currentInventory != 0x0
-        if let Ok(items_ptr) = memory_context.follow_fields::<u64>(&["ownedInventoryItems"])
+        if let Ok(items_ptr) = memory_context.read::<u64>(&["ownedInventoryItems"])
             && items_ptr != 0x0
             && let Ok(items) =
                 UnitySerializableDictionary::<InventoryItemName, InventoryItemQuantity>::read(

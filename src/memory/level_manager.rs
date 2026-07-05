@@ -16,7 +16,7 @@ pub struct LevelManagerData {
 impl Default for MemoryManager<LevelManagerData> {
     fn default() -> Self {
         let manager = Self {
-            name: "LevelManager".to_string(),
+            name: "LevelManager",
             data: LevelManagerData::default(),
             manager: UnityMemoryManager::default(),
         };
@@ -43,7 +43,7 @@ impl MemoryManagerUpdate for LevelManagerData {
 
 impl LevelManagerData {
     pub fn update_loading(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
-        if let Ok(loading) = memory_context.follow_fields::<u8>(&["loadingLevel"]) {
+        if let Ok(loading) = memory_context.read::<u8>(&["loadingLevel"]) {
             match loading {
                 0 => self.loading = false,
                 1 => self.loading = true,
@@ -54,7 +54,7 @@ impl LevelManagerData {
     }
 
     pub fn update_scene_name(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
-        if let Ok(addr) = memory_context.follow_fields::<u64>(&["levelLoader", "mainSceneName"])
+        if let Ok(addr) = memory_context.read::<u64>(&["levelLoader", "mainSceneName"])
             && addr != 0x0
         {
             let name_str = memory_context.read_pointer::<ArrayWString<128>>(addr + 0x14)?;
@@ -71,7 +71,7 @@ impl LevelManagerData {
     }
 
     pub fn update_scene_guid(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
-        if let Ok(addr) = memory_context.follow_fields::<u64>(&["currentLevel"])
+        if let Ok(addr) = memory_context.read::<u64>(&["currentLevel"])
             && addr != 0x0
         {
             let name_str = memory_context.read_pointer::<ArrayWString<128>>(addr + 0x14)?;

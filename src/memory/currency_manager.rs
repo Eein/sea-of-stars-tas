@@ -13,7 +13,7 @@ pub struct CurrencyManagerData {
 impl Default for MemoryManager<CurrencyManagerData> {
     fn default() -> Self {
         let manager = Self {
-            name: "CurrencyManager".to_string(),
+            name: "CurrencyManager",
             data: CurrencyManagerData::default(),
             manager: UnityMemoryManager::default(),
         };

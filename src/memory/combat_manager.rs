@@ -141,7 +141,7 @@ pub struct CombatManagerData {
 impl Default for MemoryManager<CombatManagerData> {
     fn default() -> Self {
         let manager = Self {
-            name: "CombatManager".to_string(),
+            name: "CombatManager",
             data: CombatManagerData::default(),
             manager: UnityMemoryManager::default(),
         };
@@ -168,7 +168,7 @@ impl MemoryManagerUpdate for CombatManagerData {
             if !was_active {
                 info!(
                     "Combat active. CombatManager address: {:#x}",
-                    memory_context.singleton.class
+                    memory_context.singleton().unwrap_or(0)
                 );
             }
             self.update_combat_controller_type(&memory_context)?;
@@ -204,7 +204,7 @@ impl CombatManagerData {
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
         if let Ok(encounter_done) =
-            memory_context.follow_fields::<u8>(&["currentEncounter", "encounterDone"])
+            memory_context.read::<u8>(&["currentEncounter", "encounterDone"])
         {
             self.encounter_active = matches!(encounter_done, 0)
         } else {
@@ -220,7 +220,7 @@ impl CombatManagerData {
     ) -> Result<(), MemoryError> {
         // [self.current_encounter_base, 0x128, 0x0, 0x10, 0x0],
         if let Ok(controller) =
-            memory_context.follow_fields::<u8>(&["currentEncounter", "controller"])
+            memory_context.read::<u8>(&["currentEncounter", "controller"])
         {
             // This code reaches into the base types of the controller thats active to find the
             // name
@@ -250,7 +250,7 @@ impl CombatManagerData {
     }
 
     pub fn update_live_mana(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
-        if let Ok(small_live_mana_ptr) = memory_context.follow_fields::<u64>(&[
+        if let Ok(small_live_mana_ptr) = memory_context.read::<u64>(&[
             "currentEncounter",
             "liveManaHandler",
             "smallLiveManaParticles",
@@ -263,7 +263,7 @@ impl CombatManagerData {
         } else {
             self.live_mana.small = 0;
         }
-        if let Ok(big_live_mana_ptr) = memory_context.follow_fields::<u64>(&[
+        if let Ok(big_live_mana_ptr) = memory_context.read::<u64>(&[
             "currentEncounter",
             "liveManaHandler",
             "bigLiveManaParticles",
@@ -284,7 +284,7 @@ impl CombatManagerData {
         &mut self,
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
-        if let Ok(combo_points_panel_ptr) = memory_context.follow_fields::<u64>(&[
+        if let Ok(combo_points_panel_ptr) = memory_context.read::<u64>(&[
             "currentEncounter",
             "controller",
             "battleUI",
@@ -323,7 +323,7 @@ impl CombatManagerData {
 
     pub fn update_enemies(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
         if let Ok(enemies) =
-            memory_context.follow_fields::<u64>(&["currentEncounter", "enemyTargets"])
+            memory_context.read::<u64>(&["currentEncounter", "enemyTargets"])
         {
             let enemies = UnityList::<CombatEnemy>::read(memory_context.process, enemies)?;
             self.enemies = enemies;
@@ -333,7 +333,7 @@ impl CombatManagerData {
 
     pub fn update_players(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
         if let Ok(players) =
-            memory_context.follow_fields::<u64>(&["currentEncounter", "playerActors"])
+            memory_context.read::<u64>(&["currentEncounter", "playerActors"])
         {
             let players = UnityList::<CombatPlayer>::read(memory_context.process, players)?;
             self.players = players;

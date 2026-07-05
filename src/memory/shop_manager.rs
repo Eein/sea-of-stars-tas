@@ -15,7 +15,7 @@ pub struct ShopManagerData {
 impl Default for MemoryManager<ShopManagerData> {
     fn default() -> Self {
         let manager = Self {
-            name: "ShopManager".to_string(),
+            name: "ShopManager",
             data: ShopManagerData::default(),
             manager: UnityMemoryManager::default(),
         };
@@ -41,7 +41,7 @@ impl MemoryManagerUpdate for ShopManagerData {
 impl ShopManagerData {
     pub fn update_items(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
         // If currentShop != 0x0
-        if let Ok(items_ptr) = memory_context.follow_fields::<u64>(&["currentShop", "itemsToSell"])
+        if let Ok(items_ptr) = memory_context.read::<u64>(&["currentShop", "itemsToSell"])
             && items_ptr != 0x0
         {
             let items = UnityList::<ShopItem>::read(memory_context.process, items_ptr)?;

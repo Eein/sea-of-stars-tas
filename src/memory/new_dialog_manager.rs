@@ -13,7 +13,7 @@ pub struct NewDialogManagerData {
 impl Default for MemoryManager<NewDialogManagerData> {
     fn default() -> Self {
         let manager = Self {
-            name: "NewDialogManager".to_string(),
+            name: "NewDialogManager",
             data: NewDialogManagerData::default(),
             manager: UnityMemoryManager::default(),
         };
@@ -41,7 +41,7 @@ impl NewDialogManagerData {
         &mut self,
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
-        if let Ok(dialog_box_pointer) = memory_context.follow_fields::<u64>(&["onDialogCompleted"])
+        if let Ok(dialog_box_pointer) = memory_context.read::<u64>(&["onDialogCompleted"])
         {
             self.dialog_visible = dialog_box_pointer != 0x0;
         }

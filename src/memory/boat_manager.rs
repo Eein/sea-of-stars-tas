@@ -11,7 +11,6 @@ use memory::process::MemoryError;
 
 #[derive(Default, Debug)]
 pub struct BoatManagerData {
-    backing_field: Option<u32>,
     pub position: Vector3<f32>,
     pub rotation: Quaternion,
     pub speed: f32,
@@ -21,7 +20,7 @@ pub struct BoatManagerData {
 impl Default for MemoryManager<BoatManagerData> {
     fn default() -> Self {
         let manager = Self {
-            name: "BoatManager".to_string(),
+            name: "BoatManager",
             data: BoatManagerData::default(),
             manager: UnityMemoryManager::default(),
         };
@@ -38,30 +37,19 @@ impl MemoryManagerUpdate for BoatManagerData {
     ) -> Result<(), MemoryError> {
         let memory_context = MemoryContext::create(ctx, manager)?;
 
-        self.update_backing_field(&memory_context)?;
-
-        if self.backing_field.is_some() {
-            self.update_position(&memory_context)?;
-            self.update_rotation(&memory_context)?;
-            self.update_speed(&memory_context)?;
-        }
+        // Each read is guarded and no-ops until the boat instance exists, so we
+        // no longer need a separate backing-field existence gate.
+        self.update_position(&memory_context)?;
+        self.update_rotation(&memory_context)?;
+        self.update_speed(&memory_context)?;
 
         Ok(())
     }
 }
 
 impl BoatManagerData {
-    pub fn update_backing_field(
-        &mut self,
-        memory_context: &MemoryContext,
-    ) -> Result<(), MemoryError> {
-        self.backing_field = memory_context.get_field_offset("<BoatInstance>k__BackingField");
-
-        Ok(())
-    }
-
     pub fn update_position(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
-        if let Ok([x, y, z]) = memory_context.follow_fields::<[f32; 3]>(&[
+        if let Ok([x, y, z]) = memory_context.read::<[f32; 3]>(&[
             "<BoatInstance>k__BackingField",
             "boatController",
             "currentTargetPosition",
@@ -73,7 +61,7 @@ impl BoatManagerData {
     }
 
     pub fn update_rotation(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
-        if let Ok([x, y, z, w]) = memory_context.follow_fields::<[f32; 4]>(&[
+        if let Ok([x, y, z, w]) = memory_context.read::<[f32; 4]>(&[
             "<BoatInstance>k__BackingField",
             "boatSnapRotation",
             "pitchRollLocalRotation",
@@ -86,12 +74,12 @@ impl BoatManagerData {
 
     pub fn update_speed(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
         if let Ok(max_speed) =
-            memory_context.follow_fields::<f32>(&["<BoatInstance>k__BackingField", "boatSpeed"])
+            memory_context.read::<f32>(&["<BoatInstance>k__BackingField", "boatSpeed"])
         {
             self.max_speed = max_speed;
         }
         if let Ok(speed) =
-            memory_context.follow_fields::<f32>(&["<BoatInstance>k__BackingField", "previousSpeed"])
+            memory_context.read::<f32>(&["<BoatInstance>k__BackingField", "previousSpeed"])
         {
             self.speed = speed;
         }

@@ -237,6 +237,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "asr"
+version = "0.1.0"
+dependencies = [
+ "arrayvec",
+ "asr-derive",
+ "bytemuck",
+ "indexmap",
+ "proc-maps",
+ "read-process-memory",
+ "sysinfo",
+ "time",
+ "wasi",
+]
+
+[[package]]
+name = "asr-derive"
+version = "0.1.0"
+dependencies = [
+ "heck 0.4.1",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "atomic-waker"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -310,8 +335,6 @@ dependencies = [
  "cexpr",
  "clang-sys",
  "itertools 0.13.0",
- "log",
- "prettyplease",
  "proc-macro2",
  "quote",
  "regex",
@@ -596,7 +619,7 @@ version = "4.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2ce8604710f6733aa641a2b3731eaa1e8b3d9973d5e3565da11800813f997a9"
 dependencies = [
- "heck",
+ "heck 0.5.0",
  "proc-macro2",
  "quote",
  "syn",
@@ -895,7 +918,7 @@ version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8e92f10a49176cbffacaedabfaa11d51db1ea0f80a83c26e1873b43cd1742c24"
 dependencies = [
- "heck",
+ "heck 0.5.0",
  "proc-macro2",
  "proc-macro2-diagnostics",
 ]
@@ -1549,6 +1572,12 @@ dependencies = [
 
 [[package]]
 name = "heck"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "95505c38b4572b2d910cecb0281560f54b440a19336cbbcb27bf6ce6adc6f5a8"
+
+[[package]]
+name = "heck"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
@@ -2076,9 +2105,12 @@ dependencies = [
 
 [[package]]
 name = "mach2"
-version = "0.6.0"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dae608c151f68243f2b000364e1f7b186d9c29845f7d2d85bd31b9ad77ad552b"
+checksum = "d640282b302c0bb0a2a8e0233ead9035e3bed871f0b7e81fe4a1ec829765db44"
+dependencies = [
+ "libc",
+]
 
 [[package]]
 name = "maybe-rayon"
@@ -2128,11 +2160,10 @@ name = "memory"
 version = "0.1.0"
 dependencies = [
  "arrayvec",
+ "asr",
  "bytemuck",
  "indexmap",
  "memchr",
- "proc-maps",
- "read-process-memory",
  "sysinfo",
 ]
 
@@ -2942,16 +2973,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "prettyplease"
-version = "0.2.37"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "479ca8adacdd7ce8f1fb39ce9ecccbfe93a3f1344b3d0d97f20bc0196208f62b"
-dependencies = [
- "proc-macro2",
- "syn",
-]
-
-[[package]]
 name = "proc-macro-crate"
 version = "3.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2983,12 +3004,11 @@ dependencies = [
 
 [[package]]
 name = "proc-maps"
-version = "0.5.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "221de5f6ef11b9be9d59b330c5b81799b3e7c51b18af84c1f235ef88998b00e1"
+checksum = "3db44c5aa60e193a25fcd93bb9ed27423827e8f118897866f946e2cf936c44fb"
 dependencies = [
  "anyhow",
- "bindgen",
  "libc",
  "libproc",
  "mach2",

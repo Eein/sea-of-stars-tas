@@ -1,59 +1,63 @@
-use bytemuck::{CheckedBitPattern, Pod};
-use memory::game_engine::il2cpp::{Class, Module};
+use bytemuck::CheckedBitPattern;
+use memory::game_engine::il2cpp::{Image, Module};
 use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::{MemoryError, Process};
 
-// TODO(eein): is it possible to make this more generic so it can be
-// moved into memory crate?
 use crate::state::StateContext;
 
+/// Per-frame handle bundling the attached process/module/image with a manager's
+/// [`UnityPointer`](asr::game_engine::unity::il2cpp::UnityPointer) cache. Reads
+/// resolve (and cache) their pointer paths through the manager.
 pub struct MemoryContext<'a> {
-    pub class: &'a Class,
     pub process: &'a Process,
-    pub module: &'a Module,
-    pub singleton: &'a Class,
+    module: &'a Module,
+    image: &'a Image,
+    manager: &'a UnityMemoryManager,
 }
 
 impl<'a> MemoryContext<'a> {
     pub fn create(
         ctx: &'a StateContext,
-        manager: &'a mut UnityMemoryManager,
+        manager: &'a UnityMemoryManager,
     ) -> Result<MemoryContext<'a>, MemoryError> {
-        if let Some(class) = &manager.class
-            && let Some(process) = &ctx.process
-            && let Some(module) = &ctx.module
-            && let Some(singleton) = &manager.singleton
+        if let (Some(process), Some(module), Some(image)) =
+            (&ctx.process, &ctx.module, &ctx.image)
         {
-            return Ok(Self {
-                class,
+            Ok(Self {
                 process,
                 module,
-                singleton,
-            });
+                image,
+                manager,
+            })
+        } else {
+            Err(MemoryError::Unset)
         }
-
-        Err(MemoryError::Unset)
     }
 
-    pub fn follow_fields<T: Pod>(&self, fields: &[&str]) -> Result<T, MemoryError> {
-        self.class
-            .follow_fields::<T>(*self.singleton, self.process, self.module, fields)
+    /// Read `T` at a singleton-relative field `path`. Each entry is either a
+    /// field name or a raw `"0x.."` / decimal offset; the static `instance`
+    /// field is prepended automatically.
+    pub fn read<T: CheckedBitPattern>(&self, path: &[&'static str]) -> Result<T, MemoryError> {
+        self.manager.read::<T>(self.process, self.module, self.image, path)
     }
 
-    pub fn read_pointer_path<T: CheckedBitPattern + Pod>(
+    /// Address of the manager singleton object.
+    pub fn singleton(&self) -> Result<u64, MemoryError> {
+        self.manager.singleton(self.process, self.module, self.image)
+    }
+
+    /// Raw pointer path anchored at the singleton object. Kept for the handful
+    /// of call sites that walk runtime offset values (not compile-time field
+    /// paths).
+    pub fn read_pointer_path<T: CheckedBitPattern>(
         &self,
         path: &[u64],
     ) -> Result<T, MemoryError> {
-        self.process
-            .read_pointer_path::<T>(self.singleton.class, path)
+        let base = self.singleton()?;
+        self.process.read_pointer_path::<T>(base, path)
     }
 
-    pub fn read_pointer<T: Pod>(&self, addr: u64) -> Result<T, MemoryError> {
+    pub fn read_pointer<T: CheckedBitPattern>(&self, addr: u64) -> Result<T, MemoryError> {
         self.process.read_pointer::<T>(addr)
-    }
-
-    pub fn get_field_offset(&self, field: &str) -> Option<u32> {
-        self.class
-            .get_field_offset(self.process, self.module, field)
     }
 }

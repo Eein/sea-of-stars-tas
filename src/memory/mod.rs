@@ -27,7 +27,7 @@ use encounter_players_manager::EncounterPlayersManagerData;
 use inventory_manager::InventoryManagerData;
 use level_manager::LevelManagerData;
 use level_up_manager::LevelUpManagerData;
-use memory::memory_manager::il2cpp::{UnityMemoryManagement, UnityMemoryManager};
+use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
 use new_dialog_manager::NewDialogManagerData;
 use player_party_manager::PlayerPartyManagerData;
@@ -46,7 +46,7 @@ pub trait MemoryManagerUpdate {
 }
 
 pub struct MemoryManager<T: MemoryManagerUpdate> {
-    pub name: String,
+    pub name: &'static str,
     pub manager: UnityMemoryManager,
     pub data: T,
 }
@@ -96,19 +96,6 @@ impl MemoryManagers {
 }
 
 impl<T: MemoryManagerUpdate> MemoryManager<T> {
-    fn ready_for_updates(&mut self, _ctx: &StateContext) -> bool {
-        matches!(self.manager.singleton, Some(_val))
-    }
-
-    fn update_manager(&mut self, ctx: &StateContext) {
-        if let Some(process) = &ctx.process
-            && let Some(module) = &ctx.module
-            && let Some(image) = &ctx.image
-        {
-            self.manager.update(process, module, image, &self.name);
-        }
-    }
-
     fn update_memory(&mut self, ctx: &StateContext) {
         match self.data.update(ctx, &mut self.manager) {
             Ok(_) => (),
@@ -127,10 +114,12 @@ impl<T: MemoryManagerUpdate> MemoryManager<T> {
         }
     }
 
+    // Reads resolve (and cache) their own pointer paths lazily via asr's
+    // `UnityPointer`, so there is no separate singleton-resolution step or
+    // readiness gate — pointer resolution simply fails until the class is
+    // available. We only ensure the manager knows its class name.
     fn update(&mut self, ctx: &StateContext) {
-        self.update_manager(ctx);
-        if self.ready_for_updates(ctx) {
-            self.update_memory(ctx);
-        }
+        self.manager.class_name = self.name;
+        self.update_memory(ctx);
     }
 }

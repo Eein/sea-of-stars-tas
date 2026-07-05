@@ -37,7 +37,7 @@ pub struct SinglePlayerPlusManagerData {
 impl Default for MemoryManager<SinglePlayerPlusManagerData> {
     fn default() -> Self {
         let manager = Self {
-            name: "SinglePlayerPlusManager".to_string(),
+            name: "SinglePlayerPlusManager",
             data: SinglePlayerPlusManagerData::default(),
             manager: UnityMemoryManager::default(),
         };
@@ -83,7 +83,7 @@ impl SinglePlayerPlusManagerData {
         Ok(())
     }
     pub fn update_players(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
-        if let Ok(players) = memory_context.follow_fields::<u64>(&["allPlayers"]) {
+        if let Ok(players) = memory_context.read::<u64>(&["allPlayers"]) {
             let players = UnityList::<Player>::read(memory_context.process, players)?;
             self.players = players;
         }

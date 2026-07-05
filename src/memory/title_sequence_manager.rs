@@ -43,7 +43,7 @@ pub struct TitleSequenceManagerData {
 impl Default for MemoryManager<TitleSequenceManagerData> {
     fn default() -> Self {
         let manager = Self {
-            name: "TitleSequenceManager".to_string(),
+            name: "TitleSequenceManager",
             data: TitleSequenceManagerData::default(),
             manager: UnityMemoryManager::default(),
         };
@@ -60,8 +60,8 @@ impl MemoryManagerUpdate for TitleSequenceManagerData {
     ) -> Result<(), MemoryError> {
         let memory_context = MemoryContext::create(ctx, manager)?;
 
-        // if the singleton is not 0x0, set active true
-        self.active = !matches!(memory_context.singleton.class, 0);
+        // if the singleton resolves to a non-null instance, set active true
+        self.active = matches!(memory_context.singleton(), Ok(addr) if addr != 0);
 
         self.update_pressed_start(&memory_context)?;
         self.update_current_screen_name(&memory_context)?;
@@ -91,7 +91,7 @@ impl TitleSequenceManagerData {
         &mut self,
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
-        if let Ok(load_save_done) = memory_context.follow_fields::<u8>(&["loadSaveDone"]) {
+        if let Ok(load_save_done) = memory_context.read::<u8>(&["loadSaveDone"]) {
             self.load_save_done = match load_save_done {
                 1 => true,
                 0 => false,
@@ -107,7 +107,7 @@ impl TitleSequenceManagerData {
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
         if let Ok(pressed_start) =
-            memory_context.follow_fields::<u8>(&["titleScreen", "startPressed"])
+            memory_context.read::<u8>(&["titleScreen", "startPressed"])
         {
             self.pressed_start = match pressed_start {
                 1 => true,
@@ -121,7 +121,7 @@ impl TitleSequenceManagerData {
 
     pub fn update_title_menu(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
         if memory_context
-            .follow_fields::<u8>(&["titleScreen", "newGameButton", "selected"])
+            .read::<u8>(&["titleScreen", "newGameButton", "selected"])
             .ok()
             == Some(1)
         {
@@ -129,7 +129,7 @@ impl TitleSequenceManagerData {
             return Ok(());
         }
         if memory_context
-            .follow_fields::<u8>(&["titleScreen", "newGamePlusButton", "selected"])
+            .read::<u8>(&["titleScreen", "newGamePlusButton", "selected"])
             .ok()
             == Some(1)
         {
@@ -137,7 +137,7 @@ impl TitleSequenceManagerData {
             return Ok(());
         }
         if memory_context
-            .follow_fields::<u8>(&["titleScreen", "continueButton", "selected"])
+            .read::<u8>(&["titleScreen", "continueButton", "selected"])
             .ok()
             == Some(1)
         {
@@ -145,7 +145,7 @@ impl TitleSequenceManagerData {
             return Ok(());
         }
         if memory_context
-            .follow_fields::<u8>(&["titleScreen", "loadGameButton", "selected"])
+            .read::<u8>(&["titleScreen", "loadGameButton", "selected"])
             .ok()
             == Some(1)
         {
@@ -153,7 +153,7 @@ impl TitleSequenceManagerData {
             return Ok(());
         }
         if memory_context
-            .follow_fields::<u8>(&["titleScreen", "optionsButton", "selected"])
+            .read::<u8>(&["titleScreen", "optionsButton", "selected"])
             .ok()
             == Some(1)
         {
@@ -161,7 +161,7 @@ impl TitleSequenceManagerData {
             return Ok(());
         }
         if memory_context
-            .follow_fields::<u8>(&["titleScreen", "quitGameButton", "selected"])
+            .read::<u8>(&["titleScreen", "quitGameButton", "selected"])
             .ok()
             == Some(1)
         {
@@ -175,13 +175,13 @@ impl TitleSequenceManagerData {
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
         if let Ok(active) =
-            memory_context.follow_fields::<u8>(&["difficultySelectionScreen", "active"])
+            memory_context.read::<u8>(&["difficultySelectionScreen", "active"])
         {
             if active != 1 {
                 self.selected_difficulty = None;
                 return Ok(());
             } else if let Ok(selected_difficulty) = memory_context
-                .follow_fields::<u8>(&["difficultySelectionScreen", "selectedDifficulty"])
+                .read::<u8>(&["difficultySelectionScreen", "selectedDifficulty"])
             {
                 self.selected_difficulty = match selected_difficulty {
                     2 => Some(Difficulty::Story),
@@ -196,7 +196,7 @@ impl TitleSequenceManagerData {
 
     pub fn update_relics(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
         if let Ok(relic_buttons) =
-            memory_context.follow_fields::<u64>(&["relicSelectionScreen", "relicButtons"])
+            memory_context.read::<u64>(&["relicSelectionScreen", "relicButtons"])
         {
             let buttons = UnityList::<RelicButton>::read(memory_context.process, relic_buttons)?;
             self.relic_buttons = buttons;
@@ -209,7 +209,7 @@ impl TitleSequenceManagerData {
         &mut self,
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
-        if let Ok(addr) = memory_context.follow_fields::<u64>(&["currentScreenName"]) {
+        if let Ok(addr) = memory_context.read::<u64>(&["currentScreenName"]) {
             let name_str = memory_context.read_pointer::<ArrayWString<128>>(addr + 0x14)?;
             match String::from_utf16(name_str.as_slice()) {
                 Ok(value) => {
@@ -229,7 +229,7 @@ impl TitleSequenceManagerData {
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
         // Sanity check for escaping a missing dangling address
-        match memory_context.follow_fields::<u64>(&["characterSelectionScreen", "leftButton"]) {
+        match memory_context.read::<u64>(&["characterSelectionScreen", "leftButton"]) {
             Ok(value) => {
                 if value == 0 {
                     return Ok(());
@@ -237,7 +237,7 @@ impl TitleSequenceManagerData {
             }
             Err(_) => return Ok(()),
         }
-        let left_name_addr = memory_context.follow_fields::<u64>(&[
+        let left_name_addr = memory_context.read::<u64>(&[
             "characterSelectionScreen",
             "leftButton",
             "characterDefinitionId",
@@ -250,7 +250,7 @@ impl TitleSequenceManagerData {
             Err(_) => "None".to_string(),
         };
 
-        let left_selected = match memory_context.follow_fields::<u8>(&[
+        let left_selected = match memory_context.read::<u8>(&[
             "characterSelectionScreen",
             "leftButton",
             "selected",
@@ -260,7 +260,7 @@ impl TitleSequenceManagerData {
             _ => false,
         };
 
-        let right_name_addr = memory_context.follow_fields::<u64>(&[
+        let right_name_addr = memory_context.read::<u64>(&[
             "characterSelectionScreen",
             "rightButton",
             "characterDefinitionId",
@@ -275,7 +275,7 @@ impl TitleSequenceManagerData {
             }
         };
 
-        let right_selected = match memory_context.follow_fields::<u8>(&[
+        let right_selected = match memory_context.read::<u8>(&[
             "characterSelectionScreen",
             "rightButton",
             "selected",
@@ -286,13 +286,13 @@ impl TitleSequenceManagerData {
         };
 
         let mut selected = match memory_context
-            .follow_fields::<u64>(&["characterSelectionScreen", "selectedCharacter"])
+            .read::<u64>(&["characterSelectionScreen", "selectedCharacter"])
         {
             Ok(value) => {
                 if value == 0 {
                     PlayerPartyCharacter::None
                 } else {
-                    let selected_name_addr = memory_context.follow_fields::<u64>(&[
+                    let selected_name_addr = memory_context.read::<u64>(&[
                         "characterSelectionScreen",
                         "selectedCharacter",
                         "characterDefinitionId",
@@ -314,7 +314,7 @@ impl TitleSequenceManagerData {
         };
 
         let character_selected = match memory_context
-            .follow_fields::<u8>(&["characterSelectionScreen", "characterSelected"])?
+            .read::<u8>(&["characterSelectionScreen", "characterSelected"])?
         {
             0 => false,
             1 => true,
