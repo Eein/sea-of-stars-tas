@@ -148,17 +148,4 @@ impl Process {
 
         self.read::<T>(address + last)
     }
-
-    pub fn read_pointer_path_without_read(
-        &self,
-        mut address: u64,
-        path: &[u64],
-    ) -> Result<u64, MemoryError> {
-        let (&last, path) = path.split_last().ok_or(MemoryError::InvalidParameters)?;
-        for &offset in path {
-            address = self.read_pointer::<u64>(address + offset)?;
-        }
-
-        Ok(address + last)
-    }
 }

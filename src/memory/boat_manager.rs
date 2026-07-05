@@ -61,15 +61,11 @@ impl BoatManagerData {
     }
 
     pub fn update_position(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
-        if let Ok(boat_position_ptr) = memory_context.follow_fields_without_read(&[
+        if let Ok([x, y, z]) = memory_context.follow_fields::<[f32; 3]>(&[
             "<BoatInstance>k__BackingField",
             "boatController",
             "currentTargetPosition",
         ]) {
-            let x = memory_context.read_pointer::<f32>(boat_position_ptr)?;
-            let y = memory_context.read_pointer::<f32>(boat_position_ptr + 0x4)?;
-            let z = memory_context.read_pointer::<f32>(boat_position_ptr + 0x8)?;
-
             self.position = Vector3::new(x, y, z);
         }
 
@@ -77,16 +73,11 @@ impl BoatManagerData {
     }
 
     pub fn update_rotation(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
-        if let Ok(boat_rotation_ptr) = memory_context.follow_fields_without_read(&[
+        if let Ok([x, y, z, w]) = memory_context.follow_fields::<[f32; 4]>(&[
             "<BoatInstance>k__BackingField",
             "boatSnapRotation",
             "pitchRollLocalRotation",
         ]) {
-            let x = memory_context.read_pointer::<f32>(boat_rotation_ptr)?;
-            let y = memory_context.read_pointer::<f32>(boat_rotation_ptr + 0x4)?;
-            let z = memory_context.read_pointer::<f32>(boat_rotation_ptr + 0x8)?;
-            let w = memory_context.read_pointer::<f32>(boat_rotation_ptr + 0xC)?;
-
             self.rotation = Quaternion { x, y, z, w };
         }
 

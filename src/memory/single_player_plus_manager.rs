@@ -110,27 +110,16 @@ impl UnityItem for Player {
         } else {
             false
         };
-        let position = if let Ok(position_ptr) =
-            process.read_pointer_path_without_read(item_ptr, &[0x88, 0x98, 0x84])
-        {
-            let x = process.read_pointer::<f32>(position_ptr)?;
-            let y = process.read_pointer::<f32>(position_ptr + 0x4)?;
-            let z = process.read_pointer::<f32>(position_ptr + 0x8)?;
-            Some(Vector3::new(x, y, z))
-        } else {
-            None
+        let position = match process.read_pointer_path::<[f32; 3]>(item_ptr, &[0x88, 0x98, 0x84]) {
+            Ok([x, y, z]) => Some(Vector3::new(x, y, z)),
+            Err(_) => None,
         };
 
-        let gameobject_position = if let Ok(gameobject_ptr) =
-            process.read_pointer_path_without_read(item_ptr, &[0x88, 0x30, 0x48, 0x1C])
-        {
-            let x = process.read_pointer::<f32>(gameobject_ptr)?;
-            let y = process.read_pointer::<f32>(gameobject_ptr + 0x4)?;
-            let z = process.read_pointer::<f32>(gameobject_ptr + 0x8)?;
-            Some(Vector3::new(x, y, z))
-        } else {
-            None
-        };
+        let gameobject_position =
+            match process.read_pointer_path::<[f32; 3]>(item_ptr, &[0x88, 0x30, 0x48, 0x1C]) {
+                Ok([x, y, z]) => Some(Vector3::new(x, y, z)),
+                Err(_) => None,
+            };
         let index = process.read_pointer_path::<i32>(item_ptr, &[0x80])?;
 
         let can_join_leave =

@@ -146,33 +146,28 @@ impl SpeedrunManagerData {
         memory_context: &MemoryContext,
         field_name: &str,
     ) -> Result<SpeedrunTimer, MemoryError> {
-        if memory_context
-            .follow_fields_without_read(&[field_name])
-            .is_ok()
-        {
-            let is_started = match memory_context.follow_fields::<u8>(&[field_name, "isStarted"])? {
-                0 => false,
-                1 => true,
-                _ => false,
-            };
-            let is_paused = match memory_context.follow_fields::<u8>(&[field_name, "isPaused"])? {
-                0 => false,
-                1 => true,
-                _ => false,
-            };
-            let timer_in_second =
-                memory_context.follow_fields::<f64>(&[field_name, "timerInSecond"])?;
-            let realtime_delta_time =
-                memory_context.follow_fields::<f64>(&[field_name, "realtimeDeltaTime"])?;
+        // Each read propagates its own error via `?`; callers use `if let Ok(..)`
+        // and ignore the error, so no separate existence guard is needed.
+        let is_started = match memory_context.follow_fields::<u8>(&[field_name, "isStarted"])? {
+            0 => false,
+            1 => true,
+            _ => false,
+        };
+        let is_paused = match memory_context.follow_fields::<u8>(&[field_name, "isPaused"])? {
+            0 => false,
+            1 => true,
+            _ => false,
+        };
+        let timer_in_second =
+            memory_context.follow_fields::<f64>(&[field_name, "timerInSecond"])?;
+        let realtime_delta_time =
+            memory_context.follow_fields::<f64>(&[field_name, "realtimeDeltaTime"])?;
 
-            Ok(SpeedrunTimer {
-                is_started,
-                is_paused,
-                timer_in_second,
-                realtime_delta_time,
-            })
-        } else {
-            Err(MemoryError::NullPointer)
-        }
+        Ok(SpeedrunTimer {
+            is_started,
+            is_paused,
+            timer_in_second,
+            realtime_delta_time,
+        })
     }
 }

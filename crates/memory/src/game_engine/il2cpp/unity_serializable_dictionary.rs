@@ -87,17 +87,9 @@ impl<K: UnitySerializableDictKey + Eq + Hash, V: UnitySerializableDictValue>
                     break;
                 }
 
-                if let Ok(key_ptr) =
-                    process.read_pointer_path_without_read(item_base + key_offset, &[0x0])
-                {
-                    let key = K::read(process, key_ptr)?;
-                    if let Ok(value_ptr) =
-                        process.read_pointer_path_without_read(item_base + value_offset, &[0x0])
-                    {
-                        let value = V::read(process, value_ptr)?;
-                        items.insert(key, value);
-                    }
-                }
+                let key = K::read(process, item_base + key_offset)?;
+                let value = V::read(process, item_base + value_offset)?;
+                items.insert(key, value);
             }
 
             fields_base += item_offset;
