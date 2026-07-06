@@ -454,6 +454,41 @@ impl MainHelper {
                     });
             });
     }
+
+    /// Per-character move enumeration (id + costs), read from each actor's
+    /// `fighterDefinition.allMoveDefinitions`.
+    fn draw_moves(&self, game_state: &mut GameState, ui: &mut egui::Ui) {
+        let cmd = &game_state.memory_managers.combat_manager.data;
+        egui::CollapsingHeader::new("Moves")
+            .default_open(false)
+            .show(ui, |ui| {
+                for character_moves in &cmd.moves {
+                    ui.label(format!("{:?}", character_moves.character));
+                    for m in &character_moves.moves {
+                        let targeting =
+                            m.main_target_guid.is_some() || m.current_target_guid.is_some();
+                        let text = format!(
+                            "    {}  cp={}  sp={}{}",
+                            m.move_id.as_deref().unwrap_or("?"),
+                            m.combo_point_cost
+                                .map(|c| c.to_string())
+                                .unwrap_or_else(|| "-".to_string()),
+                            m.skill_point_cost
+                                .map(|c| c.to_string())
+                                .unwrap_or_else(|| "-".to_string()),
+                            if targeting { "  👈 👈 👈" } else { "" },
+                        );
+                        // Loaded = instantiated for this fight (likely the
+                        // unlocked/usable set); dim the rest.
+                        if m.loaded {
+                            ui.label(text);
+                        } else {
+                            ui.weak(text);
+                        }
+                    }
+                }
+            });
+    }
 }
 
 impl GuiHelper for MainHelper {
@@ -627,6 +662,7 @@ impl GuiHelper for MainHelper {
             self.draw_players(game_state, ui);
             self.draw_damage_calculations(game_state, ui);
             self.draw_appraisals(game_state, ui);
+            self.draw_moves(game_state, ui);
         } else if lum.active {
             self.draw_level_up(game_state, ui);
         } else if tsmd.active {

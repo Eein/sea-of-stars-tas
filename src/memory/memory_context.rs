@@ -88,6 +88,13 @@ impl<'a> MemoryContext<'a> {
             .filter(|p| *p != 0)
     }
 
+    /// Read a `Pod` value field (e.g. an `i32`/`f32`) by name from an arbitrary
+    /// il2cpp object.
+    pub fn read_named<T: Pod>(&self, obj_ptr: u64, field: &str) -> Option<T> {
+        let offset = self.field_offset_of(obj_ptr, field)?;
+        self.process.read_pointer::<T>(obj_ptr + offset as u64).ok()
+    }
+
     /// Read the element pointers of a Unity `List<T>` object (its `_items`
     /// backing array). Capped to a sane length as a safety bound.
     pub fn list_item_ptrs(&self, list_ptr: u64) -> Vec<u64> {

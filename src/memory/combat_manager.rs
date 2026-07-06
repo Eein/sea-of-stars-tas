@@ -136,12 +136,28 @@ pub struct CombatMove {
     /// The move's internal id/name (`combatMoveId`), used to tell moves apart
     /// (e.g. basic attack vs a named skill).
     pub move_id: Option<String>,
+    /// Combo-point cost (`comboPointCost`).
+    pub combo_point_cost: Option<u32>,
+    /// Skill-point (MP) cost (`skillPointCost`).
+    pub skill_point_cost: Option<u32>,
+    /// Whether the move is instantiated for this fight (has a live
+    /// `combatMoveComponent`). Locked/unavailable moves in `allMoveDefinitions`
+    /// aren't loaded, so this doubles as a usable-this-fight signal.
+    pub loaded: bool,
     /// Enemy `unique_id` under this move's single-target cursor, populated only
     /// when this move owns the active target-selector screen.
     pub main_target_guid: Option<String>,
     /// Enemy `unique_id` under this move's AoE cursor, populated only when this
     /// move owns the active target-selector screen.
     pub current_target_guid: Option<String>,
+}
+
+/// One party member's available moves, read from their combat actor's
+/// `fighterDefinition.allMoveDefinitions`.
+#[derive(Default, Debug, Clone)]
+pub struct CharacterMoves {
+    pub character: PlayerPartyCharacter,
+    pub moves: Vec<CombatMove>,
 }
 
 impl CombatMove {
@@ -206,10 +222,15 @@ impl CombatMove {
         active.then_some(screen)
     }
 
-    /// Read a move: its id and, when it owns the live target cursor, the enemy
-    /// under `mainTarget` (single-target) and `currentTarget` (AoE).
+    /// Read a move: its id/costs and, when it owns the live target cursor, the
+    /// enemy under `mainTarget` (single-target) and `currentTarget` (AoE).
     fn read(memory_context: &MemoryContext, move_ptr: u64) -> CombatMove {
         let move_id = Self::read_string(memory_context, move_ptr, "combatMoveId");
+        let combo_point_cost = memory_context.read_named::<u32>(move_ptr, "comboPointCost");
+        let skill_point_cost = memory_context.read_named::<u32>(move_ptr, "skillPointCost");
+        let loaded = memory_context
+            .read_named_ptr(move_ptr, "combatMoveComponent")
+            .is_some();
         let (main_target_guid, current_target_guid) =
             match Self::active_screen(memory_context, move_ptr) {
                 Some(screen) => (
@@ -220,6 +241,9 @@ impl CombatMove {
             };
         CombatMove {
             move_id,
+            combo_point_cost,
+            skill_point_cost,
+            loaded,
             main_target_guid,
             current_target_guid,
         }
@@ -246,6 +270,8 @@ pub struct CombatManagerData {
     /// `unique_id` (UUID) of the enemy currently under the targeting cursor,
     /// if a target-select is active.
     pub selected_attack_target_guid: Option<String>,
+    /// Each party member's available moves, for the appraiser to score.
+    pub moves: Vec<CharacterMoves>,
 }
 
 /// Sentinel returned by the game for an unset pointer.
@@ -291,7 +317,7 @@ impl MemoryManagerUpdate for CombatManagerData {
             self.update_players(&memory_context)?;
             self.update_selected_character(&memory_context)?;
             self.update_battle_commands(&memory_context)?;
-            self.update_current_target(&memory_context)?;
+            self.update_moves(&memory_context)?;
         }
 
         Ok(())
@@ -346,18 +372,17 @@ impl CombatManagerData {
         Ok(())
     }
 
-    /// Derive the enemy currently under the targeting cursor.
+    /// Enumerate each party member's moves and derive the live target cursor.
     ///
-    /// There is no direct cursor/target-index field. We scan each actor's move
-    /// sources and read the target off whichever move's `targetSelectorScreen`
-    /// is `active`, yielding that enemy's `unique_id`. Resolved entirely by field
-    /// name, so it survives struct-layout drift. Callers match it against
-    /// `enemies[..].unique_id`.
-    pub fn update_current_target(
-        &mut self,
-        memory_context: &MemoryContext,
-    ) -> Result<(), MemoryError> {
+    /// Reads every actor's `fighterDefinition.allMoveDefinitions` into
+    /// [`CharacterMoves`] (aligned to `players` order, which shares the
+    /// `playerActors` list). In the same pass, the enemy under the active
+    /// move's target-selector screen is captured as `selected_attack_target_guid`
+    /// (there is no direct cursor field). All field-name resolved, so it survives
+    /// struct-layout drift.
+    pub fn update_moves(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
         self.selected_attack_target_guid = None;
+        self.moves.clear();
 
         let Ok(enc) = memory_context.follow_fields::<u64>(&["currentEncounter"]) else {
             return Ok(());
@@ -366,26 +391,46 @@ impl CombatManagerData {
             return Ok(());
         };
 
-        // Every move's target-selector screen reflects the same live cursor, so
-        // reading the active one off `allMoveDefinitions` is enough. Prefer
-        // `mainTarget` (single-target cursor) over `currentTarget` (AoE cursor).
+        // `players` is read from the same `playerActors` list earlier this frame,
+        // so it aligns by index with the actors we iterate here.
+        let characters: Vec<PlayerPartyCharacter> = self
+            .players
+            .items
+            .iter()
+            .map(|p| p.character.clone())
+            .collect();
+
+        // Every move's target-selector screen reflects the same live cursor;
+        // prefer `mainTarget` (single-target) over `currentTarget` (AoE).
         let mut main_hit: Option<String> = None;
         let mut current_hit: Option<String> = None;
 
-        for actor in memory_context.list_item_ptrs(actors) {
+        for (index, actor) in memory_context
+            .list_item_ptrs(actors)
+            .into_iter()
+            .enumerate()
+        {
             let Some(fighter_def) = memory_context.read_named_ptr(actor, "fighterDefinition")
             else {
                 continue;
             };
-            let Some(moves) = memory_context.read_named_ptr(fighter_def, "allMoveDefinitions")
+            let Some(move_list) = memory_context.read_named_ptr(fighter_def, "allMoveDefinitions")
             else {
                 continue;
             };
-            for move_ptr in memory_context.list_item_ptrs(moves) {
+
+            let mut moves = Vec::new();
+            for move_ptr in memory_context.list_item_ptrs(move_list) {
                 let move_def = CombatMove::read(memory_context, move_ptr);
-                main_hit = main_hit.or(move_def.main_target_guid);
-                current_hit = current_hit.or(move_def.current_target_guid);
+                main_hit = main_hit.or(move_def.main_target_guid.clone());
+                current_hit = current_hit.or(move_def.current_target_guid.clone());
+                moves.push(move_def);
             }
+
+            self.moves.push(CharacterMoves {
+                character: characters.get(index).cloned().unwrap_or_default(),
+                moves,
+            });
         }
 
         self.selected_attack_target_guid = main_hit.or(current_hit);
