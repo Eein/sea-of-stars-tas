@@ -1,6 +1,6 @@
 use super::{GuiHelper, MovementGui};
 use crate::util::vec3_ext::Vector3Ext;
-use crate::{game_manager::GameManager, seq::movement::Move, state::GameState};
+use crate::{seq::movement::Move, state::GameState, tas_runner::TasRunner};
 
 pub const NAME: &str = "Route Helper v1";
 
@@ -23,7 +23,7 @@ impl GuiHelper for RouteHelperV1 {
     fn draw(
         &mut self,
         game_state: &mut GameState,
-        _game_manager: &mut Option<GameManager>,
+        _tas_runner: &mut Option<TasRunner>,
         ui: &mut egui::Ui,
         _tab: &mut String,
     ) {

@@ -378,7 +378,7 @@ pub fn repro_command(
 }
 
 /// Build the requested game manager, applying route-specific options.
-fn build_game_manager(core: &mut TasCore, args: &CliArgs) {
+fn build_tas_runner(core: &mut TasCore, args: &CliArgs) {
     let gm = match args.route {
         Route::Tas => {
             let mut gm = tas::create_tas();
@@ -396,7 +396,7 @@ fn build_game_manager(core: &mut TasCore, args: &CliArgs) {
         Route::Combat => tas::create_combat_test(),
         Route::Relic => tas::create_relic_test(),
     };
-    core.game_manager = Some(gm);
+    core.tas_runner = Some(gm);
 }
 
 /// Run the headless TAS. Returns a process exit code.
@@ -488,17 +488,17 @@ fn run_sequence(core: &mut TasCore, args: &CliArgs) -> u8 {
         && let Some(slot) = args.save_slot
     {
         info!("Loading save slot {slot}...");
-        core.game_manager = Some(tas::create_load_sequence(slot, args.auto_save_present));
-        core.start_game_manager();
+        core.tas_runner = Some(tas::create_load_sequence(slot, args.auto_save_present));
+        core.start_tas();
         if let Err(code) = run_active(core, args, run_start) {
             return code;
         }
     }
 
     // Build and run the requested route (TAS advances to the checkpoint if set).
-    build_game_manager(core, args);
+    build_tas_runner(core, args);
     info!("Starting sequence (route={:?}).", args.route);
-    core.start_game_manager();
+    core.start_tas();
     match run_active(core, args, run_start) {
         Ok(()) => exit::SUCCESS,
         Err(code) => code,
@@ -512,9 +512,9 @@ fn run_active(core: &mut TasCore, args: &CliArgs, run_start: Instant) -> Result<
     let mut fps = FpsClock::new(args.fps);
     loop {
         core.poll();
-        core.run_game_manager();
+        core.run_tas();
 
-        if !core.game_manager_running() {
+        if !core.tas_running() {
             info!("Sequence finished.");
             return Ok(());
         }

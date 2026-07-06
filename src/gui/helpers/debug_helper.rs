@@ -1,6 +1,6 @@
 use super::GuiHelper;
 use crate::util::vec3_ext::Vector3Ext;
-use crate::{game_manager::GameManager, memory::speedrun_manager::SpeedrunTimer, state::GameState};
+use crate::{memory::speedrun_manager::SpeedrunTimer, state::GameState, tas_runner::TasRunner};
 
 use vec3_rs::Vector3;
 
@@ -117,7 +117,7 @@ impl GuiHelper for DebugHelper {
     fn draw(
         &mut self,
         game_state: &mut GameState,
-        _game_manager: &mut Option<GameManager>,
+        _tas_runner: &mut Option<TasRunner>,
         ui: &mut egui::Ui,
         _tab: &mut String,
     ) {

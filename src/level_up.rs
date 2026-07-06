@@ -10,12 +10,12 @@ enum LevelUpFsm {
     Press,
 }
 
-pub struct LevelUpManager {
+pub struct LevelUpController {
     btn: ButtonPress,
     fsm: LevelUpFsm,
 }
 
-impl Default for LevelUpManager {
+impl Default for LevelUpController {
     fn default() -> Self {
         Self {
             btn: ButtonPress::new(crate::control::SosAction::MenuRight),
@@ -33,7 +33,7 @@ const STAT_PRIORITY: [LevelUpUpgrade; 6] = [
     LevelUpUpgrade::PhysicalDefense,
 ];
 
-impl LevelUpManager {
+impl LevelUpController {
     pub fn update(&mut self, state: &mut GameState, dt: f64) -> bool {
         let lumd = &state.memory_managers.level_up_manager.data;
 

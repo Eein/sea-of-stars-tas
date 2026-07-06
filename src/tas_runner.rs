@@ -5,7 +5,7 @@ use std::fmt::Display;
 use joystick::common::{JoystickBtnInterface, JoystickInterface};
 use seq::prelude::*;
 
-use super::level_up::LevelUpManager;
+use super::level_up::LevelUpController;
 use crate::seq::button::ButtonPress;
 use crate::{
     control::SosAction,
@@ -21,9 +21,13 @@ enum GameFsm {
     LevelUp,
 }
 
-pub struct GameManager {
+/// The top-level TAS orchestrator: runs the route sequencer and hands frames
+/// to the matching controller (combat, level-up, cutscene mash) whenever the
+/// game state demands one. `*Manager` names are reserved for the mirrors of
+/// the game's own Unity managers in `memory::`.
+pub struct TasRunner {
     sequencer: Sequencer<GameState, GameEvent>,
-    level_up: Option<LevelUpManager>,
+    level_up_controller: Option<LevelUpController>,
     combat_controller: Option<CombatController>,
     fsm: GameFsm,
     btn: [ButtonPress; 3],
@@ -31,13 +35,13 @@ pub struct GameManager {
     paused: bool,
 }
 
-impl Display for GameManager {
+impl Display for TasRunner {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "FSM: {:?}\nRoot: {}", self.fsm, self.sequencer)
     }
 }
 
-impl GameManager {
+impl TasRunner {
     pub fn new(root: Box<dyn Node<GameState, GameEvent>>) -> Self {
         Self {
             sequencer: Sequencer::new(root),
@@ -49,7 +53,7 @@ impl GameManager {
             ],
             timer: delta::Timer::new(),
             paused: false,
-            level_up: None,
+            level_up_controller: None,
             combat_controller: None,
         }
     }
@@ -88,7 +92,6 @@ impl GameManager {
         let lumd = &context.memory_managers.level_up_manager.data;
 
         // TODO(orkaboy): detect game over?
-        // TODO(orkaboy): detect level up screen
         if cmd.encounter_active {
             // Stop whatever we're doing and enter combat controller
             for gamepad in context.gamepads.iter_mut() {
@@ -101,8 +104,6 @@ impl GameManager {
 
         match self.fsm {
             GameFsm::Combat => {
-                // TODO(orkaboy): actually handle combat. For now, mash!
-
                 if !cmd.encounter_active {
                     context.release_all();
                     self.combat_controller = None;
@@ -120,14 +121,14 @@ impl GameManager {
                 }
             }
             GameFsm::LevelUp => {
-                if let Some(level_up) = self.level_up.as_mut() {
+                if let Some(level_up) = self.level_up_controller.as_mut() {
                     if level_up.update(context, dt) {
-                        self.level_up = None;
+                        self.level_up_controller = None;
                         self.fsm = GameFsm::Route;
                     }
                 } else {
                     context.release_all();
-                    self.level_up = Some(LevelUpManager::default());
+                    self.level_up_controller = Some(LevelUpController::default());
                 }
             }
             GameFsm::Route => {
