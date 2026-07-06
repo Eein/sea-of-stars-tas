@@ -43,25 +43,6 @@ impl CombatAction {
                 | CombatAction::Skill { .. }
         )
     }
-
-    /// The top-level battle-command ring index this action lives under
-    /// (`Attack=0, Skill=1, Combo=2, Item=3`).
-    pub fn battle_command_index(&self) -> i64 {
-        match self {
-            CombatAction::BasicAttack { .. } => 0,
-            CombatAction::Skill { .. } => 1,
-            CombatAction::Combo { .. } => 2,
-        }
-    }
-
-    /// The move name for a submenu action (combo or skill), if any. Basic
-    /// attacks have no submenu.
-    pub fn ability_name(&self) -> Option<&str> {
-        match self {
-            CombatAction::Combo { name, .. } | CombatAction::Skill { name, .. } => Some(name),
-            _ => None,
-        }
-    }
 }
 
 /// A scored candidate action: have `attacker` perform `action` against the
@@ -264,7 +245,9 @@ pub fn generate_appraisals(cmd: &CombatManagerData) -> Vec<Appraisal> {
     appraisals
 }
 
-/// Pick the single best appraisal for the current state, if any.
-pub fn pick_best(cmd: &CombatManagerData) -> Option<Appraisal> {
-    generate_appraisals(cmd).into_iter().next()
+/// The appraisal the executor will act on: the top-ranked *executable* one
+/// (appraisals are sorted best-first). The single source of the decision rule,
+/// shared by the executor and the GUI's appraisal panel.
+pub fn choose(appraisals: &[Appraisal]) -> Option<&Appraisal> {
+    appraisals.iter().find(|a| a.action.is_executable())
 }

@@ -4,7 +4,7 @@ use crate::route::tas;
 use crate::{game_manager::GameManager, state::GameState};
 
 use crate::assets::ASSETS;
-use crate::combat::{appraisal, damage};
+use crate::combat::{CombatController, appraisal, damage};
 use crate::memory::combat_manager::CombatDamageType;
 use crate::memory::level_up_manager::LevelUpUpgrade;
 
@@ -339,13 +339,28 @@ impl MainHelper {
     }
 
     /// Show the appraisal (decision) layer's ranked candidate actions and the
-    /// chosen top action, computed from the current combat snapshot.
-    fn draw_appraisals(&self, game_state: &mut GameState, ui: &mut egui::Ui) {
+    /// chosen top action.
+    fn draw_appraisals(
+        &self,
+        game_state: &GameState,
+        combat: Option<&CombatController>,
+        ui: &mut egui::Ui,
+    ) {
         const LETHAL: egui::Color32 = egui::Color32::from_rgb(120, 220, 120);
         const CHOSEN: egui::Color32 = egui::Color32::from_rgb(255, 210, 90);
 
         let cmd = &game_state.memory_managers.combat_manager.data;
-        let appraisals = appraisal::generate_appraisals(cmd);
+        // Prefer the running executor's cached ranking, so the panel shows
+        // exactly what it is acting on; recompute only when no executor is
+        // live (e.g. watching a fight with no route running).
+        let recomputed;
+        let (appraisals, chosen) = match combat {
+            Some(combat) => (combat.appraisals.as_slice(), combat.chosen.as_ref()),
+            None => {
+                recomputed = appraisal::generate_appraisals(cmd);
+                (recomputed.as_slice(), appraisal::choose(&recomputed))
+            }
+        };
 
         egui::CollapsingHeader::new("Appraisals")
             .default_open(true)
@@ -353,7 +368,7 @@ impl MainHelper {
                 // Callout for the current decision.
                 ui.horizontal(|ui| {
                     ui.label("Chosen:");
-                    match appraisals.first() {
+                    match chosen {
                         Some(best) => {
                             ui.colored_label(
                                 CHOSEN,
@@ -393,9 +408,8 @@ impl MainHelper {
                     ui.label("Cursor target:");
                     match &cmd.selected_attack_target_guid {
                         Some(guid) => {
-                            let matches_chosen = appraisals
-                                .first()
-                                .is_some_and(|best| best.target_enemy_id == *guid);
+                            let matches_chosen =
+                                chosen.is_some_and(|best| best.target_enemy_id == *guid);
                             let color = if matches_chosen { LETHAL } else { CHOSEN };
                             ui.colored_label(color, format!("{:.5}", guid));
                             ui.weak(if matches_chosen {
@@ -661,7 +675,8 @@ impl GuiHelper for MainHelper {
             self.draw_combat(game_state, ui);
             self.draw_players(game_state, ui);
             self.draw_damage_calculations(game_state, ui);
-            self.draw_appraisals(game_state, ui);
+            let combat = game_manager.as_ref().and_then(|gm| gm.combat_controller());
+            self.draw_appraisals(game_state, combat, ui);
             self.draw_moves(game_state, ui);
         } else if lum.active {
             self.draw_level_up(game_state, ui);

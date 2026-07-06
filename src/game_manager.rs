@@ -1,4 +1,4 @@
-use crate::combat::CombatManager;
+use crate::combat::CombatController;
 use delta::Timer;
 use std::fmt::Display;
 
@@ -24,7 +24,7 @@ enum GameFsm {
 pub struct GameManager {
     sequencer: Sequencer<GameState, GameEvent>,
     level_up: Option<LevelUpManager>,
-    combat_manager: Option<CombatManager>,
+    combat_controller: Option<CombatController>,
     fsm: GameFsm,
     btn: [ButtonPress; 3],
     timer: Timer,
@@ -50,7 +50,7 @@ impl GameManager {
             timer: delta::Timer::new(),
             paused: false,
             level_up: None,
-            combat_manager: None,
+            combat_controller: None,
         }
     }
 
@@ -64,6 +64,11 @@ impl GameManager {
 
     pub fn is_paused(&self) -> bool {
         self.paused
+    }
+
+    /// The live combat controller, present while an encounter is being driven.
+    pub fn combat_controller(&self) -> Option<&CombatController> {
+        self.combat_controller.as_ref()
     }
 
     pub fn advance_to_checkpoint(&mut self, context: &mut GameState, checkpoint: &str) -> bool {
@@ -100,18 +105,18 @@ impl GameManager {
 
                 if !cmd.encounter_active {
                     context.release_all();
-                    self.combat_manager = None;
+                    self.combat_controller = None;
                     self.fsm = GameFsm::Route;
                     // Signal return to sequencer
                     self.sequencer.on_event(context, &GameEvent::Combat);
-                } else if let Some(combat) = self.combat_manager.as_mut() {
+                } else if let Some(combat) = self.combat_controller.as_mut() {
                     if combat.update(context, dt) {
-                        self.combat_manager = None;
+                        self.combat_controller = None;
                         self.fsm = GameFsm::Route;
                     }
                 } else {
                     context.release_all();
-                    self.combat_manager = Some(CombatManager::default());
+                    self.combat_controller = Some(CombatController::default());
                 }
             }
             GameFsm::LevelUp => {

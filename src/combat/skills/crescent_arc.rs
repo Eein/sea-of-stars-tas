@@ -2,8 +2,8 @@
 
 use data::prelude::PlayerPartyCharacter;
 
-use super::sunball::magic_damage_estimate;
 use super::{Action, SkillResource, TargetType};
+use crate::combat::damage;
 use crate::memory::combat_manager::{CombatDamageType, CombatEnemy, CombatPlayer};
 
 pub struct CrescentArc;
@@ -34,6 +34,6 @@ impl Action for CrescentArc {
     }
 
     fn estimate_damage(&self, player: &CombatPlayer, enemy: &CombatEnemy) -> f32 {
-        magic_damage_estimate(player, enemy, CombatDamageType::Moon)
+        damage::magic_damage_estimate(player, enemy, CombatDamageType::Moon)
     }
 }
