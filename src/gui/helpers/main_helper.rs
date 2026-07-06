@@ -326,6 +326,8 @@ impl MainHelper {
                 //calculate basic attack damage
                 let min_damage = Self::calculate_basic_attack_damage(player, enemy, 0.0);
                 let max_damage = Self::calculate_basic_attack_damage(player, enemy, 3.0);
+                // Floor is a guess here, round overestimates. Will rescan the source formulas with
+                // ghidra at a later date.
                 ui.label(format!(
                     "Enemy: {:.5} | Damage: {:.3}-{:.3} Timed: {:.3}-{:.3}",
                     enemy.unique_id,
