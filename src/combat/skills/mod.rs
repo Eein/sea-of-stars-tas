@@ -99,6 +99,8 @@ pub trait Action {
         TargetType::Enemy
     }
     fn timing_type(&self) -> TimingType {
+        // Most skills land a single timed hit; only a few charge (Sunball) or
+        // hit multiple times (Moonerang). Those override this.
         TimingType::OneHit
     }
     fn resource(&self) -> SkillResource {
@@ -127,10 +129,23 @@ pub trait Action {
         }
         match self.resource() {
             SkillResource::None => true,
-            SkillResource::Mana => player.current_mp >= self.cost(),
+            SkillResource::Mana => player.current_mp >= self.mp_cost(cmd),
             SkillResource::ComboPoints => cmd.combo_points >= self.cost(),
             SkillResource::UltimateGuage => cmd.ultimate_progress >= 1.0,
         }
+    }
+
+    /// The move's live MP cost, read from its `skillPointCost` in the move
+    /// definition, falling back to the module's declared [`cost`](Self::cost)
+    /// when the move isn't present in memory.
+    fn mp_cost(&self, cmd: &CombatManagerData) -> u32 {
+        cmd.moves
+            .iter()
+            .filter(|cm| cm.character == self.character())
+            .flat_map(|cm| &cm.moves)
+            .find(|m| m.move_id.as_deref() == Some(self.internal_name()))
+            .and_then(|m| m.skill_point_cost)
+            .unwrap_or_else(|| self.cost())
     }
 
     /// Estimated damage against `enemy`. Default is a multiple of the basic
@@ -200,4 +215,12 @@ pub fn skill_actions() -> Vec<Box<dyn Action>> {
         Box::new(sunball::Sunball),
         Box::new(crescent_arc::CrescentArc),
     ]
+}
+
+/// The timing type of the skill with this `combatMoveId`, if registered.
+pub fn skill_timing(internal_name: &str) -> Option<TimingType> {
+    skill_actions()
+        .iter()
+        .find(|a| a.internal_name() == internal_name)
+        .map(|a| a.timing_type())
 }

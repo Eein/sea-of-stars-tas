@@ -3,7 +3,7 @@
 use data::prelude::PlayerPartyCharacter;
 
 use super::sunball::magic_damage_estimate;
-use super::{Action, SkillResource, TargetType, TimingType};
+use super::{Action, SkillResource, TargetType};
 use crate::memory::combat_manager::{CombatDamageType, CombatEnemy, CombatPlayer};
 
 pub struct CrescentArc;
@@ -27,10 +27,6 @@ impl Action for CrescentArc {
 
     fn cost(&self) -> u32 {
         6
-    }
-
-    fn timing_type(&self) -> TimingType {
-        TimingType::OneHit
     }
 
     fn damage_types(&self) -> Vec<CombatDamageType> {

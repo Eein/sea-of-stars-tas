@@ -25,7 +25,8 @@ impl Action for Sunball {
     }
 
     fn timing_type(&self) -> TimingType {
-        TimingType::OneHit
+        // Sunball charges: hold Confirm, release on the window.
+        TimingType::Charge
     }
 
     fn damage_types(&self) -> Vec<CombatDamageType> {

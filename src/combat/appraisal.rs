@@ -35,12 +35,13 @@ impl CombatAction {
         }
     }
 
-    /// Whether the executor can currently act on this action. Skills are
-    /// appraised but not yet executed.
+    /// Whether the executor can currently act on this action.
     pub fn is_executable(&self) -> bool {
         matches!(
             self,
-            CombatAction::BasicAttack { .. } | CombatAction::Combo { .. }
+            CombatAction::BasicAttack { .. }
+                | CombatAction::Combo { .. }
+                | CombatAction::Skill { .. }
         )
     }
 
@@ -54,10 +55,11 @@ impl CombatAction {
         }
     }
 
-    /// The combo's move name, if this action is a combo.
-    pub fn combo_name(&self) -> Option<&str> {
+    /// The move name for a submenu action (combo or skill), if any. Basic
+    /// attacks have no submenu.
+    pub fn ability_name(&self) -> Option<&str> {
         match self {
-            CombatAction::Combo { name, .. } => Some(name),
+            CombatAction::Combo { name, .. } | CombatAction::Skill { name, .. } => Some(name),
             _ => None,
         }
     }
