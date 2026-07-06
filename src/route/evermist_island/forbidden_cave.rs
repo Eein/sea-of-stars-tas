@@ -11,6 +11,7 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
             SeqMove::create(
                 "Open door",
                 vec![
+                    Move::To(14.000, 1.002, 14.367),
                     Move::To(14.000, 1.002, 17.396),
                     Move::Confirm, // Open door to cave
                 ],
