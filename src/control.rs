@@ -1,7 +1,7 @@
 use joystick::prelude::*;
 
 // For now, define these statically
-#[derive(Clone)]
+#[derive(Clone, Copy, Debug)]
 pub enum SosAction {
     Confirm,
     Bracelet,
