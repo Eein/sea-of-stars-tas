@@ -8,6 +8,7 @@
 use data::prelude::PlayerPartyCharacter;
 
 use crate::combat::damage;
+use crate::combat::skills::{self, Action};
 use crate::memory::combat_manager::{CombatEnemy, CombatManagerData, CombatPlayer};
 
 /// A concrete thing a player can do on their turn.
@@ -19,6 +20,9 @@ pub enum CombatAction {
     BasicAttack { timed: bool },
     /// A combo move (costs combo points; `name` is its `combatMoveId`).
     Combo { name: String, cost: u32 },
+    /// A skill (costs mana; `name` is its `combatMoveId`). Appraised now,
+    /// executed in a later slice.
+    Skill { name: String, cost: u32 },
 }
 
 impl CombatAction {
@@ -27,10 +31,12 @@ impl CombatAction {
             CombatAction::BasicAttack { timed: true } => "Basic Attack (timed)".to_string(),
             CombatAction::BasicAttack { timed: false } => "Basic Attack".to_string(),
             CombatAction::Combo { name, cost } => format!("Combo: {name} (cp {cost})"),
+            CombatAction::Skill { name, cost } => format!("Skill: {name} (mp {cost})"),
         }
     }
 
-    /// Whether the executor can currently act on this action.
+    /// Whether the executor can currently act on this action. Skills are
+    /// appraised but not yet executed.
     pub fn is_executable(&self) -> bool {
         matches!(
             self,
@@ -43,6 +49,7 @@ impl CombatAction {
     pub fn battle_command_index(&self) -> i64 {
         match self {
             CombatAction::BasicAttack { .. } => 0,
+            CombatAction::Skill { .. } => 1,
             CombatAction::Combo { .. } => 2,
         }
     }
@@ -163,12 +170,38 @@ fn score_combo(player: &CombatPlayer, enemy: &CombatEnemy, name: &str, cost: u32
     }
 }
 
+/// Score a skill candidate from its [`Action`] module against an enemy.
+fn score_skill(action: &dyn Action, player: &CombatPlayer, enemy: &CombatEnemy) -> Appraisal {
+    let expected_damage = action.estimate_damage(player, enemy);
+    let lethal = expected_damage >= enemy.current_hp as f32;
+
+    let mut score = expected_damage;
+    if lethal {
+        score += LETHAL_BONUS;
+    }
+    if enemy.turns_to_action > 0 {
+        score += IMMINENT_THREAT_BONUS / enemy.turns_to_action as f32;
+    }
+
+    Appraisal {
+        attacker: action.character(),
+        action: CombatAction::Skill {
+            name: action.internal_name().to_string(),
+            cost: action.cost(),
+        },
+        target_enemy_id: enemy.unique_id.clone(),
+        expected_damage,
+        lethal,
+        score,
+    }
+}
+
 /// Generate every candidate appraisal for the current combat state, ranked best
 /// first.
 ///
-/// Candidates: a timed basic attack for every controllable (alive, on-screen)
-/// player against every living enemy, plus every affordable, loaded combo move
-/// (`combo_point_cost > 0` and `<= combo_points`) against every living enemy.
+/// Candidates: a timed basic attack per controllable player, every affordable
+/// loaded combo, and every usable skill [`Action`] — each against every living
+/// enemy.
 pub fn generate_appraisals(cmd: &CombatManagerData) -> Vec<Appraisal> {
     let mut appraisals = Vec::new();
     let living_enemies = || cmd.enemies.items.iter().filter(|e| e.current_hp != 0);
@@ -212,6 +245,20 @@ pub fn generate_appraisals(cmd: &CombatManagerData) -> Vec<Appraisal> {
             for enemy in living_enemies() {
                 appraisals.push(score_combo(player, enemy, name, cost));
             }
+        }
+    }
+
+    // Skills: each registered skill Action usable this turn (character alive,
+    // move loaded, mana affordable) against every living enemy.
+    for action in skills::skill_actions() {
+        if !action.is_usable(cmd) {
+            continue;
+        }
+        let Some(player) = action.player(cmd) else {
+            continue;
+        };
+        for enemy in living_enemies() {
+            appraisals.push(score_skill(action.as_ref(), player, enemy));
         }
     }
 
