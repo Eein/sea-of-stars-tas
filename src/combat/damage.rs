@@ -1,7 +1,9 @@
-//! Basic-attack damage formula, shared by the combat appraiser and the GUI.
+//! Damage formulas, shared by the combat appraiser and the GUI.
 //!
-//! Lifted verbatim from the GUI helper so the decision layer and the on-screen
-//! damage readout compute from a single source of truth.
+//! The basic-attack formula is lifted verbatim from the GUI helper so the
+//! decision layer and the on-screen damage readout compute from a single
+//! source of truth; the magic-skill estimate is the shared placeholder the
+//! magic skills appraise with.
 
 use data::prelude::PlayerPartyCharacter;
 
@@ -52,6 +54,28 @@ fn damage_type_attack_modifier(player: &CombatPlayer, enemy: &CombatEnemy) -> f3
         PlayerPartyCharacter::Garl => modifier_for(CombatDamageType::Blunt),
         _ => 1.0,
     }
+}
+
+/// Rough magic-skill estimate: scales with magical attack, reduced by the
+/// enemy's magical defense, times the enemy's modifier for `damage_type`.
+/// Placeholder pending the real per-skill formula.
+pub fn magic_damage_estimate(
+    player: &CombatPlayer,
+    enemy: &CombatEnemy,
+    damage_type: CombatDamageType,
+) -> f32 {
+    const SKILL_MULTIPLIER: f32 = 2.0;
+
+    let defense_ratio = 1.0 - (enemy.magical_defense as f32 / MAGICAL_DEFENSE_CAP);
+    let modifier = enemy
+        .damage_type_modifiers
+        .items
+        .iter()
+        .find(|(k, _)| k.key == damage_type)
+        .map(|(_, v)| v.value)
+        .unwrap_or(1.0);
+
+    (player.magical_attack as f32 * SKILL_MULTIPLIER * modifier * defense_ratio).floor()
 }
 
 /// Compute a basic attack's `(base_damage, timed_hit_bonus)` for a given roll.

@@ -422,6 +422,13 @@ impl MemoryManagerUpdate for CombatManagerData {
 }
 
 impl CombatManagerData {
+    /// Whether an ability submenu (combo or skill) is currently open. The combo
+    /// submenu reuses the battle selector, so it's detected by its highlighted
+    /// entry; the skill submenu has its own focus flag.
+    pub fn ability_submenu_open(&self) -> bool {
+        self.highlighted_combo_id.is_some() || self.skill_command_has_focus
+    }
+
     pub fn update_selected_character(
         &mut self,
         _memory_context: &MemoryContext,
