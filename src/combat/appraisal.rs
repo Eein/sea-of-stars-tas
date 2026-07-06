@@ -7,8 +7,7 @@
 
 use data::prelude::PlayerPartyCharacter;
 
-use crate::combat::damage;
-use crate::combat::skills::{self, Action};
+use crate::combat::skills::{self, Action, BasicAttack, Combo};
 use crate::memory::combat_manager::{CombatEnemy, CombatManagerData, CombatPlayer};
 
 /// A concrete thing a player can do on their turn.
@@ -82,6 +81,33 @@ pub struct Appraisal {
 }
 
 impl Appraisal {
+    /// Build the executable [`Action`] for this appraisal, bound to its attacker.
+    /// This is the bridge the executor drives step-by-step: basic attacks and
+    /// combos are constructed from the enum, skills are looked up by name (falling
+    /// back to a basic attack if somehow unregistered).
+    pub fn to_action(&self) -> Box<dyn Action> {
+        match &self.action {
+            CombatAction::BasicAttack { timed } => Box::new(BasicAttack {
+                character: self.attacker.clone(),
+                timed: *timed,
+            }),
+            CombatAction::Combo { name, cost } => Box::new(Combo {
+                character: self.attacker.clone(),
+                name: name.clone(),
+                cost: *cost,
+            }),
+            CombatAction::Skill { name, .. } => skills::skill_actions()
+                .into_iter()
+                .find(|a| a.internal_name() == name)
+                .unwrap_or_else(|| {
+                    Box::new(BasicAttack {
+                        character: self.attacker.clone(),
+                        timed: true,
+                    })
+                }),
+        }
+    }
+
     /// One-line human-readable summary for logging / the GUI.
     pub fn describe(&self) -> String {
         format!(
@@ -102,20 +128,17 @@ const LETHAL_BONUS: f32 = 1000.0;
 /// Bonus for targeting an enemy that is about to act, weighted by how imminent
 /// its turn is (fewer turns-to-action = larger nudge).
 const IMMINENT_THREAT_BONUS: f32 = 50.0;
-/// Placeholder combo damage estimate: combos hit roughly this multiple of the
-/// attacker's basic attack, scaled up by combo-point cost. This is a heuristic
-/// pending a real combo damage model (needs `damageTypeDefinitions` RE).
-const COMBO_DAMAGE_FACTOR: f32 = 2.5;
-
-/// Score a basic-attack candidate against an enemy.
-fn score_basic(player: &CombatPlayer, enemy: &CombatEnemy, timed: bool) -> Appraisal {
-    let (base, timed_bonus) = damage::basic_attack_damage(player, enemy, damage::MAX_ROLL);
-    let expected_damage = if timed {
-        (base + timed_bonus).floor()
-    } else {
-        base.floor()
-    };
-
+/// Score a candidate action against an enemy. Damage comes from the action's own
+/// [`estimate_damage`](Action::estimate_damage); the lethal/imminent-threat
+/// bonuses are shared across every action kind. `combat_action` is the enum form
+/// carried on the `Appraisal` for the GUI label and the executor's command routing.
+fn score_action(
+    action: &dyn Action,
+    player: &CombatPlayer,
+    enemy: &CombatEnemy,
+    combat_action: CombatAction,
+) -> Appraisal {
+    let expected_damage = action.estimate_damage(player, enemy);
     let lethal = expected_damage >= enemy.current_hp as f32;
 
     let mut score = expected_damage;
@@ -128,69 +151,8 @@ fn score_basic(player: &CombatPlayer, enemy: &CombatEnemy, timed: bool) -> Appra
     }
 
     Appraisal {
-        attacker: player.character.clone(),
-        action: CombatAction::BasicAttack { timed },
-        target_enemy_id: enemy.unique_id.clone(),
-        expected_damage,
-        lethal,
-        score,
-    }
-}
-
-/// Estimate a combo's damage against an enemy as a heuristic multiple of the
-/// attacker's basic attack (higher-cost combos hit harder). Placeholder until a
-/// real combo damage model exists.
-fn combo_damage_estimate(player: &CombatPlayer, enemy: &CombatEnemy, cost: u32) -> f32 {
-    let (base, timed_bonus) = damage::basic_attack_damage(player, enemy, damage::MAX_ROLL);
-    ((base + timed_bonus) * COMBO_DAMAGE_FACTOR * (1.0 + cost as f32 * 0.5)).floor()
-}
-
-/// Score a combo candidate: `attacker` uses combo `name` (costing `cost` combo
-/// points) against `enemy`.
-fn score_combo(player: &CombatPlayer, enemy: &CombatEnemy, name: &str, cost: u32) -> Appraisal {
-    let expected_damage = combo_damage_estimate(player, enemy, cost);
-    let lethal = expected_damage >= enemy.current_hp as f32;
-
-    let mut score = expected_damage;
-    if lethal {
-        score += LETHAL_BONUS;
-    }
-    if enemy.turns_to_action > 0 {
-        score += IMMINENT_THREAT_BONUS / enemy.turns_to_action as f32;
-    }
-
-    Appraisal {
-        attacker: player.character.clone(),
-        action: CombatAction::Combo {
-            name: name.to_string(),
-            cost,
-        },
-        target_enemy_id: enemy.unique_id.clone(),
-        expected_damage,
-        lethal,
-        score,
-    }
-}
-
-/// Score a skill candidate from its [`Action`] module against an enemy.
-fn score_skill(action: &dyn Action, player: &CombatPlayer, enemy: &CombatEnemy) -> Appraisal {
-    let expected_damage = action.estimate_damage(player, enemy);
-    let lethal = expected_damage >= enemy.current_hp as f32;
-
-    let mut score = expected_damage;
-    if lethal {
-        score += LETHAL_BONUS;
-    }
-    if enemy.turns_to_action > 0 {
-        score += IMMINENT_THREAT_BONUS / enemy.turns_to_action as f32;
-    }
-
-    Appraisal {
         attacker: action.character(),
-        action: CombatAction::Skill {
-            name: action.internal_name().to_string(),
-            cost: action.cost(),
-        },
+        action: combat_action,
         target_enemy_id: enemy.unique_id.clone(),
         expected_damage,
         lethal,
@@ -213,7 +175,16 @@ pub fn generate_appraisals(cmd: &CombatManagerData) -> Vec<Appraisal> {
             continue;
         }
         for enemy in living_enemies() {
-            appraisals.push(score_basic(player, enemy, true));
+            let action = BasicAttack {
+                character: player.character.clone(),
+                timed: true,
+            };
+            appraisals.push(score_action(
+                &action,
+                player,
+                enemy,
+                CombatAction::BasicAttack { timed: true },
+            ));
         }
     }
 
@@ -245,7 +216,20 @@ pub fn generate_appraisals(cmd: &CombatManagerData) -> Vec<Appraisal> {
                 continue;
             };
             for enemy in living_enemies() {
-                appraisals.push(score_combo(player, enemy, name, cost));
+                let action = Combo {
+                    character: player.character.clone(),
+                    name: name.to_string(),
+                    cost,
+                };
+                appraisals.push(score_action(
+                    &action,
+                    player,
+                    enemy,
+                    CombatAction::Combo {
+                        name: name.to_string(),
+                        cost,
+                    },
+                ));
             }
         }
     }
@@ -260,7 +244,15 @@ pub fn generate_appraisals(cmd: &CombatManagerData) -> Vec<Appraisal> {
             continue;
         };
         for enemy in living_enemies() {
-            appraisals.push(score_skill(action.as_ref(), player, enemy));
+            appraisals.push(score_action(
+                action.as_ref(),
+                player,
+                enemy,
+                CombatAction::Skill {
+                    name: action.internal_name().to_string(),
+                    cost: action.cost(),
+                },
+            ));
         }
     }
 
