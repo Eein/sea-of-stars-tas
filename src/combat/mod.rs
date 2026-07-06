@@ -1,10 +1,13 @@
 #![allow(dead_code)]
 
+pub mod appraisal;
 mod controllers;
+pub mod damage;
 mod skills;
 
 use joystick::common::JoystickBtnInterface;
 
+use crate::combat::appraisal::Appraisal;
 use crate::control::SosAction;
 use crate::seq::button::ButtonPress;
 use crate::state::GameState;
@@ -36,6 +39,12 @@ pub struct CombatManager {
     /// Duty-cycle timer for mashing Confirm on all pads to dismiss mid-fight
     /// dialogue.
     dialog_timer: f64,
+    /// Ranked candidate actions for the current combat state, recomputed every
+    /// frame. Phase 1 only *decides* and surfaces these; acting on them is not
+    /// wired up yet (we still mash Confirm to progress).
+    pub appraisals: Vec<Appraisal>,
+    /// The top-ranked appraisal, if any.
+    pub chosen: Option<Appraisal>,
     // Old WIP FSM state, kept for reference:
     // fsm: CombatFsm,
     // controller: Option<Box<dyn EncounterController>>,
@@ -48,6 +57,8 @@ impl Default for CombatManager {
             btn: ButtonPress::default(),
             last_gamepad: None,
             dialog_timer: 0.0,
+            appraisals: Vec::new(),
+            chosen: None,
             // Old WIP FSM state, kept for reference:
             // fsm: CombatFsm::Idle,
             // controller: None,
@@ -59,6 +70,11 @@ impl Default for CombatManager {
 impl CombatManager {
     pub fn update(&mut self, state: &mut GameState, dt: f64) -> bool {
         let encounter_active = state.memory_managers.combat_manager.data.encounter_active;
+
+        // Decision layer: rank candidate actions for the current state. Phase 1
+        // only decides and surfaces the result; the mashing below still does the
+        // actual acting.
+        self.appraise(state);
 
         // Mid-fight dialogue isn't tied to a player's turn, so mash Confirm on
         // every controller to dismiss it.
@@ -90,6 +106,14 @@ impl CombatManager {
 
         // Done once the encounter ends.
         !encounter_active
+    }
+
+    /// Recompute the ranked appraisals and the chosen (top) action from the
+    /// current combat snapshot.
+    fn appraise(&mut self, state: &GameState) {
+        let cmd = &state.memory_managers.combat_manager.data;
+        self.appraisals = appraisal::generate_appraisals(cmd);
+        self.chosen = self.appraisals.first().cloned();
     }
 
     /// Tap Confirm on every controller in a duty cycle to dismiss mid-fight
