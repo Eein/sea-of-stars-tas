@@ -20,7 +20,7 @@ pub enum CombatAction {
 }
 
 impl CombatAction {
-    fn label(&self) -> &'static str {
+    pub fn label(&self) -> &'static str {
         match self {
             CombatAction::BasicAttack { timed: true } => "Basic Attack (timed)",
             CombatAction::BasicAttack { timed: false } => "Basic Attack",

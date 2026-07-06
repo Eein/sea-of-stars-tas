@@ -341,18 +341,84 @@ impl MainHelper {
     /// Show the appraisal (decision) layer's ranked candidate actions and the
     /// chosen top action, computed from the current combat snapshot.
     fn draw_appraisals(&self, game_state: &mut GameState, ui: &mut egui::Ui) {
+        const LETHAL: egui::Color32 = egui::Color32::from_rgb(120, 220, 120);
+        const CHOSEN: egui::Color32 = egui::Color32::from_rgb(255, 210, 90);
+
         let cmd = &game_state.memory_managers.combat_manager.data;
         let appraisals = appraisal::generate_appraisals(cmd);
 
-        ui.separator();
-        ui.label("Appraisals");
-        match appraisals.first() {
-            Some(best) => ui.label(format!("Chosen: {}", best.describe())),
-            None => ui.label("Chosen: (none)"),
-        };
-        for (i, appraisal) in appraisals.iter().enumerate().take(8) {
-            ui.label(format!("{}. {}", i + 1, appraisal.describe()));
-        }
+        egui::CollapsingHeader::new("Appraisals")
+            .default_open(true)
+            .show(ui, |ui| {
+                // Callout for the current decision.
+                ui.horizontal(|ui| {
+                    ui.label("Chosen:");
+                    match appraisals.first() {
+                        Some(best) => {
+                            ui.colored_label(
+                                CHOSEN,
+                                format!(
+                                    "{:?} -> {} on {:.5}",
+                                    best.attacker,
+                                    best.action.label(),
+                                    best.target_enemy_id,
+                                ),
+                            );
+                            ui.label(format!(
+                                "dmg {:.0}{}",
+                                best.expected_damage,
+                                if best.lethal { " (lethal)" } else { "" },
+                            ));
+                        }
+                        None => {
+                            ui.weak("(none)");
+                        }
+                    }
+                });
+
+                if appraisals.is_empty() {
+                    return;
+                }
+
+                egui::Grid::new("appraisals")
+                    .min_col_width(10.0)
+                    .striped(true)
+                    .show(ui, |ui| {
+                        ui.label("#");
+                        ui.label("Attacker");
+                        ui.label("Action");
+                        ui.label("Target");
+                        ui.label("Dmg");
+                        ui.label("Lethal");
+                        ui.label("Score");
+                        ui.end_row();
+
+                        for (i, appraisal) in appraisals.iter().enumerate().take(12) {
+                            let rank_color = if i == 0 { Some(CHOSEN) } else { None };
+                            let colored = |ui: &mut egui::Ui, text: String| match rank_color {
+                                Some(c) => {
+                                    ui.colored_label(c, text);
+                                }
+                                None => {
+                                    ui.label(text);
+                                }
+                            };
+
+                            colored(ui, format!("{}", i + 1));
+                            colored(ui, format!("{:?}", appraisal.attacker));
+                            colored(ui, appraisal.action.label().to_string());
+                            colored(ui, format!("{:.5}", appraisal.target_enemy_id));
+                            colored(ui, format!("{:.0}", appraisal.expected_damage));
+                            if appraisal.lethal {
+                                ui.colored_label(LETHAL, "kill");
+                            } else {
+                                ui.label("");
+                            }
+                            colored(ui, format!("{:.1}", appraisal.score));
+                            ui.end_row();
+                        }
+                    });
+            });
     }
 }
 
