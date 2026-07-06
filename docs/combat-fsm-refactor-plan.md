@@ -122,3 +122,47 @@ over several fights.
 ## Not in scope yet
 `priority_targets` boss focus-fire, benched-member swaps (3rd+ party member),
 non-`Basic` controllers. Add after the pipeline lands.
+
+## Session status (live-verified)
+
+Stages 1–3 are **done and verified in-game** (drove `--route combat` on normal
+encounters, fights won end-to-end):
+
+- **Stage 1–2** — action foundation + appraiser routes through the `Action` impls.
+- **Stage 3** — the ability step machine. `TurnFsm` collapsed to
+  `Idle → SelectCharacter → Driving`; per-step logic lives on `execute_*` via
+  `ActionCtx`/`StepOutcome`. Verified: basic attack + targeting, and Sunball
+  select + **charge** all execute.
+- **Pulled forward from Stage 5** — the `CommittedAction` latch. Driving rebuilt
+  the action from the live `chosen` each frame, which abandoned Sunball's charge
+  hold on any flicker; latching the action when leaving `SelectCharacter` fixed it.
+- **Tuning** — `CHARGE_SETTLE` 1.50 → 0.35 (the old wait stalled the hold; charge
+  screen opens fast).
+- **Appraiser** — `chosen` now takes the top-*scored* appraisal (removed the
+  `TEMP(slice2 RE)` skill-preference hack).
+
+### Combos — blocked on an availability signal (deferred)
+
+Combos never fire because `generate_appraisals` filters on `CombatMove.loaded`,
+which is **always false for combos** (party-level combos have no per-fighter
+`combatMoveComponent`; `loaded` only marks instantiated skills/basics). RE dump
+of `allMoveDefinitions` found:
+
+- `unlockable` field: `0` for the default combos (`DualAttack`, `DualAttackKids`,
+  `SpectacleStrike`), `1` for everything that must be learned. But `unlockable`
+  is a **static move-def property**, not a runtime "learned now" flag — so `1`
+  alone can't tell a learned combo from an un-learned one.
+- Probed `learned`/`isLearned`/`unlocked`/`isUnlocked`/`learnedByDefault`/
+  `available` on the move def — **none resolve**; the runtime learned flag has
+  another name / lives elsewhere.
+
+Next session: find the authoritative available/learned-combo source (a
+learned-moves list on the fighter/party, or read the combo selection screen's
+item list), then gate combos on `unlockable == 0 || <learned>` in
+`generate_appraisals`. Dropping the `loaded` filter naively would wedge the
+executor on un-learned combos it can't find in the menu.
+
+### Remaining refactor stages
+Stage 4 (thin the controller onto the `EncounterController` pipeline) and the
+rest of Stage 5 (swap-gate cleanup, collapse `CombatAction` special-casing) are
+still open — the controller is already thin, so these are mostly reorganisation.

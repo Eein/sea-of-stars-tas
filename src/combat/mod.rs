@@ -107,10 +107,6 @@ pub struct CombatManager {
     action_step: ActionStep,
     /// The action latched for the current `Driving` cycle (see [`CommittedAction`]).
     committed: Option<CommittedAction>,
-    /// Last-logged appraisal summary, so the diagnostic logs only on change.
-    debug_appraisal: Option<String>,
-    /// Whether we've dumped the per-character move list once (debug diagnostic).
-    debug_moves_dumped: bool,
     // Old WIP FSM state, kept for reference:
     // fsm: CombatFsm,
     // controller: Option<Box<dyn EncounterController>>,
@@ -135,8 +131,6 @@ impl Default for CombatManager {
             last_cursor: None,
             action_step: ActionStep::SelectingCommand,
             committed: None,
-            debug_appraisal: None,
-            debug_moves_dumped: false,
             // Old WIP FSM state, kept for reference:
             // fsm: CombatFsm::Idle,
             // controller: None,
@@ -198,47 +192,6 @@ impl CombatManager {
             .iter()
             .find(|a| a.action.is_executable())
             .cloned();
-
-        // Diagnostic: one-time dump of every character's move list, so we can see
-        // whether combos are present in `allMoveDefinitions` and why they filter.
-        if log::log_enabled!(log::Level::Debug) && !self.debug_moves_dumped && !cmd.moves.is_empty()
-        {
-            for cm in &cmd.moves {
-                for m in &cm.moves {
-                    log::debug!(
-                        "move {:?}: {} cp={:?} mp={:?} loaded={} dmg={} unlockable={:?} {}",
-                        cm.character,
-                        m.move_id.as_deref().unwrap_or("?"),
-                        m.combo_point_cost,
-                        m.skill_point_cost,
-                        m.loaded,
-                        m.is_damaging,
-                        m.unlockable,
-                        m.learned_dbg.as_deref().unwrap_or("learned?=none"),
-                    );
-                }
-            }
-            self.debug_moves_dumped = true;
-        }
-
-        // Diagnostic: log the top candidates (and combo points) whenever the
-        // ranking changes, so we can see what's being appraised and why.
-        if log::log_enabled!(log::Level::Debug) {
-            let summary = format!(
-                "pts={} | top: [{}]",
-                cmd.combo_points,
-                self.appraisals
-                    .iter()
-                    .take(4)
-                    .map(|a| format!("{} s{:.0}", a.action.label(), a.score))
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            );
-            if self.debug_appraisal.as_deref() != Some(summary.as_str()) {
-                log::debug!("appraise: {summary}");
-                self.debug_appraisal = Some(summary);
-            }
-        }
     }
 
     /// Reset the per-turn executor to a known state and drop any turn tracking.
