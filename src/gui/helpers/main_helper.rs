@@ -376,6 +376,40 @@ impl MainHelper {
                     }
                 });
 
+                // Live executor signals — use these to verify the (drift-prone)
+                // battle-command + target-cursor offsets against the game.
+                let command = match cmd.battle_command_index {
+                    Some(0) => "Attack",
+                    Some(1) => "Skill",
+                    Some(2) => "Combo",
+                    Some(3) => "Item",
+                    Some(_) | None => "-",
+                };
+                ui.label(format!(
+                    "Command ring: focus={} idx={:?} ({})",
+                    cmd.battle_command_has_focus, cmd.battle_command_index, command,
+                ));
+                ui.horizontal(|ui| {
+                    ui.label("Cursor target:");
+                    match &cmd.selected_attack_target_guid {
+                        Some(guid) => {
+                            let matches_chosen = appraisals
+                                .first()
+                                .is_some_and(|best| best.target_enemy_id == *guid);
+                            let color = if matches_chosen { LETHAL } else { CHOSEN };
+                            ui.colored_label(color, format!("{:.5}", guid));
+                            ui.weak(if matches_chosen {
+                                "= chosen"
+                            } else {
+                                "!= chosen"
+                            });
+                        }
+                        None => {
+                            ui.weak("(none)");
+                        }
+                    }
+                });
+
                 if appraisals.is_empty() {
                     return;
                 }
