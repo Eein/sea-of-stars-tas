@@ -44,18 +44,20 @@ use crate::state::GameState;
 enum TurnFsm {
     /// No player owns the ring; wait.
     Idle,
-    /// Press Confirm to pick the (default-highlighted) Attack command.
-    ConfirmAttack,
+    /// Navigate the battle-command ring to the chosen action's command (closed-
+    /// loop on `battle_command_index`) and confirm it.
+    SelectCommand,
+    /// Navigate the skill/combo submenu to the chosen combo and confirm it.
+    SelectComboAbility,
     /// Move the enemy cursor onto the chosen appraisal's target (closed-loop on
     /// `selected_attack_target_guid`), bailing to the default after a bounded
-    /// number of taps.
+    /// number of taps. Only active once we've left the command ring.
     SelectTarget,
     /// Press Confirm to commit the attack on the cursor's current target.
     ConfirmTarget,
-    /// Watch `timed_attack_ready` and tap Confirm on each rising edge.
-    AwaitTimedHit,
-    /// Action committed; wait for the turn to end (index changes).
-    Done,
+    /// Attack committed. Watch `timed_attack_ready` for the whole animation and
+    /// tap Confirm on each window edge, until the turn ends (index changes).
+    Attacking,
 }
 
 pub struct CombatManager {
@@ -79,13 +81,16 @@ pub struct CombatManager {
     /// Time spent in the current `turn_fsm` state, for settle delays and the
     /// anti-hang watchdogs.
     state_timer: f64,
-    /// `timed_attack_ready` last frame, so we only tap on the rising edge.
+    /// `timed_attack_ready` last frame, so we only act on the rising edge.
     last_timed_ready: bool,
-    /// Whether a timed-hit Confirm press is currently in flight.
-    timed_pressing: bool,
     /// Cursor taps spent this turn trying to reach the chosen target, so we can
     /// bail to the default target instead of looping forever.
     target_taps: u32,
+    /// Index into [`TARGET_DIRS`] for the current cursor-step direction. We
+    /// advance it when a tap doesn't move the cursor (hit an edge / wrong axis).
+    target_dir: usize,
+    /// Cursor target at the last tap, to detect when a direction stops moving it.
+    last_cursor: Option<String>,
     // Old WIP FSM state, kept for reference:
     // fsm: CombatFsm,
     // controller: Option<Box<dyn EncounterController>>,
@@ -104,8 +109,9 @@ impl Default for CombatManager {
             turn_index: None,
             state_timer: 0.0,
             last_timed_ready: false,
-            timed_pressing: false,
             target_taps: 0,
+            target_dir: 0,
+            last_cursor: None,
             // Old WIP FSM state, kept for reference:
             // fsm: CombatFsm::Idle,
             // controller: None,
@@ -153,12 +159,16 @@ impl CombatManager {
         !encounter_active
     }
 
-    /// Recompute the ranked appraisals and the chosen (top) action from the
-    /// current combat snapshot.
+    /// Recompute the ranked appraisals and the chosen action from the current
+    /// combat snapshot. `chosen` is the top *executable* appraisal.
     fn appraise(&mut self, state: &GameState) {
         let cmd = &state.memory_managers.combat_manager.data;
         self.appraisals = appraisal::generate_appraisals(cmd);
-        self.chosen = self.appraisals.first().cloned();
+        self.chosen = self
+            .appraisals
+            .iter()
+            .find(|a| a.action.is_executable())
+            .cloned();
     }
 
     /// Reset the per-turn executor to a known state and drop any turn tracking.
@@ -167,8 +177,9 @@ impl CombatManager {
         self.turn_index = None;
         self.state_timer = 0.0;
         self.last_timed_ready = false;
-        self.timed_pressing = false;
         self.target_taps = 0;
+        self.target_dir = 0;
+        self.last_cursor = None;
     }
 
     /// Mash Confirm on the controller of the player whose turn it is.
@@ -193,33 +204,37 @@ impl CombatManager {
         }
     }
 
-    /// Drive one basic attack for the active player: pick Attack, commit on the
-    /// default target, then land the timed hit. See [`TurnFsm`] for the
-    /// closed-/open-loop split.
+    /// Drive the active player's turn: select the chosen action's command
+    /// (Attack, or Combo + its submenu ability), move the cursor onto the chosen
+    /// enemy, commit, then hold the charge through the attack. See [`TurnFsm`].
     fn execute_turn(&mut self, state: &mut GameState, dt: f64) {
         /// Settle delay before the executor first acts on a new turn, so the
         /// command ring is up before we press.
-        const TURN_SETTLE: f64 = 0.35;
-        /// Give up waiting for a timed-hit window after this long (enemy died,
-        /// no window, etc.) and consider the action done.
-        const AWAIT_TIMEOUT: f64 = 4.0;
-        /// If a turn never yields (open-loop confirms desynced), fall back to
-        /// mashing so the fight can't hard-hang.
+        const TURN_SETTLE: f64 = 0.10;
+        /// If the post-commit wait sees no timed-window activity for this long,
+        /// the confirms likely desynced — mash to force the turn along.
         const STUCK_TIMEOUT: f64 = 6.0;
         /// Cursor taps to spend chasing the chosen target before committing on
         /// whatever the cursor lands on (mirrors the Python bot's bail-out).
-        const MAX_TARGET_TAPS: u32 = 12;
+        const MAX_TARGET_TAPS: u32 = 16;
+        /// Directions to step the enemy cursor. Enemies can be laid out 2D, so
+        /// we cycle through these when a direction stops moving the cursor.
+        const TARGET_DIRS: [SosAction; 4] = [
+            SosAction::MenuRight,
+            SosAction::MenuDown,
+            SosAction::MenuLeft,
+            SosAction::MenuUp,
+        ];
 
         let gamepad = Self::active_gamepad(state);
         let cmd = &state.memory_managers.combat_manager.data;
         let has_control = cmd.selected_character.is_some();
-        let timed_ready = cmd
-            .players
-            .items
-            .iter()
-            .any(|p| p.selected && p.timed_attack_ready);
-        // UUID currently under the target cursor (may be stale/None until the
-        // offsets are verified live).
+        // The timed-hit window opens during the attack *animation*, after the
+        // command is confirmed — at which point the attacker is no longer
+        // `selected`. So don't filter by `selected`: only the acting player has
+        // `timed_attack_ready` set during their hit.
+        let timed_ready = cmd.players.items.iter().any(|p| p.timed_attack_ready);
+        // UUID currently under the target cursor.
         let cursor_target = cmd.selected_attack_target_guid.clone();
         let turn = state
             .memory_managers
@@ -228,6 +243,30 @@ impl CombatManager {
             .current_player_index;
         // The enemy the appraisal wants to hit, if any.
         let want_target = self.chosen.as_ref().map(|a| a.target_enemy_id.clone());
+        // The chosen action's command ring index (Attack=0, Combo=2, ...) and,
+        // for combos, the combo's name to find in the submenu.
+        let want_command = self
+            .chosen
+            .as_ref()
+            .map(|a| a.action.battle_command_index())
+            .unwrap_or(0);
+        let want_combo = self
+            .chosen
+            .as_ref()
+            .and_then(|a| a.action.combo_name().map(str::to_string));
+        // Battle-command ring state (Attack=0, Skill=1, Combo=2, Item=3).
+        let command_focus = cmd.battle_command_has_focus;
+        let command_index = cmd.battle_command_index;
+        // Skill/combo submenu focus.
+        let skill_focus = cmd.skill_command_has_focus;
+        // The combo highlighted in the combo submenu (matched against want_combo)
+        // and whether it's castable right now.
+        let highlighted_combo = cmd.highlighted_combo_id.clone();
+        let highlighted_castable = cmd.highlighted_combo_castable;
+        // The combo submenu is open iff the selector's items are combos (i.e. a
+        // combo is highlighted). This is how a state knows it's in the submenu
+        // vs the top-level command ring (both keep battle focus).
+        let in_combo_submenu = highlighted_combo.is_some();
 
         // Turn boundary: a different active index means a fresh actor. Reset and
         // let the settle delay elapse before the first press.
@@ -236,8 +275,9 @@ impl CombatManager {
             self.turn_index = turn;
             self.state_timer = 0.0;
             self.last_timed_ready = false;
-            self.timed_pressing = false;
             self.target_taps = 0;
+            self.target_dir = 0;
+            self.last_cursor = None;
             self.turn_fsm = TurnFsm::Idle;
             self.last_gamepad = Some(gamepad);
         }
@@ -246,23 +286,88 @@ impl CombatManager {
 
         match self.turn_fsm {
             TurnFsm::Idle => {
-                // Wait for a player to own the ring, then begin after a settle.
-                if has_control && turn.is_some() && self.state_timer >= TURN_SETTLE {
-                    self.btn = Self::confirm_press();
+                // Wait until the command ring actually has focus before acting,
+                // so our confirm lands on the menu instead of being lost early.
+                if has_control && command_focus && self.state_timer >= TURN_SETTLE {
                     self.state_timer = 0.0;
-                    self.turn_fsm = TurnFsm::ConfirmAttack;
+                    self.turn_fsm = TurnFsm::SelectCommand;
                 }
             }
-            TurnFsm::ConfirmAttack => {
-                if self.btn.update(&mut state.gamepads[gamepad], dt) {
+            TurnFsm::SelectCommand => {
+                // Drive any in-flight nav/confirm press first.
+                if !self.btn.done() {
+                    self.btn.update(&mut state.gamepads[gamepad], dt);
+                } else if in_combo_submenu {
+                    // We're actually in the combo submenu, not the ring — back
+                    // out so we can navigate the top-level commands.
+                    self.btn = Self::cancel_press();
                     self.state_timer = 0.0;
+                } else if command_index == Some(want_command) {
+                    // Desired command highlighted — confirm it. Combos open a
+                    // submenu; everything else goes straight to target select.
+                    self.btn = Self::confirm_press();
+                    self.state_timer = 0.0;
+                    self.turn_fsm = if want_combo.is_some() {
+                        TurnFsm::SelectComboAbility
+                    } else {
+                        TurnFsm::SelectTarget
+                    };
+                } else {
+                    // Step the command cursor toward the desired command.
+                    self.btn = Self::tap_press(SosAction::MenuDown);
+                }
+            }
+            TurnFsm::SelectComboAbility => {
+                // The combo submenu reuses the *battle* selector (battle focus
+                // stays true, skill focus doesn't). Navigate until the highlighted
+                // combo's id matches the chosen one, then confirm. Once battle
+                // focus drops we've entered target select. Back out (Cancel) if we
+                // no longer want a combo, the chosen combo isn't castable, or we
+                // can't find it — so a dead-character/uncastable combo can't hang.
+                let on_combo = match (&want_combo, &highlighted_combo) {
+                    (Some(want), Some(have)) => want == have,
+                    _ => false,
+                };
+                if !self.btn.done() {
+                    self.btn.update(&mut state.gamepads[gamepad], dt);
+                } else if !command_focus {
+                    // Combo confirmed — we're in target select now.
+                    self.state_timer = 0.0;
+                    self.target_taps = 0; // reset the tap budget for targeting
                     self.turn_fsm = TurnFsm::SelectTarget;
+                } else if !in_combo_submenu
+                    || want_combo.is_none()
+                    || self.target_taps >= MAX_TARGET_TAPS
+                    || (on_combo && !highlighted_castable)
+                {
+                    // We shouldn't be here, don't want a combo, can't find it, or
+                    // the chosen combo isn't castable — hand off to SelectCommand,
+                    // which owns backing out of the submenu.
+                    self.state_timer = 0.0;
+                    self.target_taps = 0;
+                    self.turn_fsm = TurnFsm::SelectCommand;
+                } else if on_combo {
+                    self.btn = Self::confirm_press();
+                    self.state_timer = 0.0;
+                } else {
+                    self.btn = Self::tap_press(SosAction::MenuDown);
+                    self.target_taps += 1;
                 }
             }
             TurnFsm::SelectTarget => {
-                // Drive any in-flight cursor tap to completion first.
+                // Finish any in-flight press (the command/combo-confirm or a tap).
+                // We're only really in target select once we've left every menu;
+                // otherwise recover to the menu we're actually in.
                 if !self.btn.done() {
                     self.btn.update(&mut state.gamepads[gamepad], dt);
+                } else if in_combo_submenu || skill_focus {
+                    // Still in the combo/skill submenu — handle it there.
+                    self.state_timer = 0.0;
+                    self.turn_fsm = TurnFsm::SelectComboAbility;
+                } else if command_focus {
+                    // Still on the command ring — the confirm didn't take; retry.
+                    self.state_timer = 0.0;
+                    self.turn_fsm = TurnFsm::SelectCommand;
                 } else {
                     // Commit when the cursor is on the chosen enemy, when we have
                     // no preference, or after exhausting the tap budget (bail to
@@ -277,8 +382,13 @@ impl CombatManager {
                         self.state_timer = 0.0;
                         self.turn_fsm = TurnFsm::ConfirmTarget;
                     } else {
-                        // Step the cursor one enemy over and re-check next frame.
-                        self.btn = Self::tap_press(SosAction::MenuRight);
+                        // If the previous tap didn't move the cursor, that axis
+                        // is exhausted (edge / wrong direction) — rotate.
+                        if cursor_target == self.last_cursor {
+                            self.target_dir = (self.target_dir + 1) % TARGET_DIRS.len();
+                        }
+                        self.last_cursor = cursor_target.clone();
+                        self.btn = Self::tap_press(TARGET_DIRS[self.target_dir]);
                         self.target_taps += 1;
                     }
                 }
@@ -287,38 +397,36 @@ impl CombatManager {
                 if self.btn.update(&mut state.gamepads[gamepad], dt) {
                     state.gamepads[gamepad].release(&SosAction::Confirm);
                     self.state_timer = 0.0;
-                    self.turn_fsm = TurnFsm::AwaitTimedHit;
+                    // Arm the edge detector so the first window fires.
+                    self.last_timed_ready = false;
+                    self.turn_fsm = TurnFsm::Attacking;
                 }
             }
-            TurnFsm::AwaitTimedHit => {
-                // Tap Confirm on each rising edge of the timed-hit window; this
-                // naturally covers multi-hit basic attacks (one window per hit).
-                if timed_ready && !self.last_timed_ready {
-                    self.btn = Self::timed_press();
-                    self.timed_pressing = true;
-                }
-                if self.timed_pressing {
-                    if self.btn.update(&mut state.gamepads[gamepad], dt) {
-                        state.gamepads[gamepad].release(&SosAction::Confirm);
-                        self.timed_pressing = false;
-                    }
-                    self.state_timer = 0.0; // making progress; hold off the watchdog
-                } else if self.state_timer >= AWAIT_TIMEOUT {
-                    self.turn_fsm = TurnFsm::Done;
+            TurnFsm::Attacking => {
+                // Check for the command ring returning FIRST: the attack is over
+                // and it's a fresh action. Release (dropping any held charge so it
+                // can't auto-confirm the menu) and go select the next command.
+                if command_focus {
+                    state.gamepads[gamepad].release(&SosAction::Confirm);
                     self.state_timer = 0.0;
+                    self.turn_fsm = TurnFsm::SelectCommand;
+                } else if timed_ready {
+                    // Charge-attack timing (per the Python TAS): the RELEASE the
+                    // instant the flag fires is the timed input.
+                    state.gamepads[gamepad].release(&SosAction::Confirm);
+                    self.state_timer = 0.0; // window activity = progress
+                } else {
+                    // Hold Confirm to charge while waiting for the window.
+                    state.gamepads[gamepad].press(&SosAction::Confirm);
+                    if self.state_timer >= STUCK_TIMEOUT {
+                        // Only after a genuine stall (no window activity) do we
+                        // mash to force the turn along.
+                        self.mash_turn(state, dt);
+                    }
                 }
-            }
-            TurnFsm::Done => {
-                state.gamepads[gamepad].release(&SosAction::Confirm);
-                // Anti-hang: if the turn still hasn't passed to someone else, the
-                // open-loop confirms likely desynced — mash to force progress.
-                if self.state_timer >= STUCK_TIMEOUT {
-                    self.mash_turn(state, dt);
-                }
+                self.last_timed_ready = timed_ready;
             }
         }
-
-        self.last_timed_ready = timed_ready;
     }
 
     /// Tap Confirm on every controller in a duty cycle to dismiss mid-fight
@@ -350,35 +458,35 @@ impl CombatManager {
         }
     }
 
-    /// A deliberate menu Confirm with a settle gap before the next press, used
-    /// to step through the command ring and target select. Timings are
-    /// conservative and meant to be tuned against the live game.
+    /// A menu Confirm with a short settle gap before the next press, used to
+    /// step through the command ring and target select.
     fn confirm_press() -> ButtonPress {
         ButtonPress {
             action: SosAction::Confirm,
-            press_time: 0.09,
-            release_time: 0.35,
+            press_time: 0.04,
+            release_time: 0.10,
             ..Default::default()
         }
     }
 
-    /// A crisp Confirm tap for landing a timed hit.
-    fn timed_press() -> ButtonPress {
+    /// A Cancel (B) tap to back out of a menu (e.g. an uncastable combo submenu).
+    fn cancel_press() -> ButtonPress {
         ButtonPress {
-            action: SosAction::Confirm,
-            press_time: 0.07,
-            release_time: 0.14,
+            action: SosAction::Cancel,
+            press_time: 0.04,
+            release_time: 0.12,
             ..Default::default()
         }
     }
 
-    /// A directional tap with a settle gap, used to step the enemy cursor. The
-    /// release gap lets the cursor move and memory update before we re-check.
+    /// A directional tap with a short settle gap, used to step the command/enemy
+    /// cursor. The release gap lets the cursor move and memory update before we
+    /// re-check.
     fn tap_press(action: SosAction) -> ButtonPress {
         ButtonPress {
             action,
-            press_time: 0.06,
-            release_time: 0.28,
+            press_time: 0.04,
+            release_time: 0.12,
             ..Default::default()
         }
     }

@@ -440,7 +440,7 @@ impl MainHelper {
 
                             colored(ui, format!("{}", i + 1));
                             colored(ui, format!("{:?}", appraisal.attacker));
-                            colored(ui, appraisal.action.label().to_string());
+                            colored(ui, appraisal.action.label());
                             colored(ui, format!("{:.5}", appraisal.target_enemy_id));
                             colored(ui, format!("{:.0}", appraisal.expected_damage));
                             if appraisal.lethal {
