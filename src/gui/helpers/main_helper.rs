@@ -1,7 +1,7 @@
 use super::GuiHelper;
 use crate::cli::{Route, repro_command};
 use crate::route::tas;
-use crate::{game_manager::GameManager, state::GameState};
+use crate::{state::GameState, tas_runner::TasRunner};
 
 use crate::assets::ASSETS;
 use crate::combat::{CombatController, appraisal, damage};
@@ -509,12 +509,12 @@ impl GuiHelper for MainHelper {
     fn draw(
         &mut self,
         game_state: &mut GameState,
-        game_manager: &mut Option<GameManager>,
+        tas_runner: &mut Option<TasRunner>,
         ui: &mut egui::Ui,
         _tab: &mut String,
     ) {
         let mut running = false;
-        if let Some(gm) = game_manager {
+        if let Some(gm) = tas_runner {
             let countdown_finished = self.handle_countdown();
             if countdown_finished {
                 gm.start(game_state);
@@ -580,7 +580,7 @@ impl GuiHelper for MainHelper {
                             &game_state.config,
                         )
                     );
-                    *game_manager = Some(tas::create_load_sequence(
+                    *tas_runner = Some(tas::create_load_sequence(
                         self.save_slot,
                         self.auto_save_present,
                     ));
@@ -612,7 +612,7 @@ impl GuiHelper for MainHelper {
                 if let Some(checkpoint) = &self.checkpoint {
                     gm.advance_to_checkpoint(game_state, checkpoint);
                 }
-                *game_manager = Some(gm);
+                *tas_runner = Some(gm);
                 self.countdown = Some(COUNTDOWN_TIMEOUT);
             }
             if ui
@@ -624,7 +624,7 @@ impl GuiHelper for MainHelper {
                     repro_command(Route::Combat, None, None, false, &game_state.config)
                 );
                 let gm = tas::create_combat_test();
-                *game_manager = Some(gm);
+                *tas_runner = Some(gm);
                 self.countdown = Some(1.0);
             }
             // Debug: runs only the relic-selection sequence. Position the game on
@@ -638,12 +638,12 @@ impl GuiHelper for MainHelper {
                     repro_command(Route::Relic, None, None, false, &game_state.config)
                 );
                 let gm = tas::create_relic_test();
-                *game_manager = Some(gm);
+                *tas_runner = Some(gm);
                 self.countdown = Some(1.0);
             }
         }
 
-        if let Some(gm) = game_manager {
+        if let Some(gm) = tas_runner {
             ui.separator();
 
             let paused = gm.is_paused();
@@ -675,7 +675,7 @@ impl GuiHelper for MainHelper {
             self.draw_combat(game_state, ui);
             self.draw_players(game_state, ui);
             self.draw_damage_calculations(game_state, ui);
-            let combat = game_manager.as_ref().and_then(|gm| gm.combat_controller());
+            let combat = tas_runner.as_ref().and_then(|gm| gm.combat_controller());
             self.draw_appraisals(game_state, combat, ui);
             self.draw_moves(game_state, ui);
         } else if lum.active {

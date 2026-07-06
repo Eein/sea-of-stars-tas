@@ -2,16 +2,16 @@
 //!
 //! [`TasCore`] owns everything the TAS needs at runtime that is *not* tied to a
 //! window: the attached game process, the memory managers, the virtual
-//! gamepads, and the optional running [`GameManager`]. Both the GUI ([`State`])
+//! gamepads, and the optional running [`TasRunner`]. Both the GUI ([`State`])
 //! and the headless CLI drive the exact same logic through this struct so there
 //! is a single source of truth for the attach/update/run loop.
 //!
 //! [`State`]: crate::state::State
 
 use crate::config::Config;
-use crate::game_manager::GameManager;
 use crate::memory::MemoryManagers;
 use crate::state::{GameState, StateContext};
+use crate::tas_runner::TasRunner;
 
 use joystick::prelude::*;
 use log::info;
@@ -28,7 +28,7 @@ pub struct TasCore {
     pub context: StateContext,
     pub process_list: ProcessList,
     pub game_state: GameState,
-    pub game_manager: Option<GameManager>,
+    pub tas_runner: Option<TasRunner>,
 }
 
 impl TasCore {
@@ -47,7 +47,7 @@ impl TasCore {
                 config,
                 game_launched_by_tas: false,
             },
-            game_manager: None,
+            tas_runner: None,
         }
     }
 
@@ -137,16 +137,16 @@ impl TasCore {
     }
 
     /// Start the currently-loaded game manager (enters the sequencer root).
-    pub fn start_game_manager(&mut self) {
-        if let Some(gm) = self.game_manager.as_mut() {
+    pub fn start_tas(&mut self) {
+        if let Some(gm) = self.tas_runner.as_mut() {
             gm.start(&mut self.game_state);
         }
     }
 
     /// Advance the running game manager by one frame, if any. Returns `true` on
     /// the frame the sequencer finishes.
-    pub fn run_game_manager(&mut self) -> bool {
-        if let Some(gm) = self.game_manager.as_mut()
+    pub fn run_tas(&mut self) -> bool {
+        if let Some(gm) = self.tas_runner.as_mut()
             && gm.is_running()
         {
             return gm.run(&mut self.game_state);
@@ -155,7 +155,7 @@ impl TasCore {
     }
 
     /// Whether a game manager exists and its sequencer is still running.
-    pub fn game_manager_running(&self) -> bool {
-        self.game_manager.as_ref().is_some_and(|gm| gm.is_running())
+    pub fn tas_running(&self) -> bool {
+        self.tas_runner.as_ref().is_some_and(|gm| gm.is_running())
     }
 }

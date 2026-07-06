@@ -1,5 +1,5 @@
 use super::GuiHelper;
-use crate::{game_manager::GameManager, state::GameState};
+use crate::{state::GameState, tas_runner::TasRunner};
 
 use data::prelude::*;
 
@@ -18,7 +18,7 @@ impl GuiHelper for ShopHelper {
     fn draw(
         &mut self,
         game_state: &mut GameState,
-        _game_manager: &mut Option<GameManager>,
+        _tas_runner: &mut Option<TasRunner>,
         ui: &mut egui::Ui,
         _tab: &mut String,
     ) {

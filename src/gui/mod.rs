@@ -1,20 +1,19 @@
 pub mod helpers;
 pub struct Gui;
-use super::game_manager::GameManager;
 use super::gui::helpers::GuiHelpers;
 use super::state::{GameState, State};
+use super::tas_runner::TasRunner;
 use crate::config::Config;
 use egui_dock::{DockArea, Style};
 
 pub struct TabViewer<'a> {
     helpers: &'a mut GuiHelpers,
     game_state: &'a mut GameState,
-    game_manager: &'a mut Option<GameManager>,
+    tas_runner: &'a mut Option<TasRunner>,
 }
 impl TabViewer<'_> {
     fn draw(&mut self, ui: &mut egui::Ui, tab: &mut String) {
-        self.helpers
-            .draw(self.game_state, self.game_manager, ui, tab);
+        self.helpers.draw(self.game_state, self.tas_runner, ui, tab);
     }
 }
 
@@ -89,7 +88,7 @@ impl Gui {
                     ui,
                     &mut TabViewer {
                         game_state: &mut state.core.game_state,
-                        game_manager: &mut state.core.game_manager,
+                        tas_runner: &mut state.core.tas_runner,
                         helpers: &mut state.gui.helpers,
                     },
                 );

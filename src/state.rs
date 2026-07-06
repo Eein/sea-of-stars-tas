@@ -130,7 +130,7 @@ impl eframe::App for State {
 
         // Advance the running game manager, if any.
         // TODO(orkaboy): Should probably not be here
-        let _ = self.core.run_game_manager();
+        let _ = self.core.run_tas();
 
         // puffin::GlobalProfiler::lock().new_frame();
         Gui::update(self, ui, frame);
