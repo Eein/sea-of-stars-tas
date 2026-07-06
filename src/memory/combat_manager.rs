@@ -147,12 +147,6 @@ pub struct CombatMove {
     /// Whether the move deals damage: its `damageTypeDefinitions` list is
     /// non-empty. Heals/buffs have no damage types.
     pub is_damaging: bool,
-    /// `unlockable` field on the move definition (0 = already learned, per the
-    /// combo availability signal). TEMP diagnostic while REing combo gating.
-    pub unlockable: Option<i32>,
-    /// First matching `learned`-ish field found on the move definition, as
-    /// `name=value`. TEMP diagnostic while REing combo gating.
-    pub learned_dbg: Option<String>,
     /// Enemy `unique_id` under this move's single-target cursor, populated only
     /// when this move owns the active target-selector screen.
     pub main_target_guid: Option<String>,
@@ -244,22 +238,6 @@ impl CombatMove {
         let is_damaging = memory_context
             .read_named_ptr(move_ptr, "damageTypeDefinitions")
             .is_some_and(|list| !memory_context.list_item_ptrs(list).is_empty());
-        // TEMP: probe candidate combo-availability fields while REing.
-        let unlockable = memory_context.read_named::<i32>(move_ptr, "unlockable");
-        let learned_dbg = [
-            "learned",
-            "isLearned",
-            "unlocked",
-            "isUnlocked",
-            "learnedByDefault",
-            "available",
-        ]
-        .iter()
-        .find_map(|name| {
-            memory_context
-                .read_named::<u8>(move_ptr, name)
-                .map(|v| format!("{name}={v}"))
-        });
         let (main_target_guid, current_target_guid) =
             match Self::active_screen(memory_context, move_ptr) {
                 Some(screen) => (
@@ -274,8 +252,6 @@ impl CombatMove {
             skill_point_cost,
             loaded,
             is_damaging,
-            unlockable,
-            learned_dbg,
             main_target_guid,
             current_target_guid,
         }
