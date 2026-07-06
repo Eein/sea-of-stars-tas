@@ -329,10 +329,10 @@ impl MainHelper {
                 ui.label(format!(
                     "Enemy: {:.5} | Damage: {:.3}-{:.3} Timed: {:.3}-{:.3}",
                     enemy.unique_id,
-                    min_damage.0.round(),
-                    max_damage.0.round(),
-                    (min_damage.0 + min_damage.1).round(),
-                    (max_damage.0 + max_damage.1).round()
+                    min_damage.0.floor(),
+                    max_damage.0.floor(),
+                    (min_damage.0 + min_damage.1).floor(),
+                    (max_damage.0 + max_damage.1).floor()
                 ));
             }
         }
@@ -385,15 +385,14 @@ impl MainHelper {
                 {
                     modifiers *= value.value;
                 }
-                if player.mana_charge_count > 0 {
-                    if let Some((_key, value)) = enemy
+                if player.mana_charge_count > 0
+                    && let Some((_key, value)) = enemy
                         .damage_type_modifiers
                         .items
                         .iter()
                         .find(|(k, _v)| k.key == CombatDamageType::Moon)
-                    {
-                        modifiers *= value.value;
-                    }
+                {
+                    modifiers *= value.value;
                 }
                 modifiers
             }
