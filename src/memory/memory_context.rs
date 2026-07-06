@@ -56,4 +56,66 @@ impl<'a> MemoryContext<'a> {
         self.class
             .get_field_offset(self.process, self.module, field)
     }
+
+    /// Resolve a named field's offset on an *arbitrary* il2cpp object by reading
+    /// its class from the object header. Unlike hardcoded offsets, this survives
+    /// game patches that shift struct layouts.
+    ///
+    /// Falls back to the C# auto-property backing-field name
+    /// (`<field>k__BackingField`) when the plain name doesn't resolve, since many
+    /// of these fields are exposed as properties.
+    pub fn field_offset_of(&self, obj_ptr: u64, field: &str) -> Option<u32> {
+        if obj_ptr == 0 {
+            return None;
+        }
+        let class_ptr = self.process.read_pointer::<u64>(obj_ptr).ok()?;
+        let class = Class { class: class_ptr };
+        class
+            .get_field_offset(self.process, self.module, field)
+            .or_else(|| {
+                let backing = format!("<{field}>k__BackingField");
+                class.get_field_offset(self.process, self.module, &backing)
+            })
+    }
+
+    /// Read a pointer-typed field by name from an arbitrary il2cpp object,
+    /// returning `None` on a failed read or a null pointer.
+    pub fn read_named_ptr(&self, obj_ptr: u64, field: &str) -> Option<u64> {
+        let offset = self.field_offset_of(obj_ptr, field)?;
+        self.process
+            .read_pointer::<u64>(obj_ptr + offset as u64)
+            .ok()
+            .filter(|p| *p != 0)
+    }
+
+    /// Read the element pointers of a Unity `List<T>` object (its `_items`
+    /// backing array). Capped to a sane length as a safety bound.
+    pub fn list_item_ptrs(&self, list_ptr: u64) -> Vec<u64> {
+        const ITEMS_OFFSET: u64 = 0x10;
+        const COUNT_OFFSET: u64 = 0x18;
+        const ITEMS_0_INDEX_BASE: u64 = 0x20;
+        const STRIDE: u64 = 0x8;
+        const MAX_ITEMS: u32 = 64;
+
+        let mut out = Vec::new();
+        if list_ptr == 0 {
+            return out;
+        }
+        let Ok(items) = self.process.read_pointer::<u64>(list_ptr + ITEMS_OFFSET) else {
+            return out;
+        };
+        let Ok(count) = self.process.read_pointer::<u32>(items + COUNT_OFFSET) else {
+            return out;
+        };
+        for i in 0..count.min(MAX_ITEMS) {
+            if let Ok(item) = self
+                .process
+                .read_pointer::<u64>(items + ITEMS_0_INDEX_BASE + i as u64 * STRIDE)
+                && item != 0
+            {
+                out.push(item);
+            }
+        }
+        out
+    }
 }

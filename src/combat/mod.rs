@@ -46,7 +46,11 @@ enum TurnFsm {
     Idle,
     /// Press Confirm to pick the (default-highlighted) Attack command.
     ConfirmAttack,
-    /// Press Confirm to commit the attack on the default-highlighted target.
+    /// Move the enemy cursor onto the chosen appraisal's target (closed-loop on
+    /// `selected_attack_target_guid`), bailing to the default after a bounded
+    /// number of taps.
+    SelectTarget,
+    /// Press Confirm to commit the attack on the cursor's current target.
     ConfirmTarget,
     /// Watch `timed_attack_ready` and tap Confirm on each rising edge.
     AwaitTimedHit,
@@ -79,6 +83,9 @@ pub struct CombatManager {
     last_timed_ready: bool,
     /// Whether a timed-hit Confirm press is currently in flight.
     timed_pressing: bool,
+    /// Cursor taps spent this turn trying to reach the chosen target, so we can
+    /// bail to the default target instead of looping forever.
+    target_taps: u32,
     // Old WIP FSM state, kept for reference:
     // fsm: CombatFsm,
     // controller: Option<Box<dyn EncounterController>>,
@@ -98,6 +105,7 @@ impl Default for CombatManager {
             state_timer: 0.0,
             last_timed_ready: false,
             timed_pressing: false,
+            target_taps: 0,
             // Old WIP FSM state, kept for reference:
             // fsm: CombatFsm::Idle,
             // controller: None,
@@ -160,6 +168,7 @@ impl CombatManager {
         self.state_timer = 0.0;
         self.last_timed_ready = false;
         self.timed_pressing = false;
+        self.target_taps = 0;
     }
 
     /// Mash Confirm on the controller of the player whose turn it is.
@@ -197,6 +206,9 @@ impl CombatManager {
         /// If a turn never yields (open-loop confirms desynced), fall back to
         /// mashing so the fight can't hard-hang.
         const STUCK_TIMEOUT: f64 = 6.0;
+        /// Cursor taps to spend chasing the chosen target before committing on
+        /// whatever the cursor lands on (mirrors the Python bot's bail-out).
+        const MAX_TARGET_TAPS: u32 = 12;
 
         let gamepad = Self::active_gamepad(state);
         let cmd = &state.memory_managers.combat_manager.data;
@@ -206,11 +218,16 @@ impl CombatManager {
             .items
             .iter()
             .any(|p| p.selected && p.timed_attack_ready);
+        // UUID currently under the target cursor (may be stale/None until the
+        // offsets are verified live).
+        let cursor_target = cmd.selected_attack_target_guid.clone();
         let turn = state
             .memory_managers
             .encounter_players_manager
             .data
             .current_player_index;
+        // The enemy the appraisal wants to hit, if any.
+        let want_target = self.chosen.as_ref().map(|a| a.target_enemy_id.clone());
 
         // Turn boundary: a different active index means a fresh actor. Reset and
         // let the settle delay elapse before the first press.
@@ -220,6 +237,7 @@ impl CombatManager {
             self.state_timer = 0.0;
             self.last_timed_ready = false;
             self.timed_pressing = false;
+            self.target_taps = 0;
             self.turn_fsm = TurnFsm::Idle;
             self.last_gamepad = Some(gamepad);
         }
@@ -237,9 +255,32 @@ impl CombatManager {
             }
             TurnFsm::ConfirmAttack => {
                 if self.btn.update(&mut state.gamepads[gamepad], dt) {
-                    self.btn = Self::confirm_press();
                     self.state_timer = 0.0;
-                    self.turn_fsm = TurnFsm::ConfirmTarget;
+                    self.turn_fsm = TurnFsm::SelectTarget;
+                }
+            }
+            TurnFsm::SelectTarget => {
+                // Drive any in-flight cursor tap to completion first.
+                if !self.btn.done() {
+                    self.btn.update(&mut state.gamepads[gamepad], dt);
+                } else {
+                    // Commit when the cursor is on the chosen enemy, when we have
+                    // no preference, or after exhausting the tap budget (bail to
+                    // the default target rather than loop forever).
+                    let on_target = match (&want_target, &cursor_target) {
+                        (Some(want), Some(have)) => want == have,
+                        (None, _) => true,
+                        _ => false,
+                    };
+                    if on_target || self.target_taps >= MAX_TARGET_TAPS {
+                        self.btn = Self::confirm_press();
+                        self.state_timer = 0.0;
+                        self.turn_fsm = TurnFsm::ConfirmTarget;
+                    } else {
+                        // Step the cursor one enemy over and re-check next frame.
+                        self.btn = Self::tap_press(SosAction::MenuRight);
+                        self.target_taps += 1;
+                    }
                 }
             }
             TurnFsm::ConfirmTarget => {
@@ -327,6 +368,17 @@ impl CombatManager {
             action: SosAction::Confirm,
             press_time: 0.07,
             release_time: 0.14,
+            ..Default::default()
+        }
+    }
+
+    /// A directional tap with a settle gap, used to step the enemy cursor. The
+    /// release gap lets the cursor move and memory update before we re-check.
+    fn tap_press(action: SosAction) -> ButtonPress {
+        ButtonPress {
+            action,
+            press_time: 0.06,
+            release_time: 0.28,
             ..Default::default()
         }
     }

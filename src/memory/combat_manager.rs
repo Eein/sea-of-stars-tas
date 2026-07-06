@@ -125,6 +125,107 @@ pub struct CombatEnemy {
     pub live_mana_spawn_quantity: u32,
 }
 
+/// One entry of an actor's `allMoveDefinitions`.
+///
+/// Read by resolved field name (not the `UnityItem` trait) because the walk
+/// needs il2cpp field-name resolution, which requires `module` — something
+/// `UnityItem::read` doesn't receive. Grows the move's cost/damage-types as
+/// appraisals need them.
+#[derive(Default, Debug, Clone)]
+pub struct CombatMove {
+    /// The move's internal id/name (`combatMoveId`), used to tell moves apart
+    /// (e.g. basic attack vs a named skill).
+    pub move_id: Option<String>,
+    /// Enemy `unique_id` under this move's single-target cursor, populated only
+    /// when this move owns the active target-selector screen.
+    pub main_target_guid: Option<String>,
+    /// Enemy `unique_id` under this move's AoE cursor, populated only when this
+    /// move owns the active target-selector screen.
+    pub current_target_guid: Option<String>,
+}
+
+impl CombatMove {
+    /// Read a C# `System.String` field by name (chars at object `+0x14`).
+    fn read_string(memory_context: &MemoryContext, obj: u64, field: &str) -> Option<String> {
+        let str_obj = memory_context.read_named_ptr(obj, field)?;
+        let chars = memory_context
+            .process
+            .read_pointer::<ArrayWString<64>>(str_obj + 0x14)
+            .ok()?;
+        let out = String::from_utf16(chars.as_slice()).ok()?;
+        (!out.is_empty()).then_some(out)
+    }
+
+    /// Resolve a move entry to its `targetSelectorScreen`.
+    ///
+    /// Handles both element shapes: a static `MoveDefinition` (which wraps a
+    /// `combatMoveComponent`) and a live loaded move that *is* the component.
+    fn resolve_screen(memory_context: &MemoryContext, move_ptr: u64) -> Option<u64> {
+        let component = memory_context
+            .read_named_ptr(move_ptr, "combatMoveComponent")
+            .unwrap_or(move_ptr);
+        memory_context
+            .read_named_ptr(component, "targetSelector")
+            .and_then(|ts| memory_context.read_named_ptr(ts, "targetSelectorScreen"))
+    }
+
+    /// Resolve a `CombatTarget` to its enemy's `unique_id`:
+    /// `target -> owner -> enemy -> uniqueID -> guid`.
+    fn resolve_target_guid(memory_context: &MemoryContext, target: u64) -> Option<String> {
+        let unique_id = memory_context
+            .read_named_ptr(target, "owner")
+            .and_then(|p| memory_context.read_named_ptr(p, "enemy"))
+            .and_then(|p| memory_context.read_named_ptr(p, "uniqueID"))?;
+        Self::read_string(memory_context, unique_id, "guid")
+    }
+
+    /// Guid off a named target field on the screen (e.g. `currentTarget`).
+    fn screen_target_guid(
+        memory_context: &MemoryContext,
+        screen: u64,
+        field: &str,
+    ) -> Option<String> {
+        memory_context
+            .read_named_ptr(screen, field)
+            .and_then(|t| Self::resolve_target_guid(memory_context, t))
+    }
+
+    /// The move's `targetSelectorScreen` iff it is `active`. Only the active
+    /// screen reflects the live cursor; all others hold a stale last target.
+    fn active_screen(memory_context: &MemoryContext, move_ptr: u64) -> Option<u64> {
+        let screen = Self::resolve_screen(memory_context, move_ptr)?;
+        let active = memory_context
+            .field_offset_of(screen, "active")
+            .and_then(|off| {
+                memory_context
+                    .process
+                    .read_pointer::<u8>(screen + off as u64)
+                    .ok()
+            })
+            .is_some_and(|b| matches!(b, 1));
+        active.then_some(screen)
+    }
+
+    /// Read a move: its id and, when it owns the live target cursor, the enemy
+    /// under `mainTarget` (single-target) and `currentTarget` (AoE).
+    fn read(memory_context: &MemoryContext, move_ptr: u64) -> CombatMove {
+        let move_id = Self::read_string(memory_context, move_ptr, "combatMoveId");
+        let (main_target_guid, current_target_guid) =
+            match Self::active_screen(memory_context, move_ptr) {
+                Some(screen) => (
+                    Self::screen_target_guid(memory_context, screen, "mainTarget"),
+                    Self::screen_target_guid(memory_context, screen, "currentTarget"),
+                ),
+                None => (None, None),
+            };
+        CombatMove {
+            move_id,
+            main_target_guid,
+            current_target_guid,
+        }
+    }
+}
+
 #[derive(Default, Debug)]
 pub struct CombatManagerData {
     pub encounter_active: bool,
@@ -136,7 +237,19 @@ pub struct CombatManagerData {
     pub enemies: UnityList<CombatEnemy>,
     pub players: UnityList<CombatPlayer>,
     pub selected_character: Option<PlayerPartyCharacter>,
+    /// Whether the top-level battle command ring (Attack/Skill/Combo/Item) has
+    /// focus.
+    pub battle_command_has_focus: bool,
+    /// Highlighted battle command index while the ring has focus
+    /// (`Attack=0, Skill=1, Combo=2, Item=3`).
+    pub battle_command_index: Option<i64>,
+    /// `unique_id` (UUID) of the enemy currently under the targeting cursor,
+    /// if a target-select is active.
+    pub selected_attack_target_guid: Option<String>,
 }
+
+/// Sentinel returned by the game for an unset pointer.
+const NULL_POINTER: u64 = 0xFFFF_FFFF;
 
 impl Default for MemoryManager<CombatManagerData> {
     fn default() -> Self {
@@ -177,6 +290,8 @@ impl MemoryManagerUpdate for CombatManagerData {
             self.update_enemies(&memory_context)?;
             self.update_players(&memory_context)?;
             self.update_selected_character(&memory_context)?;
+            self.update_battle_commands(&memory_context)?;
+            self.update_current_target(&memory_context)?;
         }
 
         Ok(())
@@ -196,6 +311,84 @@ impl CombatManagerData {
         }
         self.selected_character = None;
 
+        Ok(())
+    }
+
+    /// Read the top-level battle command ring focus + highlighted index.
+    ///
+    /// TODO(verify-live): pointer path and offsets are ported from
+    /// shenef/SoS-TAS `memory/combat_manager.py::_read_battle_commands`. The
+    /// game's structs have drifted since (the enemy struct moved +0x10), so
+    /// these must be re-derived against the running game before the executor
+    /// trusts them. Reads fail-soft to `false`/`None`.
+    pub fn update_battle_commands(
+        &mut self,
+        memory_context: &MemoryContext,
+    ) -> Result<(), MemoryError> {
+        self.battle_command_has_focus = false;
+        self.battle_command_index = None;
+
+        if let Ok(enc) = memory_context.follow_fields::<u64>(&["currentEncounter"])
+            && let Ok(selector) = memory_context
+                .process
+                .read_pointer_path::<u64>(enc, &[0x140, 0x50, 0x68])
+            && selector != NULL_POINTER
+            && selector != 0
+        {
+            if let Ok(focus) = memory_context.process.read_pointer::<u8>(selector + 0x3C) {
+                self.battle_command_has_focus = matches!(focus, 1);
+            }
+            if let Ok(index) = memory_context.process.read_pointer::<i64>(selector + 0x40) {
+                self.battle_command_index = Some(index);
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Derive the enemy currently under the targeting cursor.
+    ///
+    /// There is no direct cursor/target-index field. We scan each actor's move
+    /// sources and read the target off whichever move's `targetSelectorScreen`
+    /// is `active`, yielding that enemy's `unique_id`. Resolved entirely by field
+    /// name, so it survives struct-layout drift. Callers match it against
+    /// `enemies[..].unique_id`.
+    pub fn update_current_target(
+        &mut self,
+        memory_context: &MemoryContext,
+    ) -> Result<(), MemoryError> {
+        self.selected_attack_target_guid = None;
+
+        let Ok(enc) = memory_context.follow_fields::<u64>(&["currentEncounter"]) else {
+            return Ok(());
+        };
+        let Some(actors) = memory_context.read_named_ptr(enc, "playerActors") else {
+            return Ok(());
+        };
+
+        // Every move's target-selector screen reflects the same live cursor, so
+        // reading the active one off `allMoveDefinitions` is enough. Prefer
+        // `mainTarget` (single-target cursor) over `currentTarget` (AoE cursor).
+        let mut main_hit: Option<String> = None;
+        let mut current_hit: Option<String> = None;
+
+        for actor in memory_context.list_item_ptrs(actors) {
+            let Some(fighter_def) = memory_context.read_named_ptr(actor, "fighterDefinition")
+            else {
+                continue;
+            };
+            let Some(moves) = memory_context.read_named_ptr(fighter_def, "allMoveDefinitions")
+            else {
+                continue;
+            };
+            for move_ptr in memory_context.list_item_ptrs(moves) {
+                let move_def = CombatMove::read(memory_context, move_ptr);
+                main_hit = main_hit.or(move_def.main_target_guid);
+                current_hit = current_hit.or(move_def.current_target_guid);
+            }
+        }
+
+        self.selected_attack_target_guid = main_hit.or(current_hit);
         Ok(())
     }
 
