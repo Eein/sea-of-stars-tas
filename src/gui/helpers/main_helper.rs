@@ -4,11 +4,9 @@ use crate::route::tas;
 use crate::{game_manager::GameManager, state::GameState};
 
 use crate::assets::ASSETS;
+use crate::combat::{appraisal, damage};
 use crate::memory::combat_manager::CombatDamageType;
-use crate::memory::combat_manager::{CombatEnemy, CombatPlayer};
 use crate::memory::level_up_manager::LevelUpUpgrade;
-
-use data::prelude::PlayerPartyCharacter;
 
 use delta::Timer;
 use log::info;
@@ -324,8 +322,8 @@ impl MainHelper {
             ui.label(format!("{:?}", player.character));
             for enemy in &gmd.enemies.items {
                 //calculate basic attack damage
-                let min_damage = Self::calculate_basic_attack_damage(player, enemy, 0.0);
-                let max_damage = Self::calculate_basic_attack_damage(player, enemy, 3.0);
+                let min_damage = damage::basic_attack_damage(player, enemy, damage::MIN_ROLL);
+                let max_damage = damage::basic_attack_damage(player, enemy, damage::MAX_ROLL);
                 // Floor is a guess here, round overestimates. Will rescan the source formulas with
                 // ghidra at a later date.
                 ui.label(format!(
@@ -340,102 +338,21 @@ impl MainHelper {
         }
     }
 
-    // The final damage calculation is (int)value, so just floor them.
-    fn calculate_basic_attack_damage(
-        player: &CombatPlayer,
-        enemy: &CombatEnemy,
-        random: f32,
-    ) -> (f32, f32) {
-        // floats are very specific - this matters
-        const PHYSICAL_DEFENSE_CAP: f32 = 150.0;
-        const MANA_CHARGE_STAT_MULTIPLIER: f32 = 0.330000;
-        const MAGICAL_DEFENSE_CAP: f32 = 150.0;
-        const TIMED_HIT_MULTIPLIER: f32 = 1.299999; // in globalCombatSettings -> basicAttackTimedHitMultiplier
+    /// Show the appraisal (decision) layer's ranked candidate actions and the
+    /// chosen top action, computed from the current combat snapshot.
+    fn draw_appraisals(&self, game_state: &mut GameState, ui: &mut egui::Ui) {
+        let cmd = &game_state.memory_managers.combat_manager.data;
+        let appraisals = appraisal::generate_appraisals(cmd);
 
-        // manually do this for now
-        let damage_type_attack_modifier = match player.character {
-            PlayerPartyCharacter::Zale => {
-                let mut modifiers = 1.0;
-                if let Some((_key, value)) = enemy
-                    .damage_type_modifiers
-                    .items
-                    .iter()
-                    .find(|(k, _v)| k.key == CombatDamageType::Sword)
-                {
-                    modifiers *= value.value;
-                }
-                if player.mana_charge_count > 0 {
-                    // find modifier in enemy weaknesses
-                    if let Some((_key, value)) = enemy
-                        .damage_type_modifiers
-                        .items
-                        .iter()
-                        .find(|(k, _v)| k.key == CombatDamageType::Sun)
-                    {
-                        modifiers *= value.value;
-                    }
-                }
-                modifiers
-            }
-            PlayerPartyCharacter::Valere => {
-                let mut modifiers = 1.0;
-                if let Some((_key, value)) = enemy
-                    .damage_type_modifiers
-                    .items
-                    .iter()
-                    .find(|(k, _v)| k.key == CombatDamageType::Blunt)
-                {
-                    modifiers *= value.value;
-                }
-                if player.mana_charge_count > 0
-                    && let Some((_key, value)) = enemy
-                        .damage_type_modifiers
-                        .items
-                        .iter()
-                        .find(|(k, _v)| k.key == CombatDamageType::Moon)
-                {
-                    modifiers *= value.value;
-                }
-                modifiers
-            }
-
-            PlayerPartyCharacter::Garl => {
-                let mut modifiers = 1.0;
-                if let Some((_key, value)) = enemy
-                    .damage_type_modifiers
-                    .items
-                    .iter()
-                    .find(|(k, _v)| k.key == CombatDamageType::Blunt)
-                {
-                    modifiers *= value.value;
-                }
-                modifiers
-            }
-            _ => 1.0,
+        ui.separator();
+        ui.label("Appraisals");
+        match appraisals.first() {
+            Some(best) => ui.label(format!("Chosen: {}", best.describe())),
+            None => ui.label("Chosen: (none)"),
         };
-
-        // Apply boosted damage emodifier to physical attack on basic attacks
-        let boosted_live_mana_attack = player.magical_attack as f32
-            * MANA_CHARGE_STAT_MULTIPLIER
-            * damage_type_attack_modifier; // + random;
-
-        let total_physical_attack =
-            (damage_type_attack_modifier * player.physical_attack as f32) + random;
-
-        let magical_defense_cap_ratio = enemy.magical_defense as f32 / MAGICAL_DEFENSE_CAP;
-        let physical_defense_cap_ratio = enemy.physical_defense as f32 / PHYSICAL_DEFENSE_CAP;
-
-        let mut total_magical_attack = boosted_live_mana_attack * player.mana_charge_count as f32;
-        total_magical_attack *= 1.0 - magical_defense_cap_ratio; // deduct enemy defense ratio
-
-        let mut total_physical_attack = total_physical_attack;
-        total_physical_attack *= 1.0 - physical_defense_cap_ratio; // deduct enemy defense ratio
-
-        let total_attack = total_magical_attack + total_physical_attack;
-
-        let timed_hit_damage = (TIMED_HIT_MULTIPLIER * total_attack) - total_attack;
-
-        (total_attack, timed_hit_damage)
+        for (i, appraisal) in appraisals.iter().enumerate().take(8) {
+            ui.label(format!("{}. {}", i + 1, appraisal.describe()));
+        }
     }
 }
 
@@ -609,6 +526,7 @@ impl GuiHelper for MainHelper {
             self.draw_combat(game_state, ui);
             self.draw_players(game_state, ui);
             self.draw_damage_calculations(game_state, ui);
+            self.draw_appraisals(game_state, ui);
         } else if lum.active {
             self.draw_level_up(game_state, ui);
         } else if tsmd.active {
