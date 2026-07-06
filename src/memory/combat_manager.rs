@@ -289,10 +289,66 @@ pub struct CombatManagerData {
     pub highlighted_combo_id: Option<String>,
     /// Whether the highlighted combo is currently castable (`canCast`).
     pub highlighted_combo_castable: bool,
+    /// `combatMoveId` of the skill highlighted in the skill submenu, or `None`
+    /// when the submenu isn't open.
+    pub highlighted_skill_id: Option<String>,
+    /// Whether the highlighted skill is currently castable (`canCast`).
+    pub highlighted_skill_castable: bool,
 }
 
 /// Sentinel returned by the game for an unset pointer.
 const NULL_POINTER: u64 = 0xFFFF_FFFF;
+
+/// `(Some(id), castable)` if present, else `(None, false)`.
+fn split(hit: Option<(String, bool)>) -> (Option<String>, bool) {
+    match hit {
+        Some((id, castable)) => (Some(id), castable),
+        None => (None, false),
+    }
+}
+
+/// Read the highlighted ability in a submenu (combo or skill): the selector at
+/// `offset` must be focused; its `items[selectedItemIndex]` is a
+/// `{Combo,SpecialMove}SelectorItem` whose `playerCombatMoveDefinition.combatMoveId`
+/// names the move and `canCast` says whether it's castable. `None` otherwise
+/// (submenu closed, or the items aren't move items — e.g. the command ring).
+fn read_highlighted_move(
+    memory_context: &MemoryContext,
+    enc: u64,
+    offset: u64,
+) -> Option<(String, bool)> {
+    let selector = memory_context
+        .process
+        .read_pointer_path::<u64>(enc, &[0x140, 0x50, offset])
+        .ok()
+        .filter(|s| *s != NULL_POINTER && *s != 0)?;
+    // Only trust the highlighted item while this selector has focus.
+    memory_context
+        .process
+        .read_pointer::<u8>(selector + 0x3C)
+        .ok()
+        .filter(|f| matches!(f, 1))?;
+    let idx = memory_context
+        .process
+        .read_pointer::<i64>(selector + 0x40)
+        .ok()?;
+    let items = memory_context.read_named_ptr(selector, "items")?;
+    let item = *memory_context
+        .list_item_ptrs(items)
+        .get(usize::try_from(idx).ok()?)?;
+    let move_def = memory_context.read_named_ptr(item, "playerCombatMoveDefinition")?;
+    let id = CombatMove::read_string(memory_context, move_def, "combatMoveId")?;
+    let castable = memory_context
+        .field_offset_of(item, "canCast")
+        .and_then(|off| {
+            memory_context
+                .process
+                .read_pointer::<u8>(item + off as u64)
+                .ok()
+        })
+        .is_some_and(|b| matches!(b, 1));
+    Some((id, castable))
+}
 
 /// Read a command-menu selector (`currentEncounter -> 0x140 -> 0x50 -> offset`):
 /// `(has_focus, highlighted_index)`. Returns `None` if the selector is unset.
@@ -414,49 +470,18 @@ impl CombatManagerData {
             self.skill_command_index = index;
         }
 
-        // The combo highlighted in the combo submenu. The submenu reuses the
-        // battle-command selector, whose `items` become `ComboMoveSelectorItem`s;
-        // the highlighted one's `playerCombatMoveDefinition.combatMoveId` names
-        // the combo and `canCast` says whether it's currently castable. Both are
-        // cleared when the submenu isn't open.
-        (self.highlighted_combo_id, self.highlighted_combo_castable) = self
-            .read_highlighted_combo(memory_context, enc)
-            .map(|(id, castable)| (Some(id), castable))
-            .unwrap_or((None, false));
+        // The move highlighted in the ability submenus. Both submenus reuse a
+        // command selector whose `items` become `{Combo,SpecialMove}SelectorItem`s
+        // — the highlighted one's `playerCombatMoveDefinition.combatMoveId` names
+        // the ability and `canCast` says whether it's castable. Combos live on the
+        // battle selector (0x68), skills on the skill selector (0x78). Cleared
+        // when the respective submenu isn't open.
+        (self.highlighted_combo_id, self.highlighted_combo_castable) =
+            split(read_highlighted_move(memory_context, enc, 0x68));
+        (self.highlighted_skill_id, self.highlighted_skill_castable) =
+            split(read_highlighted_move(memory_context, enc, 0x78));
 
         Ok(())
-    }
-
-    fn read_highlighted_combo(
-        &self,
-        memory_context: &MemoryContext,
-        enc: u64,
-    ) -> Option<(String, bool)> {
-        let selector = memory_context
-            .process
-            .read_pointer_path::<u64>(enc, &[0x140, 0x50, 0x68])
-            .ok()
-            .filter(|s| *s != NULL_POINTER && *s != 0)?;
-        let idx = memory_context
-            .process
-            .read_pointer::<i64>(selector + 0x40)
-            .ok()?;
-        let items = memory_context.read_named_ptr(selector, "items")?;
-        let item = *memory_context
-            .list_item_ptrs(items)
-            .get(usize::try_from(idx).ok()?)?;
-        let move_def = memory_context.read_named_ptr(item, "playerCombatMoveDefinition")?;
-        let id = CombatMove::read_string(memory_context, move_def, "combatMoveId")?;
-        let castable = memory_context
-            .field_offset_of(item, "canCast")
-            .and_then(|off| {
-                memory_context
-                    .process
-                    .read_pointer::<u8>(item + off as u64)
-                    .ok()
-            })
-            .is_some_and(|b| matches!(b, 1));
-        Some((id, castable))
     }
 
     /// Enumerate each party member's moves and derive the live target cursor.
