@@ -70,7 +70,7 @@ impl CombatController {
             self.execute_turn(state, dt);
         } else {
             self.reset_turn();
-            self.mash_turn(state, dt);
+            self.mash_all_turn(state, dt);
         }
 
         // Done once the encounter ends.
@@ -93,24 +93,14 @@ impl CombatController {
         self.turn_index = None;
     }
 
-    /// Mash Confirm on the controller of the player whose turn it is.
-    ///
-    /// Re-read every frame, since the active player changes turn-to-turn. If the
-    /// encounter-players manager isn't active, assume a single player on
-    /// controller 0. This is the fallback path for fights the executor doesn't
-    /// model yet.
-    fn mash_turn(&mut self, state: &mut GameState, dt: f64) {
-        let gamepad = Self::active_gamepad(state);
-
-        // If the active player changed, release every controller and restart the
-        // mash so we never leave a button held on the previous one.
-        if self.last_gamepad != Some(gamepad) {
-            state.release_all();
-            self.btn = skills::mash_press();
-            self.last_gamepad = Some(gamepad);
-        }
-
-        if self.btn.update(&mut state.gamepads[gamepad], dt) {
+    /// Mash Confirm on *every* controller to force a scripted/unmodelled fight
+    /// along. Unlike a per-player mash, this doesn't try to guess which pad owns
+    /// the prompt: scripted encounters (KidsCavern, tutorials) don't route
+    /// through `current_player_index`, and by these fights the party has several
+    /// players, so a single-pad mash on the wrong controller stalls the fight.
+    fn mash_all_turn(&mut self, state: &mut GameState, dt: f64) {
+        self.last_gamepad = None;
+        if self.btn.update_all(&mut state.gamepads, dt) {
             self.btn = skills::mash_press();
         }
     }

@@ -41,6 +41,23 @@ impl ButtonPress {
         false
     }
 
+    /// Like [`update`](Self::update) but drives *every* gamepad in lockstep.
+    /// Used to mash a prompt when we don't know which player owns it — scripted
+    /// fights don't route through `current_player_index`, and the party has
+    /// several players, so a single-pad mash can land on the wrong controller.
+    pub fn update_all(&mut self, gamepads: &mut [GenericJoystick], delta: f64) -> bool {
+        self.timer += delta;
+        let pressing = self.timer < self.press_time;
+        for gamepad in gamepads.iter_mut() {
+            if pressing {
+                gamepad.press(&self.action);
+            } else {
+                gamepad.release(&self.action);
+            }
+        }
+        !pressing && self.done()
+    }
+
     pub fn done(&self) -> bool {
         self.timer >= self.release_time
     }
