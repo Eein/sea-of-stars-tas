@@ -610,10 +610,7 @@ impl CombatManagerData {
     ///
     /// The controller object's il2cpp class name *is* the encounter type
     /// (`EncounterController` for normal fights, `KidsCavernEncounter`,
-    /// `FirstEncounter`, the tutorials, …). We resolve it with proper reflection
-    /// (`Class::from_object` + the module's version-correct name offset) rather
-    /// than a hardcoded struct offset, which had drifted and silently read
-    /// garbage — so every fight used to fall through to `Basic`.
+    /// `FirstEncounter`, the tutorials, …)
     pub fn update_combat_controller_type(
         &mut self,
         memory_context: &MemoryContext,
