@@ -95,6 +95,61 @@ impl<'a> MemoryContext<'a> {
         self.process.read_pointer::<T>(obj_ptr + offset as u64).ok()
     }
 
+    /// Read the element pointers of a `HashSet<T>` of reference-typed elements
+    /// (the `System.Collections.Generic.HashSet` layout: `_slots` at `+0x18`,
+    /// `_lastIndex` at `+0x24`; each `Slot` is `{ i32 hashCode; i32 next; T value }`
+    /// = 16 bytes, live when `hashCode >= 0`, with the element pointer at
+    /// `slot+0x8`). The `List<T>` analogue is [`list_item_ptrs`](Self::list_item_ptrs).
+    pub fn hashset_item_ptrs(&self, set_ptr: u64) -> Vec<u64> {
+        const SLOTS_OFFSET: u64 = 0x18;
+        const LAST_INDEX_OFFSET: u64 = 0x24;
+        const SLOTS_ELEMS_BASE: u64 = 0x20;
+        const SLOT_STRIDE: u64 = 0x10;
+        const SLOT_VALUE_OFFSET: u64 = 0x8;
+        const MAX_ITEMS: i32 = 128;
+
+        let mut out = Vec::new();
+        if set_ptr == 0 {
+            return out;
+        }
+        let Ok(slots) = self.process.read_pointer::<u64>(set_ptr + SLOTS_OFFSET) else {
+            return out;
+        };
+        let Ok(last_index) = self.process.read_pointer::<i32>(set_ptr + LAST_INDEX_OFFSET) else {
+            return out;
+        };
+        if slots == 0 {
+            return out;
+        }
+        for i in 0..last_index.clamp(0, MAX_ITEMS) {
+            let slot = slots + SLOTS_ELEMS_BASE + i as u64 * SLOT_STRIDE;
+            // Free slots have hashCode < 0; skip them.
+            if self.process.read_pointer::<i32>(slot).unwrap_or(-1) < 0 {
+                continue;
+            }
+            if let Ok(value) = self.process.read_pointer::<u64>(slot + SLOT_VALUE_OFFSET)
+                && value != 0
+            {
+                out.push(value);
+            }
+        }
+        out
+    }
+
+    /// Resolve a `System.Type` / `RuntimeType` object to the class name it
+    /// represents (`typeof(Foo)` → `"Foo"`): `RuntimeType +0x10` is the
+    /// `Il2CppType`, whose `+0x20` is the `Il2CppClass`, whose name we read.
+    pub fn type_class_name<const N: usize>(&self, type_object: u64) -> Option<String> {
+        let il2cpp_type = self.process.read_pointer::<u64>(type_object + 0x10).ok()?;
+        let klass = self.process.read_pointer::<u64>(il2cpp_type + 0x20).ok()?;
+        Class { class: klass }
+            .class_name::<N>(self.process, self.module)
+            .ok()?
+            .validate_utf8()
+            .ok()
+            .map(str::to_string)
+    }
+
     /// Read the element pointers of a Unity `List<T>` object (its `_items`
     /// backing array). Capped to a sane length as a safety bound.
     pub fn list_item_ptrs(&self, list_ptr: u64) -> Vec<u64> {

@@ -4,7 +4,9 @@ use data::prelude::PlayerPartyCharacter;
 
 use super::{Action, SkillResource, TimingType};
 use crate::combat::damage;
-use crate::memory::combat_manager::{CombatDamageType, CombatEnemy, CombatPlayer};
+use crate::memory::combat_manager::{
+    CombatDamageType, CombatEnemy, CombatManagerData, CombatPlayer,
+};
 
 pub struct Sunball;
 
@@ -34,7 +36,12 @@ impl Action for Sunball {
         vec![CombatDamageType::Sun]
     }
 
-    fn estimate_damage(&self, player: &CombatPlayer, enemy: &CombatEnemy) -> f32 {
+    fn estimate_damage(
+        &self,
+        _cmd: &CombatManagerData,
+        player: &CombatPlayer,
+        enemy: &CombatEnemy,
+    ) -> f32 {
         damage::magic_damage_estimate(player, enemy, CombatDamageType::Sun)
     }
 }

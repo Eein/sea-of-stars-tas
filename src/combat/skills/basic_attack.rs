@@ -43,12 +43,18 @@ impl Action for BasicAttack {
         self.player(cmd).is_some_and(|p| !p.dead && p.enabled)
     }
 
-    fn estimate_damage(&self, player: &CombatPlayer, enemy: &CombatEnemy) -> f32 {
-        let (base, timed) = damage::basic_attack_damage(player, enemy, damage::MAX_ROLL);
+    fn estimate_damage(
+        &self,
+        cmd: &CombatManagerData,
+        player: &CombatPlayer,
+        enemy: &CombatEnemy,
+    ) -> f32 {
+        let (_, max_roll) = cmd.damage_roll_bounds();
+        let (base, timed) = damage::basic_attack_damage(player, enemy, max_roll);
         if self.timed {
-            (base + timed).floor()
+            damage::round_damage(base + timed)
         } else {
-            base.floor()
+            damage::round_damage(base)
         }
     }
 }

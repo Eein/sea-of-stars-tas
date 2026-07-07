@@ -17,9 +17,9 @@ use crate::memory::combat_manager::{
 const STUCK_TIMEOUT: f64 = 6.0;
 /// Delay after committing a charge action before we start holding Confirm: the
 /// caster leaps to center screen before the charge phase opens, so holding too
-/// early gets the input eaten and the charge never builds. Kept short — the
-/// charge screen opens quickly, so a long wait just stalls the hold.
-const CHARGE_SETTLE: f64 = 0.35;
+/// early gets the input eaten and the charge fails. The jump is slow, so this
+/// must cover it — a short wait fails when the caster has to travel.
+const CHARGE_SETTLE: f64 = 1.5;
 /// How long to hold Confirm to build the charge before releasing to fire. A
 /// charge isn't a timed hit — there's no `timed_attack_ready` window.
 const CHARGE_HOLD: f64 = 1.75;
@@ -79,6 +79,17 @@ impl BattleCommand {
             BattleCommand::Item => 3,
         }
     }
+
+    /// The game's `*BattleCommand` class name for this command, matched against a
+    /// fighter's `disabled_commands` set to honour tutorial restrictions.
+    pub fn class_name(self) -> &'static str {
+        match self {
+            BattleCommand::Attack => "BasicAttackBattleCommand",
+            BattleCommand::Skill => "SkillBattleCommand",
+            BattleCommand::Combo => "ComboBattleCommand",
+            BattleCommand::Item => "ItemsBattleCommand",
+        }
+    }
 }
 
 /// A combat action. One `impl` per skill; identity + usability + damage power
@@ -124,7 +135,7 @@ pub trait Action {
         if player.dead || !player.enabled {
             return false;
         }
-        if !self.move_loaded(cmd) {
+        if !self.move_available(cmd) {
             return false;
         }
         match self.resource() {
@@ -146,8 +157,14 @@ pub trait Action {
 
     /// Estimated damage against `enemy`. Default is a multiple of the basic
     /// attack; damaging skills override this with their real formula.
-    fn estimate_damage(&self, player: &CombatPlayer, enemy: &CombatEnemy) -> f32 {
-        let (base, timed) = damage::basic_attack_damage(player, enemy, damage::MAX_ROLL);
+    fn estimate_damage(
+        &self,
+        cmd: &CombatManagerData,
+        player: &CombatPlayer,
+        enemy: &CombatEnemy,
+    ) -> f32 {
+        let (_, max_roll) = cmd.damage_roll_bounds();
+        let (base, timed) = damage::basic_attack_damage(player, enemy, max_roll);
         ((base + timed) * 1.5).floor()
     }
 
@@ -324,9 +341,14 @@ pub trait Action {
             .find(|p| p.character == self.character())
     }
 
-    /// Whether this action's move is loaded (unlocked) for its character.
-    fn move_loaded(&self, cmd: &CombatManagerData) -> bool {
-        self.find_move(cmd).is_some_and(|m| m.loaded)
+    /// Whether this action's move is available for its character. `loaded` (a
+    /// live `combatMoveComponent`) is unreliable for skills — a castable skill
+    /// like CrescentArc can read `loaded=0` — so, as for combos, a base skill
+    /// (`unlockable == 0`) also counts. Only registered actions reach this, so an
+    /// early-game unlearned base skill can't leak in through an unregistered move.
+    fn move_available(&self, cmd: &CombatManagerData) -> bool {
+        self.find_move(cmd)
+            .is_some_and(|m| m.loaded || m.unlockable == Some(0))
     }
 
     /// This action's move definition in its character's live move list, if

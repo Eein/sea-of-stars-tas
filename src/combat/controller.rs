@@ -57,8 +57,10 @@ impl CombatController {
         self.dialog_timer = 0.0;
 
         // Only the normal encounter controller drives the appraisal executor.
-        // Tutorials and scripted fights (FirstEncounter, LiveManaTutorial, ...)
-        // still ride the proven Confirm-mash until they're modelled explicitly.
+        // Tutorials and scripted fights (FirstEncounter, KidsCavernEncounter, ...)
+        // ride the proven Confirm-mash. KidsCavern additionally exposes no
+        // readable moves (its `allMoveDefinitions` is empty), so the executor has
+        // nothing to appraise there yet — mash until that's modelled.
         let controller_type = &state
             .memory_managers
             .combat_manager

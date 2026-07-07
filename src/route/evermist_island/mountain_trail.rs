@@ -6,6 +6,10 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
     SeqMove::create(
         "Mountain trail intro",
         vec![
+            Move::ToWorld(104.000, 3.002, 71.500),
+            Move::ToWorld(110.000, 3.002, 71.500),
+            Move::ToWorld(110.000, 3.002, 75.500),
+            Move::Confirm,
             Move::Interact(31.524, 6.002, 19.951),
             Move::To(36.021, 5.842, 19.951),
             Move::To(49.921, 6.002, 6.540),
