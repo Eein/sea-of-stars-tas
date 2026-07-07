@@ -20,38 +20,51 @@ const TIMED_HIT_MULTIPLIER: f32 = 1.299999;
 pub const MIN_ROLL: f32 = 0.0;
 pub const MAX_ROLL: f32 = 3.0;
 
-/// Look up a character's per-hit damage-type modifier against an enemy.
+/// The game's final `(int)Math.Round(damage)` cast.
 ///
-/// Only Zale/Valere/Garl carry real damage-type logic today; everyone else
-/// falls through to a neutral `1.0`. Mana-charged Zale/Valere also apply their
-/// secondary (Sun/Moon) type.
-fn damage_type_attack_modifier(player: &CombatPlayer, enemy: &CombatEnemy) -> f32 {
-    let modifier_for = |damage_type: CombatDamageType| -> f32 {
-        enemy
-            .damage_type_modifiers
-            .items
-            .iter()
-            .find(|(k, _v)| k.key == damage_type)
-            .map(|(_k, v)| v.value)
-            .unwrap_or(1.0)
-    };
+/// `PlayerBasicAttackDamage.CalculatePreModifiersDamage` rounds the full float
+/// damage exactly once, via `System.Math.Round` (round *half to even*), in
+/// `double` precision — not `floor`, not round-half-away. Verified against the
+/// decompiled `Math.Round` implementation (RVA 0x13880).
+pub fn round_damage(damage: f32) -> f32 {
+    (damage as f64).round_ties_even() as f32
+}
 
+/// Look up the enemy's modifier for a single damage type (neutral `1.0` if the
+/// enemy has no entry for it — matches the game's `TryGetValue` miss).
+fn modifier_for(enemy: &CombatEnemy, damage_type: CombatDamageType) -> f32 {
+    enemy
+        .damage_type_modifiers
+        .items
+        .iter()
+        .find(|(k, _v)| k.key == damage_type)
+        .map(|(_k, v)| v.value)
+        .unwrap_or(1.0)
+}
+
+/// The damage-type modifier applied to the **physical** stream (the physical
+/// attack stat). The game partitions a move's damage types into physical vs.
+/// magic (`CombatDamageType::Magical == 0xFC` is the magic mask) and only the
+/// physical types multiply the physical stream. For basic attacks that is the
+/// character's weapon type (Sword/Blunt); everyone else is neutral.
+fn physical_damage_modifier(player: &CombatPlayer, enemy: &CombatEnemy) -> f32 {
     match player.character {
-        PlayerPartyCharacter::Zale => {
-            let mut modifiers = modifier_for(CombatDamageType::Sword);
-            if player.mana_charge_count > 0 {
-                modifiers *= modifier_for(CombatDamageType::Sun);
-            }
-            modifiers
+        PlayerPartyCharacter::Zale => modifier_for(enemy, CombatDamageType::Sword),
+        PlayerPartyCharacter::Valere | PlayerPartyCharacter::Garl => {
+            modifier_for(enemy, CombatDamageType::Blunt)
         }
-        PlayerPartyCharacter::Valere => {
-            let mut modifiers = modifier_for(CombatDamageType::Blunt);
-            if player.mana_charge_count > 0 {
-                modifiers *= modifier_for(CombatDamageType::Moon);
-            }
-            modifiers
-        }
-        PlayerPartyCharacter::Garl => modifier_for(CombatDamageType::Blunt),
+        _ => 1.0,
+    }
+}
+
+/// The damage-type modifier applied to the **magic** stream (the Live Mana
+/// boost). Only the elemental (Sun/Moon) type multiplies the magic stream — the
+/// weapon type stays on the physical stream. Irrelevant when uncharged, since
+/// the magic stream is then zero.
+fn magic_damage_modifier(player: &CombatPlayer, enemy: &CombatEnemy) -> f32 {
+    match player.character {
+        PlayerPartyCharacter::Zale => modifier_for(enemy, CombatDamageType::Sun),
+        PlayerPartyCharacter::Valere => modifier_for(enemy, CombatDamageType::Moon),
         _ => 1.0,
     }
 }
@@ -84,27 +97,117 @@ pub fn magic_damage_estimate(
 /// display or comparison. `timed_hit_bonus` is the *additional* damage a
 /// successful timed hit adds on top of `base_damage`.
 pub fn basic_attack_damage(player: &CombatPlayer, enemy: &CombatEnemy, random: f32) -> (f32, f32) {
-    // floats are very specific - this matters
-    let attack_modifier = damage_type_attack_modifier(player, enemy);
+    // floats are very specific - the operation order here mirrors the decompiled
+    // `PlayerBasicAttackDamage.GetDamage` (RVA 0x4CE490) so results stay bit-exact.
+    let physical_modifier = physical_damage_modifier(player, enemy);
+    let magic_modifier = magic_damage_modifier(player, enemy);
 
-    // Apply boosted damage modifier to physical attack on basic attacks
-    let boosted_live_mana_attack =
-        player.magical_attack as f32 * MANA_CHARGE_STAT_MULTIPLIER * attack_modifier;
+    // Physical stream: the game sums the attack stat, adds the random roll, and
+    // *then* multiplies by the physical type modifier — i.e. the roll is inside
+    // the modifier, not added after it. `(stat + random) * modifier`.
+    let physical_stream = (player.physical_attack as f32 + random) * physical_modifier;
 
-    let total_physical_attack = (attack_modifier * player.physical_attack as f32) + random;
+    // Magic stream: the Live Mana boost only. Order matches the game's
+    // `boostLevel * manaChargeMultiplier * magicStat`, then the magic type
+    // modifier. Zero when uncharged (`mana_charge_count == 0`).
+    let magic_stream = player.mana_charge_count as f32
+        * MANA_CHARGE_STAT_MULTIPLIER
+        * player.magical_attack as f32
+        * magic_modifier;
 
     let magical_defense_cap_ratio = enemy.magical_defense as f32 / MAGICAL_DEFENSE_CAP;
     let physical_defense_cap_ratio = enemy.physical_defense as f32 / PHYSICAL_DEFENSE_CAP;
 
-    let mut total_magical_attack = boosted_live_mana_attack * player.mana_charge_count as f32;
-    total_magical_attack *= 1.0 - magical_defense_cap_ratio; // deduct enemy defense ratio
-
-    let mut total_physical_attack = total_physical_attack;
-    total_physical_attack *= 1.0 - physical_defense_cap_ratio; // deduct enemy defense ratio
+    // Each stream is reduced by its own defense ratio, then summed. Matches the
+    // game's `(1 - magDef) * magic + physical * (1 - physDef)`.
+    let total_magical_attack = magic_stream * (1.0 - magical_defense_cap_ratio);
+    let total_physical_attack = physical_stream * (1.0 - physical_defense_cap_ratio);
 
     let total_attack = total_magical_attack + total_physical_attack;
 
+    // Timed-hit bonus is `(multiplier - 1) * total`, on the post-defense total.
+    // (Combo/multi-hit scaling and TimedAttackBonusDamage modifiers are not yet
+    // modelled — this is the base single-hit bonus.)
     let timed_hit_damage = (TIMED_HIT_MULTIPLIER * total_attack) - total_attack;
 
     (total_attack, timed_hit_damage)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::memory::combat_manager::{DamageTypeModifierKey, DamageTypeModifierValue};
+
+    /// The game rounds with `Math.Round` — half to *even*, not floor and not
+    /// half-away-from-zero. These ties pin that down.
+    #[test]
+    fn round_damage_is_half_to_even() {
+        assert_eq!(round_damage(2.4), 2.0);
+        assert_eq!(round_damage(2.6), 3.0);
+        // exact .5 ties resolve to the nearest even integer
+        assert_eq!(round_damage(0.5), 0.0);
+        assert_eq!(round_damage(1.5), 2.0);
+        assert_eq!(round_damage(2.5), 2.0);
+        assert_eq!(round_damage(3.5), 4.0);
+        assert_eq!(round_damage(10.5), 10.0);
+        assert_eq!(round_damage(11.5), 12.0);
+    }
+
+    fn enemy_with(mods: &[(CombatDamageType, f32)]) -> CombatEnemy {
+        let mut enemy = CombatEnemy::default();
+        for (key, value) in mods {
+            enemy.damage_type_modifiers.items.insert(
+                DamageTypeModifierKey { key: key.clone() },
+                DamageTypeModifierValue { value: *value },
+            );
+        }
+        enemy
+    }
+
+    /// Neutral, uncharged basic attack: only the physical stream contributes,
+    /// and the max roll (3) sits inside it.
+    #[test]
+    fn neutral_uncharged_basic_attack() {
+        let player = CombatPlayer {
+            character: PlayerPartyCharacter::Zale,
+            physical_attack: 50,
+            magical_attack: 30, // ignored while uncharged
+            mana_charge_count: 0,
+            ..Default::default()
+        };
+        let enemy = enemy_with(&[]); // no modifiers -> all neutral 1.0
+
+        let (base, timed) = basic_attack_damage(&player, &enemy, MAX_ROLL);
+        assert_eq!(base, 53.0); // (50 + 3) * 1 * (1 - 0)
+        assert_eq!(round_damage(base), 53.0);
+        // 1.299999 * 53 = 68.8999.. -> Math.Round -> 69
+        assert_eq!(round_damage(base + timed), 69.0);
+    }
+
+    /// Charged Zale vs an enemy weak to Sword but resistant to Sun. The fix:
+    /// the Sword modifier hits *only* the physical stream and the Sun modifier
+    /// *only* the magic (Live Mana) stream. The old combined `Sword*Sun == 1.0`
+    /// on both streams would give ~133 here instead of 233.
+    #[test]
+    fn charged_split_applies_each_modifier_to_its_own_stream() {
+        let player = CombatPlayer {
+            character: PlayerPartyCharacter::Zale,
+            physical_attack: 100,
+            magical_attack: 200,
+            mana_charge_count: 1,
+            ..Default::default()
+        };
+        let enemy = enemy_with(&[
+            (CombatDamageType::Sword, 2.0), // physical weakness
+            (CombatDamageType::Sun, 0.5),   // magic resistance
+        ]);
+
+        // random 0 for clean arithmetic.
+        let (base, timed) = basic_attack_damage(&player, &enemy, MIN_ROLL);
+        // physical: (100 + 0) * 2.0 = 200 ; magic: 1 * 0.33 * 200 * 0.5 = 33
+        assert!((base - 233.0).abs() < 0.05, "base was {base}");
+        assert_eq!(round_damage(base), 233.0);
+        // 1.299999 * 233 = 302.8997.. -> Math.Round -> 303
+        assert_eq!(round_damage(base + timed), 303.0);
+    }
 }

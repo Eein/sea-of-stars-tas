@@ -114,17 +114,25 @@ const IMMINENT_THREAT_BONUS: f32 = 50.0;
 /// bonuses are shared across every action kind. `combat_action` is the enum form
 /// carried on the `Appraisal` for the GUI label and the executor's command routing.
 fn score_action(
+    cmd: &CombatManagerData,
     action: &dyn Action,
     player: &CombatPlayer,
     enemy: &CombatEnemy,
     combat_action: CombatAction,
 ) -> Appraisal {
-    let expected_damage = action.estimate_damage(player, enemy);
+    let expected_damage = action.estimate_damage(cmd, player, enemy);
     let lethal = expected_damage >= enemy.current_hp as f32;
 
     let mut score = expected_damage;
     if lethal {
-        score += LETHAL_BONUS;
+        // Securing a kill is worth a big bonus — but halve it for summoned
+        // enemies (a boss's adds) so an available boss kill always outranks
+        // killing a summon.
+        score += if enemy.summoned {
+            LETHAL_BONUS / 2.0
+        } else {
+            LETHAL_BONUS
+        };
     }
     // Prioritise enemies whose turn is imminent (turns_to_action counts down).
     if enemy.turns_to_action > 0 {
@@ -141,6 +149,23 @@ fn score_action(
     }
 }
 
+/// Whether the fighter for `character` has `command` disabled this fight (e.g. a
+/// tutorial forcing a specific command). Normal fights disable nothing.
+fn command_disabled(
+    cmd: &CombatManagerData,
+    character: &PlayerPartyCharacter,
+    command: skills::BattleCommand,
+) -> bool {
+    cmd.moves
+        .iter()
+        .find(|cm| &cm.character == character)
+        .is_some_and(|cm| {
+            cm.disabled_commands
+                .iter()
+                .any(|name| name == command.class_name())
+        })
+}
+
 /// Generate every candidate appraisal for the current combat state, ranked best
 /// first.
 ///
@@ -155,12 +180,16 @@ pub fn generate_appraisals(cmd: &CombatManagerData) -> Vec<Appraisal> {
         if player.dead || !player.enabled {
             continue;
         }
+        if command_disabled(cmd, &player.character, skills::BattleCommand::Attack) {
+            continue;
+        }
         for enemy in living_enemies() {
             let action = BasicAttack {
                 character: player.character.clone(),
                 timed: true,
             };
             appraisals.push(score_action(
+                cmd,
                 &action,
                 player,
                 enemy,
@@ -174,7 +203,7 @@ pub fn generate_appraisals(cmd: &CombatManagerData) -> Vec<Appraisal> {
     // whole party is up (a downed member means some combos are uncastable).
     let party_all_alive = cmd.players.items.iter().all(|p| !p.dead);
 
-    // Combos: each character's affordable, loaded combo moves.
+    // Combos: each character's affordable, available combo moves.
     for character_moves in cmd.moves.iter().filter(|_| party_all_alive) {
         let Some(player) = cmd
             .players
@@ -184,13 +213,20 @@ pub fn generate_appraisals(cmd: &CombatManagerData) -> Vec<Appraisal> {
         else {
             continue;
         };
+        if command_disabled(cmd, &character_moves.character, skills::BattleCommand::Combo) {
+            continue;
+        }
         for combat_move in &character_moves.moves {
             let cost = combat_move.combo_point_cost.unwrap_or(0);
             // A combo we can appraise for damage: costs (and can afford) combo
-            // points, is loaded, and actually deals damage (excludes heals/buffs
-            // like MendingLight, whose damageTypeDefinitions are empty).
+            // points, deals damage (excludes heals/buffs like MendingLight, whose
+            // damageTypeDefinitions are empty), and is *available*. `loaded` is
+            // always false for combos (they have no per-fighter
+            // `combatMoveComponent`), so availability comes from `unlockable == 0`
+            // — the base combos every party has. Learned-only combos
+            // (`unlockable != 0`) stay out until we read a real learned signal.
             let is_damage_combo = cost > 0
-                && combat_move.loaded
+                && combat_move.unlockable == Some(0)
                 && combat_move.is_damaging
                 && cost <= cmd.combo_points;
             let Some(name) = combat_move.move_id.as_deref().filter(|_| is_damage_combo) else {
@@ -203,6 +239,7 @@ pub fn generate_appraisals(cmd: &CombatManagerData) -> Vec<Appraisal> {
                     cost,
                 };
                 appraisals.push(score_action(
+                    cmd,
                     &action,
                     player,
                     enemy,
@@ -221,11 +258,15 @@ pub fn generate_appraisals(cmd: &CombatManagerData) -> Vec<Appraisal> {
         if !action.is_usable(cmd) {
             continue;
         }
+        if command_disabled(cmd, &action.character(), skills::BattleCommand::Skill) {
+            continue;
+        }
         let Some(player) = action.player(cmd) else {
             continue;
         };
         for enemy in living_enemies() {
             appraisals.push(score_action(
+                cmd,
                 action.as_ref(),
                 player,
                 enemy,

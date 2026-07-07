@@ -322,17 +322,18 @@ impl MainHelper {
             ui.label(format!("{:?}", player.character));
             for enemy in &gmd.enemies.items {
                 //calculate basic attack damage
-                let min_damage = damage::basic_attack_damage(player, enemy, damage::MIN_ROLL);
-                let max_damage = damage::basic_attack_damage(player, enemy, damage::MAX_ROLL);
-                // Floor is a guess here, round overestimates. Will rescan the source formulas with
-                // ghidra at a later date.
+                let (min_roll, max_roll) = gmd.damage_roll_bounds();
+                let min_damage = damage::basic_attack_damage(player, enemy, min_roll);
+                let max_damage = damage::basic_attack_damage(player, enemy, max_roll);
+                // The game rounds the final damage with Math.Round (half to even),
+                // confirmed via ghidra decompile of PlayerBasicAttackDamage.
                 ui.label(format!(
                     "Enemy: {:.5} | Damage: {:.3}-{:.3} Timed: {:.3}-{:.3}",
                     enemy.unique_id,
-                    min_damage.0.floor(),
-                    max_damage.0.floor(),
-                    (min_damage.0 + min_damage.1).floor(),
-                    (max_damage.0 + max_damage.1).floor()
+                    damage::round_damage(min_damage.0),
+                    damage::round_damage(max_damage.0),
+                    damage::round_damage(min_damage.0 + min_damage.1),
+                    damage::round_damage(max_damage.0 + max_damage.1)
                 ));
             }
         }
@@ -548,6 +549,7 @@ impl GuiHelper for MainHelper {
                         "Zenith Academy Dorms 2",
                         "Outside Forbidden Cavern",
                         "Before Bosslug",
+                        "After Bosslug",
                         "After Elder Mist Boss-fight",
                     ] {
                         ui.selectable_value(

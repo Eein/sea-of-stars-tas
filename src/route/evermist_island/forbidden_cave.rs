@@ -241,6 +241,12 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                     Move::To(-39.370, 2.002, 219.607),
                     Move::AwaitCombat(Box::new(Move::HoldDir([0.0, 1.0], [0.0, 0.0, 0.0]))),
                     // TODO: Optionally, can enter cave to the north here and grab items
+                ],
+            ),
+            SeqCheckpoint::create("After Bosslug"),
+            SeqMove::create(
+                "After Boss",
+                vec![
                     Move::To(-35.969, 2.002, 236.869),
                     Move::Interact(-32.475, 6.002, 237.234),
                     Move::To(-31.291, 6.002, 237.234),

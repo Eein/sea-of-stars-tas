@@ -15,7 +15,7 @@ pub mod speedrun_manager;
 pub mod time_of_day_manager;
 pub mod title_sequence_manager;
 
-use log::error;
+use log::{error, info};
 
 use crate::state::StateContext;
 
@@ -128,7 +128,17 @@ impl<T: MemoryManagerUpdate> MemoryManager<T> {
     }
 
     fn update(&mut self, ctx: &StateContext) {
+        let was_resolved = self.manager.singleton.is_some();
         self.update_manager(ctx);
+        // Log each manager's singleton address once, the moment it first resolves
+        // (the `X Loaded` line is emitted at construction, before the game is
+        // attached, so the address isn't known there). Re-logs if it re-resolves
+        // after a reset.
+        if !was_resolved
+            && let Some(singleton) = &self.manager.singleton
+        {
+            info!("Memory: {} address: {:#x}", self.name, singleton.class);
+        }
         if self.ready_for_updates(ctx) {
             self.update_memory(ctx);
         }

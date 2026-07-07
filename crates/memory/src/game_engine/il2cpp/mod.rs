@@ -233,6 +233,27 @@ impl Class {
         )
     }
 
+    /// Build a [`Class`] from a live il2cpp object pointer by reading its class
+    /// pointer from the object header (`*object`). Returns `None` on a failed
+    /// read or a null class.
+    pub fn from_object(process: &Process, object: u64) -> Option<Class> {
+        process
+            .read_pointer::<u64>(object)
+            .ok()
+            .filter(|class| *class != 0)
+            .map(|class| Class { class })
+    }
+
+    /// This class's name (il2cpp `MonoClass.name`), resolved via the module's
+    /// version-correct name offset rather than a hardcoded struct offset.
+    pub fn class_name<const N: usize>(
+        &self,
+        process: &Process,
+        module: &Module,
+    ) -> Result<ArrayCString<N>, MemoryError> {
+        self.get_name(process, module)
+    }
+
     pub fn fields<'a>(
         &'a self,
         process: &'a Process,
@@ -408,6 +429,20 @@ impl Field {
         process
             .read(self.field + module.offsets.monoclassfield_offset as u64)
             .ok()
+    }
+
+    /// This field's name.
+    pub fn name<const N: usize>(
+        &self,
+        process: &Process,
+        module: &Module,
+    ) -> Result<ArrayCString<N>, MemoryError> {
+        self.get_name(process, module)
+    }
+
+    /// This field's offset within its declaring object.
+    pub fn offset(&self, process: &Process, module: &Module) -> Option<u32> {
+        self.get_offset(process, module)
     }
 }
 

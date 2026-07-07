@@ -1,9 +1,11 @@
+use crate::combat::damage;
 use crate::memory::memory_context::MemoryContext;
 use crate::memory::{MemoryManager, MemoryManagerUpdate};
 use crate::state::StateContext;
 use data::Item;
 use data::prelude::{PlayerPartyCharacter, armor, trinkets, weapons};
 use log::info;
+use memory::game_engine::il2cpp::Class;
 use memory::game_engine::il2cpp::unity_list::*;
 use memory::game_engine::il2cpp::unity_serializable_dictionary::*;
 use memory::memory_manager::il2cpp::UnityMemoryManager;
@@ -26,6 +28,7 @@ pub enum CombatControllerType {
     SpellLockTutorial,
     TimedBlocksTutorial,
     TimedHitsTutorial,
+    KidsCavernEncounter,
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
@@ -123,6 +126,9 @@ pub struct CombatEnemy {
     pub fleshmancer_minion: bool,
     pub level: u32,
     pub live_mana_spawn_quantity: u32,
+    /// Whether this enemy was summoned (its target `owner.summoned == 1`), e.g. a
+    /// boss's adds. Used to bias the appraiser toward killing the boss itself.
+    pub summoned: bool,
 }
 
 /// One entry of an actor's `allMoveDefinitions`.
@@ -147,6 +153,13 @@ pub struct CombatMove {
     /// Whether the move deals damage: its `damageTypeDefinitions` list is
     /// non-empty. Heals/buffs have no damage types.
     pub is_damaging: bool,
+    /// The move definition's `unlockable` flag: `0` for moves available by
+    /// default (the base combos: `DualAttack`, `SpectacleStrike`, …), non-zero
+    /// for moves that must be learned. Unlike `loaded`, this is present for
+    /// combos, so it's how the appraiser tells an available combo apart from a
+    /// locked one (party-level combos never have a live `combatMoveComponent`,
+    /// so `loaded` is always false for them).
+    pub unlockable: Option<i32>,
     /// Enemy `unique_id` under this move's single-target cursor, populated only
     /// when this move owns the active target-selector screen.
     pub main_target_guid: Option<String>,
@@ -161,6 +174,11 @@ pub struct CombatMove {
 pub struct CharacterMoves {
     pub character: PlayerPartyCharacter,
     pub moves: Vec<CombatMove>,
+    /// Battle-command class names disabled for this fighter this fight (e.g.
+    /// `"BasicAttackBattleCommand"`, `"ComboBattleCommand"`), read from the
+    /// fighter's `disabledBattleCommands` set. Tutorials use this to force a
+    /// specific command; empty for normal fights.
+    pub disabled_commands: Vec<String>,
 }
 
 impl CombatMove {
@@ -238,6 +256,7 @@ impl CombatMove {
         let is_damaging = memory_context
             .read_named_ptr(move_ptr, "damageTypeDefinitions")
             .is_some_and(|list| !memory_context.list_item_ptrs(list).is_empty());
+        let unlockable = memory_context.read_named::<i32>(move_ptr, "unlockable");
         let (main_target_guid, current_target_guid) =
             match Self::active_screen(memory_context, move_ptr) {
                 Some(screen) => (
@@ -252,6 +271,7 @@ impl CombatMove {
             skill_point_cost,
             loaded,
             is_damaging,
+            unlockable,
             main_target_guid,
             current_target_guid,
         }
@@ -294,6 +314,11 @@ pub struct CombatManagerData {
     pub highlighted_skill_id: Option<String>,
     /// Whether the highlighted skill is currently castable (`canCast`).
     pub highlighted_skill_castable: bool,
+    /// `GlobalCombatSettings.playerRandomDamageRange` (`min`, `max`), read live.
+    /// Constant per session. `max` is the *exclusive* bound the game feeds to
+    /// `UnityEngine.Random.RangeInt`, so the inclusive max roll is `max - 1`.
+    /// See [`Self::damage_roll_bounds`].
+    pub player_random_damage_range: Option<[i32; 2]>,
 }
 
 /// Sentinel returned by the game for an unset pointer.
@@ -394,19 +419,12 @@ impl MemoryManagerUpdate for CombatManagerData {
     ) -> Result<(), MemoryError> {
         let memory_context = MemoryContext::create(ctx, manager)?;
 
-        let was_active = self.encounter_active;
         self.update_encounter_active(&memory_context)?;
+        self.update_combat_settings(&memory_context)?;
 
         // Check if the encounter is active, then run the rest
         // of the updates.
         if self.encounter_active {
-            // Log the CombatManager singleton address once when combat starts.
-            if !was_active {
-                info!(
-                    "Combat active. CombatManager address: {:#x}",
-                    memory_context.singleton.class
-                );
-            }
             self.update_combat_controller_type(&memory_context)?;
             self.update_live_mana(&memory_context)?;
             self.update_combo_points_and_ultimates(&memory_context)?;
@@ -533,6 +551,21 @@ impl CombatManagerData {
             else {
                 continue;
             };
+
+            // The commands the game has disabled for this fighter this fight
+            // (a HashSet<Type> of *BattleCommand classes), resolved to their
+            // class names. Tutorials use this to force a specific command.
+            let disabled_commands = memory_context
+                .read_named_ptr(fighter_def, "disabledBattleCommands")
+                .map(|set| {
+                    memory_context
+                        .hashset_item_ptrs(set)
+                        .into_iter()
+                        .filter_map(|type_obj| memory_context.type_class_name::<64>(type_obj))
+                        .collect()
+                })
+                .unwrap_or_default();
+
             let Some(move_list) = memory_context.read_named_ptr(fighter_def, "allMoveDefinitions")
             else {
                 continue;
@@ -549,6 +582,7 @@ impl CombatManagerData {
             self.moves.push(CharacterMoves {
                 character: characters.get(index).cloned().unwrap_or_default(),
                 moves,
+                disabled_commands,
             });
         }
 
@@ -571,39 +605,87 @@ impl CombatManagerData {
         Ok(())
     }
 
+    /// Identify the active encounter's controller by reflecting the concrete
+    /// class name of `currentEncounter.controller`.
+    ///
+    /// The controller object's il2cpp class name *is* the encounter type
+    /// (`EncounterController` for normal fights, `KidsCavernEncounter`,
+    /// `FirstEncounter`, the tutorials, …). We resolve it with proper reflection
+    /// (`Class::from_object` + the module's version-correct name offset) rather
+    /// than a hardcoded struct offset, which had drifted and silently read
+    /// garbage — so every fight used to fall through to `Basic`.
     pub fn update_combat_controller_type(
         &mut self,
         memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
-        // [self.current_encounter_base, 0x128, 0x0, 0x10, 0x0],
-        if let Ok(controller) =
-            memory_context.follow_fields::<u8>(&["currentEncounter", "controller"])
-        {
-            // This code reaches into the base types of the controller thats active to find the
-            // name
-            if let Ok(controller_type_c_str) = memory_context
-                .read_pointer_path::<ArrayCString<200>>(&[controller.into(), 0x0, 0x10, 0x0])
-                && let Ok(controller_type) = controller_type_c_str.validate_utf8()
-            {
-                self.combat_controller_type = match controller_type {
-                    "EncounterController" => CombatControllerType::Basic,
-                    "FirstEncounter" => CombatControllerType::FirstEncounter,
-                    "SecondEncounter" => CombatControllerType::SecondEncounter,
-                    "DwellerOfStrife" => CombatControllerType::DwellerOfStrife,
-                    "DwellerOfDread" => CombatControllerType::DwellerOfDread,
-                    "KOTutorial" => CombatControllerType::KOTutorial,
-                    "LiveManaTutorial" => CombatControllerType::LiveManaTutorial,
-                    "ManaRegenTutorial" => CombatControllerType::ManaRegenTutorial,
-                    "RoundsTutorial" => CombatControllerType::RoundsTutorial,
-                    "SpellLockTutorial" => CombatControllerType::SpellLockTutorial,
-                    "TimedBlocksTutorial" => CombatControllerType::TimedBlocksTutorial,
-                    "TimedHitsTutorial" => CombatControllerType::TimedHitsTutorial,
-                    _ => CombatControllerType::Basic,
-                }
+        let Ok(enc) = memory_context.follow_fields::<u64>(&["currentEncounter"]) else {
+            return Ok(());
+        };
+        let Some(controller) = memory_context.read_named_ptr(enc, "controller") else {
+            return Ok(());
+        };
+        let Some(class) = Class::from_object(memory_context.process, controller) else {
+            return Ok(());
+        };
+        let Ok(name) = class.class_name::<64>(memory_context.process, memory_context.module) else {
+            return Ok(());
+        };
+        let Ok(name) = name.validate_utf8() else {
+            return Ok(());
+        };
+
+        self.combat_controller_type = match name {
+            "EncounterController" => CombatControllerType::Basic,
+            "FirstEncounter" => CombatControllerType::FirstEncounter,
+            "SecondEncounter" => CombatControllerType::SecondEncounter,
+            "DwellerOfStrife" => CombatControllerType::DwellerOfStrife,
+            "DwellerOfDread" => CombatControllerType::DwellerOfDread,
+            "KOTutorial" => CombatControllerType::KOTutorial,
+            "LiveManaTutorial" => CombatControllerType::LiveManaTutorial,
+            "ManaRegenTutorial" => CombatControllerType::ManaRegenTutorial,
+            "RoundsTutorial" => CombatControllerType::RoundsTutorial,
+            "SpellLockTutorial" => CombatControllerType::SpellLockTutorial,
+            "TimedBlocksTutorial" => CombatControllerType::TimedBlocksTutorial,
+            "TimedHitsTutorial" => CombatControllerType::TimedHitsTutorial,
+            "KidsCavernEncounter" => CombatControllerType::KidsCavernEncounter,
+            other => {
+                // Unmapped controllers fall back to Basic; log the raw name
+                // (debug) so we can model new encounters explicitly.
+                log::debug!("unmapped combat controller: {other}");
+                CombatControllerType::Basic
             }
-        }
+        };
 
         Ok(())
+    }
+
+    /// Read the global combat-balance settings the damage formulas depend on
+    /// (currently just the basic-attack random damage roll range). These are
+    /// constant per session, so this reads once and keeps the value; it
+    /// fail-softs, leaving the previous value on a miss.
+    pub fn update_combat_settings(
+        &mut self,
+        memory_context: &MemoryContext,
+    ) -> Result<(), MemoryError> {
+        if self.player_random_damage_range.is_none()
+            && let Ok(range) = memory_context
+                .follow_fields::<[i32; 2]>(&["globalCombatSettings", "playerRandomDamageRange"])
+        {
+            self.player_random_damage_range = Some(range);
+        }
+        Ok(())
+    }
+
+    /// The basic-attack random damage roll bounds `(min_roll, max_roll)`,
+    /// inclusive on both ends. The game rolls `Random.RangeInt(min, max)` which
+    /// is max-*exclusive*, so the inclusive max roll is `max - 1`. Falls back to
+    /// the historical constants until [`Self::update_combat_settings`] has read
+    /// the live values.
+    pub fn damage_roll_bounds(&self) -> (f32, f32) {
+        match self.player_random_damage_range {
+            Some([min, max]) => (min as f32, (max - 1) as f32),
+            None => (damage::MIN_ROLL, damage::MAX_ROLL),
+        }
     }
 
     pub fn update_live_mana(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
@@ -679,11 +761,23 @@ impl CombatManagerData {
     }
 
     pub fn update_enemies(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
-        if let Ok(enemies) =
+        if let Ok(enemy_targets) =
             memory_context.follow_fields::<u64>(&["currentEncounter", "enemyTargets"])
         {
-            let enemies = UnityList::<CombatEnemy>::read(memory_context.process, enemies)?;
-            self.enemies = enemies;
+            self.enemies = UnityList::<CombatEnemy>::read(memory_context.process, enemy_targets)?;
+            // Resolve each enemy's `summoned` flag from its target:
+            // enemyTargets.items[x] -> item -> owner -> summoned. Aligned by index
+            // with the list read above (both walk the same `_items` array).
+            for (target, enemy) in memory_context
+                .list_item_ptrs(enemy_targets)
+                .into_iter()
+                .zip(self.enemies.items.iter_mut())
+            {
+                enemy.summoned = memory_context
+                    .read_named_ptr(target, "owner")
+                    .and_then(|owner| memory_context.read_named::<u8>(owner, "summoned"))
+                    .is_some_and(|summoned| summoned == 1);
+            }
         }
         Ok(())
     }
@@ -783,6 +877,9 @@ impl UnityItem for CombatEnemy {
             fleshmancer_minion,
             level,
             live_mana_spawn_quantity,
+            // Resolved in `update_enemies`, which has the memory context needed
+            // to walk the `item -> owner -> summoned` field-name path.
+            summoned: false,
         })
     }
 }

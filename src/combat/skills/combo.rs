@@ -8,7 +8,7 @@ use data::prelude::PlayerPartyCharacter;
 
 use super::{Action, BattleCommand, SkillResource, TimingType};
 use crate::combat::damage;
-use crate::memory::combat_manager::{CombatEnemy, CombatPlayer};
+use crate::memory::combat_manager::{CombatEnemy, CombatManagerData, CombatPlayer};
 
 /// Placeholder combo damage estimate: combos hit roughly this multiple of the
 /// caster's basic attack, scaled up by combo-point cost. Mirrors the appraiser's
@@ -47,8 +47,14 @@ impl Action for Combo {
         self.cost
     }
 
-    fn estimate_damage(&self, player: &CombatPlayer, enemy: &CombatEnemy) -> f32 {
-        let (base, timed) = damage::basic_attack_damage(player, enemy, damage::MAX_ROLL);
+    fn estimate_damage(
+        &self,
+        cmd: &CombatManagerData,
+        player: &CombatPlayer,
+        enemy: &CombatEnemy,
+    ) -> f32 {
+        let (_, max_roll) = cmd.damage_roll_bounds();
+        let (base, timed) = damage::basic_attack_damage(player, enemy, max_roll);
         ((base + timed) * COMBO_DAMAGE_FACTOR * (1.0 + self.cost as f32 * 0.5)).floor()
     }
 }

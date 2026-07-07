@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+assembly="${SOS_ASSEMBLY:-decoded/cpp2il/Assembly-CSharp.dll}"
+ilspy="${ILSPYCMD:-/nix/store/bzfakdibhmgjrzbkiiqdawlgy1jyy5kz-ilspycmd-9.1/bin/ilspycmd}"
+
+usage() {
+  cat <<'USAGE'
+Usage:
+  scripts/decompile-sos-type --list
+  scripts/decompile-sos-type TYPE_NAME
+
+Examples:
+  scripts/decompile-sos-type --list | rg CombatManager
+  scripts/decompile-sos-type CombatManager > /tmp/CombatManager.cs
+
+Environment:
+  SOS_ASSEMBLY  Assembly path to decompile. Defaults to decoded/cpp2il/Assembly-CSharp.dll.
+  ILSPYCMD      ilspycmd executable path. Defaults to the Nix store path used during setup.
+USAGE
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  usage
+  exit 0
+fi
+
+if [[ ! -f "$assembly" ]]; then
+  echo "Assembly not found: $assembly" >&2
+  exit 1
+fi
+
+if [[ ! -x "$ilspy" ]]; then
+  if command -v ilspycmd >/dev/null 2>&1; then
+    ilspy="$(command -v ilspycmd)"
+  else
+    echo "ilspycmd not found. Set ILSPYCMD or run via: nix shell nixpkgs#ilspycmd" >&2
+    exit 1
+  fi
+fi
+
+case "${1:-}" in
+  --list)
+    "$ilspy" --disable-updatecheck -l c "$assembly"
+    ;;
+  "")
+    usage >&2
+    exit 2
+    ;;
+  *)
+    "$ilspy" --disable-updatecheck -t "$1" "$assembly"
+    ;;
+esac
