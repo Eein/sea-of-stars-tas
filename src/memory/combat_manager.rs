@@ -222,6 +222,11 @@ pub struct CombatMove {
     /// locked one (party-level combos never have a live `combatMoveComponent`,
     /// so `loaded` is always false for them).
     pub unlockable: Option<i32>,
+    /// The characters this move needs in the party to be castable
+    /// (`requiredCharacters` on the move definition). Combos list their
+    /// participants (e.g. SpectacleStrike needs Garl, DualAttackKids the
+    /// kids); empty for moves with no requirement.
+    pub required_characters: Vec<String>,
     /// Enemy `unique_id` under this move's single-target cursor, populated only
     /// when this move owns the active target-selector screen.
     pub main_target_guid: Option<String>,
@@ -244,15 +249,20 @@ pub struct CharacterMoves {
 }
 
 impl CombatMove {
-    /// Read a C# `System.String` field by name (chars at object `+0x14`).
-    fn read_string(memory_context: &MemoryContext, obj: u64, field: &str) -> Option<String> {
-        let str_obj = memory_context.read_named_ptr(obj, field)?;
+    /// Read a C# `System.String` object (chars at `+0x14`).
+    fn read_string_obj(memory_context: &MemoryContext, str_obj: u64) -> Option<String> {
         let chars = memory_context
             .process
             .read_pointer::<ArrayWString<64>>(str_obj + 0x14)
             .ok()?;
         let out = String::from_utf16(chars.as_slice()).ok()?;
         (!out.is_empty()).then_some(out)
+    }
+
+    /// Read a C# `System.String` field by name.
+    fn read_string(memory_context: &MemoryContext, obj: u64, field: &str) -> Option<String> {
+        let str_obj = memory_context.read_named_ptr(obj, field)?;
+        Self::read_string_obj(memory_context, str_obj)
     }
 
     /// Resolve a move entry to its `targetSelectorScreen`.
@@ -322,6 +332,18 @@ impl CombatMove {
             .read_named_ptr(move_ptr, "damageTypeDefinitions")
             .is_some_and(|list| !memory_context.list_item_ptrs(list).is_empty());
         let unlockable = memory_context.read_named::<i32>(move_ptr, "unlockable");
+        // `requiredCharacters` is a `List<CharacterDefinitionId>`; the struct
+        // wraps a single string, so each list slot is that string's pointer.
+        let required_characters = memory_context
+            .read_named_ptr(move_ptr, "requiredCharacters")
+            .map(|list| {
+                memory_context
+                    .list_item_ptrs(list)
+                    .into_iter()
+                    .filter_map(|s| Self::read_string_obj(memory_context, s))
+                    .collect()
+            })
+            .unwrap_or_default();
         let (main_target_guid, current_target_guid) =
             match Self::active_screen(memory_context, move_ptr) {
                 Some(screen) => (
@@ -338,6 +360,7 @@ impl CombatMove {
             special_move_power,
             is_damaging,
             unlockable,
+            required_characters,
             main_target_guid,
             current_target_guid,
         }

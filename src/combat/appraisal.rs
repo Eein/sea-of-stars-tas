@@ -166,6 +166,22 @@ fn command_disabled(
         })
 }
 
+/// Whether a party character matches a move definition's `requiredCharacters`
+/// id (the game's `CharacterDefinitionId` strings, e.g. `"ZALE"`). Characters
+/// we don't model (Artificer, the god-forms, ...) match nothing, which
+/// correctly filters out their combos.
+fn character_matches_id(character: &PlayerPartyCharacter, id: &str) -> bool {
+    matches!(
+        (character, id),
+        (PlayerPartyCharacter::Zale, "ZALE")
+            | (PlayerPartyCharacter::Valere, "VALERE")
+            | (PlayerPartyCharacter::Garl, "GARL")
+            | (PlayerPartyCharacter::Serai, "SERAI")
+            | (PlayerPartyCharacter::Reshan, "RESHAN")
+            | (PlayerPartyCharacter::Bst, "BST")
+    )
+}
+
 /// Generate every candidate appraisal for the current combat state, ranked best
 /// first.
 ///
@@ -198,13 +214,8 @@ pub fn generate_appraisals(cmd: &CombatManagerData) -> Vec<Appraisal> {
         }
     }
 
-    // Combos need every participating character alive. We don't read a combo's
-    // `requiredCharacters` yet, so as a safe proxy only appraise combos when the
-    // whole party is up (a downed member means some combos are uncastable).
-    let party_all_alive = cmd.players.items.iter().all(|p| !p.dead);
-
     // Combos: each character's affordable, available combo moves.
-    for character_moves in cmd.moves.iter().filter(|_| party_all_alive) {
+    for character_moves in cmd.moves.iter() {
         let Some(player) = cmd
             .players
             .items
@@ -224,15 +235,28 @@ pub fn generate_appraisals(cmd: &CombatManagerData) -> Vec<Appraisal> {
             let cost = combat_move.combo_point_cost.unwrap_or(0);
             // A combo we can appraise for damage: costs (and can afford) combo
             // points, deals damage (excludes heals/buffs like MendingLight, whose
-            // damageTypeDefinitions are empty), and is *available*. `loaded` is
-            // always false for combos (they have no per-fighter
-            // `combatMoveComponent`), so availability comes from `unlockable == 0`
-            // — the base combos every party has. Learned-only combos
-            // (`unlockable != 0`) stay out until we read a real learned signal.
+            // damageTypeDefinitions are empty), and is *available* — it has a
+            // live `combatMoveComponent` (`loaded`). The game only instantiates
+            // the fight's real combos: scripted variants that share the party's
+            // `requiredCharacters` (DualAttackKids, SpectacleStrike) stay
+            // unloaded in normal encounters, so `unlockable == 0` alone is not
+            // enough to admit a combo.
             let is_damage_combo = cost > 0
-                && combat_move.unlockable == Some(0)
+                && combat_move.loaded
                 && combat_move.is_damaging
                 && cost <= cmd.combo_points;
+            // Every participating character must be in the party and alive
+            // (`requiredCharacters` on the move definition) — e.g. Garl combos
+            // are uncastable without Garl, and any combo needs its partners up.
+            let participants_ready = combat_move.required_characters.iter().all(|id| {
+                cmd.players
+                    .items
+                    .iter()
+                    .any(|p| !p.dead && character_matches_id(&p.character, id))
+            });
+            if !participants_ready {
+                continue;
+            }
             let Some(name) = combat_move.move_id.as_deref().filter(|_| is_damage_combo) else {
                 continue;
             };

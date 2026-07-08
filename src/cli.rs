@@ -351,15 +351,29 @@ fn dump_state(core: &TasCore, format: LogFormat) {
                 .moves
                 .iter()
                 .flat_map(|cm| {
-                    cm.moves.iter().filter(|m| m.loaded).map(|m| {
-                        format!(
-                            "{:?}:{} power={:?}",
-                            cm.character,
-                            m.move_id.as_deref().unwrap_or("?"),
-                            m.special_move_power
-                        )
-                    })
+                    // Loaded moves (skills/attacks) plus combos, which never
+                    // have a live component but do cost combo points.
+                    cm.moves
+                        .iter()
+                        .filter(|m| m.loaded || m.combo_point_cost.unwrap_or(0) > 0)
+                        .map(|m| {
+                            format!(
+                                "{:?}:{} power={:?} req={:?}",
+                                cm.character,
+                                m.move_id.as_deref().unwrap_or("?"),
+                                m.special_move_power,
+                                m.required_characters
+                            )
+                        })
                 })
+                .collect::<Vec<_>>()
+                .join(" | "),
+        ),
+        (
+            "appraisals",
+            crate::combat::appraisal::generate_appraisals(combat)
+                .iter()
+                .map(crate::combat::appraisal::Appraisal::describe)
                 .collect::<Vec<_>>()
                 .join(" | "),
         ),
