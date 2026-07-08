@@ -34,17 +34,9 @@ pub(crate) use menu::{cancel_press, mash_press, tap_press};
 /// Every skill action the appraiser considers. One entry per skill module.
 pub fn skill_actions() -> Vec<Box<dyn Action>> {
     vec![
-        Box::new(sunball::Sunball),
+        Box::new(sunball::Sunball::default()),
         Box::new(crescent_arc::CrescentArc),
     ]
-}
-
-/// The timing type of the skill with this `combatMoveId`, if registered.
-pub fn skill_timing(internal_name: &str) -> Option<TimingType> {
-    skill_actions()
-        .iter()
-        .find(|a| a.internal_name() == internal_name)
-        .map(|a| a.timing_type())
 }
 
 /// The registered [`Charge`](TimingType::Charge) action (Sunball), if any. Used

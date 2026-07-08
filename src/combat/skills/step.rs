@@ -43,6 +43,20 @@ pub enum StepOutcome {
     Done,
 }
 
+/// The exit of one frame of a shared driver (submenu navigation, target
+/// cursor): its job is done, it needs more frames, or it can't make progress.
+/// Steps match on this to route — the driver knows the mechanics, the step
+/// knows where to go next.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DriveResult {
+    /// The driver finished its job (the ability/target is committed).
+    Ok,
+    /// Still working; drive again next frame.
+    Wait,
+    /// Can't make progress; the caller must back out and recover.
+    Error,
+}
+
 /// Bookkeeping an action carries across its steps. Created fresh when the
 /// executor latches an action and dropped with it when the action resolves,
 /// so nothing here can leak from one action into the next.
@@ -60,18 +74,6 @@ pub struct StepScratch {
     pub last_cursor: Option<String>,
     /// `timed_attack_ready` last frame, so taps land only on the rising edge.
     pub last_timed_ready: bool,
-    /// Charge actions: whether we've seen the projectile's level climb below max
-    /// this cast. The projectile is pooled, so at the intro→charging boundary its
-    /// level briefly reads the previous cast's (stale) max; we only trust
-    /// "at max" once we've watched it climb up from below, or it fires instantly.
-    pub charge_saw_low: bool,
-    /// Charge actions: whether we're holding Confirm mid-build. Latches the hold
-    /// across a transient charge-read dropout — releasing for even one frame
-    /// while charging fires the sunball early.
-    pub charge_building: bool,
-    /// Charge actions: time elapsed in a charge-read dropout, bounding how long
-    /// we keep holding before concluding the charge really ended.
-    pub charge_miss: f64,
 }
 
 /// Everything an `Action`'s `execute_*` step needs to drive one frame: the
@@ -89,9 +91,19 @@ pub struct ActionCtx<'a> {
 }
 
 impl ActionCtx<'_> {
+    /// If the attack step sees no progress for this long, the confirms likely
+    /// desynced — see [`mash_if_stuck`](Self::mash_if_stuck).
+    const STUCK_TIMEOUT: f64 = 6.0;
+
     /// Whether an ability submenu (combo or skill) is currently open.
     pub(super) fn in_submenu(&self) -> bool {
         self.cmd.ability_submenu_open()
+    }
+
+    /// Whether the battle menus are back on screen — during
+    /// [`Attacking`](ActionStep::Attacking) this means the action resolved.
+    pub(super) fn menus_returned(&self) -> bool {
+        self.cmd.battle_command_has_focus || self.in_submenu()
     }
 
     /// Any acting player's timed-hit window is open this frame.
@@ -105,5 +117,14 @@ impl ActionCtx<'_> {
             *self.btn = menu::mash_press();
         }
         self.btn.update(self.gamepad, self.dt);
+    }
+
+    /// Anti-hang watchdog: [`mash`](Self::mash) once the step has gone
+    /// [`STUCK_TIMEOUT`](Self::STUCK_TIMEOUT) without progress (steps zero
+    /// `scratch.timer` when they see progress).
+    pub(super) fn mash_if_stuck(&mut self) {
+        if self.scratch.timer >= Self::STUCK_TIMEOUT {
+            self.mash();
+        }
     }
 }

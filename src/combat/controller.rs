@@ -15,6 +15,18 @@ use crate::memory::combat_manager::CombatControllerType;
 use crate::seq::button::ButtonPress;
 use crate::state::GameState;
 
+/// What the controller does this frame, decided fresh from the snapshot every
+/// frame — one mode, one driver, no overlap.
+enum CombatMode {
+    /// Mid-fight dialogue is up; mash Confirm on every pad to dismiss it
+    /// (dialogue isn't tied to a player's turn).
+    Dialogue,
+    /// A normal encounter — run the appraisal-driven turn executor.
+    Execute,
+    /// A scripted/unmodelled fight — ride the proven Confirm-mash.
+    Mash,
+}
+
 #[derive(Default)]
 pub struct CombatController {
     pub(super) btn: ButtonPress,
@@ -45,36 +57,47 @@ impl CombatController {
         // GUI also surfaces the ranking.
         self.appraise(state);
 
-        // Mid-fight dialogue isn't tied to a player's turn, so mash Confirm on
-        // every controller to dismiss it.
-        if state.memory_managers.new_dialog_manager.data.dialog_visible {
-            self.mash_all_confirm(state, dt);
-            // Force a fresh per-player mash / turn once dialogue clears.
-            self.last_gamepad = None;
-            self.reset_turn();
-            return !encounter_active;
+        match Self::mode(state) {
+            CombatMode::Dialogue => {
+                self.mash_all_confirm(state, dt);
+                // Force a fresh per-player mash / turn once dialogue clears.
+                self.last_gamepad = None;
+                self.reset_turn();
+            }
+            CombatMode::Execute => {
+                self.dialog_timer = 0.0;
+                self.execute_turn(state, dt);
+            }
+            CombatMode::Mash => {
+                self.dialog_timer = 0.0;
+                self.reset_turn();
+                self.mash_all_turn(state, dt);
+            }
         }
-        self.dialog_timer = 0.0;
 
-        // Only the normal encounter controller drives the appraisal executor.
-        // Tutorials and scripted fights (FirstEncounter, KidsCavernEncounter, ...)
-        // ride the proven Confirm-mash. KidsCavern additionally exposes no
-        // readable moves (its `allMoveDefinitions` is empty), so the executor has
-        // nothing to appraise there yet — mash until that's modelled.
+        // Done once the encounter ends.
+        !encounter_active
+    }
+
+    /// Pick this frame's [`CombatMode`]. Only the normal encounter controller
+    /// drives the appraisal executor; tutorials and scripted fights
+    /// (FirstEncounter, KidsCavernEncounter, ...) ride the Confirm-mash.
+    /// KidsCavern additionally exposes no readable moves (its
+    /// `allMoveDefinitions` is empty), so the executor has nothing to appraise
+    /// there yet — mash until that's modelled.
+    fn mode(state: &GameState) -> CombatMode {
+        if state.memory_managers.new_dialog_manager.data.dialog_visible {
+            return CombatMode::Dialogue;
+        }
         let controller_type = &state
             .memory_managers
             .combat_manager
             .data
             .combat_controller_type;
-        if matches!(controller_type, CombatControllerType::Basic) {
-            self.execute_turn(state, dt);
-        } else {
-            self.reset_turn();
-            self.mash_all_turn(state, dt);
+        match controller_type {
+            CombatControllerType::Basic => CombatMode::Execute,
+            _ => CombatMode::Mash,
         }
-
-        // Done once the encounter ends.
-        !encounter_active
     }
 
     /// Recompute the ranked appraisals and the chosen action from the current
