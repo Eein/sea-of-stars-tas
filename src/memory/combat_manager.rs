@@ -12,6 +12,7 @@ use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
 use memory::process::Process;
 use memory::string::*;
+use vec3_rs::Vector3;
 
 #[derive(Default, Debug)]
 pub enum CombatControllerType {
@@ -181,6 +182,11 @@ pub struct CombatEnemy {
     /// Whether this enemy was summoned (its target `owner.summoned == 1`), e.g. a
     /// boss's adds. Used to bias the appraiser toward killing the boss itself.
     pub summoned: bool,
+    /// World position of the target's AOE-overlap anchor — the point the game
+    /// centres a splash sphere on when this enemy is an AOE's main target
+    /// (`CombatTarget.GetAOEOverlapPosition`, RVA 0xF04BC0). `None` when the
+    /// anchor chain is unreadable.
+    pub position: Option<Vector3<f32>>,
 }
 
 /// One entry of an actor's `allMoveDefinitions`.
@@ -202,6 +208,10 @@ pub struct CombatMove {
     /// `combatMoveComponent`). Locked/unavailable moves in `allMoveDefinitions`
     /// aren't loaded, so this doubles as a usable-this-fight signal.
     pub loaded: bool,
+    /// The move component's serialized `specialMovePower` — the flat power term
+    /// the special-move damage formula adds to the caster's attack stats. Only
+    /// present when the move is loaded.
+    pub special_move_power: Option<f32>,
     /// Whether the move deals damage: its `damageTypeDefinitions` list is
     /// non-empty. Heals/buffs have no damage types.
     pub is_damaging: bool,
@@ -301,9 +311,12 @@ impl CombatMove {
         let move_id = Self::read_string(memory_context, move_ptr, "combatMoveId");
         let combo_point_cost = memory_context.read_named::<u32>(move_ptr, "comboPointCost");
         let skill_point_cost = memory_context.read_named::<u32>(move_ptr, "skillPointCost");
-        let loaded = memory_context
-            .read_named_ptr(move_ptr, "combatMoveComponent")
-            .is_some();
+        let component = memory_context.read_named_ptr(move_ptr, "combatMoveComponent");
+        let loaded = component.is_some();
+        // `specialMovePower` lives on the component's `CombatMove` base class;
+        // field resolution walks parents, so the read works on any move type.
+        let special_move_power =
+            component.and_then(|c| memory_context.read_named::<f32>(c, "specialMovePower"));
         // A move deals damage iff its damageTypeDefinitions list has entries.
         let is_damaging = memory_context
             .read_named_ptr(move_ptr, "damageTypeDefinitions")
@@ -322,6 +335,7 @@ impl CombatMove {
             combo_point_cost,
             skill_point_cost,
             loaded,
+            special_move_power,
             is_damaging,
             unlockable,
             main_target_guid,
@@ -371,6 +385,12 @@ pub struct CombatManagerData {
     /// `UnityEngine.Random.RangeInt`, so the inclusive max roll is `max - 1`.
     /// See [`Self::damage_roll_bounds`].
     pub player_random_damage_range: Option<[i32; 2]>,
+    /// `GlobalCombatSettings.playerAOERadius`, read live. Constant per session.
+    /// The radius of the `Physics.OverlapSphere` a player AOE move casts around
+    /// its main target's AOE anchor to gather splash targets
+    /// (`PlayerRadiusTargetSelector.SelectAOETargets`, RVA 0x6893D0) — unless
+    /// the move's selector overrides it with a `customAOERadius`.
+    pub player_aoe_radius: Option<f32>,
     /// Zale's Sunball charge, present only while the charge QTE is active. Lets
     /// the executor hold the charge to max and release on the frame it peaks.
     pub sunball_charge: Option<SunballCharge>,
@@ -815,6 +835,12 @@ impl CombatManagerData {
         {
             self.player_random_damage_range = Some(range);
         }
+        if self.player_aoe_radius.is_none()
+            && let Ok(radius) =
+                memory_context.follow_fields::<f32>(&["globalCombatSettings", "playerAOERadius"])
+        {
+            self.player_aoe_radius = Some(radius);
+        }
         Ok(())
     }
 
@@ -919,9 +945,107 @@ impl CombatManagerData {
                     .read_named_ptr(target, "owner")
                     .and_then(|owner| memory_context.read_named::<u8>(owner, "summoned"))
                     .is_some_and(|summoned| summoned == 1);
+                enemy.position = Self::aoe_anchor_position(memory_context, target);
             }
         }
         Ok(())
+    }
+
+    /// The world position an AOE sphere is centred on when `target` is the
+    /// main target: `dependencies.aoeOverlapPosition`'s Transform position
+    /// (mirrors `CombatTarget.GetAOEOverlapPosition`). The Transform is read
+    /// through its managed wrapper's native object (`m_CachedPtr` at +0x10,
+    /// local position at +0x90 in this Unity build). Combat actors sit under
+    /// identity parents, so local position == world position here.
+    fn aoe_anchor_position(memory_context: &MemoryContext, target: u64) -> Option<Vector3<f32>> {
+        // Explicit anchor, when the target has one set.
+        if let Some(anchor) = memory_context
+            .read_named_ptr(target, "dependencies")
+            .and_then(|deps| memory_context.read_named_ptr(deps, "aoeOverlapPosition"))
+            && let Some(pos) = Self::transform_position(memory_context, anchor)
+        {
+            return Some(pos);
+        }
+        // Fallback (matches the game's): the target's own transform. The
+        // managed MonoBehaviour's native component links to its GameObject
+        // (+0x30), whose component array (+0x30) holds the Transform first.
+        let native_component = Self::native_object(memory_context, target)?;
+        let game_object = memory_context
+            .process
+            .read_pointer::<u64>(native_component + 0x30)
+            .ok()
+            .filter(|p| *p != 0)?;
+        let components = memory_context
+            .process
+            .read_pointer::<u64>(game_object + 0x30)
+            .ok()
+            .filter(|p| *p != 0)?;
+        let native_transform = memory_context
+            .process
+            .read_pointer::<u64>(components + 0x8)
+            .ok()
+            .filter(|p| *p != 0)?;
+        Self::native_transform_position(memory_context, native_transform)
+    }
+
+    /// A managed Unity object's native counterpart (`m_CachedPtr` at +0x10).
+    fn native_object(memory_context: &MemoryContext, managed: u64) -> Option<u64> {
+        memory_context
+            .process
+            .read_pointer::<u64>(managed + 0x10)
+            .ok()
+            .filter(|p| *p != 0)
+    }
+
+    /// Position of a *managed* Transform, through its native object.
+    fn transform_position(memory_context: &MemoryContext, transform: u64) -> Option<Vector3<f32>> {
+        let native = Self::native_object(memory_context, transform)?;
+        Self::native_transform_position(memory_context, native)
+    }
+
+    /// World position of a *native* Transform, computed from Unity's transform
+    /// hierarchy: the native Transform holds a `TransformAccess` (hierarchy ptr
+    /// at +0x38, node index at +0x40); the hierarchy stores per-node local TRS
+    /// blocks (48 bytes: translation, rotation, scale — ptr at +0x18) and
+    /// parent indices (+0x20). Battle hierarchies carry no rotation/scale, so
+    /// the world position is the sum of local translations up the parent chain.
+    fn native_transform_position(
+        memory_context: &MemoryContext,
+        native: u64,
+    ) -> Option<Vector3<f32>> {
+        const TRS_STRIDE: u64 = 48;
+        let process = memory_context.process;
+        let hierarchy = process
+            .read_pointer::<u64>(native + 0x38)
+            .ok()
+            .filter(|p| *p != 0)?;
+        let mut index = process.read_pointer::<i32>(native + 0x40).ok()?;
+        let local_trs = process
+            .read_pointer::<u64>(hierarchy + 0x18)
+            .ok()
+            .filter(|p| *p != 0)?;
+        let parents = process
+            .read_pointer::<u64>(hierarchy + 0x20)
+            .ok()
+            .filter(|p| *p != 0)?;
+
+        let (mut x, mut y, mut z) = (0.0f32, 0.0f32, 0.0f32);
+        // Bounded walk so a bad read can't loop forever.
+        for _ in 0..64 {
+            if index < 0 {
+                return Some(Vector3::new(x, y, z));
+            }
+            let [tx, ty, tz] = process
+                .read_pointer::<[f32; 3]>(local_trs + index as u64 * TRS_STRIDE)
+                .ok()?;
+            x += tx;
+            y += ty;
+            z += tz;
+            index = process
+                .read_pointer::<i32>(parents + index as u64 * 4)
+                .ok()?;
+        }
+        None
     }
 
     pub fn update_players(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
@@ -1020,8 +1144,10 @@ impl UnityItem for CombatEnemy {
             level,
             live_mana_spawn_quantity,
             // Resolved in `update_enemies`, which has the memory context needed
-            // to walk the `item -> owner -> summoned` field-name path.
+            // to walk the field-name paths (`item -> owner -> summoned`, the
+            // AOE anchor transform).
             summoned: false,
+            position: None,
         })
     }
 }
