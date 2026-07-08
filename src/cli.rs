@@ -293,6 +293,76 @@ fn dump_state(core: &TasCore, format: LogFormat) {
         ("encounter_active", combat.encounter_active.to_string()),
         ("enemy_count", combat.enemies.items.len().to_string()),
         ("player_count", combat.players.items.len().to_string()),
+        (
+            "player_aoe_radius",
+            combat
+                .player_aoe_radius
+                .map(|r| format!("{r:.3}"))
+                .unwrap_or_else(|| "none".to_string()),
+        ),
+        (
+            "enemies",
+            combat
+                .enemies
+                .items
+                .iter()
+                .map(|e| {
+                    let pos = e
+                        .position
+                        .map(|p| format!("{:.2},{:.2},{:.2}", p.get_x(), p.get_y(), p.get_z()))
+                        .unwrap_or_else(|| "?".to_string());
+                    let mods = e
+                        .damage_type_modifiers
+                        .items
+                        .iter()
+                        .map(|(k, v)| format!("{:?}={}", k.key, v.value))
+                        .collect::<Vec<_>>()
+                        .join(",");
+                    format!(
+                        "{} hp={} pdef={} mdef={} pos=({pos}) mods=[{mods}]",
+                        e.unique_id, e.current_hp, e.physical_defense, e.magical_defense
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join(" | "),
+        ),
+        (
+            "players",
+            combat
+                .players
+                .items
+                .iter()
+                .map(|p| {
+                    format!(
+                        "{:?} hp={} mp={} patk={} matk={}",
+                        p.character,
+                        p.current_hp,
+                        p.current_mp,
+                        p.physical_attack,
+                        p.magical_attack
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join(" | "),
+        ),
+        (
+            "moves",
+            combat
+                .moves
+                .iter()
+                .flat_map(|cm| {
+                    cm.moves.iter().filter(|m| m.loaded).map(|m| {
+                        format!(
+                            "{:?}:{} power={:?}",
+                            cm.character,
+                            m.move_id.as_deref().unwrap_or("?"),
+                            m.special_move_power
+                        )
+                    })
+                })
+                .collect::<Vec<_>>()
+                .join(" | "),
+        ),
         ("level_up_active", level_up.active.to_string()),
         ("is_speedrunning", speedrun.is_speedrunning.to_string()),
         ("speedrun_timer", format!("{}", speedrun.speedrun_timer)),

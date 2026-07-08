@@ -298,6 +298,27 @@ pub trait Action {
 
     // --- Helpers ---
 
+    /// Damage estimate for a magic special move: the real decompiled formula
+    /// when the move's `specialMovePower` is readable from memory, the rough
+    /// magic heuristic otherwise (move not loaded yet). The executor lands its
+    /// cast QTEs — Sunball charges to max, timed hits connect — so the
+    /// estimate assumes a full charge (`1.0`).
+    fn special_move_estimate(
+        &self,
+        cmd: &CombatManagerData,
+        player: &CombatPlayer,
+        enemy: &CombatEnemy,
+        damage_type: CombatDamageType,
+    ) -> f32 {
+        match self.find_move(cmd).and_then(|m| m.special_move_power) {
+            Some(power) => {
+                let (_, max_roll) = cmd.damage_roll_bounds();
+                damage::special_move_damage(player, enemy, damage_type, power, 1.0, max_roll)
+            }
+            None => damage::magic_damage_estimate(player, enemy, damage_type),
+        }
+    }
+
     /// The live `CombatPlayer` for this action's character, if present.
     fn player<'a>(&self, cmd: &'a CombatManagerData) -> Option<&'a CombatPlayer> {
         cmd.players

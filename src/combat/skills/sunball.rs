@@ -9,7 +9,6 @@ use data::prelude::PlayerPartyCharacter;
 use joystick::common::JoystickBtnInterface;
 
 use super::{Action, ActionCtx, SkillResource, StepOutcome, TimingType};
-use crate::combat::damage;
 use crate::control::SosAction;
 use crate::memory::combat_manager::{
     CombatDamageType, CombatEnemy, CombatManagerData, CombatPlayer, SunballCharge,
@@ -135,11 +134,11 @@ impl Action for Sunball {
 
     fn estimate_damage(
         &self,
-        _cmd: &CombatManagerData,
+        cmd: &CombatManagerData,
         player: &CombatPlayer,
         enemy: &CombatEnemy,
     ) -> f32 {
-        damage::magic_damage_estimate(player, enemy, CombatDamageType::Sun)
+        self.special_move_estimate(cmd, player, enemy, CombatDamageType::Sun)
     }
 
     /// Drive the charge QTE: advance [`ChargeState`] from the live read, then

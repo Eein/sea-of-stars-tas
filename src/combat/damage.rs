@@ -69,9 +69,61 @@ fn magic_damage_modifier(player: &CombatPlayer, enemy: &CombatEnemy) -> f32 {
     }
 }
 
+/// `PlayerSpecialMoveDamage.qteSuccessMultiplier` — the damage multiplier a
+/// fully successful cast QTE earns. Serialized default from the component's
+/// ctor (RVA 0x4D0E70); per-move assets could override it, none are known to.
+const QTE_SUCCESS_MULTIPLIER: f32 = 1.3;
+/// `PlayerSpecialMoveDamage.additionalTimedHitQteSuccessMultiplierBonus` —
+/// added to the multiplier per QTE success counted (ctor default).
+const QTE_SUCCESS_BONUS: f32 = 0.2;
+/// `PlayerAttackDamage.aoeDamageMultiplier` — secondary targets of an AOE
+/// special move take this fraction of the full damage (ctor default).
+pub const AOE_SECONDARY_MULTIPLIER: f32 = 0.6;
+
+/// A magic special move's damage, following the decompiled
+/// `PlayerSpecialMoveDamage.CalculatePreModifiersDamage` (RVA 0x4CFE70):
+///
+/// ```text
+/// base      = magicAttack + specialMovePower + random          (+ Live Mana boost, unmodelled)
+/// processed = (1 - magDef/150) * (typeModifier * base)
+/// qteMult   = 1.3 + successCount * 0.2                          (ctor defaults)
+/// final     = round(processed + t * (qteMult - 1) * (processed - random))
+/// ```
+///
+/// `charge` is the move's *input modifier* `t`, clamped to `0..=1`. Sunball
+/// passes its charge fraction (`level / maxLevel`, set on the projectile at
+/// throw time); a plain timed-QTE move passes `HasSuccess()` as `0`/`1`. The
+/// QTE *success bonus* only counts at a full charge — Sunball scores any
+/// release below max as a failed QTE (`OnSunballHit`, RVA 0x655480: `level <
+/// max` → `FailDidNoPress`) — so the effective multiplier ramps from `×1.0`
+/// (no charge) through `1 + t·0.3` (partial) to `×1.5` (max charge, where the
+/// success adds its `+0.2`).
+///
+/// `move_power` is the move component's serialized `specialMovePower`, read
+/// live from memory. Assumes the damage component's stat lists are the usual
+/// `[MagicalAttack]` with no physical component, and no Live Mana boost.
+pub fn special_move_damage(
+    player: &CombatPlayer,
+    enemy: &CombatEnemy,
+    damage_type: CombatDamageType,
+    move_power: f32,
+    charge: f32,
+    random: f32,
+) -> f32 {
+    let base = player.magical_attack as f32 + move_power + random;
+    let defense_ratio = 1.0 - (enemy.magical_defense as f32 / MAGICAL_DEFENSE_CAP);
+    let processed = defense_ratio * (modifier_for(enemy, damage_type) * base);
+
+    let t = charge.clamp(0.0, 1.0);
+    let success_bonus = if t >= 1.0 { QTE_SUCCESS_BONUS } else { 0.0 };
+    let qte_multiplier = QTE_SUCCESS_MULTIPLIER + success_bonus;
+    round_damage(processed + t * (qte_multiplier - 1.0) * (processed - random))
+}
+
 /// Rough magic-skill estimate: scales with magical attack, reduced by the
 /// enemy's magical defense, times the enemy's modifier for `damage_type`.
-/// Placeholder pending the real per-skill formula.
+/// Fallback for special moves whose `specialMovePower` isn't readable (move
+/// not loaded); [`special_move_damage`] is the real formula.
 pub fn magic_damage_estimate(
     player: &CombatPlayer,
     enemy: &CombatEnemy,
@@ -80,13 +132,7 @@ pub fn magic_damage_estimate(
     const SKILL_MULTIPLIER: f32 = 2.0;
 
     let defense_ratio = 1.0 - (enemy.magical_defense as f32 / MAGICAL_DEFENSE_CAP);
-    let modifier = enemy
-        .damage_type_modifiers
-        .items
-        .iter()
-        .find(|(k, _)| k.key == damage_type)
-        .map(|(_, v)| v.value)
-        .unwrap_or(1.0);
+    let modifier = modifier_for(enemy, damage_type);
 
     (player.magical_attack as f32 * SKILL_MULTIPLIER * modifier * defense_ratio).floor()
 }
@@ -182,6 +228,33 @@ mod tests {
         assert_eq!(round_damage(base), 53.0);
         // 1.299999 * 53 = 68.8999.. -> Math.Round -> 69
         assert_eq!(round_damage(base + timed), 69.0);
+    }
+
+    /// Sunball's charge-scaled damage, pinned to the live boss-fight capture
+    /// (2026-07-08, see AOE.md): Zale matk 15, Sunball power 12, max roll 3,
+    /// boss mdef 50 with Sun ×1.25 — `processed` is exactly 25.
+    #[test]
+    fn sunball_charge_damage_scales_with_charge() {
+        let player = CombatPlayer {
+            character: PlayerPartyCharacter::Zale,
+            magical_attack: 15,
+            ..Default::default()
+        };
+        let mut enemy = enemy_with(&[(CombatDamageType::Sun, 1.25)]);
+        enemy.magical_defense = 50;
+
+        let dmg =
+            |charge| special_move_damage(&player, &enemy, CombatDamageType::Sun, 12.0, charge, 3.0);
+
+        // Max charge: QTE success, ×1.5 → 25 + 0.5·(25−3) = 36.
+        assert_eq!(dmg(1.0), 36.0);
+        // Half charge (level 2/4): failed QTE, 1 + 0.5·0.3 → 25 + 0.15·22 = 28.3 → 28.
+        assert_eq!(dmg(0.5), 28.0);
+        // No charge: multiplier collapses to ×1.0 → just the processed base.
+        assert_eq!(dmg(0.0), 25.0);
+        // Out-of-range input modifiers clamp like the game's (comiss clamp).
+        assert_eq!(dmg(2.0), dmg(1.0));
+        assert_eq!(dmg(-1.0), dmg(0.0));
     }
 
     /// Charged Zale vs an enemy weak to Sword but resistant to Sun. The fix:

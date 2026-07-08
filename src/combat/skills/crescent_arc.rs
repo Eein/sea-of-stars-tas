@@ -3,7 +3,6 @@
 use data::prelude::PlayerPartyCharacter;
 
 use super::{Action, SkillResource, TargetType};
-use crate::combat::damage;
 use crate::memory::combat_manager::{
     CombatDamageType, CombatEnemy, CombatManagerData, CombatPlayer,
 };
@@ -37,10 +36,10 @@ impl Action for CrescentArc {
 
     fn estimate_damage(
         &self,
-        _cmd: &CombatManagerData,
+        cmd: &CombatManagerData,
         player: &CombatPlayer,
         enemy: &CombatEnemy,
     ) -> f32 {
-        damage::magic_damage_estimate(player, enemy, CombatDamageType::Moon)
+        self.special_move_estimate(cmd, player, enemy, CombatDamageType::Moon)
     }
 }
