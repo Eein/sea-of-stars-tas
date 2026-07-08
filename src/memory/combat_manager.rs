@@ -72,6 +72,58 @@ pub struct LiveMana {
     pub small: u32,
 }
 
+/// The step Zale's Sunball charge QTE is on (`SunboyShootQTESunballState.currentStep`).
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SunballChargeStep {
+    /// Intro: "Hold A for power!" — the intro animation plays forward only while
+    /// Confirm is held, then transitions to [`Charging`](Self::Charging). The
+    /// projectile hasn't been (re)spawned yet, so its `level` is stale here.
+    #[default]
+    In,
+    /// The charge is building: holding climbs the projectile's `level` one step
+    /// at a time up to `max_level`.
+    Charging,
+    /// The sunball has been released/thrown.
+    Shoot,
+    /// Any other/unrecognised step value.
+    Other,
+}
+
+impl SunballChargeStep {
+    fn from_i32(value: i32) -> Self {
+        match value {
+            0 => Self::In,
+            1 => Self::Charging,
+            2 => Self::Shoot,
+            _ => Self::Other,
+        }
+    }
+}
+
+/// Live state of Zale's Sunball charge, read from the active
+/// `SunboyShootQTESunballState` while the charge QTE is on screen. Present only
+/// while that state is active; `None` otherwise.
+///
+/// The move charges through discrete levels: holding Confirm advances the intro
+/// then climbs the projectile's `level` one step at a time up to `max_level`.
+/// Releasing exactly at `max_level` lands the strongest hit (and its timing
+/// QTE). The executor (`CombatController::charge_should_hold`) turns this into a
+/// hold/release decision — no blind timer.
+#[derive(Default, Debug, Clone)]
+pub struct SunballCharge {
+    /// The projectile's current charge level (`SunballProjectile.level`),
+    /// counting up from 0 as the charge builds. Only meaningful during
+    /// [`Charging`](SunballChargeStep::Charging) — the projectile is pooled, so
+    /// during [`In`](SunballChargeStep::In) (and the first Charging frame) it can
+    /// still read the *previous* cast's level until the fresh projectile spawns.
+    pub level: i32,
+    /// The move's maximum charge level (`SunboyShootQTESunballState.sunballMaxLevel`,
+    /// normally 4).
+    pub max_level: i32,
+    /// Which step the QTE is on.
+    pub step: SunballChargeStep,
+}
+
 #[derive(Default, Debug, Clone)]
 pub struct EquippedTrinket {
     pub trinket: Option<Item>,
@@ -319,6 +371,9 @@ pub struct CombatManagerData {
     /// `UnityEngine.Random.RangeInt`, so the inclusive max roll is `max - 1`.
     /// See [`Self::damage_roll_bounds`].
     pub player_random_damage_range: Option<[i32; 2]>,
+    /// Zale's Sunball charge, present only while the charge QTE is active. Lets
+    /// the executor hold the charge to max and release on the frame it peaks.
+    pub sunball_charge: Option<SunballCharge>,
 }
 
 /// Sentinel returned by the game for an unset pointer.
@@ -433,6 +488,7 @@ impl MemoryManagerUpdate for CombatManagerData {
             self.update_selected_character(&memory_context)?;
             self.update_battle_commands(&memory_context)?;
             self.update_moves(&memory_context)?;
+            self.update_sunball_charge(&memory_context)?;
         }
 
         Ok(())
@@ -587,6 +643,95 @@ impl CombatManagerData {
         }
 
         self.selected_attack_target_guid = main_hit.or(current_hit);
+        Ok(())
+    }
+
+    /// Read Zale's live Sunball charge while the charge QTE is active.
+    ///
+    /// The charge lives on the `SunboyShootQTESunballState`, but reading it off
+    /// `stateMachine.currentState` is unreliable: that pointer flickers off the
+    /// state for stray frames (transitions, sub-states), and since releasing
+    /// Confirm for even one frame fires the sunball early, a momentary miss ruins
+    /// the cast. Instead we find the state's *persistent, pooled instance* in
+    /// `stateMachine.stateInstances` (a stable object that never flickers) and
+    /// gate "actively charging" on `sunballChargeDuration`, which the game sets
+    /// positive on enter and resets to `-1` on exit. From that instance we read
+    /// the projectile's `level` (its `sunballProjectileInstance.level`), the
+    /// ceiling `sunballMaxLevel`, and `currentStep`. All field-name resolved, so
+    /// it survives struct-layout drift. Cleared to `None` when no actor is
+    /// charging.
+    pub fn update_sunball_charge(
+        &mut self,
+        memory_context: &MemoryContext,
+    ) -> Result<(), MemoryError> {
+        self.sunball_charge = None;
+
+        let Ok(enc) = memory_context.follow_fields::<u64>(&["currentEncounter"]) else {
+            return Ok(());
+        };
+        let Some(actors) = memory_context.read_named_ptr(enc, "playerActors") else {
+            return Ok(());
+        };
+
+        for actor in memory_context.list_item_ptrs(actors) {
+            let Some(states) = memory_context
+                .read_named_ptr(actor, "stateMachine")
+                .and_then(|sm| memory_context.read_named_ptr(sm, "stateInstances"))
+            else {
+                continue;
+            };
+
+            // Find the charge state's persistent instance by its il2cpp class.
+            // Unlike `currentState`, this list entry is stable frame-to-frame.
+            let Some(state) = memory_context
+                .list_item_ptrs(states)
+                .into_iter()
+                .find(|&s| {
+                    Class::from_object(memory_context.process, s)
+                        .and_then(|class| {
+                            class
+                                .class_name::<64>(memory_context.process, memory_context.module)
+                                .ok()
+                        })
+                        .and_then(|name| name.validate_utf8().ok().map(str::to_string))
+                        .is_some_and(|name| name == "SunboyShootQTESunballState")
+                })
+            else {
+                continue;
+            };
+
+            // A charge is on screen only while the state is active: its duration
+            // is set strictly positive on enter and reset to -1 on exit (and is
+            // 0 on the pooled instance before the first cast) — so `> 0` cleanly
+            // distinguishes an active cast from idle.
+            let charging = memory_context
+                .read_named::<f32>(state, "sunballChargeDuration")
+                .is_some_and(|d| d > 0.0);
+            if !charging {
+                continue;
+            }
+
+            let max_level = memory_context
+                .read_named::<i32>(state, "sunballMaxLevel")
+                .unwrap_or(0);
+            let level = memory_context
+                .read_named_ptr(state, "sunballProjectileInstance")
+                .and_then(|projectile| memory_context.read_named::<i32>(projectile, "level"))
+                .unwrap_or(0);
+            let step = SunballChargeStep::from_i32(
+                memory_context
+                    .read_named::<i32>(state, "currentStep")
+                    .unwrap_or(-1),
+            );
+
+            self.sunball_charge = Some(SunballCharge {
+                level,
+                max_level,
+                step,
+            });
+            return Ok(());
+        }
+
         Ok(())
     }
 

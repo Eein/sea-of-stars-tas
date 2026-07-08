@@ -73,6 +73,19 @@ impl ActingState {
             scratch: StepScratch::default(),
         }
     }
+
+    /// Latch `action` straight into its execution ([`Attacking`](ActionStep::Attacking))
+    /// step, skipping the menus. Used to (re-)own an in-progress timed input — a
+    /// Sunball charge — that's already on screen (there are no menus left to
+    /// drive, and no target to pick since the cast is committed).
+    fn executing(action: Box<dyn Action>) -> Self {
+        Self {
+            action,
+            target: String::new(),
+            step: ActionStep::Attacking,
+            scratch: StepScratch::default(),
+        }
+    }
 }
 
 /// The per-frame combat flags the turn logic branches on, copied out of the
@@ -136,6 +149,14 @@ impl CombatController {
     /// submenu → target → timed hit). The coarse gates (turn boundary, enemy
     /// turns, wrong-character preemption) live here; the per-state behaviour is
     /// one small handler per [`TurnState`] variant.
+    ///
+    /// A committed action in its *execution* phase (see
+    /// [`acting_in_execution`](Self::acting_in_execution)) is exempt from those
+    /// gates: its timed input (a Sunball charge) plays out during the
+    /// special-move animation — after the menu turn has ended, when no player is
+    /// `enabled` and the active index may move — exactly when the gates would
+    /// otherwise `release_all` and abandon it. So we tick the action straight
+    /// through until its own step machine says [`Done`](skills::StepOutcome::Done).
     pub(super) fn execute_turn(&mut self, state: &mut GameState, dt: f64) {
         let gamepad_idx = Self::active_gamepad(state);
         let signals = TurnSignals::read(
@@ -148,25 +169,46 @@ impl CombatController {
             .data
             .current_player_index;
 
-        // Turn boundary: a different active index means a fresh actor. Reset and
-        // let the settle delay elapse before the first press.
-        if turn != self.turn_index {
-            state.release_all();
-            self.turn_index = turn;
-            self.last_gamepad = Some(gamepad_idx);
-            self.turn_state = TurnState::idle();
+        // A live charge QTE that nothing is executing needs an owner: it plays
+        // out after the menu turn (so the gates below would just drop the hold),
+        // and we may not have committed it through the menus at all (self-heal a
+        // desync/restart mid-cast). Latch the charge action straight into its
+        // execution step so its own FSM drives it to completion.
+        let charge_live = state
+            .memory_managers
+            .combat_manager
+            .data
+            .sunball_charge
+            .is_some();
+        if charge_live
+            && !self.acting_in_execution()
+            && let Some(action) = skills::charge_action()
+        {
+            self.turn_state = TurnState::Acting(ActingState::executing(action));
         }
 
-        // Not our turn: nobody is enabled, so an enemy is acting. Release any
-        // held input, park in Idle, and wait — never drive a menu now.
-        if !signals.our_turn {
-            if !self.btn.done() {
-                self.btn.update(&mut state.gamepads[gamepad_idx], dt);
-            } else {
+        // Gates apply only when we're *not* mid-execution of a committed action.
+        if !self.acting_in_execution() {
+            // Turn boundary: a different active index means a fresh actor. Reset
+            // and let the settle delay elapse before the first press.
+            if turn != self.turn_index {
                 state.release_all();
+                self.turn_index = turn;
+                self.last_gamepad = Some(gamepad_idx);
+                self.turn_state = TurnState::idle();
             }
-            self.turn_state = TurnState::idle();
-            return;
+
+            // Not our turn: nobody is enabled, so an enemy is acting. Release any
+            // held input, park in Idle, and wait — never drive a menu now.
+            if !signals.our_turn {
+                if !self.btn.done() {
+                    self.btn.update(&mut state.gamepads[gamepad_idx], dt);
+                } else {
+                    state.release_all();
+                }
+                self.turn_state = TurnState::idle();
+                return;
+            }
         }
 
         let cmd = &state.memory_managers.combat_manager.data;
@@ -199,6 +241,22 @@ impl CombatController {
             }
             TurnState::Acting(acting) => self.act(acting, cmd, pad, dt),
         };
+    }
+
+    /// Whether a committed action is in its execution phase — latched in
+    /// [`TurnState::Acting`] on the target-confirm or attack step, where its
+    /// timed input plays out. From `ConfirmingTarget` onward the cast is
+    /// committed and the special-move animation can drop `our_turn`, so the
+    /// action owns the inputs until its step machine resolves; the per-turn gates
+    /// (turn boundary, not-our-turn) are skipped rather than abandon it.
+    fn acting_in_execution(&self) -> bool {
+        matches!(
+            &self.turn_state,
+            TurnState::Acting(acting) if matches!(
+                acting.step,
+                ActionStep::ConfirmingTarget | ActionStep::Attacking
+            )
+        )
     }
 
     /// Whether we're navigating menus (command ring / ability submenu) while

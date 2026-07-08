@@ -134,9 +134,7 @@ impl<T: MemoryManagerUpdate> MemoryManager<T> {
         // (the `X Loaded` line is emitted at construction, before the game is
         // attached, so the address isn't known there). Re-logs if it re-resolves
         // after a reset.
-        if !was_resolved
-            && let Some(singleton) = &self.manager.singleton
-        {
+        if !was_resolved && let Some(singleton) = &self.manager.singleton {
             info!("Memory: {} address: {:#x}", self.name, singleton.class);
         }
         if self.ready_for_updates(ctx) {

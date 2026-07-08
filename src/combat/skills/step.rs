@@ -60,6 +60,18 @@ pub struct StepScratch {
     pub last_cursor: Option<String>,
     /// `timed_attack_ready` last frame, so taps land only on the rising edge.
     pub last_timed_ready: bool,
+    /// Charge actions: whether we've seen the projectile's level climb below max
+    /// this cast. The projectile is pooled, so at the intro→charging boundary its
+    /// level briefly reads the previous cast's (stale) max; we only trust
+    /// "at max" once we've watched it climb up from below, or it fires instantly.
+    pub charge_saw_low: bool,
+    /// Charge actions: whether we're holding Confirm mid-build. Latches the hold
+    /// across a transient charge-read dropout — releasing for even one frame
+    /// while charging fires the sunball early.
+    pub charge_building: bool,
+    /// Charge actions: time elapsed in a charge-read dropout, bounding how long
+    /// we keep holding before concluding the charge really ended.
+    pub charge_miss: f64,
 }
 
 /// Everything an `Action`'s `execute_*` step needs to drive one frame: the

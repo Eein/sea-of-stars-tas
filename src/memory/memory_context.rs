@@ -115,7 +115,10 @@ impl<'a> MemoryContext<'a> {
         let Ok(slots) = self.process.read_pointer::<u64>(set_ptr + SLOTS_OFFSET) else {
             return out;
         };
-        let Ok(last_index) = self.process.read_pointer::<i32>(set_ptr + LAST_INDEX_OFFSET) else {
+        let Ok(last_index) = self
+            .process
+            .read_pointer::<i32>(set_ptr + LAST_INDEX_OFFSET)
+        else {
             return out;
         };
         if slots == 0 {

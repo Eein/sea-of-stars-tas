@@ -5,27 +5,48 @@ use data::prelude::PlayerPartyCharacter;
 use joystick::common::JoystickBtnInterface;
 
 use super::menu::{self, MAX_TARGET_TAPS, TARGET_DIRS, cancel_press, confirm_press, tap_press};
-use super::step::{ActionCtx, ActionStep, StepOutcome};
+use super::step::{ActionCtx, ActionStep, StepOutcome, StepScratch};
 use crate::combat::damage;
 use crate::control::SosAction;
 use crate::memory::combat_manager::{
-    CombatDamageType, CombatEnemy, CombatManagerData, CombatMove, CombatPlayer,
+    CombatDamageType, CombatEnemy, CombatManagerData, CombatMove, CombatPlayer, SunballCharge,
+    SunballChargeStep,
 };
 
 /// If a post-commit wait sees no timed-window activity for this long, the
 /// confirms likely desynced — mash to force the turn along.
 const STUCK_TIMEOUT: f64 = 6.0;
-/// Delay after committing a charge action before we start holding Confirm: the
-/// caster leaps to center screen before the charge phase opens, so holding too
-/// early gets the input eaten and the charge fails. The jump is slow, so this
-/// must cover it — a short wait fails when the caster has to travel.
-const CHARGE_SETTLE: f64 = 1.5;
-/// How long to hold Confirm to build the charge before releasing to fire. A
-/// charge isn't a timed hit — there's no `timed_attack_ready` window.
-const CHARGE_HOLD: f64 = 1.75;
-/// Grace after the charge releases before the mash safety net kicks in, to let
-/// the cast animation resolve on its own.
-const CHARGE_RESOLVE_GRACE: f64 = 4.0;
+/// How long to keep holding a charge through a `None` charge-read blip before
+/// concluding the charge really ended (a few frames' worth).
+const CHARGE_HOLD_GRACE: f64 = 0.2;
+
+/// Whether to keep holding Confirm for this Sunball charge frame. Holds through
+/// the intro and while the level climbs; releases (to fire) once it truly peaks.
+///
+/// The subtlety is the pooled projectile's stale `level` at the intro→charging
+/// boundary: it can read the previous cast's max for a frame before resetting,
+/// so "at max" is only trusted after we've watched the level climb up from below
+/// this cast ([`StepScratch::charge_saw_low`]).
+fn charge_should_hold(charge: &SunballCharge, scratch: &mut StepScratch) -> bool {
+    match charge.step {
+        // Intro: hold, and reset the per-cast "saw the level climb" latch.
+        SunballChargeStep::In => {
+            scratch.charge_saw_low = false;
+            true
+        }
+        SunballChargeStep::Charging => {
+            if charge.max_level > 0 && charge.level >= charge.max_level {
+                // At max — release only once we've seen it climb here (else the
+                // level is a stale pooled read; keep holding until it resets).
+                !scratch.charge_saw_low
+            } else {
+                scratch.charge_saw_low = true;
+                true
+            }
+        }
+        SunballChargeStep::Shoot | SunballChargeStep::Other => false,
+    }
+}
 
 /// How the timed input is landed during [`ActionStep::Attacking`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -292,18 +313,38 @@ pub trait Action {
         let timed_ready = ctx.timed_ready();
         match self.timing_type() {
             TimingType::Charge => {
-                // Settle → hold to build the charge → release to fire. No timed
-                // window is involved; it's driven off the step timer alone.
-                let hold_end = CHARGE_SETTLE + CHARGE_HOLD;
-                if ctx.scratch.timer >= CHARGE_SETTLE && ctx.scratch.timer < hold_end {
-                    ctx.gamepad.press(&SosAction::Confirm);
-                } else {
-                    ctx.gamepad.release(&SosAction::Confirm);
-                }
-                // Safety net: if the cast still hasn't resolved a while after
-                // releasing, mash to force the turn along.
-                if ctx.scratch.timer >= hold_end + CHARGE_RESOLVE_GRACE {
-                    ctx.mash();
+                // Drive the charge off its live state (`sunball_charge`): hold
+                // Confirm to advance the intro and climb the charge levels,
+                // releasing the frame it peaks to fire at max. The read can blip
+                // to `None` for a frame mid-charge, and releasing even once fires
+                // early, so [`charge_building`] latches the hold across a brief
+                // gap. Before the charge appears (the caster's leap) and after it
+                // fires we just wait — a returning menu ends the step above.
+                match &ctx.cmd.sunball_charge {
+                    Some(charge) => {
+                        if charge_should_hold(charge, ctx.scratch) {
+                            ctx.gamepad.press(&SosAction::Confirm);
+                            ctx.scratch.charge_building = true;
+                        } else {
+                            ctx.gamepad.release(&SosAction::Confirm);
+                            ctx.scratch.charge_building = false;
+                        }
+                        ctx.scratch.charge_miss = 0.0;
+                    }
+                    None if ctx.scratch.charge_building
+                        && ctx.scratch.charge_miss < CHARGE_HOLD_GRACE =>
+                    {
+                        // Transient read dropout mid-build — keep holding.
+                        ctx.gamepad.press(&SosAction::Confirm);
+                        ctx.scratch.charge_miss += ctx.dt;
+                    }
+                    None => {
+                        ctx.scratch.charge_building = false;
+                        ctx.gamepad.release(&SosAction::Confirm);
+                        if ctx.scratch.timer >= STUCK_TIMEOUT {
+                            ctx.mash();
+                        }
+                    }
                 }
             }
             TimingType::OneHit | TimingType::MultiHit => {
