@@ -4,49 +4,13 @@
 use data::prelude::PlayerPartyCharacter;
 use joystick::common::JoystickBtnInterface;
 
-use super::menu::{self, MAX_TARGET_TAPS, TARGET_DIRS, cancel_press, confirm_press, tap_press};
-use super::step::{ActionCtx, ActionStep, StepOutcome, StepScratch};
+use super::menu::{self, cancel_press, confirm_press, tap_press};
+use super::step::{ActionCtx, ActionStep, DriveResult, StepOutcome};
 use crate::combat::damage;
 use crate::control::SosAction;
 use crate::memory::combat_manager::{
-    CombatDamageType, CombatEnemy, CombatManagerData, CombatMove, CombatPlayer, SunballCharge,
-    SunballChargeStep,
+    CombatDamageType, CombatEnemy, CombatManagerData, CombatMove, CombatPlayer,
 };
-
-/// If a post-commit wait sees no timed-window activity for this long, the
-/// confirms likely desynced — mash to force the turn along.
-const STUCK_TIMEOUT: f64 = 6.0;
-/// How long to keep holding a charge through a `None` charge-read blip before
-/// concluding the charge really ended (a few frames' worth).
-const CHARGE_HOLD_GRACE: f64 = 0.2;
-
-/// Whether to keep holding Confirm for this Sunball charge frame. Holds through
-/// the intro and while the level climbs; releases (to fire) once it truly peaks.
-///
-/// The subtlety is the pooled projectile's stale `level` at the intro→charging
-/// boundary: it can read the previous cast's max for a frame before resetting,
-/// so "at max" is only trusted after we've watched the level climb up from below
-/// this cast ([`StepScratch::charge_saw_low`]).
-fn charge_should_hold(charge: &SunballCharge, scratch: &mut StepScratch) -> bool {
-    match charge.step {
-        // Intro: hold, and reset the per-cast "saw the level climb" latch.
-        SunballChargeStep::In => {
-            scratch.charge_saw_low = false;
-            true
-        }
-        SunballChargeStep::Charging => {
-            if charge.max_level > 0 && charge.level >= charge.max_level {
-                // At max — release only once we've seen it climb here (else the
-                // level is a stale pooled read; keep holding until it resets).
-                !scratch.charge_saw_low
-            } else {
-                scratch.charge_saw_low = true;
-                true
-            }
-        }
-        SunballChargeStep::Shoot | SunballChargeStep::Other => false,
-    }
-}
 
 /// How the timed input is landed during [`ActionStep::Attacking`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -55,7 +19,10 @@ pub enum TimingType {
     None,
     /// A single crisp tap when the window opens.
     OneHit,
-    /// Hold, then release when the window fires.
+    /// Hold, then release when the window fires. Charge skills own their QTE:
+    /// they override [`Action::execute_attacking`] with their own state machine
+    /// (see `sunball.rs`); this variant is their identity for the executor's
+    /// re-latch (see `charge_action`).
     Charge,
     /// One tap per hit across a multi-hit animation.
     MultiHit,
@@ -194,17 +161,18 @@ pub trait Action {
     // The executor dispatches the action's current [`ActionStep`] to the
     // matching method, which reads live memory, presses at most one input, and
     // returns a [`StepOutcome`] telling the executor to stay, advance, or drop
-    // the action. The defaults implement the standard menu-driving behaviour, so
-    // a normal action (basic attack, most skills, combos) overrides nothing; only
-    // an odd timing (a charge) is expressed through [`timing_type`](Self::timing_type),
-    // which the default [`execute_attacking`](Self::execute_attacking) already
-    // dispatches on.
+    // the action. The defaults implement the standard menu-driving behaviour
+    // (delegating the mechanics to the shared `menu` drivers and routing on
+    // their [`DriveResult`]), so a normal action — basic attack, most skills,
+    // combos — overrides nothing. An ability with its own mechanics (Sunball's
+    // charge) overrides the step it owns and keeps that logic, and any state it
+    // needs, in its own file; the methods take `&mut self` for exactly that.
 
     /// [`SelectingCommand`](ActionStep::SelectingCommand): navigate the
     /// battle-command ring to this action's command and confirm it. Skills and
     /// combos open a submenu ([`SelectingAbility`](ActionStep::SelectingAbility));
     /// everything else goes straight to target select.
-    fn execute_selecting_command(&self, ctx: &mut ActionCtx) -> StepOutcome {
+    fn execute_selecting_command(&mut self, ctx: &mut ActionCtx) -> StepOutcome {
         if !ctx.btn.done() {
             ctx.btn.update(ctx.gamepad, ctx.dt);
             return StepOutcome::Stay;
@@ -236,18 +204,23 @@ pub trait Action {
     /// this action's move and confirm it. Backs out to
     /// [`SelectingCommand`](ActionStep::SelectingCommand) if the move can't be
     /// found/cast, advances to target select once committed.
-    fn execute_selecting_ability(&self, ctx: &mut ActionCtx) -> StepOutcome {
-        match self.battle_command() {
+    fn execute_selecting_ability(&mut self, ctx: &mut ActionCtx) -> StepOutcome {
+        let drive = match self.battle_command() {
             BattleCommand::Combo => menu::drive_combo_submenu(self.internal_name(), ctx),
             _ => menu::drive_skill_submenu(self.internal_name(), ctx),
+        };
+        match drive {
+            DriveResult::Ok => StepOutcome::Advance(ActionStep::SelectingTarget),
+            DriveResult::Wait => StepOutcome::Stay,
+            DriveResult::Error => StepOutcome::Advance(ActionStep::SelectingCommand),
         }
     }
 
     /// [`SelectingTarget`](ActionStep::SelectingTarget): move the enemy cursor
-    /// onto the action's target and confirm, bailing to the default target after
-    /// [`MAX_TARGET_TAPS`]. Recovers to the menu we're actually in if the
-    /// previous confirm didn't take.
-    fn execute_selecting_target(&self, ctx: &mut ActionCtx) -> StepOutcome {
+    /// onto the action's target and confirm (the shared cursor driver bails to
+    /// the default target if the wanted one can't be reached). Recovers to the
+    /// menu we're actually in if the previous confirm didn't take.
+    fn execute_selecting_target(&mut self, ctx: &mut ActionCtx) -> StepOutcome {
         if !ctx.btn.done() {
             ctx.btn.update(ctx.gamepad, ctx.dt);
             return StepOutcome::Stay;
@@ -262,32 +235,20 @@ pub trait Action {
             ctx.scratch.timer = 0.0;
             return StepOutcome::Advance(ActionStep::SelectingCommand);
         }
-        let cursor_target = ctx.cmd.selected_attack_target_guid.clone();
-        let on_target = match (ctx.want_target, &cursor_target) {
-            (Some(want), Some(have)) => want == have,
-            (None, _) => true,
-            _ => false,
-        };
-        if on_target || ctx.scratch.taps >= MAX_TARGET_TAPS {
-            *ctx.btn = confirm_press();
-            ctx.scratch.timer = 0.0;
-            return StepOutcome::Advance(ActionStep::ConfirmingTarget);
+        match menu::drive_target_cursor(ctx) {
+            DriveResult::Ok => {
+                *ctx.btn = confirm_press();
+                ctx.scratch.timer = 0.0;
+                StepOutcome::Advance(ActionStep::ConfirmingTarget)
+            }
+            DriveResult::Wait | DriveResult::Error => StepOutcome::Stay,
         }
-        // If the previous tap didn't move the cursor, that axis is exhausted
-        // (edge / wrong direction) — rotate to the next.
-        if cursor_target == ctx.scratch.last_cursor {
-            ctx.scratch.cursor_dir = (ctx.scratch.cursor_dir + 1) % TARGET_DIRS.len();
-        }
-        ctx.scratch.last_cursor = cursor_target;
-        *ctx.btn = tap_press(TARGET_DIRS[ctx.scratch.cursor_dir]);
-        ctx.scratch.taps += 1;
-        StepOutcome::Stay
     }
 
     /// [`ConfirmingTarget`](ActionStep::ConfirmingTarget): drive the
     /// target-confirm press; once it lands, arm the timed-hit edge detector and
     /// enter [`Attacking`](ActionStep::Attacking).
-    fn execute_confirming_target(&self, ctx: &mut ActionCtx) -> StepOutcome {
+    fn execute_confirming_target(&mut self, ctx: &mut ActionCtx) -> StepOutcome {
         if ctx.btn.update(ctx.gamepad, ctx.dt) {
             ctx.gamepad.release(&SosAction::Confirm);
             ctx.scratch.timer = 0.0;
@@ -301,52 +262,16 @@ pub trait Action {
     /// the whole animation, per its [`timing_type`](Self::timing_type). Resolves
     /// ([`Done`](StepOutcome::Done)) when a menu returns (the action ended); a
     /// stuck window triggers a mash.
-    fn execute_attacking(&self, ctx: &mut ActionCtx) -> StepOutcome {
-        // A menu returning means the action resolved — release (dropping any held
-        // charge so it can't auto-confirm the menu) and let the executor pick
-        // the next action.
-        if ctx.cmd.battle_command_has_focus || ctx.in_submenu() {
+    fn execute_attacking(&mut self, ctx: &mut ActionCtx) -> StepOutcome {
+        // A menu returning means the action resolved — release and let the
+        // executor pick the next action.
+        if ctx.menus_returned() {
             ctx.gamepad.release(&SosAction::Confirm);
             ctx.scratch.timer = 0.0;
             return StepOutcome::Done;
         }
         let timed_ready = ctx.timed_ready();
         match self.timing_type() {
-            TimingType::Charge => {
-                // Drive the charge off its live state (`sunball_charge`): hold
-                // Confirm to advance the intro and climb the charge levels,
-                // releasing the frame it peaks to fire at max. The read can blip
-                // to `None` for a frame mid-charge, and releasing even once fires
-                // early, so [`charge_building`] latches the hold across a brief
-                // gap. Before the charge appears (the caster's leap) and after it
-                // fires we just wait — a returning menu ends the step above.
-                match &ctx.cmd.sunball_charge {
-                    Some(charge) => {
-                        if charge_should_hold(charge, ctx.scratch) {
-                            ctx.gamepad.press(&SosAction::Confirm);
-                            ctx.scratch.charge_building = true;
-                        } else {
-                            ctx.gamepad.release(&SosAction::Confirm);
-                            ctx.scratch.charge_building = false;
-                        }
-                        ctx.scratch.charge_miss = 0.0;
-                    }
-                    None if ctx.scratch.charge_building
-                        && ctx.scratch.charge_miss < CHARGE_HOLD_GRACE =>
-                    {
-                        // Transient read dropout mid-build — keep holding.
-                        ctx.gamepad.press(&SosAction::Confirm);
-                        ctx.scratch.charge_miss += ctx.dt;
-                    }
-                    None => {
-                        ctx.scratch.charge_building = false;
-                        ctx.gamepad.release(&SosAction::Confirm);
-                        if ctx.scratch.timer >= STUCK_TIMEOUT {
-                            ctx.mash();
-                        }
-                    }
-                }
-            }
             TimingType::OneHit | TimingType::MultiHit => {
                 // Tap Confirm on each rising edge of the window.
                 ctx.gamepad.release(&SosAction::Confirm);
@@ -356,16 +281,15 @@ pub trait Action {
                 ctx.btn.update(ctx.gamepad, ctx.dt);
                 if timed_ready {
                     ctx.scratch.timer = 0.0; // window activity = progress
-                } else if ctx.scratch.timer >= STUCK_TIMEOUT {
-                    ctx.mash();
+                } else {
+                    ctx.mash_if_stuck();
                 }
             }
-            TimingType::None => {
-                // No input; just wait for the action to resolve.
+            // No input; just wait for the action to resolve. (A Charge skill
+            // never reaches this default — it overrides the whole step.)
+            TimingType::None | TimingType::Charge => {
                 ctx.gamepad.release(&SosAction::Confirm);
-                if ctx.scratch.timer >= STUCK_TIMEOUT {
-                    ctx.mash();
-                }
+                ctx.mash_if_stuck();
             }
         }
         ctx.scratch.last_timed_ready = timed_ready;
