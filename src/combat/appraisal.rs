@@ -213,7 +213,11 @@ pub fn generate_appraisals(cmd: &CombatManagerData) -> Vec<Appraisal> {
         else {
             continue;
         };
-        if command_disabled(cmd, &character_moves.character, skills::BattleCommand::Combo) {
+        if command_disabled(
+            cmd,
+            &character_moves.character,
+            skills::BattleCommand::Combo,
+        ) {
             continue;
         }
         for combat_move in &character_moves.moves {

@@ -46,3 +46,13 @@ pub fn skill_timing(internal_name: &str) -> Option<TimingType> {
         .find(|a| a.internal_name() == internal_name)
         .map(|a| a.timing_type())
 }
+
+/// The registered [`Charge`](TimingType::Charge) action (Sunball), if any. Used
+/// to (re-)latch the charge QTE onto the executor when it appears — the charge
+/// plays out after the menu turn, so it may need driving even when we didn't
+/// commit it through the menus.
+pub fn charge_action() -> Option<Box<dyn Action>> {
+    skill_actions()
+        .into_iter()
+        .find(|a| a.timing_type() == TimingType::Charge)
+}

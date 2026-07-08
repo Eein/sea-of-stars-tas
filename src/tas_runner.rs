@@ -12,7 +12,7 @@ use crate::{
     state::{GameEvent, GameState},
 };
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, PartialEq, Eq)]
 enum GameFsm {
     Combat,
     #[default]
@@ -93,11 +93,17 @@ impl TasRunner {
 
         // TODO(orkaboy): detect game over?
         if cmd.encounter_active {
-            // Stop whatever we're doing and enter combat controller
-            for gamepad in context.gamepads.iter_mut() {
-                gamepad.release_all();
+            // Stop whatever we're doing and enter combat. Only clear inputs on
+            // the *transition* into combat, not every frame: once in combat the
+            // controller owns the pads, and a per-frame `release_all` would blip
+            // a release between frames — fatal to a held input like the Sunball
+            // charge, which fires the instant the game reads Confirm as released.
+            if self.fsm != GameFsm::Combat {
+                for gamepad in context.gamepads.iter_mut() {
+                    gamepad.release_all();
+                }
+                self.fsm = GameFsm::Combat;
             }
-            self.fsm = GameFsm::Combat;
         } else if lumd.active {
             self.fsm = GameFsm::LevelUp;
         }
