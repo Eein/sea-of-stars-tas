@@ -7,8 +7,10 @@
 
 use data::prelude::PlayerPartyCharacter;
 
-use crate::combat::skills::{self, Action, BasicAttack, Combo};
+use crate::combat::damage;
+use crate::combat::skills::{self, Action, BasicAttack, Combo, TargetType};
 use crate::memory::combat_manager::{CombatEnemy, CombatManagerData, CombatPlayer};
+use crate::util::vec3_ext::Vector3Ext;
 
 /// A concrete thing a player can do on their turn.
 ///
@@ -57,6 +59,10 @@ pub struct Appraisal {
     pub expected_damage: f32,
     /// Whether `expected_damage` is enough to kill the target outright.
     pub lethal: bool,
+    /// For AOE actions: the number of *secondary* enemies predicted inside the
+    /// splash sphere around the main target (each takes 0.6× damage). Zero for
+    /// single-target actions.
+    pub splash_targets: u32,
     /// Utility score used for ranking. Higher is better.
     pub score: f32,
 }
@@ -91,8 +97,12 @@ impl Appraisal {
 
     /// One-line human-readable summary for logging / the GUI.
     pub fn describe(&self) -> String {
+        let splash = match self.splash_targets {
+            0 => String::new(),
+            n => format!(" | splash {n}"),
+        };
         format!(
-            "{:?} -> {} on {} | dmg {:.0}{} | score {:.1}",
+            "{:?} -> {} on {} | dmg {:.0}{}{splash} | score {:.1}",
             self.attacker,
             self.action.label(),
             self.target_enemy_id,
@@ -109,10 +119,64 @@ const LETHAL_BONUS: f32 = 1000.0;
 /// Bonus for targeting an enemy that is about to act, weighted by how imminent
 /// its turn is (fewer turns-to-action = larger nudge).
 const IMMINENT_THREAT_BONUS: f32 = 50.0;
+/// Fallback splash radius when `playerAOERadius` hasn't been read yet (its
+/// live value — see AOE.md).
+const AOE_RADIUS_FALLBACK: f32 = 3.0;
+/// Reach a hit-zone collider adds to the splash sphere: the game's
+/// `Physics.OverlapSphere` hits *colliders*, not anchor points, so an enemy is
+/// splashed when its anchor is within `radius + extent`. Calibrated against
+/// the live 3-enemy boss fight (see AOE.md) pending an exact collider-bounds
+/// read.
+const AOE_COLLIDER_EXTENT: f32 = 1.7;
+
+/// The living enemies an AOE centred on `main` is predicted to splash, `main`
+/// excluded. Mirrors `PlayerRadiusTargetSelector.SelectAOETargets` (RVA
+/// 0x6893D0): a sphere of `playerAOERadius` around the main target's AOE
+/// anchor. Enemies without a readable position are conservatively not
+/// splashed. Identity is by reference — the same enemy *instance* is skipped,
+/// not the same `unique_id` (twin adds share their guid).
+fn aoe_secondaries<'a>(cmd: &'a CombatManagerData, main: &CombatEnemy) -> Vec<&'a CombatEnemy> {
+    let Some(center) = main.position else {
+        return Vec::new();
+    };
+    let reach = cmd.player_aoe_radius.unwrap_or(AOE_RADIUS_FALLBACK) + AOE_COLLIDER_EXTENT;
+    cmd.enemies
+        .items
+        .iter()
+        .filter(|e| e.current_hp != 0 && !std::ptr::eq(*e, main))
+        .filter(|e| {
+            e.position.is_some_and(|p| {
+                let (dx, dy, dz) = (
+                    p.get_x() - center.get_x(),
+                    p.get_y() - center.get_y(),
+                    p.get_z() - center.get_z(),
+                );
+                (dx * dx + dy * dy + dz * dz).sqrt() <= reach
+            })
+        })
+        .collect()
+}
+
+/// The kill bonus for downing `enemy` — halved for summoned enemies (a boss's
+/// adds) so an available boss kill always outranks killing a summon.
+fn kill_bonus(enemy: &CombatEnemy) -> f32 {
+    if enemy.summoned {
+        LETHAL_BONUS / 2.0
+    } else {
+        LETHAL_BONUS
+    }
+}
+
 /// Score a candidate action against an enemy. Damage comes from the action's own
 /// [`estimate_damage`](Action::estimate_damage); the lethal/imminent-threat
 /// bonuses are shared across every action kind. `combat_action` is the enum form
 /// carried on the `Appraisal` for the GUI label and the executor's command routing.
+///
+/// AOE actions additionally score their predicted splash: every secondary in
+/// the sphere contributes its *effective* damage (0.6× the full hit, capped by
+/// its remaining HP — overkill on a 1-HP add is worthless) plus a kill bonus
+/// when the splash downs it. This is what makes "hit the boss, splash both
+/// adds" outrank "overkill one add directly".
 fn score_action(
     cmd: &CombatManagerData,
     action: &dyn Action,
@@ -125,18 +189,25 @@ fn score_action(
 
     let mut score = expected_damage;
     if lethal {
-        // Securing a kill is worth a big bonus — but halve it for summoned
-        // enemies (a boss's adds) so an available boss kill always outranks
-        // killing a summon.
-        score += if enemy.summoned {
-            LETHAL_BONUS / 2.0
-        } else {
-            LETHAL_BONUS
-        };
+        score += kill_bonus(enemy);
     }
     // Prioritise enemies whose turn is imminent (turns_to_action counts down).
     if enemy.turns_to_action > 0 {
         score += IMMINENT_THREAT_BONUS / enemy.turns_to_action as f32;
+    }
+
+    let mut splash_targets = 0;
+    if action.target_type() == TargetType::Aoe {
+        for secondary in aoe_secondaries(cmd, enemy) {
+            let splash_damage = damage::round_damage(
+                action.estimate_damage(cmd, player, secondary) * damage::AOE_SECONDARY_MULTIPLIER,
+            );
+            score += splash_damage.min(secondary.current_hp as f32);
+            if splash_damage >= secondary.current_hp as f32 {
+                score += kill_bonus(secondary);
+            }
+            splash_targets += 1;
+        }
     }
 
     Appraisal {
@@ -145,6 +216,7 @@ fn score_action(
         target_enemy_id: enemy.unique_id.clone(),
         expected_damage,
         lethal,
+        splash_targets,
         score,
     }
 }
@@ -319,4 +391,83 @@ pub fn generate_appraisals(cmd: &CombatManagerData) -> Vec<Appraisal> {
 /// shared by the executor and the GUI's appraisal panel.
 pub fn choose(appraisals: &[Appraisal]) -> Option<&Appraisal> {
     appraisals.iter().find(|a| a.action.is_executable())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use vec3_rs::Vector3;
+
+    /// The live 3-enemy boss fight captured in AOE.md: boss centre, one add on
+    /// each side. Boss↔add distances (~4.3–4.6) are inside the splash reach
+    /// (3.0 + 1.7); the add↔add distance (~8.6) is not.
+    fn live_case() -> CombatManagerData {
+        let mut cmd = CombatManagerData {
+            player_aoe_radius: Some(3.0),
+            ..Default::default()
+        };
+        let enemy = |hp: u32, mdef: u32, x: f32, z: f32| CombatEnemy {
+            current_hp: hp,
+            magical_defense: mdef,
+            position: Some(Vector3::new(x, 2.0, z)),
+            summoned: true,
+            ..Default::default()
+        };
+        cmd.enemies.items = vec![
+            enemy(250, 50, -39.38, 237.82), // boss
+            enemy(1, 0, -34.93, 236.62),    // add, right
+            enemy(1, 0, -43.49, 236.49),    // add, left
+        ];
+        cmd
+    }
+
+    #[test]
+    fn splash_prediction_matches_observed_hit_sets() {
+        let cmd = live_case();
+        let hits = |main: usize| aoe_secondaries(&cmd, &cmd.enemies.items[main]).len();
+        // Centred on the boss both adds are splashed; centred on either add
+        // only the boss is (the adds are too far apart to splash each other).
+        assert_eq!(hits(0), 2);
+        assert_eq!(hits(1), 1);
+        assert_eq!(hits(2), 1);
+    }
+
+    /// AOE scoring makes "hit the boss, splash both 1-HP adds" outrank
+    /// "overkill one add directly": two splash kills beat one direct kill.
+    #[test]
+    fn aoe_prefers_the_boss_centre_over_direct_add_kill() {
+        let cmd = live_case();
+        let player = CombatPlayer {
+            character: PlayerPartyCharacter::Valere,
+            magical_attack: 13,
+            ..Default::default()
+        };
+        let action = skills::skill_actions()
+            .into_iter()
+            .find(|a| a.internal_name() == "CrescentArc")
+            .unwrap();
+        let score = |enemy| {
+            score_action(
+                &cmd,
+                action.as_ref(),
+                &player,
+                enemy,
+                CombatAction::Skill {
+                    name: "CrescentArc".into(),
+                    cost: 6,
+                },
+            )
+        };
+
+        let on_boss = score(&cmd.enemies.items[0]);
+        let on_add = score(&cmd.enemies.items[1]);
+        assert_eq!(on_boss.splash_targets, 2);
+        assert_eq!(on_add.splash_targets, 1);
+        assert!(
+            on_boss.score > on_add.score,
+            "boss-centre ({}) should outrank add-centre ({})",
+            on_boss.score,
+            on_add.score
+        );
+    }
 }
