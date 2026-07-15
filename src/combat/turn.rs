@@ -59,6 +59,10 @@ pub(super) struct ActingState {
     action: Box<dyn Action>,
     /// The `unique_id` of the enemy this action targets.
     target: String,
+    /// Total Live Mana charges the appraisal expects the attacker to hold —
+    /// the [`Boosting`](ActionStep::Boosting) step absorbs up to this before
+    /// the menus are touched.
+    mana_charges: u32,
     step: ActionStep,
     scratch: StepScratch,
 }
@@ -69,7 +73,8 @@ impl ActingState {
         Self {
             action: appraisal.to_action(),
             target: appraisal.target_enemy_id.clone(),
-            step: ActionStep::SelectingCommand,
+            mana_charges: appraisal.mana_charges,
+            step: ActionStep::Boosting,
             scratch: StepScratch::default(),
         }
     }
@@ -82,6 +87,7 @@ impl ActingState {
         Self {
             action,
             target: String::new(),
+            mana_charges: 0,
             step: ActionStep::Attacking,
             scratch: StepScratch::default(),
         }
@@ -267,7 +273,11 @@ impl CombatController {
             &self.turn_state,
             TurnState::Acting(acting) if matches!(
                 acting.step,
-                ActionStep::SelectingCommand | ActionStep::SelectingAbility
+                // Boosting counts: charges absorb to the *selected* character,
+                // so the swap must happen before any mana is spent on them.
+                ActionStep::Boosting
+                    | ActionStep::SelectingCommand
+                    | ActionStep::SelectingAbility
             )
         );
         in_menu_nav && !signals.on_wanted_character()
@@ -362,9 +372,11 @@ impl CombatController {
             btn: &mut self.btn,
             dt,
             want_target: Some(acting.target.as_str()),
+            want_mana_charges: acting.mana_charges,
             scratch: &mut acting.scratch,
         };
         let outcome = match acting.step {
+            ActionStep::Boosting => acting.action.execute_boosting(&mut ctx),
             ActionStep::SelectingCommand => acting.action.execute_selecting_command(&mut ctx),
             ActionStep::SelectingAbility => acting.action.execute_selecting_ability(&mut ctx),
             ActionStep::SelectingTarget => acting.action.execute_selecting_target(&mut ctx),

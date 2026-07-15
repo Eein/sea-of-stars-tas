@@ -63,6 +63,12 @@ pub struct Appraisal {
     /// splash sphere around the main target (each takes 0.6× damage). Zero for
     /// single-target actions.
     pub splash_targets: u32,
+    /// Live Mana charges factored into `expected_damage` (the boost term on
+    /// special moves, the magic stream on basic attacks): what the attacker
+    /// holds plus what the ground pool can still yield, capped at 3. The
+    /// executor's Boosting step absorbs up to this before attacking. Zero
+    /// means the estimate is charge-free.
+    pub mana_charges: u32,
     /// Utility score used for ranking. Higher is better.
     pub score: f32,
 }
@@ -101,8 +107,12 @@ impl Appraisal {
             0 => String::new(),
             n => format!(" | splash {n}"),
         };
+        let mana = match self.mana_charges {
+            0 => String::new(),
+            n => format!(" LM{n}"),
+        };
         format!(
-            "{:?} -> {} on {} | dmg {:.0}{}{splash} | score {:.1}",
+            "{:?} -> {} on {} | dmg {:.0}{mana}{}{splash} | score {:.1}",
             self.attacker,
             self.action.label(),
             self.target_enemy_id,
@@ -122,6 +132,12 @@ const IMMINENT_THREAT_BONUS: f32 = 50.0;
 /// Fallback splash radius when `playerAOERadius` hasn't been read yet (its
 /// live value — see AOE.md).
 const AOE_RADIUS_FALLBACK: f32 = 3.0;
+/// The most Live Mana charges a character can hold
+/// (`CombatBoostLevelController`'s boost levels run 0..=3).
+const MAX_MANA_CHARGES: u32 = 3;
+/// Small mana orbs merged into one charge per absorb
+/// (`EncounterTransitionToAbsorbState.BeginMergeMana`, RVA 0x4B1CB0, groups of 5).
+const SMALL_MANA_PER_CHARGE: u32 = 5;
 /// Reach a hit-zone collider adds to the splash sphere: the game's
 /// `Physics.OverlapSphere` hits *colliders*, not anchor points, so an enemy is
 /// splashed when its anchor is within `radius + extent`. Calibrated against
@@ -167,10 +183,21 @@ fn kill_bonus(enemy: &CombatEnemy) -> f32 {
     }
 }
 
+/// The Live Mana charges `player` can enter the attack with: what they already
+/// hold plus what the ground pool can still yield (each big particle is one
+/// charge; every 5 small merge into one), capped at the game's 3. The executor's
+/// Boosting step absorbs the difference before the attack.
+fn potential_mana_charges(cmd: &CombatManagerData, player: &CombatPlayer) -> u32 {
+    let absorbable = cmd.live_mana.big + cmd.live_mana.small / SMALL_MANA_PER_CHARGE;
+    (player.mana_charge_count + absorbable).min(MAX_MANA_CHARGES)
+}
+
 /// Score a candidate action against an enemy. Damage comes from the action's own
-/// [`estimate_damage`](Action::estimate_damage); the lethal/imminent-threat
-/// bonuses are shared across every action kind. `combat_action` is the enum form
-/// carried on the `Appraisal` for the GUI label and the executor's command routing.
+/// [`estimate_damage`](Action::estimate_damage), computed as if the attacker has
+/// boosted to their [`potential_mana_charges`] (the executor absorbs to match);
+/// the lethal/imminent-threat bonuses are shared across every action kind.
+/// `combat_action` is the enum form carried on the `Appraisal` for the GUI label
+/// and the executor's command routing.
 ///
 /// AOE actions additionally score their predicted splash: every secondary in
 /// the sphere contributes its *effective* damage (0.6× the full hit, capped by
@@ -184,6 +211,18 @@ fn score_action(
     enemy: &CombatEnemy,
     combat_action: CombatAction,
 ) -> Appraisal {
+    // Estimate as the boosted attacker when the ground pool allows it.
+    let mana_charges = potential_mana_charges(cmd, player);
+    let boosted;
+    let player = if mana_charges > player.mana_charge_count {
+        boosted = CombatPlayer {
+            mana_charge_count: mana_charges,
+            ..player.clone()
+        };
+        &boosted
+    } else {
+        player
+    };
     let expected_damage = action.estimate_damage(cmd, player, enemy);
     let lethal = expected_damage >= enemy.current_hp as f32;
 
@@ -217,6 +256,7 @@ fn score_action(
         expected_damage,
         lethal,
         splash_targets,
+        mana_charges,
         score,
     }
 }
@@ -430,6 +470,54 @@ mod tests {
         assert_eq!(hits(0), 2);
         assert_eq!(hits(1), 1);
         assert_eq!(hits(2), 1);
+    }
+
+    /// 15 small mana on the ground = 3 potential charges (5 merge into one,
+    /// capped at 3): the appraisal estimates as the boosted attacker and tags
+    /// the charge count for the executor's Boosting step.
+    #[test]
+    fn appraisal_counts_potential_mana_charges_from_the_ground_pool() {
+        let mut cmd = live_case();
+        let player = CombatPlayer {
+            character: PlayerPartyCharacter::Valere,
+            magical_attack: 13,
+            ..Default::default()
+        };
+        let action = skills::skill_actions()
+            .into_iter()
+            .find(|a| a.internal_name() == "CrescentArc")
+            .unwrap();
+        let appraise = |cmd: &CombatManagerData| {
+            score_action(
+                cmd,
+                action.as_ref(),
+                &player,
+                &cmd.enemies.items[0],
+                CombatAction::Skill {
+                    name: "CrescentArc".into(),
+                    cost: 6,
+                },
+            )
+        };
+
+        let uncharged = appraise(&cmd);
+        assert_eq!(uncharged.mana_charges, 0);
+
+        cmd.live_mana.small = 15;
+        let charged = appraise(&cmd);
+        assert_eq!(charged.mana_charges, 3);
+        assert!(
+            charged.expected_damage > uncharged.expected_damage,
+            "boosted estimate ({}) should beat uncharged ({})",
+            charged.expected_damage,
+            uncharged.expected_damage
+        );
+
+        // 4 small can't complete a merge; already-held charges still count.
+        cmd.live_mana.small = 4;
+        assert_eq!(appraise(&cmd).mana_charges, 0);
+        cmd.live_mana.big = 2;
+        assert_eq!(appraise(&cmd).mana_charges, 2);
     }
 
     /// AOE scoring makes "hit the boss, splash both 1-HP adds" outrank

@@ -381,8 +381,12 @@ impl MainHelper {
                                 ),
                             );
                             ui.label(format!(
-                                "dmg {:.0}{}",
+                                "dmg {:.0}{}{}",
                                 best.expected_damage,
+                                match best.mana_charges {
+                                    0 => String::new(),
+                                    n => format!(" LM{n}"),
+                                },
                                 if best.lethal { " (lethal)" } else { "" },
                             ));
                         }
@@ -438,6 +442,7 @@ impl MainHelper {
                         ui.label("Action");
                         ui.label("Target");
                         ui.label("Dmg");
+                        ui.label("LM");
                         ui.label("Lethal");
                         ui.label("Score");
                         ui.end_row();
@@ -458,6 +463,12 @@ impl MainHelper {
                             colored(ui, appraisal.action.label());
                             colored(ui, format!("{:.5}", appraisal.target_enemy_id));
                             colored(ui, format!("{:.0}", appraisal.expected_damage));
+                            match appraisal.mana_charges {
+                                0 => {
+                                    ui.label("");
+                                }
+                                n => colored(ui, format!("LM{n}")),
+                            }
                             if appraisal.lethal {
                                 ui.colored_label(LETHAL, "kill");
                             } else {

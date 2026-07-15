@@ -7,7 +7,9 @@
 
 use data::prelude::PlayerPartyCharacter;
 
-use crate::memory::combat_manager::{CombatDamageType, CombatEnemy, CombatPlayer};
+use crate::memory::combat_manager::{
+    CombatDamageType, CombatEnemy, CombatMove, CombatPlayer, PlayableCharacterStat,
+};
 
 const PHYSICAL_DEFENSE_CAP: f32 = 150.0;
 const MAGICAL_DEFENSE_CAP: f32 = 150.0;
@@ -79,16 +81,46 @@ const QTE_SUCCESS_BONUS: f32 = 0.2;
 /// `PlayerAttackDamage.aoeDamageMultiplier` — secondary targets of an AOE
 /// special move take this fraction of the full damage (ctor default).
 pub const AOE_SECONDARY_MULTIPLIER: f32 = 0.6;
+/// `PlayerSpecialMoveDamage.manaChargeStatMultiplier` — serialized default
+/// from the component's ctor (RVA 0x4D0E70, `0x3ea8f5c3`). Fallback when the
+/// move's damage effect isn't readable; same 0.33 the basic attack uses.
+pub const SPECIAL_MOVE_MANA_CHARGE_MULTIPLIER: f32 = 0.33;
+
+/// A special move's Live Mana boost, following the decompiled
+/// `PlayerSpecialMoveDamage.GetBoostDamage` (RVA 0x4D0AA0):
+///
+/// ```text
+/// boost = boostLevel * manaChargeStatMultiplier * manaChargeDamageStat
+/// ```
+///
+/// The multiplier and stat come from the move's damage effect when readable,
+/// falling back to the ctor default ×0.33 of MagicalAttack (the serialized
+/// choice on Zale's and Valere's casters). Zero when uncharged.
+pub fn special_move_boost(player: &CombatPlayer, combat_move: &CombatMove) -> f32 {
+    let multiplier = combat_move
+        .mana_charge_multiplier
+        .unwrap_or(SPECIAL_MOVE_MANA_CHARGE_MULTIPLIER);
+    let stat = match combat_move.mana_charge_stat.unwrap_or_default() {
+        PlayableCharacterStat::PhysicalAttack => player.physical_attack,
+        _ => player.magical_attack,
+    };
+    player.mana_charge_count as f32 * multiplier * stat as f32
+}
 
 /// A magic special move's damage, following the decompiled
 /// `PlayerSpecialMoveDamage.CalculatePreModifiersDamage` (RVA 0x4CFE70):
 ///
 /// ```text
-/// base      = magicAttack + specialMovePower + random          (+ Live Mana boost, unmodelled)
+/// base      = magicAttack + specialMovePower + random + boost   (boost: Live Mana, see special_move_boost)
 /// processed = (1 - magDef/150) * (typeModifier * base)
 /// qteMult   = 1.3 + successCount * 0.2                          (ctor defaults)
 /// final     = round(processed + t * (qteMult - 1) * (processed - random))
 /// ```
+///
+/// The boost joins the base sum before resistances because the ctor leaves
+/// `applyMagicDefenseAndResistanceToBoostDamageOnly` false — that path sums
+/// `damage + boost` and processes the total per damage type — and the base
+/// `OnBeforeApplyResistances` is a no-op (RVA 0x350CB0).
 ///
 /// `charge` is the move's *input modifier* `t`, clamped to `0..=1`. Sunball
 /// passes its charge fraction (`level / maxLevel`, set on the projectile at
@@ -100,17 +132,19 @@ pub const AOE_SECONDARY_MULTIPLIER: f32 = 0.6;
 /// success adds its `+0.2`).
 ///
 /// `move_power` is the move component's serialized `specialMovePower`, read
-/// live from memory. Assumes the damage component's stat lists are the usual
-/// `[MagicalAttack]` with no physical component, and no Live Mana boost.
+/// live from memory; `boost` is the Live Mana term ([`special_move_boost`]).
+/// Assumes the damage component's stat lists are the usual `[MagicalAttack]`
+/// with no physical component.
 pub fn special_move_damage(
     player: &CombatPlayer,
     enemy: &CombatEnemy,
     damage_type: CombatDamageType,
     move_power: f32,
+    boost: f32,
     charge: f32,
     random: f32,
 ) -> f32 {
-    let base = player.magical_attack as f32 + move_power + random;
+    let base = player.magical_attack as f32 + move_power + random + boost;
     let defense_ratio = 1.0 - (enemy.magical_defense as f32 / MAGICAL_DEFENSE_CAP);
     let processed = defense_ratio * (modifier_for(enemy, damage_type) * base);
 
@@ -120,10 +154,11 @@ pub fn special_move_damage(
     round_damage(processed + t * (qte_multiplier - 1.0) * (processed - random))
 }
 
-/// Rough magic-skill estimate: scales with magical attack, reduced by the
-/// enemy's magical defense, times the enemy's modifier for `damage_type`.
-/// Fallback for special moves whose `specialMovePower` isn't readable (move
-/// not loaded); [`special_move_damage`] is the real formula.
+/// Rough magic-skill estimate: scales with magical attack (plus the default
+/// Live Mana boost when charged), reduced by the enemy's magical defense,
+/// times the enemy's modifier for `damage_type`. Fallback for special moves
+/// whose `specialMovePower` isn't readable (move not loaded);
+/// [`special_move_damage`] is the real formula.
 pub fn magic_damage_estimate(
     player: &CombatPlayer,
     enemy: &CombatEnemy,
@@ -133,8 +168,13 @@ pub fn magic_damage_estimate(
 
     let defense_ratio = 1.0 - (enemy.magical_defense as f32 / MAGICAL_DEFENSE_CAP);
     let modifier = modifier_for(enemy, damage_type);
+    // The move isn't loaded, so its boost fields aren't readable — assume the
+    // ctor-default multiplier on MagicalAttack.
+    let boost = player.mana_charge_count as f32
+        * SPECIAL_MOVE_MANA_CHARGE_MULTIPLIER
+        * player.magical_attack as f32;
 
-    (player.magical_attack as f32 * SKILL_MULTIPLIER * modifier * defense_ratio).floor()
+    ((player.magical_attack as f32 * SKILL_MULTIPLIER + boost) * modifier * defense_ratio).floor()
 }
 
 /// Compute a basic attack's `(base_damage, timed_hit_bonus)` for a given roll.
@@ -243,8 +283,17 @@ mod tests {
         let mut enemy = enemy_with(&[(CombatDamageType::Sun, 1.25)]);
         enemy.magical_defense = 50;
 
-        let dmg =
-            |charge| special_move_damage(&player, &enemy, CombatDamageType::Sun, 12.0, charge, 3.0);
+        let dmg = |charge| {
+            special_move_damage(
+                &player,
+                &enemy,
+                CombatDamageType::Sun,
+                12.0,
+                0.0,
+                charge,
+                3.0,
+            )
+        };
 
         // Max charge: QTE success, ×1.5 → 25 + 0.5·(25−3) = 36.
         assert_eq!(dmg(1.0), 36.0);
@@ -255,6 +304,69 @@ mod tests {
         // Out-of-range input modifiers clamp like the game's (comiss clamp).
         assert_eq!(dmg(2.0), dmg(1.0));
         assert_eq!(dmg(-1.0), dmg(0.0));
+    }
+
+    /// The Live Mana boost joins the special move's base sum before the type
+    /// modifier and defense ratio (ctor leaves
+    /// `applyMagicDefenseAndResistanceToBoostDamageOnly` false), and rides the
+    /// charge multiplier with the rest of `processed`. Same live-capture
+    /// numbers as above, plus 2 charges at the ctor-default ×0.33 of matk 15.
+    #[test]
+    fn special_move_boost_joins_base_before_resistances() {
+        let player = CombatPlayer {
+            character: PlayerPartyCharacter::Zale,
+            magical_attack: 15,
+            mana_charge_count: 2,
+            ..Default::default()
+        };
+        let mut enemy = enemy_with(&[(CombatDamageType::Sun, 1.25)]);
+        enemy.magical_defense = 50;
+
+        let combat_move = CombatMove::default(); // boost fields unreadable -> defaults
+        let boost = special_move_boost(&player, &combat_move);
+        // 2 * 0.33 * 15 = 9.9
+        assert!((boost - 9.9).abs() < 1e-5, "boost was {boost}");
+
+        // base 30 + 9.9 -> processed = (2/3) * 1.25 * 39.9 = 33.25
+        // max charge: 33.25 + 0.5 * (33.25 - 3) = 48.375 -> round -> 48
+        let dmg = special_move_damage(
+            &player,
+            &enemy,
+            CombatDamageType::Sun,
+            12.0,
+            boost,
+            1.0,
+            3.0,
+        );
+        assert_eq!(dmg, 48.0);
+
+        // Uncharged the boost is zero and nothing changes.
+        let uncharged = CombatPlayer {
+            mana_charge_count: 0,
+            ..player.clone()
+        };
+        assert_eq!(special_move_boost(&uncharged, &combat_move), 0.0);
+    }
+
+    /// A physical-stat boost (`manaChargeDamageStat = PhysicalAttack`) reads
+    /// the attack stat instead, and a serialized multiplier overrides the
+    /// ctor default.
+    #[test]
+    fn special_move_boost_honours_move_fields() {
+        let player = CombatPlayer {
+            character: PlayerPartyCharacter::Garl,
+            physical_attack: 40,
+            magical_attack: 10,
+            mana_charge_count: 3,
+            ..Default::default()
+        };
+        let combat_move = CombatMove {
+            mana_charge_multiplier: Some(0.5),
+            mana_charge_stat: Some(PlayableCharacterStat::PhysicalAttack),
+            ..Default::default()
+        };
+        // 3 * 0.5 * 40 = 60
+        assert_eq!(special_move_boost(&player, &combat_move), 60.0);
     }
 
     /// Charged Zale vs an enemy weak to Sword but resistant to Sun. The fix:

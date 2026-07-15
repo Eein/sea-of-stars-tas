@@ -168,6 +168,41 @@ pub trait Action {
     // charge) overrides the step it owns and keeps that logic, and any state it
     // needs, in its own file; the methods take `&mut self` for exactly that.
 
+    /// [`Boosting`](ActionStep::Boosting): absorb Live Mana until the attacker
+    /// holds the charges the appraisal counted on. On the command ring, hold
+    /// Boost and tap Confirm — the game merges 5 small mana into one charge per
+    /// tap (up to 3) — verifying each landed charge against the live
+    /// `mana_charge_count` instead of firing blind. Releases Boost and moves to
+    /// the command ring when the target is met, the ground pool runs dry, or
+    /// the tap budget is spent (never wedge the turn on a boost).
+    fn execute_boosting(&mut self, ctx: &mut ActionCtx) -> StepOutcome {
+        /// Delay after Boost is held (and between taps) so the absorb overlay
+        /// is up and each Confirm lands as an absorb, not a menu press.
+        const ABSORB_SETTLE: f64 = 0.3;
+        /// Confirm taps to spend absorbing before giving up: 3 charges plus
+        /// retries for taps the game ignored.
+        const MAX_ABSORB_TAPS: u32 = 8;
+
+        let have = self.player(ctx.cmd).map_or(0, |p| p.mana_charge_count);
+        let pool_left = ctx.cmd.live_mana.big > 0 || ctx.cmd.live_mana.small >= 5;
+        if have >= ctx.want_mana_charges || !pool_left || ctx.scratch.taps >= MAX_ABSORB_TAPS {
+            ctx.gamepad.release(&SosAction::Boost);
+            ctx.scratch.timer = 0.0;
+            ctx.scratch.taps = 0;
+            return StepOutcome::Advance(ActionStep::SelectingCommand);
+        }
+        ctx.gamepad.press(&SosAction::Boost);
+        if !ctx.btn.done() {
+            ctx.btn.update(ctx.gamepad, ctx.dt);
+        } else if ctx.scratch.timer >= ABSORB_SETTLE {
+            // One absorb tap, then wait out the settle again before the next.
+            *ctx.btn = tap_press(SosAction::Confirm);
+            ctx.scratch.taps += 1;
+            ctx.scratch.timer = 0.0;
+        }
+        StepOutcome::Stay
+    }
+
     /// [`SelectingCommand`](ActionStep::SelectingCommand): navigate the
     /// battle-command ring to this action's command and confirm it. Skills and
     /// combos open a submenu ([`SelectingAbility`](ActionStep::SelectingAbility));
@@ -302,7 +337,8 @@ pub trait Action {
     /// when the move's `specialMovePower` is readable from memory, the rough
     /// magic heuristic otherwise (move not loaded yet). The executor lands its
     /// cast QTEs — Sunball charges to max, timed hits connect — so the
-    /// estimate assumes a full charge (`1.0`).
+    /// estimate assumes a full charge (`1.0`). The caster's current Live Mana
+    /// charges feed the boost term.
     fn special_move_estimate(
         &self,
         cmd: &CombatManagerData,
@@ -310,10 +346,12 @@ pub trait Action {
         enemy: &CombatEnemy,
         damage_type: CombatDamageType,
     ) -> f32 {
-        match self.find_move(cmd).and_then(|m| m.special_move_power) {
-            Some(power) => {
+        let combat_move = self.find_move(cmd);
+        match combat_move.and_then(|m| m.special_move_power.map(|p| (m, p))) {
+            Some((combat_move, power)) => {
                 let (_, max_roll) = cmd.damage_roll_bounds();
-                damage::special_move_damage(player, enemy, damage_type, power, 1.0, max_roll)
+                let boost = damage::special_move_boost(player, combat_move);
+                damage::special_move_damage(player, enemy, damage_type, power, boost, 1.0, max_roll)
             }
             None => damage::magic_damage_estimate(player, enemy, damage_type),
         }
