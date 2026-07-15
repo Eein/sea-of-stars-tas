@@ -77,6 +77,11 @@ pub struct StepScratch {
     pub cursor_dir: usize,
     /// Cursor target at the last tap, to detect when a direction stops moving it.
     pub last_cursor: Option<String>,
+    /// Enemies the target cursor has already landed on this step. Landing on
+    /// one again means the current direction cycles without reaching the
+    /// wanted target (e.g. Left/Right ping-ponging between the bottom two of
+    /// a triangle), so the driver rotates to the next direction.
+    pub visited_targets: Vec<String>,
     /// `timed_attack_ready` last frame, so taps land only on the rising edge.
     pub last_timed_ready: bool,
 }

@@ -365,14 +365,15 @@ pub trait Action {
             .find(|p| p.character == self.character())
     }
 
-    /// Whether this action's move is available for its character. `loaded` (a
-    /// live `combatMoveComponent`) is unreliable for skills — a castable skill
-    /// like CrescentArc can read `loaded=0` — so, as for combos, a base skill
-    /// (`unlockable == 0`) also counts. Only registered actions reach this, so an
-    /// early-game unlearned base skill can't leak in through an unregistered move.
+    /// Whether this action's move is available for its character. `loaded`
+    /// (membership in the fighter's per-fight loaded move lists) is the
+    /// primary signal; a base skill (`unlockable == 0`) also counts, in case
+    /// the loaded lists lag the fight's start. Only registered actions reach
+    /// this, so an early-game unlearned base skill can't leak in through an
+    /// unregistered move.
     fn move_available(&self, cmd: &CombatManagerData) -> bool {
         self.find_move(cmd)
-            .is_some_and(|m| m.loaded || m.unlockable == Some(0))
+            .is_some_and(|m| m.unlocked && (m.loaded || m.unlockable == Some(0)))
     }
 
     /// This action's move definition in its character's live move list, if

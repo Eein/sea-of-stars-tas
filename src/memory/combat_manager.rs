@@ -236,9 +236,11 @@ pub struct CombatMove {
     pub combo_point_cost: Option<u32>,
     /// Skill-point (MP) cost (`skillPointCost`).
     pub skill_point_cost: Option<u32>,
-    /// Whether the move is instantiated for this fight (has a live
-    /// `combatMoveComponent`). Locked/unavailable moves in `allMoveDefinitions`
-    /// aren't loaded, so this doubles as a usable-this-fight signal.
+    /// Whether the move is in the fighter's per-fight loaded lists
+    /// (`loadedCombatMoves`/`loadedSpecialMoves`) — the same lists the game's
+    /// combo and skill menus are filled from, so this is the usable-this-fight
+    /// signal. Stale definitions lingering in `allMoveDefinitions` (e.g. the
+    /// kids' moves after the prologue) are not loaded.
     pub loaded: bool,
     /// The move component's serialized `specialMovePower` — the flat power term
     /// the special-move damage formula adds to the caster's attack stats. Only
@@ -257,11 +259,16 @@ pub struct CombatMove {
     pub is_damaging: bool,
     /// The move definition's `unlockable` flag: `0` for moves available by
     /// default (the base combos: `DualAttack`, `SpectacleStrike`, …), non-zero
-    /// for moves that must be learned. Unlike `loaded`, this is present for
-    /// combos, so it's how the appraiser tells an available combo apart from a
-    /// locked one (party-level combos never have a live `combatMoveComponent`,
-    /// so `loaded` is always false for them).
+    /// for moves that must be learned (`IsUnlocked`, RVA 0xA31D30, checks the
+    /// progression set only when this is non-zero). Not sufficient on its own —
+    /// the kids' variants are also `unlockable == 0` — so availability pairs
+    /// it with [`loaded`](Self::loaded).
     pub unlockable: Option<i32>,
+    /// The game's `IsUnlocked` verdict: available by default
+    /// (`unlockable == 0`) or learned (present in the progression's
+    /// `unlockedCombatMoves`). A move in the fighter's loaded lists but not
+    /// yet learned (e.g. DashStrike before its scroll) is loaded but locked.
+    pub unlocked: bool,
     /// The characters this move needs in the party to be castable
     /// (`requiredCharacters` on the move definition). Combos list their
     /// participants (e.g. SpectacleStrike needs Garl, DualAttackKids the
@@ -357,12 +364,23 @@ impl CombatMove {
 
     /// Read a move: its id/costs and, when it owns the live target cursor, the
     /// enemy under `mainTarget` (single-target) and `currentTarget` (AoE).
-    fn read(memory_context: &MemoryContext, move_ptr: u64) -> CombatMove {
+    ///
+    /// `loaded` is whether the definition sits in the fighter's per-fight
+    /// loaded lists — what the game's own menus are filled from. The
+    /// definition's `combatMoveComponent` pointer is *not* a usable signal: it
+    /// lives on the session-global ScriptableObject and survives fights that
+    /// no longer apply (the kids' DualAttackKids read a live component well
+    /// into adulthood).
+    fn read(
+        memory_context: &MemoryContext,
+        move_ptr: u64,
+        loaded: bool,
+        unlocked_moves: &std::collections::HashSet<String>,
+    ) -> CombatMove {
         let move_id = Self::read_string(memory_context, move_ptr, "combatMoveId");
         let combo_point_cost = memory_context.read_named::<u32>(move_ptr, "comboPointCost");
         let skill_point_cost = memory_context.read_named::<u32>(move_ptr, "skillPointCost");
         let component = memory_context.read_named_ptr(move_ptr, "combatMoveComponent");
-        let loaded = component.is_some();
         // `specialMovePower` lives on the component's `CombatMove` base class;
         // field resolution walks parents, so the read works on any move type.
         let special_move_power =
@@ -398,6 +416,12 @@ impl CombatMove {
             .read_named_ptr(move_ptr, "damageTypeDefinitions")
             .is_some_and(|list| !memory_context.list_item_ptrs(list).is_empty());
         let unlockable = memory_context.read_named::<i32>(move_ptr, "unlockable");
+        // Mirrors `PlayerCombatMoveDefinition.IsUnlocked` (RVA 0xA31D30):
+        // unlockable moves must be in the progression's learned set.
+        let unlocked = unlockable == Some(0)
+            || move_id
+                .as_ref()
+                .is_some_and(|id| unlocked_moves.contains(id));
         // `requiredCharacters` is a `List<CharacterDefinitionId>`; the struct
         // wraps a single string, so each list slot is that string's pointer.
         let required_characters = memory_context
@@ -428,6 +452,7 @@ impl CombatMove {
             mana_charge_stat,
             is_damaging,
             unlockable,
+            unlocked,
             required_characters,
             main_target_guid,
             current_target_guid,
@@ -461,6 +486,11 @@ pub struct CombatManagerData {
     pub selected_attack_target_guid: Option<String>,
     /// Each party member's available moves, for the appraiser to score.
     pub moves: Vec<CharacterMoves>,
+    /// `combatMoveId`s the party has learned, copied from the
+    /// `ProgressionManager`'s `unlockedCombatMoves` before each combat update
+    /// (see `MemoryManagers::update`). Feeds each move's
+    /// [`unlocked`](CombatMove::unlocked).
+    pub unlocked_moves: std::collections::HashSet<String>,
     /// `combatMoveId` of the combo highlighted in the combo submenu, or `None`
     /// when the submenu isn't open.
     pub highlighted_combo_id: Option<String>,
@@ -687,6 +717,9 @@ impl CombatManagerData {
     pub fn update_moves(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
         self.selected_attack_target_guid = None;
         self.moves.clear();
+        // Learned-move ids, taken before the loop so reads don't fight the
+        // `&mut self` borrow on `moves`.
+        let unlocked_names = self.unlocked_moves.clone();
 
         let Ok(enc) = memory_context.follow_fields::<u64>(&["currentEncounter"]) else {
             return Ok(());
@@ -738,9 +771,27 @@ impl CombatManagerData {
                 continue;
             };
 
+            // The fighter's per-fight loaded lists — the game's own source of
+            // truth for the menus (the combo submenu fills from
+            // `loadedCombatMoves`, the skill submenu from `loadedSpecialMoves`;
+            // see `ComboMoveSelector.FillList`, RVA 0xD6C200). A definition in
+            // `allMoveDefinitions` but neither list (e.g. the kids' variants
+            // lingering on the shared assets) is not usable this fight.
+            let loaded_moves: std::collections::HashSet<u64> =
+                ["loadedCombatMoves", "loadedSpecialMoves"]
+                    .iter()
+                    .filter_map(|field| memory_context.read_named_ptr(fighter_def, field))
+                    .flat_map(|list| memory_context.list_item_ptrs(list))
+                    .collect();
+
             let mut moves = Vec::new();
             for move_ptr in memory_context.list_item_ptrs(move_list) {
-                let move_def = CombatMove::read(memory_context, move_ptr);
+                let move_def = CombatMove::read(
+                    memory_context,
+                    move_ptr,
+                    loaded_moves.contains(&move_ptr),
+                    &unlocked_names,
+                );
                 main_hit = main_hit.or(move_def.main_target_guid.clone());
                 current_hit = current_hit.or(move_def.current_target_guid.clone());
                 moves.push(move_def);

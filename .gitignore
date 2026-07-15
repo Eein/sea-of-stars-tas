@@ -7,4 +7,5 @@ perf.data*
 config.toml
 dump.json
 dump.txt
+state-dump-*.txt
 decoded/

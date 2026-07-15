@@ -260,9 +260,20 @@ fn attach(core: &mut TasCore, wait_for_game: bool, attach_timeout: u64) -> bool 
     }
 }
 
-/// Print a one-shot, structured snapshot of the current game state.
-fn dump_state(core: &TasCore, format: LogFormat) {
-    let mm = &core.game_state.memory_managers;
+/// Join a list field as an indented block — one item per line, under the
+/// field's `key:` header — so dumps read without horizontal scrolling.
+fn indented_block(items: Vec<String>) -> String {
+    if items.is_empty() {
+        "(none)".to_string()
+    } else {
+        format!("\n  {}", items.join("\n  "))
+    }
+}
+
+/// The state-snapshot fields derivable from `GameState` alone, shared by the
+/// CLI's `--dump-state` and the GUI's "Dump State" button.
+pub fn snapshot_fields(game_state: &crate::state::GameState) -> Vec<(&'static str, String)> {
+    let mm = &game_state.memory_managers;
     let title = &mm.title_sequence_manager.data;
     let party = &mm.player_party_manager.data;
     let combat = &mm.combat_manager.data;
@@ -270,17 +281,9 @@ fn dump_state(core: &TasCore, format: LogFormat) {
     let level_up = &mm.level_up_manager.data;
     let speedrun = &mm.speedrun_manager.data;
 
-    let pid = core
-        .context
-        .process
-        .as_ref()
-        .map(|p| p.pid.to_string())
-        .unwrap_or_else(|| "none".to_string());
     let pos = &party.position;
 
-    let fields: Vec<(&str, String)> = vec![
-        ("attached", core.is_attached().to_string()),
-        ("pid", pid),
+    vec![
         ("title_active", title.active.to_string()),
         ("title_screen", title.current_screen_name.clone()),
         ("leader", format!("{:?}", party.leader_character)),
@@ -302,7 +305,8 @@ fn dump_state(core: &TasCore, format: LogFormat) {
         ),
         (
             "enemies",
-            combat
+            indented_block(
+                combat
                 .enemies
                 .items
                 .iter()
@@ -323,12 +327,13 @@ fn dump_state(core: &TasCore, format: LogFormat) {
                         e.unique_id, e.current_hp, e.physical_defense, e.magical_defense
                     )
                 })
-                .collect::<Vec<_>>()
-                .join(" | "),
+                .collect(),
+            ),
         ),
         (
             "players",
-            combat
+            indented_block(
+                combat
                 .players
                 .items
                 .iter()
@@ -342,12 +347,13 @@ fn dump_state(core: &TasCore, format: LogFormat) {
                         p.magical_attack
                     )
                 })
-                .collect::<Vec<_>>()
-                .join(" | "),
+                .collect(),
+            ),
         ),
         (
             "moves",
-            combat
+            indented_block(
+                combat
                 .moves
                 .iter()
                 .flat_map(|cm| {
@@ -358,29 +364,50 @@ fn dump_state(core: &TasCore, format: LogFormat) {
                         .filter(|m| m.loaded || m.combo_point_cost.unwrap_or(0) > 0)
                         .map(|m| {
                             format!(
-                                "{:?}:{} power={:?} req={:?}",
+                                "{:?}:{} power={:?} req={:?} loaded={} unlocked={} unlockable={:?} damaging={} cp={:?} sp={:?}",
                                 cm.character,
                                 m.move_id.as_deref().unwrap_or("?"),
                                 m.special_move_power,
-                                m.required_characters
+                                m.required_characters,
+                                m.loaded,
+                                m.unlocked,
+                                m.unlockable,
+                                m.is_damaging,
+                                m.combo_point_cost,
+                                m.skill_point_cost,
                             )
                         })
                 })
-                .collect::<Vec<_>>()
-                .join(" | "),
+                .collect(),
+            ),
         ),
         (
             "appraisals",
-            crate::combat::appraisal::generate_appraisals(combat)
-                .iter()
-                .map(crate::combat::appraisal::Appraisal::describe)
-                .collect::<Vec<_>>()
-                .join(" | "),
+            indented_block(
+                crate::combat::appraisal::generate_appraisals(combat)
+                    .iter()
+                    .map(crate::combat::appraisal::Appraisal::describe)
+                    .collect(),
+            ),
         ),
         ("level_up_active", level_up.active.to_string()),
         ("is_speedrunning", speedrun.is_speedrunning.to_string()),
         ("speedrun_timer", format!("{}", speedrun.speedrun_timer)),
-    ];
+    ]
+}
+
+/// Print a one-shot, structured snapshot of the current game state.
+fn dump_state(core: &TasCore, format: LogFormat) {
+    let pid = core
+        .context
+        .process
+        .as_ref()
+        .map(|p| p.pid.to_string())
+        .unwrap_or_else(|| "none".to_string());
+
+    let mut fields: Vec<(&str, String)> =
+        vec![("attached", core.is_attached().to_string()), ("pid", pid)];
+    fields.extend(snapshot_fields(&core.game_state));
 
     match format {
         LogFormat::Plain => {

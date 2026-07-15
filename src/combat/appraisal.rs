@@ -355,6 +355,7 @@ pub fn generate_appraisals(cmd: &CombatManagerData) -> Vec<Appraisal> {
             // enough to admit a combo.
             let is_damage_combo = cost > 0
                 && combat_move.loaded
+                && combat_move.unlocked
                 && combat_move.is_damaging
                 && cost <= cmd.combo_points;
             // Every participating character must be in the party and alive

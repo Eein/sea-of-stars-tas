@@ -20,6 +20,8 @@ pub struct MainHelper {
     auto_save_present: bool,
     timer: Timer,
     countdown: Option<f64>,
+    /// Where the last "Dump State" click wrote its snapshot, for display.
+    last_dump: Option<String>,
 }
 
 fn damage_type_image(ui: &mut egui::Ui, damage_type: &CombatDamageType) {
@@ -62,7 +64,33 @@ impl MainHelper {
             auto_save_present: true,
             timer: delta::Timer::new(),
             countdown: None,
+            last_dump: None,
         })
+    }
+
+    /// Write a one-shot state snapshot (the CLI `--dump-state` fields) to a
+    /// timestamped file in the working directory, for sharing/debugging.
+    fn dump_state_to_file(&mut self, game_state: &GameState) {
+        let text = crate::cli::snapshot_fields(game_state)
+            .iter()
+            .map(|(key, value)| format!("{key}: {value}"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        let stamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs())
+            .unwrap_or(0);
+        let path = format!("state-dump-{stamp}.txt");
+        match std::fs::write(&path, text) {
+            Ok(()) => {
+                info!("State dump written to {path}");
+                self.last_dump = Some(path);
+            }
+            Err(e) => {
+                info!("State dump failed: {e}");
+                self.last_dump = Some(format!("write failed: {e}"));
+            }
+        }
     }
 
     fn handle_countdown(&mut self) -> bool {
@@ -493,8 +521,11 @@ impl MainHelper {
                     for m in &character_moves.moves {
                         let targeting =
                             m.main_target_guid.is_some() || m.current_target_guid.is_some();
+                        // Available = in the fighter's per-fight loaded lists
+                        // AND learned per progression — the appraiser's gate.
+                        let available = m.loaded && m.unlocked;
                         let text = format!(
-                            "    {}  cp={}  sp={}{}",
+                            "    {}  cp={}  sp={}{}{}",
                             m.move_id.as_deref().unwrap_or("?"),
                             m.combo_point_cost
                                 .map(|c| c.to_string())
@@ -502,11 +533,14 @@ impl MainHelper {
                             m.skill_point_cost
                                 .map(|c| c.to_string())
                                 .unwrap_or_else(|| "-".to_string()),
+                            match (m.loaded, m.unlocked) {
+                                (true, true) => "",
+                                (true, false) => "  (locked)",
+                                (false, _) => "  (not loaded)",
+                            },
                             if targeting { "  👈 👈 👈" } else { "" },
                         );
-                        // Loaded = instantiated for this fight (likely the
-                        // unlocked/usable set); dim the rest.
-                        if m.loaded {
+                        if available {
                             ui.label(text);
                         } else {
                             ui.weak(text);
@@ -525,6 +559,17 @@ impl GuiHelper for MainHelper {
         ui: &mut egui::Ui,
         _tab: &mut String,
     ) {
+        // Always available, even mid-run — snapshot the live state for sharing.
+        ui.horizontal(|ui| {
+            if ui.button("Dump State").clicked() {
+                self.dump_state_to_file(game_state);
+            }
+            if let Some(path) = &self.last_dump {
+                ui.weak(path);
+            }
+        });
+        ui.separator();
+
         let mut running = false;
         if let Some(gm) = tas_runner {
             let countdown_finished = self.handle_countdown();
