@@ -9,6 +9,7 @@ pub mod level_up_manager;
 pub mod memory_context;
 pub mod new_dialog_manager;
 pub mod player_party_manager;
+pub mod progression_manager;
 pub mod shop_manager;
 pub mod single_player_plus_manager;
 pub mod speedrun_manager;
@@ -31,6 +32,7 @@ use memory::memory_manager::il2cpp::{UnityMemoryManagement, UnityMemoryManager};
 use memory::process::MemoryError;
 use new_dialog_manager::NewDialogManagerData;
 use player_party_manager::PlayerPartyManagerData;
+use progression_manager::ProgressionManagerData;
 use shop_manager::ShopManagerData;
 use single_player_plus_manager::SinglePlayerPlusManagerData;
 use speedrun_manager::SpeedrunManagerData;
@@ -60,6 +62,7 @@ pub struct MemoryManagers {
     pub level_manager: MemoryManager<LevelManagerData>,
     pub currency_manager: MemoryManager<CurrencyManagerData>,
     pub new_dialog_manager: MemoryManager<NewDialogManagerData>,
+    pub progression_manager: MemoryManager<ProgressionManagerData>,
     pub combat_manager: MemoryManager<CombatManagerData>,
     pub cutscene_manager: MemoryManager<CutsceneManagerData>,
     pub shop_manager: MemoryManager<ShopManagerData>,
@@ -80,6 +83,11 @@ impl MemoryManagers {
             self.level_manager.update(ctx);
             self.currency_manager.update(ctx);
             self.new_dialog_manager.update(ctx);
+            self.progression_manager.update(ctx);
+            // The combat update derives per-move availability from the
+            // progression unlocks, so hand it the freshly-read set first.
+            self.combat_manager.data.unlocked_moves =
+                self.progression_manager.data.unlocked_combat_moves.clone();
             self.combat_manager.update(ctx);
             self.cutscene_manager.update(ctx);
             self.shop_manager.update(ctx);
