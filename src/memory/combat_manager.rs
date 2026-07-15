@@ -67,6 +67,38 @@ impl CombatDamageType {
     }
 }
 
+/// The game's `EPlayableCharacterStat` (TypeDefIndex 4363) — which character
+/// stat a serialized `PlayableCharacterStat` names (e.g. the stat a move's
+/// Live Mana boost multiplies).
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub enum PlayableCharacterStat {
+    HitPoint = 0,
+    SkillPoint = 1,
+    ComboPoint = 2,
+    PhysicalAttack = 3,
+    PhysicalDefense = 4,
+    #[default]
+    MagicalAttack = 5,
+    MagicalDefense = 6,
+    Level = 7,
+}
+
+impl PlayableCharacterStat {
+    fn from_i32(value: i32) -> Option<PlayableCharacterStat> {
+        Some(match value {
+            0 => PlayableCharacterStat::HitPoint,
+            1 => PlayableCharacterStat::SkillPoint,
+            2 => PlayableCharacterStat::ComboPoint,
+            3 => PlayableCharacterStat::PhysicalAttack,
+            4 => PlayableCharacterStat::PhysicalDefense,
+            5 => PlayableCharacterStat::MagicalAttack,
+            6 => PlayableCharacterStat::MagicalDefense,
+            7 => PlayableCharacterStat::Level,
+            _ => return None,
+        })
+    }
+}
+
 #[derive(Default, Debug)]
 pub struct LiveMana {
     pub big: u32,
@@ -212,6 +244,14 @@ pub struct CombatMove {
     /// the special-move damage formula adds to the caster's attack stats. Only
     /// present when the move is loaded.
     pub special_move_power: Option<f32>,
+    /// The damage effect's `manaChargeStatMultiplier` — each Live Mana charge
+    /// adds this fraction of [`mana_charge_stat`](Self::mana_charge_stat) to
+    /// the move's base damage. Only present when the move is loaded and has a
+    /// damage effect (a `PlayerSpecialMoveDamage` in its `combatEffects`).
+    pub mana_charge_multiplier: Option<f32>,
+    /// The damage effect's `manaChargeDamageStat` — the caster stat each Live
+    /// Mana charge multiplies (Zale/Valere casters use MagicalAttack).
+    pub mana_charge_stat: Option<PlayableCharacterStat>,
     /// Whether the move deals damage: its `damageTypeDefinitions` list is
     /// non-empty. Heals/buffs have no damage types.
     pub is_damaging: bool,
@@ -327,6 +367,32 @@ impl CombatMove {
         // field resolution walks parents, so the read works on any move type.
         let special_move_power =
             component.and_then(|c| memory_context.read_named::<f32>(c, "specialMovePower"));
+        // The Live Mana boost fields live on the move's damage effect — the
+        // `PlayerSpecialMoveDamage` ScriptableObject in the component's
+        // `combatEffects`. Identified by carrying `manaChargeDamageStat` (heal
+        // effects have a `manaChargeStatMultiplier` too, but pair it with
+        // `manaChargeHealStat`).
+        let damage_effect = component.and_then(|c| {
+            memory_context
+                .read_named_ptr(c, "combatEffects")
+                .and_then(|list| {
+                    memory_context
+                        .list_item_ptrs(list)
+                        .into_iter()
+                        .filter_map(|entry| memory_context.read_named_ptr(entry, "effect"))
+                        .find(|&effect| {
+                            memory_context
+                                .field_offset_of(effect, "manaChargeDamageStat")
+                                .is_some()
+                        })
+                })
+        });
+        let mana_charge_multiplier = damage_effect
+            .and_then(|e| memory_context.read_named::<f32>(e, "manaChargeStatMultiplier"));
+        let mana_charge_stat = damage_effect
+            .and_then(|e| memory_context.read_named_ptr(e, "manaChargeDamageStat"))
+            .and_then(|s| memory_context.read_named::<i32>(s, "stat"))
+            .and_then(PlayableCharacterStat::from_i32);
         // A move deals damage iff its damageTypeDefinitions list has entries.
         let is_damaging = memory_context
             .read_named_ptr(move_ptr, "damageTypeDefinitions")
@@ -358,6 +424,8 @@ impl CombatMove {
             skill_point_cost,
             loaded,
             special_move_power,
+            mana_charge_multiplier,
+            mana_charge_stat,
             is_damaging,
             unlockable,
             required_characters,
@@ -880,32 +948,19 @@ impl CombatManagerData {
     }
 
     pub fn update_live_mana(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
-        if let Ok(small_live_mana_ptr) = memory_context.follow_fields::<u64>(&[
-            "currentEncounter",
-            "liveManaHandler",
-            "smallLiveManaParticles",
-        ]) {
-            if let Ok(small_mana) =
-                memory_context.read_pointer_path::<u32>(&[small_live_mana_ptr, 0x18])
-            {
-                self.live_mana.small = small_mana
-            }
-        } else {
-            self.live_mana.small = 0;
-        }
-        if let Ok(big_live_mana_ptr) = memory_context.follow_fields::<u64>(&[
-            "currentEncounter",
-            "liveManaHandler",
-            "bigLiveManaParticles",
-        ]) {
-            if let Ok(big_mana) =
-                memory_context.read_pointer_path::<u32>(&[big_live_mana_ptr, 0x18])
-            {
-                self.live_mana.big = big_mana
-            }
-        } else {
-            self.live_mana.big = 0;
-        }
+        // Each particle list's live count is the `List<T>._size` field at
+        // `list + 0x18`. An unreadable handler (no live-mana fight yet, or a
+        // mid-transition null) reads as an empty pool.
+        let particle_count = |list_field: &str| -> u32 {
+            memory_context
+                .follow_fields::<u64>(&["currentEncounter", "liveManaHandler", list_field])
+                .ok()
+                .filter(|list| *list != 0)
+                .and_then(|list| memory_context.read_pointer::<u32>(list + 0x18).ok())
+                .unwrap_or(0)
+        };
+        self.live_mana.small = particle_count("smallLiveManaParticles");
+        self.live_mana.big = particle_count("bigLiveManaParticles");
 
         Ok(())
     }

@@ -11,11 +11,16 @@ use crate::seq::button::ButtonPress;
 /// executor calls the matching `Action::execute_*` for the current step every
 /// frame until the step returns [`StepOutcome::Advance`] or resolves.
 ///
-/// Steps the game has but we don't model yet (mana-boosting the command,
-/// separate command/ability confirm screens) are folded into these; add a
-/// variant when one is modelled explicitly.
+/// Steps the game has but we don't model yet (separate command/ability confirm
+/// screens) are folded into these; add a variant when one is modelled
+/// explicitly.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ActionStep {
+    /// Absorbing Live Mana up to the appraised charge count: hold Boost on the
+    /// command ring and tap Confirm once per charge (each merges 5 small mana),
+    /// verified against the attacker's live `mana_charge_count`. Skips straight
+    /// through when the appraisal wants no more charges than are held.
+    Boosting,
     /// Navigating the battle-command ring (Attack/Skill/Combo/Item) to the
     /// action's command and confirming it.
     SelectingCommand,
@@ -87,6 +92,9 @@ pub struct ActionCtx<'a> {
     /// The enemy `unique_id` the action wants to hit (`None` = accept the default
     /// cursor target).
     pub want_target: Option<&'a str>,
+    /// Total Live Mana charges the appraisal expects the attacker to hold when
+    /// the attack lands; [`ActionStep::Boosting`] absorbs up to this.
+    pub want_mana_charges: u32,
     pub scratch: &'a mut StepScratch,
 }
 
