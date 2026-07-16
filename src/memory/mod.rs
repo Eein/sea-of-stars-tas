@@ -8,6 +8,7 @@ pub mod level_manager;
 pub mod level_up_manager;
 pub mod memory_context;
 pub mod new_dialog_manager;
+pub mod pause_manager;
 pub mod player_party_manager;
 pub mod progression_manager;
 pub mod shop_manager;
@@ -15,6 +16,7 @@ pub mod single_player_plus_manager;
 pub mod speedrun_manager;
 pub mod time_of_day_manager;
 pub mod title_sequence_manager;
+pub mod ui_manager;
 
 use log::{error, info};
 
@@ -31,6 +33,7 @@ use level_up_manager::LevelUpManagerData;
 use memory::memory_manager::il2cpp::{UnityMemoryManagement, UnityMemoryManager};
 use memory::process::MemoryError;
 use new_dialog_manager::NewDialogManagerData;
+use pause_manager::PauseManagerData;
 use player_party_manager::PlayerPartyManagerData;
 use progression_manager::ProgressionManagerData;
 use shop_manager::ShopManagerData;
@@ -38,6 +41,7 @@ use single_player_plus_manager::SinglePlayerPlusManagerData;
 use speedrun_manager::SpeedrunManagerData;
 use time_of_day_manager::TimeOfDayManagerData;
 use title_sequence_manager::TitleSequenceManagerData;
+use ui_manager::UiManagerData;
 
 pub trait MemoryManagerUpdate {
     fn update(
@@ -62,6 +66,7 @@ pub struct MemoryManagers {
     pub level_manager: MemoryManager<LevelManagerData>,
     pub currency_manager: MemoryManager<CurrencyManagerData>,
     pub new_dialog_manager: MemoryManager<NewDialogManagerData>,
+    pub pause_manager: MemoryManager<PauseManagerData>,
     pub progression_manager: MemoryManager<ProgressionManagerData>,
     pub combat_manager: MemoryManager<CombatManagerData>,
     pub cutscene_manager: MemoryManager<CutsceneManagerData>,
@@ -71,6 +76,7 @@ pub struct MemoryManagers {
     pub level_up_manager: MemoryManager<LevelUpManagerData>,
     pub single_player_plus_manager: MemoryManager<SinglePlayerPlusManagerData>,
     pub encounter_players_manager: MemoryManager<EncounterPlayersManagerData>,
+    pub ui_manager: MemoryManager<UiManagerData>,
 }
 
 impl MemoryManagers {
@@ -83,6 +89,7 @@ impl MemoryManagers {
             self.level_manager.update(ctx);
             self.currency_manager.update(ctx);
             self.new_dialog_manager.update(ctx);
+            self.pause_manager.update(ctx);
             self.progression_manager.update(ctx);
             // The combat update derives per-move availability from the
             // progression unlocks, so hand it the freshly-read set first.
@@ -96,6 +103,7 @@ impl MemoryManagers {
             self.level_up_manager.update(ctx);
             self.single_player_plus_manager.update(ctx);
             self.encounter_players_manager.update(ctx);
+            self.ui_manager.update(ctx);
         }
     }
     pub fn ready_for_updates(&mut self, ctx: &StateContext) -> bool {

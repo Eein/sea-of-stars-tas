@@ -261,13 +261,25 @@ fn score_action(
     }
 }
 
-/// Whether the fighter for `character` has `command` disabled this fight (e.g. a
-/// tutorial forcing a specific command). Normal fights disable nothing.
+/// Whether the fighter for `character` has `command` disabled this fight: the
+/// command is missing from the live command ring (scripted sections remove
+/// commands via `RemoveBattleCommandModifier` — e.g. the Elder Mist trials
+/// strip Skill/Combo until the boss), or the fighter's `disabledBattleCommands`
+/// names it (tutorials forcing a specific command). Normal fights disable
+/// nothing.
 fn command_disabled(
     cmd: &CombatManagerData,
     character: &PlayerPartyCharacter,
     command: skills::BattleCommand,
 ) -> bool {
+    if !cmd.battle_command_ring.is_empty()
+        && !cmd
+            .battle_command_ring
+            .iter()
+            .any(|(name, interactable)| name == command.class_name() && *interactable)
+    {
+        return true;
+    }
     cmd.moves
         .iter()
         .find(|cm| &cm.character == character)
@@ -356,6 +368,7 @@ pub fn generate_appraisals(cmd: &CombatManagerData) -> Vec<Appraisal> {
             let is_damage_combo = cost > 0
                 && combat_move.loaded
                 && combat_move.unlocked
+                && !combat_move.disabled
                 && combat_move.is_damaging
                 && cost <= cmd.combo_points;
             // Every participating character must be in the party and alive

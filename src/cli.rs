@@ -42,6 +42,8 @@ pub enum Route {
     Combat,
     /// Relic-selection-only test sequence.
     Relic,
+    /// Campfire-cooking test sequence (stand near the campfire first).
+    Cook,
 }
 
 /// Log output format.
@@ -294,6 +296,60 @@ pub fn snapshot_fields(game_state: &crate::state::GameState) -> Vec<(&'static st
         ),
         ("in_cutscene", cutscene.is_in_cutscene.to_string()),
         ("encounter_active", combat.encounter_active.to_string()),
+        (
+            "combat_controller_type",
+            format!("{:?}", combat.combat_controller_type),
+        ),
+        (
+            "dialog_visible",
+            mm.new_dialog_manager.data.dialog_visible.to_string(),
+        ),
+        (
+            "live_mana",
+            format!(
+                "small={} big={}",
+                combat.live_mana.small, combat.live_mana.big
+            ),
+        ),
+        (
+            "battle_command",
+            format!(
+                "focus={} idx={:?} skill_focus={} selected_char={:?}",
+                combat.battle_command_has_focus,
+                combat.battle_command_index,
+                combat.skill_command_has_focus,
+                combat.selected_character,
+            ),
+        ),
+        (
+            "cursor_target",
+            format!("{:?}", combat.selected_attack_target_guid),
+        ),
+        (
+            "current_player_index",
+            format!(
+                "{:?}",
+                mm.encounter_players_manager.data.current_player_index
+            ),
+        ),
+        (
+            "spp_players",
+            indented_block(
+                mm.single_player_plus_manager
+                    .data
+                    .players
+                    .items
+                    .iter()
+                    .enumerate()
+                    .map(|(slot, p)| {
+                        format!(
+                            "slot {slot}: index={} playing={} first={} char={:?}",
+                            p.index, p.playing, p.first_player, p.character
+                        )
+                    })
+                    .collect(),
+            ),
+        ),
         ("enemy_count", combat.enemies.items.len().to_string()),
         ("player_count", combat.players.items.len().to_string()),
         (
@@ -339,12 +395,16 @@ pub fn snapshot_fields(game_state: &crate::state::GameState) -> Vec<(&'static st
                 .iter()
                 .map(|p| {
                     format!(
-                        "{:?} hp={} mp={} patk={} matk={}",
+                        "{:?} hp={} mp={} patk={} matk={} enabled={} selected={} dead={} charges={}",
                         p.character,
                         p.current_hp,
                         p.current_mp,
                         p.physical_attack,
-                        p.magical_attack
+                        p.magical_attack,
+                        p.enabled,
+                        p.selected,
+                        p.dead,
+                        p.mana_charge_count,
                     )
                 })
                 .collect(),
@@ -364,13 +424,14 @@ pub fn snapshot_fields(game_state: &crate::state::GameState) -> Vec<(&'static st
                         .filter(|m| m.loaded || m.combo_point_cost.unwrap_or(0) > 0)
                         .map(|m| {
                             format!(
-                                "{:?}:{} power={:?} req={:?} loaded={} unlocked={} unlockable={:?} damaging={} cp={:?} sp={:?}",
+                                "{:?}:{} power={:?} req={:?} loaded={} unlocked={} disabled={} unlockable={:?} damaging={} cp={:?} sp={:?}",
                                 cm.character,
                                 m.move_id.as_deref().unwrap_or("?"),
                                 m.special_move_power,
                                 m.required_characters,
                                 m.loaded,
                                 m.unlocked,
+                                m.disabled,
                                 m.unlockable,
                                 m.is_damaging,
                                 m.combo_point_cost,
@@ -382,6 +443,20 @@ pub fn snapshot_fields(game_state: &crate::state::GameState) -> Vec<(&'static st
             ),
         ),
         (
+            "battle_command_ring",
+            format!("{:?}", combat.battle_command_ring),
+        ),
+        (
+            "disabled_commands",
+            indented_block(
+                combat
+                    .moves
+                    .iter()
+                    .map(|cm| format!("{:?}: {:?}", cm.character, cm.disabled_commands))
+                    .collect(),
+            ),
+        ),
+        (
             "appraisals",
             indented_block(
                 crate::combat::appraisal::generate_appraisals(combat)
@@ -389,6 +464,10 @@ pub fn snapshot_fields(game_state: &crate::state::GameState) -> Vec<(&'static st
                     .map(crate::combat::appraisal::Appraisal::describe)
                     .collect(),
             ),
+        ),
+        (
+            "open_views",
+            indented_block(mm.ui_manager.data.open_views.clone()),
         ),
         ("level_up_active", level_up.active.to_string()),
         ("is_speedrunning", speedrun.is_speedrunning.to_string()),
@@ -473,7 +552,7 @@ pub fn repro_command(
             }
             parts.push(format!("--auto-save-present {auto_save_present}"));
         }
-        Route::Combat | Route::Relic => {}
+        Route::Combat | Route::Relic | Route::Cook => {}
     }
 
     parts.push(format!("--konami {}", config.konami_code));
@@ -506,6 +585,7 @@ fn build_tas_runner(core: &mut TasCore, args: &CliArgs) {
         }
         Route::Combat => tas::create_combat_test(),
         Route::Relic => tas::create_relic_test(),
+        Route::Cook => tas::create_cook_test(),
     };
     core.tas_runner = Some(gm);
 }

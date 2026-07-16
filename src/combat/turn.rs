@@ -44,6 +44,22 @@ impl TurnState {
     pub(super) fn idle() -> Self {
         TurnState::Idle { elapsed: 0.0 }
     }
+
+    /// One-line summary of where the executor is, for the GUI/debugging.
+    pub fn status(&self) -> String {
+        match self {
+            TurnState::Idle { elapsed } => format!("Idle ({elapsed:.1}s)"),
+            TurnState::SelectingCharacter { swaps } => {
+                format!("SelectingCharacter (swaps {swaps})")
+            }
+            TurnState::Acting(acting) => format!(
+                "Acting({} @ {:?}, step timer {:.1}s)",
+                acting.action.internal_name(),
+                acting.step,
+                acting.scratch.timer,
+            ),
+        }
+    }
 }
 
 impl Default for TurnState {
@@ -109,6 +125,8 @@ struct TurnSignals {
     command_focus: bool,
     /// An ability submenu (combo or skill) is open.
     in_submenu: bool,
+    /// A target-select screen is up (an enemy cursor guid is readable).
+    target_select_open: bool,
     /// Who currently owns the command ring.
     selected_character: Option<PlayerPartyCharacter>,
     /// Who the chosen action needs acting, if it's character-specific.
@@ -133,6 +151,7 @@ impl TurnSignals {
             has_control: cmd.selected_character.is_some(),
             command_focus: cmd.battle_command_has_focus,
             in_submenu: cmd.ability_submenu_open(),
+            target_select_open: cmd.selected_attack_target_guid.is_some(),
             selected_character: cmd.selected_character.clone(),
             want_character,
         }
@@ -196,8 +215,11 @@ impl CombatController {
         // Gates apply only when we're *not* mid-execution of a committed action.
         if !self.acting_in_execution() {
             // Turn boundary: a different active index means a fresh actor. Reset
-            // and let the settle delay elapse before the first press.
-            if turn != self.turn_index {
+            // and let the settle delay elapse before the first press. A `None`
+            // read is a transient blip, not a boundary — resetting on it would
+            // abandon a half-driven menu (e.g. an open target select, which
+            // Idle can't recover from).
+            if turn.is_some() && turn != self.turn_index {
                 state.release_all();
                 self.turn_index = turn;
                 self.last_gamepad = Some(gamepad_idx);
@@ -307,6 +329,13 @@ impl CombatController {
             self.btn = skills::cancel_press();
             return TurnState::idle();
         }
+        if signals.has_control && !signals.command_focus && signals.target_select_open {
+            // A dangling target-select screen (an aborted action left it up):
+            // the ring can't regain focus until it's dismissed. Cancel out,
+            // then re-plan from the ring as normal.
+            self.btn = skills::cancel_press();
+            return TurnState::idle();
+        }
         if signals.has_control && signals.command_focus && elapsed >= TURN_SETTLE {
             // The command ring actually has focus, so our presses will land on
             // the menu instead of being lost early.
@@ -371,7 +400,9 @@ impl CombatController {
             gamepad: pad,
             btn: &mut self.btn,
             dt,
-            want_target: Some(acting.target.as_str()),
+            // An empty target (the charge re-latch path) means "no
+            // preference" — the cursor driver accepts whatever it's on.
+            want_target: (!acting.target.is_empty()).then_some(acting.target.as_str()),
             want_mana_charges: acting.mana_charges,
             scratch: &mut acting.scratch,
         };

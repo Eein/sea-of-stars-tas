@@ -22,9 +22,24 @@ pub enum Move {
     Climb(f32, f32, f32),
     Interact(f32, f32, f32),
     WaitFor(f64),
+    /// Hold the left stick in a fixed direction until the player reaches a
+    /// position: `HoldDir(dir, target)` presses `dir` (a normalized `[x, z]`
+    /// joystick vector, e.g. `[0.0, -1.0]` = straight down) every frame and
+    /// advances once the player is within 1.0 units of `target` (looser than
+    /// `To`'s 0.2, since the path isn't steered). Unlike `To`, the direction
+    /// never re-aims — use it where dead-reckoning beats steering: fixed-angle
+    /// slopes/stairs, conveyor-like segments, screen transitions where the
+    /// position readout jumps, or anywhere `To`'s course correction would
+    /// zig-zag. The stick stays held when the step advances, so back-to-back
+    /// `HoldDir` steps chain without a neutral frame.
     HoldDir([f32; 2], [f32; 3]),
+    /// [`HoldDir`](Move::HoldDir), but the target is checked against the
+    /// world-map position instead of the level-local one.
     HoldDirWorld([f32; 2], [f32; 3]),
     Confirm,
+    Cancel,                  // Press the Cancel (B) button once
+    HoldConfirm(f64),        // Hold Confirm for this many seconds, then release
+    AwaitView(&'static str), // Wait until the named UI view (e.g. "CookingScreen") is up
     Log(&'static str),
     ChangeTime(f32),          // 0.0-24.0
     AwaitCombat(Box<Move>),   // Break inner Move when combat is done
@@ -51,6 +66,9 @@ impl Display for Move {
                 write!(f, "Move::HoldDirWorld({:?}, {:?})", joy, target)
             }
             Move::Confirm => write!(f, "Move::Confirm"),
+            Move::Cancel => write!(f, "Move::Cancel"),
+            Move::HoldConfirm(duration) => write!(f, "Move::HoldConfirm({:.3})", duration),
+            Move::AwaitView(view) => write!(f, "Move::AwaitView(\"{}\")", view),
             Move::Log(text) => write!(f, "Move::Log(\"{}\")", text),
             Move::ChangeTime(time) => write!(f, "Move::ChangeTime({:.3})", time),
             Move::AwaitCombat(inner) => write!(f, "Move::AwaitCombat(Box::new({}))", inner),
@@ -126,11 +144,13 @@ impl MovePath {
         f64::from(diff.magnitude()) < precision.unwrap_or(PRECISION)
     }
 
-    fn setup_confirm(&mut self) {
+    /// Arm a single tap of `action` (0.1s press, 0.2s release) as the
+    /// in-flight button press.
+    fn setup_button(&mut self, action: SosAction) {
         const PRESS_TIMEOUT: f64 = 0.1;
         const RELEASE_TIMEOUT: f64 = 0.2;
         self.btn = Some(ButtonPress {
-            action: SosAction::Confirm,
+            action,
             press_time: PRESS_TIMEOUT,
             release_time: RELEASE_TIMEOUT,
             ..Default::default()
@@ -140,10 +160,10 @@ impl MovePath {
     fn mash(&mut self, gamepad: &mut GenericJoystick, delta: f64) {
         if let Some(btn) = self.btn.as_mut() {
             if btn.update(gamepad, delta) {
-                self.setup_confirm();
+                self.setup_button(SosAction::Confirm);
             }
         } else {
-            self.setup_confirm();
+            self.setup_button(SosAction::Confirm);
         }
     }
 
@@ -205,9 +225,18 @@ impl MovePath {
             }
             // Leave/Join
             Move::Join => {
-                if sppmd.players.items[self.player].playing {
+                let me = &sppmd.players.items[self.player];
+                let game_paused = state.memory_managers.ui_manager.data.pause_menu_open();
+                if me.playing {
                     gamepad.release_all();
                     self.step += 1;
+                } else if game_paused || !me.can_join_leave {
+                    // Join maps to Start. Pressed while the pause menu is up —
+                    // or while the game won't accept a join — it opens the
+                    // pause menu instead, which the runner then cancels and
+                    // this press would immediately re-open, forever. Hold off
+                    // until the game reports joining possible.
+                    gamepad.release(&SosAction::Join);
                 } else {
                     gamepad.press(&SosAction::Join);
                 }
@@ -391,8 +420,45 @@ impl MovePath {
                     }
                 } else {
                     gamepad.release_all(); // Release held joystick direction
-                    self.setup_confirm();
+                    self.setup_button(SosAction::Confirm);
                     //TODO: gamepad.press(&SosAction::Turbo);
+                }
+            }
+            // Press cancel (B) once, e.g. to back out of a menu/dialog
+            Move::Cancel => {
+                if let Some(btn) = self.btn.as_mut() {
+                    if btn.update(gamepad, delta) {
+                        self.btn = None;
+                        self.step += 1;
+                        gamepad.release_all();
+                    }
+                } else {
+                    gamepad.release_all(); // Release held joystick direction
+                    self.setup_button(SosAction::Cancel);
+                }
+            }
+            // Wait (inputs released) until the named UI view is live in
+            // `UIManager.screensByType` — e.g. gate a cooking sequence on
+            // "CookingScreen" before holding Confirm to cook.
+            Move::AwaitView(view) => {
+                gamepad.release_all();
+                if state.memory_managers.ui_manager.data.view_open(view) {
+                    self.step += 1;
+                }
+            }
+            // Hold Confirm for a duration, then release and advance. Uses the
+            // shared step timer (like WaitFor) rather than a ButtonPress, so
+            // the hold is continuous — no release blips mid-hold.
+            Move::HoldConfirm(duration) => {
+                if self.timer == 0.0 {
+                    gamepad.release_all(); // Release held joystick direction
+                }
+                gamepad.press(&SosAction::Confirm);
+                self.timer += delta;
+                if self.timer >= duration {
+                    self.timer = 0.0;
+                    gamepad.release_all();
+                    self.step += 1;
                 }
             }
         }
@@ -415,10 +481,21 @@ impl MovePath {
                 }
             }
             GameEvent::Cutscene => {
-                if let Move::AwaitCutscene(_) = coord {
-                    self.btn = None;
-                    self.step += 1;
-                    self.dir = None;
+                match coord {
+                    Move::AwaitCutscene(_) => {
+                        self.btn = None;
+                        self.step += 1;
+                        self.dir = None;
+                    }
+                    // A Confirm whose press was in flight is what opened the
+                    // dialog/cutscene the masher just resolved. Resuming would
+                    // replay the rest of the press cycle — a stray Confirm
+                    // that re-opens the dialog. The press landed; step done.
+                    Move::Confirm if self.btn.is_some() => {
+                        self.btn = None;
+                        self.step += 1;
+                    }
+                    _ => {}
                 }
             }
             GameEvent::CoopSync(player) => {

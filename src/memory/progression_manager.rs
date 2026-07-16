@@ -21,6 +21,8 @@ pub struct ProgressionManagerData {
     /// — the reference struct wraps the id string, so each set slot holds the
     /// string pointer directly).
     pub unlocked_combat_moves: HashSet<String>,
+    /// Frame counter for throttling the set walk (unlocks change rarely).
+    frame: u64,
 }
 
 impl Default for MemoryManager<ProgressionManagerData> {
@@ -43,7 +45,12 @@ impl MemoryManagerUpdate for ProgressionManagerData {
     ) -> Result<(), MemoryError> {
         let memory_context = MemoryContext::create(ctx, manager)?;
 
-        self.update_unlocked_moves(&memory_context)?;
+        // Unlocks change on scroll pickups/level-ups, not per frame.
+        const REFRESH_FRAMES: u64 = 60;
+        self.frame = self.frame.wrapping_add(1);
+        if self.frame.is_multiple_of(REFRESH_FRAMES) || self.unlocked_combat_moves.is_empty() {
+            self.update_unlocked_moves(&memory_context)?;
+        }
 
         Ok(())
     }
