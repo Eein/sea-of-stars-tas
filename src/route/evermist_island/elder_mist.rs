@@ -172,7 +172,6 @@ fn left_trial() -> Box<dyn Node<GameState, GameEvent>> {
             Move::Interact(-10.454, 14.002, 97.185),
             Move::To(-9.190, 14.002, 92.457),
             Move::Confirm,
-
             // Move::Interact(-7.124, 14.002, 90.925),
             Move::To(-4.649, 14.002, 93.002),
             Move::Confirm,
@@ -251,10 +250,7 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                 "Elder Mist boss",
                 vec![Move::AwaitCombat(Box::new(Move::WaitFor(9999.0)))],
             ),
-            SeqMove::create(
-                "Move to save point",
-                vec![Move::To(52.413, 1.002, 33.476)],
-            ),
+            SeqMove::create("Move to save point", vec![Move::To(52.413, 1.002, 33.476)]),
             SeqCheckpoint::create("After Elder Mist Boss-fight"),
             SeqMove::create(
                 "Leave dream world",

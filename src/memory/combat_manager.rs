@@ -850,8 +850,7 @@ impl CombatManagerData {
                     let enabled = memory_context
                         .read_named::<u8>(command, "currentlyEnabled")
                         .is_none_or(|b| b == 1);
-                    if !enabled
-                        && let Some(name) = memory_context.object_class_name::<64>(command)
+                    if !enabled && let Some(name) = memory_context.object_class_name::<64>(command)
                     {
                         disabled_commands.push(name);
                     }
@@ -879,8 +878,7 @@ impl CombatManagerData {
             let mut moves = Vec::new();
             for move_ptr in memory_context.list_item_ptrs(move_list) {
                 let loaded = loaded_moves.contains(&move_ptr);
-                let move_def =
-                    CombatMove::read(memory_context, move_ptr, loaded, &unlocked_names);
+                let move_def = CombatMove::read(memory_context, move_ptr, loaded, &unlocked_names);
                 if loaded {
                     // Only loaded moves can own a live target-selector screen;
                     // cache them for the cheap per-frame cursor scan.
