@@ -123,6 +123,19 @@ impl Appraisal {
     }
 }
 
+/// Enemies that must die before anything else — scripted boss mechanics where
+/// the fight can't progress while they're up. Keyed by the enemy's definition
+/// `guid`. Mirrors the priority lists of the old Python encounter controllers
+/// (`elder_mist_controller.py` etc.).
+const PRIORITY_TARGET_GUIDS: [&str; 1] = [
+    // Elder Mist's sword: the boss must not be attacked until it's down.
+    "ddc4a3bbf0edb9945ba4b06f96f9c20e",
+];
+/// Score bonus lifting a priority target above everything else — including
+/// lethal kills on non-priority enemies (lethal + imminent-threat tops out
+/// well under this).
+const PRIORITY_TARGET_BONUS: f32 = 10_000.0;
+
 /// Bonus for an action that kills its target outright — securing a kill is
 /// worth more than raw damage spread across a survivor.
 const LETHAL_BONUS: f32 = 1000.0;
@@ -233,6 +246,11 @@ fn score_action(
     // Prioritise enemies whose turn is imminent (turns_to_action counts down).
     if enemy.turns_to_action > 0 {
         score += IMMINENT_THREAT_BONUS / enemy.turns_to_action as f32;
+    }
+    // Scripted priority targets (e.g. the Elder Mist sword) outrank
+    // everything, lethal kills included.
+    if PRIORITY_TARGET_GUIDS.contains(&enemy.guid.as_str()) {
+        score += PRIORITY_TARGET_BONUS;
     }
 
     let mut splash_targets = 0;
@@ -484,6 +502,48 @@ mod tests {
         assert_eq!(hits(0), 2);
         assert_eq!(hits(1), 1);
         assert_eq!(hits(2), 1);
+    }
+
+    /// A priority target (the Elder Mist sword) outranks even a lethal hit on
+    /// a normal enemy — mirroring the old Python controller's priority list.
+    #[test]
+    fn priority_target_outranks_lethal_kills() {
+        let cmd = CombatManagerData::default();
+        let player = CombatPlayer {
+            character: PlayerPartyCharacter::Valere,
+            physical_attack: 15,
+            ..Default::default()
+        };
+        let action = BasicAttack {
+            character: PlayerPartyCharacter::Valere,
+            timed: true,
+        };
+        let score = |enemy: &CombatEnemy| {
+            score_action(
+                &cmd,
+                &action,
+                &player,
+                enemy,
+                CombatAction::BasicAttack { timed: true },
+            )
+            .score
+        };
+
+        let sword = CombatEnemy {
+            guid: "ddc4a3bbf0edb9945ba4b06f96f9c20e".to_string(),
+            current_hp: 200, // not lethal
+            ..Default::default()
+        };
+        let killable = CombatEnemy {
+            current_hp: 1, // lethal
+            ..Default::default()
+        };
+        assert!(
+            score(&sword) > score(&killable),
+            "sword ({}) should outrank lethal kill ({})",
+            score(&sword),
+            score(&killable)
+        );
     }
 
     /// 15 small mana on the ground = 3 potential charges (5 merge into one,
