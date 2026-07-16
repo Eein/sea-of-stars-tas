@@ -269,6 +269,12 @@ pub struct CombatMove {
     /// `unlockedCombatMoves`). A move in the fighter's loaded lists but not
     /// yet learned (e.g. DashStrike before its scroll) is loaded but locked.
     pub unlocked: bool,
+    /// Whether the move is scripted-disabled: its definition's
+    /// `disableCounter` is above zero (`CanBeUsed`, RVA 0xA32F20, sums
+    /// `count + resetOnLevelLoadCount`). The Elder Mist trials disable the
+    /// skill/combo moves this way — the commands stay visible, but every
+    /// entry in the submenu reads uncastable.
+    pub disabled: bool,
     /// The characters this move needs in the party to be castable
     /// (`requiredCharacters` on the move definition). Combos list their
     /// participants (e.g. SpectacleStrike needs Garl, DualAttackKids the
@@ -422,6 +428,20 @@ impl CombatMove {
             || move_id
                 .as_ref()
                 .is_some_and(|id| unlocked_moves.contains(id));
+        // Scripted sections `Disable()` individual moves (their definition's
+        // `disableCounter` climbs above zero) — e.g. the Elder Mist trials
+        // lock every skill and combo until the boss.
+        let disabled = memory_context
+            .read_named_ptr(move_ptr, "disableCounter")
+            .is_some_and(|counter| {
+                let count = memory_context
+                    .read_named::<i32>(counter, "count")
+                    .unwrap_or(0);
+                let reset_count = memory_context
+                    .read_named::<i32>(counter, "resetOnLevelLoadCount")
+                    .unwrap_or(0);
+                count + reset_count > 0
+            });
         // `requiredCharacters` is a `List<CharacterDefinitionId>`; the struct
         // wraps a single string, so each list slot is that string's pointer.
         let required_characters = memory_context
@@ -453,6 +473,7 @@ impl CombatMove {
             is_damaging,
             unlockable,
             unlocked,
+            disabled,
             required_characters,
             main_target_guid,
             current_target_guid,
@@ -477,6 +498,12 @@ pub struct CombatManagerData {
     /// Highlighted battle command index while the ring has focus
     /// (`Attack=0, Skill=1, Combo=2, Item=3`).
     pub battle_command_index: Option<i64>,
+    /// The command ring's live entries, in ring order: each
+    /// `BattleCommandSelectorItem`'s command class name and whether the item
+    /// is `interactable` (scripted sections grey commands out — the Elder
+    /// Mist trials lock Skill/Combo until the boss). Empty when the selector
+    /// isn't readable.
+    pub battle_command_ring: Vec<(String, bool)>,
     /// Whether the skill/combo submenu has focus.
     pub skill_command_has_focus: bool,
     /// Highlighted item index in the skill/combo submenu.
@@ -491,6 +518,11 @@ pub struct CombatManagerData {
     /// (see `MemoryManagers::update`). Feeds each move's
     /// [`unlocked`](CombatMove::unlocked).
     pub unlocked_moves: std::collections::HashSet<String>,
+    /// Definition pointers of the fight's *loaded* moves, cached by
+    /// [`update_moves`](Self::update_moves) so the per-frame target-cursor
+    /// scan ([`update_target_cursor`](Self::update_target_cursor)) only
+    /// touches screens that can exist.
+    pub(crate) loaded_move_ptrs: Vec<u64>,
     /// `combatMoveId` of the combo highlighted in the combo submenu, or `None`
     /// when the submenu isn't open.
     pub highlighted_combo_id: Option<String>,
@@ -628,8 +660,23 @@ impl MemoryManagerUpdate for CombatManagerData {
             self.update_players(&memory_context)?;
             self.update_selected_character(&memory_context)?;
             self.update_battle_commands(&memory_context)?;
-            self.update_moves(&memory_context)?;
+            // The full move-definition scan is by far the most expensive read
+            // (hundreds of process reads) and moves aren't learned mid-fight —
+            // scan once at combat start, then only track the live target
+            // cursor per frame. The fighters' loaded lists fill *during* the
+            // battle intro, so keep rescanning until at least one loaded move
+            // appears — a too-early snapshot would cache every move as
+            // unloaded (and leave the cursor scan blind) for the whole fight.
+            if self.loaded_move_ptrs.is_empty() {
+                self.update_moves(&memory_context)?;
+            } else {
+                self.update_target_cursor(&memory_context);
+            }
             self.update_sunball_charge(&memory_context)?;
+        } else {
+            // Reset so the next fight rescans its moves.
+            self.moves.clear();
+            self.loaded_move_ptrs.clear();
         }
 
         Ok(())
@@ -686,6 +733,34 @@ impl CombatManagerData {
             self.battle_command_has_focus = focus;
             self.battle_command_index = index;
         }
+        // The ring's actual entries: each `BattleCommandSelectorItem` names its
+        // `battleCommandDefinition` (whose class is the command) and carries an
+        // `interactable` flag — scripted sections grey commands out (the Elder
+        // Mist trials lock Skill and Combo until the boss). Removed commands
+        // would also shift the remaining ring indices, so navigation and the
+        // appraiser key off this live list rather than fixed slots.
+        self.battle_command_ring = memory_context
+            .process
+            .read_pointer_path::<u64>(enc, &[0x140, 0x50, 0x68])
+            .ok()
+            .filter(|s| *s != NULL_POINTER && *s != 0)
+            .and_then(|selector| memory_context.read_named_ptr(selector, "items"))
+            .map(|items| {
+                memory_context
+                    .list_item_ptrs(items)
+                    .into_iter()
+                    .filter_map(|item| {
+                        let name = memory_context
+                            .read_named_ptr(item, "battleCommandDefinition")
+                            .and_then(|def| memory_context.object_class_name::<64>(def))?;
+                        let interactable = memory_context
+                            .read_named::<u8>(item, "interactable")
+                            .is_none_or(|b| b == 1);
+                        Some((name, interactable))
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
         // Skill/Combo submenu selector at 0x78 (same layout).
         if let Some((focus, index)) = read_command_selector(memory_context, enc, 0x78) {
             self.skill_command_has_focus = focus;
@@ -717,6 +792,7 @@ impl CombatManagerData {
     pub fn update_moves(&mut self, memory_context: &MemoryContext) -> Result<(), MemoryError> {
         self.selected_attack_target_guid = None;
         self.moves.clear();
+        self.loaded_move_ptrs.clear();
         // Learned-move ids, taken before the loop so reads don't fight the
         // `&mut self` borrow on `moves`.
         let unlocked_names = self.unlocked_moves.clone();
@@ -755,7 +831,7 @@ impl CombatManagerData {
             // The commands the game has disabled for this fighter this fight
             // (a HashSet<Type> of *BattleCommand classes), resolved to their
             // class names. Tutorials use this to force a specific command.
-            let disabled_commands = memory_context
+            let mut disabled_commands: Vec<String> = memory_context
                 .read_named_ptr(fighter_def, "disabledBattleCommands")
                 .map(|set| {
                     memory_context
@@ -765,6 +841,22 @@ impl CombatManagerData {
                         .collect()
                 })
                 .unwrap_or_default();
+            // Scripted fights also grey commands via each command asset's
+            // `currentlyEnabled` (e.g. the Elder Mist trials lock Skill and
+            // Combo until the boss) — fold those into the same disabled set.
+            if let Some(command_list) = memory_context.read_named_ptr(fighter_def, "battleCommands")
+            {
+                for command in memory_context.list_item_ptrs(command_list) {
+                    let enabled = memory_context
+                        .read_named::<u8>(command, "currentlyEnabled")
+                        .is_none_or(|b| b == 1);
+                    if !enabled
+                        && let Some(name) = memory_context.object_class_name::<64>(command)
+                    {
+                        disabled_commands.push(name);
+                    }
+                }
+            }
 
             let Some(move_list) = memory_context.read_named_ptr(fighter_def, "allMoveDefinitions")
             else {
@@ -786,12 +878,14 @@ impl CombatManagerData {
 
             let mut moves = Vec::new();
             for move_ptr in memory_context.list_item_ptrs(move_list) {
-                let move_def = CombatMove::read(
-                    memory_context,
-                    move_ptr,
-                    loaded_moves.contains(&move_ptr),
-                    &unlocked_names,
-                );
+                let loaded = loaded_moves.contains(&move_ptr);
+                let move_def =
+                    CombatMove::read(memory_context, move_ptr, loaded, &unlocked_names);
+                if loaded {
+                    // Only loaded moves can own a live target-selector screen;
+                    // cache them for the cheap per-frame cursor scan.
+                    self.loaded_move_ptrs.push(move_ptr);
+                }
                 main_hit = main_hit.or(move_def.main_target_guid.clone());
                 current_hit = current_hit.or(move_def.current_target_guid.clone());
                 moves.push(move_def);
@@ -806,6 +900,33 @@ impl CombatManagerData {
 
         self.selected_attack_target_guid = main_hit.or(current_hit);
         Ok(())
+    }
+
+    /// Per-frame refresh of just the live target cursor, between the throttled
+    /// full [`update_moves`](Self::update_moves) scans: walk the cached loaded
+    /// moves for the one whose target-selector screen is active and read the
+    /// enemy under its cursor. The cursor must be fresh every frame — the
+    /// executor steers it — while the definitions it hangs off barely change.
+    pub fn update_target_cursor(&mut self, memory_context: &MemoryContext) {
+        // Walk *every* loaded move's screen, or-chaining like the full scan:
+        // any `mainTarget` (single-target cursor) beats any `currentTarget`
+        // (AoE cursor). Pooled screens can keep a stale `active` flag from an
+        // earlier action, so stopping at the first active screen can serve a
+        // stale guid (a dead enemy) while the real cursor sits on another
+        // move's screen.
+        let mut main_hit: Option<String> = None;
+        let mut current_hit: Option<String> = None;
+        for &move_ptr in &self.loaded_move_ptrs {
+            let Some(screen) = CombatMove::active_screen(memory_context, move_ptr) else {
+                continue;
+            };
+            main_hit = main_hit
+                .or_else(|| CombatMove::screen_target_guid(memory_context, screen, "mainTarget"));
+            current_hit = current_hit.or_else(|| {
+                CombatMove::screen_target_guid(memory_context, screen, "currentTarget")
+            });
+        }
+        self.selected_attack_target_guid = main_hit.or(current_hit);
     }
 
     /// Read Zale's live Sunball charge while the charge QTE is active.

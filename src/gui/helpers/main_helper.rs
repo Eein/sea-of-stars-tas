@@ -394,6 +394,16 @@ impl MainHelper {
         egui::CollapsingHeader::new("Appraisals")
             .default_open(true)
             .show(ui, |ui| {
+                // Where the executor's turn machine is right now — the first
+                // thing to read when a fight looks stalled.
+                match combat {
+                    Some(combat) => {
+                        ui.label(format!("Executor: {}", combat.turn_status(game_state)));
+                    }
+                    None => {
+                        ui.weak("Executor: (not running)");
+                    }
+                }
                 // Callout for the current decision.
                 ui.horizontal(|ui| {
                     ui.label("Chosen:");
@@ -606,6 +616,11 @@ impl GuiHelper for MainHelper {
                         "Outside Forbidden Cavern",
                         "Before Bosslug",
                         "After Bosslug",
+                        "Through Mountain Trail",
+                        "Upper Mountain",
+                        "Upper Mountain (Heal Room)",
+                        "Trials in the Mist",
+                        "Elder Mist Boss",
                         "After Elder Mist Boss-fight",
                     ] {
                         ui.selectable_value(
@@ -682,6 +697,20 @@ impl GuiHelper for MainHelper {
                     repro_command(Route::Combat, None, None, false, &game_state.config)
                 );
                 let gm = tas::create_combat_test();
+                *tas_runner = Some(gm);
+                self.countdown = Some(1.0);
+            }
+            // Debug: runs only the campfire cooking interaction. Stand near the
+            // Mountain Trail campfire (berries picked) before clicking.
+            if ui
+                .add_enabled(!running, egui::Button::new("Start Cook Test"))
+                .clicked()
+            {
+                info!(
+                    "Reproduce this run with: {}",
+                    repro_command(Route::Cook, None, None, false, &game_state.config)
+                );
+                let gm = tas::create_cook_test();
                 *tas_runner = Some(gm);
                 self.countdown = Some(1.0);
             }

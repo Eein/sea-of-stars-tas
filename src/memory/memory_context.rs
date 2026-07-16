@@ -153,6 +153,16 @@ impl<'a> MemoryContext<'a> {
             .map(str::to_string)
     }
 
+    /// Resolve a live il2cpp object's class name (from its object header).
+    pub fn object_class_name<const N: usize>(&self, obj: u64) -> Option<String> {
+        Class::from_object(self.process, obj)?
+            .class_name::<N>(self.process, self.module)
+            .ok()?
+            .validate_utf8()
+            .ok()
+            .map(str::to_string)
+    }
+
     /// Read the element pointers of a Unity `List<T>` object (its `_items`
     /// backing array). Capped to a sane length as a safety bound.
     pub fn list_item_ptrs(&self, list_ptr: u64) -> Vec<u64> {

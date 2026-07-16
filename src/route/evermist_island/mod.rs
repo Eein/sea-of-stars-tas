@@ -15,8 +15,6 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
             mooncradle::create(),
             forbidden_cave::create(),
             mountain_trail::create(),
-            // TODO: Rest of mountain trail
-            SeqLog::create("TODO BREAK"),
             elder_mist::create(),
         ],
     )

@@ -1,5 +1,6 @@
 use crate::combat::CombatController;
 use delta::Timer;
+use log::info;
 use std::fmt::Display;
 
 use joystick::common::{JoystickBtnInterface, JoystickInterface};
@@ -33,6 +34,9 @@ pub struct TasRunner {
     btn: [ButtonPress; 3],
     timer: Timer,
     paused: bool,
+    /// Whether the *game* was paused last frame (a player pressing Start
+    /// mid-run), to log and clear inputs once per transition.
+    game_paused: bool,
 }
 
 impl Display for TasRunner {
@@ -53,6 +57,7 @@ impl TasRunner {
             ],
             timer: delta::Timer::new(),
             paused: false,
+            game_paused: false,
             level_up_controller: None,
             combat_controller: None,
         }
@@ -84,6 +89,31 @@ impl TasRunner {
 
         if self.paused {
             context.release_all();
+            return false;
+        }
+
+        // The pause *menu* being up (a player pressing Start mid-run) freezes
+        // everything while the sequences would otherwise keep driving blind —
+        // hold the whole FSM and tap Cancel on every pad until it's dismissed,
+        // then resume where we left off. Keyed off the PauseMenu view, not
+        // `PauseManager.isPaused`: other screens (cooking, shops) also pause
+        // gameplay, and those the TAS drives through.
+        let game_paused = context.memory_managers.ui_manager.data.pause_menu_open();
+        if game_paused != self.game_paused {
+            self.game_paused = game_paused;
+            context.release_all();
+            if game_paused {
+                info!("Game paused mid-run - holding the TAS and cancelling the pause menu");
+            } else {
+                info!("Game unpaused - resuming the TAS");
+            }
+        }
+        if game_paused {
+            for player in 0..self.btn.len() {
+                if self.btn[player].update(&mut context.gamepads[player], dt) {
+                    self.btn[player] = ButtonPress::new(SosAction::Cancel);
+                }
+            }
             return false;
         }
 

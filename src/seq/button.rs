@@ -28,8 +28,10 @@ impl ButtonPress {
     }
 
     pub fn update(&mut self, gamepad: &mut GenericJoystick, delta: f64) -> bool {
-        self.timer += delta;
-        // First press the button
+        // Check *before* accumulating so the press phase always gets at least
+        // one frame: accumulating first meant a frame longer than
+        // `press_time` skipped the press entirely and the tap silently
+        // vanished (short menu taps dying whenever the update loop ran slow).
         if self.timer < self.press_time {
             gamepad.press(&self.action);
         } else {
@@ -38,6 +40,7 @@ impl ButtonPress {
                 return true;
             }
         }
+        self.timer += delta;
         false
     }
 
@@ -46,7 +49,7 @@ impl ButtonPress {
     /// fights don't route through `current_player_index`, and the party has
     /// several players, so a single-pad mash can land on the wrong controller.
     pub fn update_all(&mut self, gamepads: &mut [GenericJoystick], delta: f64) -> bool {
-        self.timer += delta;
+        // Same press-before-accumulate guarantee as `update`.
         let pressing = self.timer < self.press_time;
         for gamepad in gamepads.iter_mut() {
             if pressing {
@@ -55,6 +58,7 @@ impl ButtonPress {
                 gamepad.release(&self.action);
             }
         }
+        self.timer += delta;
         !pressing && self.done()
     }
 

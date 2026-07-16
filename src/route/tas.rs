@@ -1,5 +1,6 @@
 use seq::prelude::*;
 
+use crate::seq::movement::{Move, SeqMove};
 use crate::seq::relics::SeqRelicList;
 use crate::seq::title::{SeqLoadGame, SeqTitleScreen};
 use crate::tas_runner::TasRunner;
@@ -43,6 +44,31 @@ pub fn create_combat_test() -> TasRunner {
             SeqLog::create("COMBAT START"),
             combat::create(),
             SeqLog::create("COMBAT DONE"),
+        ],
+    ))
+}
+
+/// Debug route for the campfire cooking interaction: assumes the game is
+/// standing next to the Mountain Trail campfire with berries picked. Walks up,
+/// picks Cook in the dialog, waits for the cooking screen, and holds Confirm
+/// to cook.
+pub fn create_cook_test() -> TasRunner {
+    TasRunner::new(SeqList::create(
+        "COOK TEST",
+        vec![
+            SeqLog::create("COOK TEST START"),
+            SeqMove::create(
+                "Campfire cook",
+                vec![
+                    Move::Interact(28.137, 21.002, 13.178),
+                    Move::Confirm,
+                    Move::WaitFor(2.5),
+                    Move::Confirm,
+                    Move::AwaitView("CookingScreen"),
+                    Move::HoldConfirm(3.5), // TODO: How long is this
+                ],
+            ),
+            SeqLog::create("COOK TEST DONE"),
         ],
     ))
 }

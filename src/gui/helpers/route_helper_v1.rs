@@ -92,6 +92,9 @@ impl GuiHelper for RouteHelperV1 {
             if ui.button("Confirm").clicked() {
                 self.coords.push(Move::Confirm);
             }
+            if ui.button("Cancel").clicked() {
+                self.coords.push(Move::Cancel);
+            }
             if ui.button("Log").clicked() {
                 self.coords.push(Move::Log("TEMP"));
             }

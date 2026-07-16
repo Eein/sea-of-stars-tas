@@ -43,6 +43,9 @@ pub struct CombatController {
     pub chosen: Option<Appraisal>,
     /// Per-turn executor state (normal encounters only). See [`TurnState`].
     pub(super) turn_state: TurnState,
+    /// Last frame's delta, displayed in the GUI status — a dt above a tap's
+    /// press window (0.04s) means timed presses are at risk.
+    last_dt: f64,
     /// The `current_player_index` we're currently acting on, so we can detect
     /// when the turn passes to another actor and reset.
     pub(super) turn_index: Option<i32>,
@@ -50,6 +53,7 @@ pub struct CombatController {
 
 impl CombatController {
     pub fn update(&mut self, state: &mut GameState, dt: f64) -> bool {
+        self.last_dt = dt;
         let encounter_active = state.memory_managers.combat_manager.data.encounter_active;
 
         // Decision layer: rank candidate actions for the current state. The
@@ -108,6 +112,17 @@ impl CombatController {
         // If the chosen action belongs to another character the executor
         // selects that character first (see `TurnState::SelectingCharacter`).
         self.chosen = appraisal::choose(&self.appraisals).cloned();
+    }
+
+    /// One-line executor status (turn state + latched action/step + the pad
+    /// being driven) for the GUI.
+    pub fn turn_status(&self, state: &GameState) -> String {
+        format!(
+            "{} | pad {} | dt {:.0}ms",
+            self.turn_state.status(),
+            Self::active_gamepad(state),
+            self.last_dt * 1000.0,
+        )
     }
 
     /// Park the executor in a fresh Idle and drop the turn tracking.

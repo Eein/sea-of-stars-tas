@@ -68,12 +68,14 @@ impl BattleCommand {
         }
     }
 
-    /// The game's `*BattleCommand` class name for this command, matched against a
-    /// fighter's `disabled_commands` set to honour tutorial restrictions.
+    /// The game's `BattleCommandDefinition` class name for this command,
+    /// matched against the live command ring and a fighter's
+    /// `disabled_commands` set. (The skill command's class is
+    /// `SelectSpecialMoveBattleCommand` — there is no `SkillBattleCommand`.)
     pub fn class_name(self) -> &'static str {
         match self {
             BattleCommand::Attack => "BasicAttackBattleCommand",
-            BattleCommand::Skill => "SkillBattleCommand",
+            BattleCommand::Skill => "SelectSpecialMoveBattleCommand",
             BattleCommand::Combo => "ComboBattleCommand",
             BattleCommand::Item => "ItemsBattleCommand",
         }
@@ -218,7 +220,17 @@ pub trait Action {
             ctx.scratch.timer = 0.0;
             return StepOutcome::Stay;
         }
-        let want_command = self.battle_command().ring_index();
+        // The ring's live entries decide the slot: removed commands (e.g. the
+        // Elder Mist trials stripping Skill/Combo) shift the remaining
+        // indices, so the fixed mapping only serves as a fallback when the
+        // ring isn't readable.
+        let want_command = ctx
+            .cmd
+            .battle_command_ring
+            .iter()
+            .position(|(name, _)| name == self.battle_command().class_name())
+            .map(|i| i as i64)
+            .unwrap_or_else(|| self.battle_command().ring_index());
         if ctx.cmd.battle_command_index == Some(want_command) {
             *ctx.btn = confirm_press();
             ctx.scratch.timer = 0.0;
@@ -373,7 +385,7 @@ pub trait Action {
     /// unregistered move.
     fn move_available(&self, cmd: &CombatManagerData) -> bool {
         self.find_move(cmd)
-            .is_some_and(|m| m.unlocked && (m.loaded || m.unlockable == Some(0)))
+            .is_some_and(|m| m.unlocked && !m.disabled && (m.loaded || m.unlockable == Some(0)))
     }
 
     /// This action's move definition in its character's live move list, if
