@@ -71,6 +71,22 @@ impl<T, E> Sequencer<T, E> {
         self.root.checkpoints(&mut out);
         out
     }
+
+    /// Jump the run to the node at `path` (child indices from the root, as
+    /// rendered by [`tree`](Self::tree)) and (re-)enter the new chain, so
+    /// execution continues from that node. Works mid-run and restarts a
+    /// finished sequence. Returns `false` if the path doesn't resolve — the
+    /// jump is best-effort and container steps along a partially valid path
+    /// may have moved.
+    pub fn advance_to_path(&mut self, context: &mut T, path: &[usize]) -> bool {
+        if !self.root.advance_to_path(path) {
+            return false;
+        }
+        self.finished = false;
+        self.started = true;
+        self.root.enter(context);
+        true
+    }
 }
 
 #[cfg(test)]
@@ -173,6 +189,35 @@ mod tests {
         fn evaluate(&self, state: &State) -> bool {
             state.value > self.value
         }
+    }
+
+    /// `advance_to_path` repositions the run on the addressed node (child
+    /// indices as rendered by `tree()`), including jumping backwards after
+    /// the target already ran; unresolvable paths report failure.
+    #[test]
+    fn advance_to_path_jumps_to_the_addressed_node() {
+        let mut sequencer: Sequencer<State, Event> = Sequencer::new(SeqList::create(
+            "Root",
+            vec![
+                SeqLog::create("a"),
+                SeqLog::create("b"),
+                SeqList::create("Inner", vec![SeqLog::create("c"), SeqLog::create("d")]),
+            ],
+        ));
+        let mut state = State::default();
+
+        assert!(sequencer.advance_to_path(&mut state, &[2, 1]));
+        let tree = sequencer.tree();
+        assert_eq!(tree.active_child, Some(2));
+        assert_eq!(tree.children[2].active_child, Some(1));
+
+        // Jump backwards: the earlier node becomes current again.
+        assert!(sequencer.advance_to_path(&mut state, &[1]));
+        assert_eq!(sequencer.tree().active_child, Some(1));
+
+        // Out-of-bounds paths don't resolve.
+        assert!(!sequencer.advance_to_path(&mut state, &[9]));
+        assert!(!sequencer.advance_to_path(&mut state, &[2, 5]));
     }
 
     #[test]

@@ -1,7 +1,7 @@
 //! Seq Tree tab: renders the route sequencer's whole node tree with the
 //! currently executing chain highlighted, so you can see where the run is at
-//! a glance. Phase 2 will make nodes clickable to start playback from them —
-//! the child-index path rendered here is the jump target for that.
+//! a glance — and right-clicking any node plays the route from it (the
+//! child-index path addresses the node for `TasRunner::play_from_path`).
 
 use std::collections::HashSet;
 
@@ -56,11 +56,23 @@ impl SeqTreeHelper {
     }
 }
 
+/// Offer "Play from here" on a node's right-click menu, capturing the node's
+/// path into `jump` when picked.
+fn play_from_here_menu(response: &egui::Response, path: &[usize], jump: &mut Option<Vec<usize>>) {
+    response.context_menu(|ui| {
+        if ui.button("▶ Play from here").clicked() {
+            *jump = Some(path.to_vec());
+            ui.close();
+        }
+    });
+}
+
 /// Draw `node` and its subtree. The snapshot carries the live flags: `active`
 /// nodes are the executing chain (the deepest one is the running node) and
 /// `completed` sections have fully finished (rendered dimmed). A header click
 /// toggles the node in `manual_open`; see [`SeqTreeHelper`] for the open-state
-/// rules.
+/// rules. Right-clicking any node offers "Play from here" (collected into
+/// `jump`).
 fn draw_node(
     ui: &mut egui::Ui,
     node: &SeqTreeNode,
@@ -68,6 +80,7 @@ fn draw_node(
     follow: bool,
     hide_completed: bool,
     manual_open: &mut HashSet<Vec<usize>>,
+    jump: &mut Option<Vec<usize>>,
 ) {
     let is_current = node.active && node.active_child.is_none();
     let label = if is_current {
@@ -83,7 +96,8 @@ fn draw_node(
     };
 
     if node.children.is_empty() {
-        ui.label(label);
+        let response = ui.label(label);
+        play_from_here_menu(&response, path, jump);
         return;
     }
     let manually_open = manual_open.contains(path.as_slice());
@@ -108,10 +122,11 @@ fn draw_node(
                     continue;
                 }
                 path.push(i);
-                draw_node(ui, child, path, follow, hide_completed, manual_open);
+                draw_node(ui, child, path, follow, hide_completed, manual_open, jump);
                 path.pop();
             }
         });
+    play_from_here_menu(&response.header_response, path, jump);
     if response.header_response.clicked() {
         if manually_open {
             manual_open.remove(path.as_slice());
@@ -127,7 +142,7 @@ fn draw_node(
 impl GuiHelper for SeqTreeHelper {
     fn draw(
         &mut self,
-        _game_state: &mut GameState,
+        game_state: &mut GameState,
         tas_runner: &mut Option<TasRunner>,
         ui: &mut egui::Ui,
         _tab: &mut String,
@@ -154,6 +169,7 @@ impl GuiHelper for SeqTreeHelper {
             ui.checkbox(&mut self.hide_completed, "Hide completed moves");
         });
         ui.separator();
+        let mut jump: Option<Vec<usize>> = None;
         if let Some(tree) = &self.tree {
             let manual_open = &mut self.manual_open;
             egui::ScrollArea::vertical()
@@ -166,8 +182,19 @@ impl GuiHelper for SeqTreeHelper {
                         self.follow,
                         self.hide_completed,
                         manual_open,
+                        &mut jump,
                     );
                 });
+        }
+        if let Some(path) = jump {
+            if tas_runner.play_from_path(game_state, &path) {
+                log::info!("seq tree: playing from {path:?}");
+                // Refresh immediately so the tree shows the new position.
+                self.tree = Some(tas_runner.seq_tree());
+                self.last_refresh = std::time::Instant::now();
+            } else {
+                log::warn!("seq tree: jump to {path:?} did not resolve");
+            }
         }
     }
 }

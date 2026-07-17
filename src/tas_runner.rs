@@ -96,6 +96,27 @@ impl TasRunner {
         self.sequencer.advance_to_checkpoint(context, checkpoint)
     }
 
+    /// Jump the run to the sequence-tree node at `path` (the Seq Tree tab's
+    /// "play from here"): release all inputs, drop any live sub-controller,
+    /// reposition the sequencer, and resume — including out of a pause —
+    /// with the route driving from the new node.
+    pub fn play_from_path(&mut self, context: &mut GameState, path: &[usize]) -> bool {
+        context.release_all();
+        if !self.sequencer.advance_to_path(context, path) {
+            return false;
+        }
+        self.combat_controller = None;
+        self.level_up_controller = None;
+        self.fsm = GameFsm::Route;
+        self.btn = [
+            ButtonPress::default(),
+            ButtonPress::default(),
+            ButtonPress::default(),
+        ];
+        self.paused = false;
+        true
+    }
+
     pub fn run(&mut self, context: &mut GameState) -> bool {
         let dt = self.timer.mark_secs();
 

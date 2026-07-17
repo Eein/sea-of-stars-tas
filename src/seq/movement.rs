@@ -99,6 +99,17 @@ enum PathStatus {
 }
 
 impl MovePath {
+    /// Park the path at `step` with all transient driving state cleared, for
+    /// the tree's play-from-here jump.
+    fn jump_to(&mut self, step: usize) {
+        self.step = step;
+        self.btn = None;
+        self.dir = None;
+        self.timer = 0.0;
+        self.semaphore.clear();
+        self.sent_signal = false;
+    }
+
     pub fn new(name: String, player: usize, coords: Vec<Move>) -> Self {
         if player > 2 {
             panic!(
@@ -573,6 +584,40 @@ impl Display for SeqMove {
 impl Node<GameState, GameEvent> for SeqMove {
     fn enter(&mut self, state: &mut GameState) {
         state.release_all();
+    }
+
+    /// Jump within the moves, mirroring [`tree`](Self::tree)'s child order:
+    /// single-player `[i]` parks player 0 on move `i`; the bare node restarts
+    /// every path. Co-op `[p]`/`[p, i]` repositions only player `p`'s path —
+    /// best-effort, since the other players' positions and sync points can't
+    /// be derived from a single node address.
+    fn advance_to_path(&mut self, path: &[usize]) -> bool {
+        if path.is_empty() {
+            for move_path in &mut self.paths {
+                move_path.jump_to(0);
+            }
+            return true;
+        }
+        if let [move_path] = self.paths.as_mut_slice() {
+            let [step] = path else {
+                return false;
+            };
+            if *step >= move_path.coords.len() {
+                return false;
+            }
+            move_path.jump_to(*step);
+            return true;
+        }
+        let (&player, rest) = path.split_first().expect("checked non-empty");
+        let Some(move_path) = self.paths.get_mut(player) else {
+            return false;
+        };
+        match rest {
+            [] => move_path.jump_to(0),
+            [step] if *step < move_path.coords.len() => move_path.jump_to(*step),
+            _ => return false,
+        }
+        true
     }
 
     /// Expose the moves as tree children: single-player paths list their

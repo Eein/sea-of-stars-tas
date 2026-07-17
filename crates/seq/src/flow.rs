@@ -159,6 +159,31 @@ impl<State, Event, Cond: SeqCondition<State, Event>> Node<State, Event>
         }
     }
 
+    fn advance_to_path(&mut self, path: &[usize]) -> bool {
+        // Child order matches `tree()`: `then` first when present, then
+        // `else`. The selection set here positions the walk, but `enter`
+        // re-evaluates the condition — if it disagrees, the other branch runs
+        // from its start.
+        let Some((&index, rest)) = path.split_first() else {
+            return true;
+        };
+        let mut next = 0;
+        if let Some(child) = &mut self.on_true {
+            if index == next {
+                self.selection = true;
+                return child.advance_to_path(rest);
+            }
+            next += 1;
+        }
+        if let Some(child) = &mut self.on_false
+            && index == next
+        {
+            self.selection = false;
+            return child.advance_to_path(rest);
+        }
+        false
+    }
+
     fn tree(&self, active: bool) -> SeqTreeNode {
         // Both branches are shown; the selected one is active. Selection is
         // only meaningful once the node has been entered (it defaults false).
@@ -295,6 +320,24 @@ impl<State, Event, Cond: SeqCondition<State, Event>> Node<State, Event>
         self.fallback.checkpoints(out);
     }
 
+    fn advance_to_path(&mut self, path: &[usize]) -> bool {
+        match path.split_first() {
+            None => {
+                self.fallback_triggered = false;
+                true
+            }
+            Some((&0, rest)) => {
+                self.fallback_triggered = false;
+                self.primary.advance_to_path(rest)
+            }
+            Some((&1, rest)) => {
+                self.fallback_triggered = true;
+                self.fallback.advance_to_path(rest)
+            }
+            Some(_) => false,
+        }
+    }
+
     fn tree(&self, active: bool) -> SeqTreeNode {
         let mut primary = self.primary.tree(active && !self.fallback_triggered);
         primary.label = format!("primary: {}", primary.label);
@@ -416,6 +459,27 @@ impl<State, Event> Node<State, Event> for SeqList<State, Event> {
     fn checkpoints(&self, out: &mut Vec<String>) {
         for child in &self.children {
             child.checkpoints(out);
+        }
+    }
+
+    fn advance_to_path(&mut self, path: &[usize]) -> bool {
+        match path.split_first() {
+            // The list itself: restart from its first child (which resets its
+            // own progress in turn — it may have run before on a backward
+            // jump).
+            None => {
+                self.step = 0;
+                self.children
+                    .first_mut()
+                    .is_none_or(|child| child.advance_to_path(&[]))
+            }
+            Some((&index, rest)) => {
+                if index >= self.children.len() {
+                    return false;
+                }
+                self.step = index;
+                self.children[index].advance_to_path(rest)
+            }
         }
     }
 
