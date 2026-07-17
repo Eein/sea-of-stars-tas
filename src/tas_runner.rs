@@ -80,6 +80,18 @@ impl TasRunner {
         self.combat_controller.as_ref()
     }
 
+    /// Snapshot of the route's sequence tree with the live execution path
+    /// marked, for the GUI's Seq Tree tab.
+    pub fn seq_tree(&self) -> SeqTreeNode {
+        self.sequencer.tree()
+    }
+
+    /// Every checkpoint name in the route, in route order — generated from
+    /// the sequence itself so pickers never drift from the route definition.
+    pub fn checkpoints(&self) -> Vec<String> {
+        self.sequencer.checkpoints()
+    }
+
     pub fn advance_to_checkpoint(&mut self, context: &mut GameState, checkpoint: &str) -> bool {
         self.sequencer.advance_to_checkpoint(context, checkpoint)
     }

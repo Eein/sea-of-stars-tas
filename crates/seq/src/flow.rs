@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::Node;
+use crate::{Node, SeqTreeNode};
 use log::{debug, info, warn};
 
 pub struct SeqIf<State, Event, Cond: SeqCondition<State, Event>> {
@@ -149,6 +149,45 @@ impl<State, Event, Cond: SeqCondition<State, Event>> Node<State, Event>
             }
         }
     }
+
+    fn checkpoints(&self, out: &mut Vec<String>) {
+        if let Some(child) = &self.on_true {
+            child.checkpoints(out);
+        }
+        if let Some(child) = &self.on_false {
+            child.checkpoints(out);
+        }
+    }
+
+    fn tree(&self, active: bool) -> SeqTreeNode {
+        // Both branches are shown; the selected one is active. Selection is
+        // only meaningful once the node has been entered (it defaults false).
+        let mut children = Vec::new();
+        let mut active_child = None;
+        if let Some(child) = &self.on_true {
+            if self.selection {
+                active_child = Some(children.len());
+            }
+            let mut tree = child.tree(active && self.selection);
+            tree.label = format!("then: {}", tree.label);
+            children.push(tree);
+        }
+        if let Some(child) = &self.on_false {
+            if !self.selection {
+                active_child = Some(children.len());
+            }
+            let mut tree = child.tree(active && !self.selection);
+            tree.label = format!("else: {}", tree.label);
+            children.push(tree);
+        }
+        SeqTreeNode {
+            label: format!("SeqIf({})", self.name),
+            children,
+            active_child,
+            active,
+            completed: false,
+        }
+    }
 }
 
 pub struct SeqFallback<State, Event, Cond: SeqCondition<State, Event>> {
@@ -248,6 +287,25 @@ impl<State, Event, Cond: SeqCondition<State, Event>> Node<State, Event>
         match self.fallback_triggered {
             true => self.fallback.exit(state),
             false => self.primary.exit(state),
+        }
+    }
+
+    fn checkpoints(&self, out: &mut Vec<String>) {
+        self.primary.checkpoints(out);
+        self.fallback.checkpoints(out);
+    }
+
+    fn tree(&self, active: bool) -> SeqTreeNode {
+        let mut primary = self.primary.tree(active && !self.fallback_triggered);
+        primary.label = format!("primary: {}", primary.label);
+        let mut fallback = self.fallback.tree(active && self.fallback_triggered);
+        fallback.label = format!("fallback: {}", fallback.label);
+        SeqTreeNode {
+            label: format!("SeqFallback({})", self.name),
+            children: vec![primary, fallback],
+            active_child: Some(usize::from(self.fallback_triggered)),
+            active,
+            completed: false,
         }
     }
 }
@@ -354,6 +412,28 @@ impl<State, Event> Node<State, Event> for SeqList<State, Event> {
             }
         }
     }
+
+    fn checkpoints(&self, out: &mut Vec<String>) {
+        for child in &self.children {
+            child.checkpoints(out);
+        }
+    }
+
+    fn tree(&self, active: bool) -> SeqTreeNode {
+        SeqTreeNode {
+            label: format!("{} ({}/{})", self.name, self.step, self.children.len()),
+            children: self
+                .children
+                .iter()
+                .enumerate()
+                .map(|(i, c)| c.tree(active && i == self.step))
+                .collect(),
+            active_child: self.in_bounds().then_some(self.step),
+            active,
+            // The list ran off its end — every child has executed.
+            completed: !self.in_bounds() && !self.children.is_empty(),
+        }
+    }
 }
 
 #[derive(Default)]
@@ -376,6 +456,10 @@ impl<State, Event> Node<State, Event> for SeqCheckpoint {
 
     fn advance_to_checkpoint(&mut self, _state: &mut State, checkpoint: &str) -> bool {
         self.checkpoint_name == checkpoint
+    }
+
+    fn checkpoints(&self, out: &mut Vec<String>) {
+        out.push(self.checkpoint_name.clone());
     }
 }
 

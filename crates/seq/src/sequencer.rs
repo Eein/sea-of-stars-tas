@@ -58,6 +58,19 @@ impl<T, E> Sequencer<T, E> {
     pub fn advance_to_checkpoint(&mut self, context: &mut T, checkpoint: &str) -> bool {
         self.root.advance_to_checkpoint(context, checkpoint)
     }
+
+    /// Snapshot of the whole sequence tree with the live execution path
+    /// marked, for the GUI's sequence view.
+    pub fn tree(&self) -> crate::SeqTreeNode {
+        self.root.tree(self.started && !self.finished)
+    }
+
+    /// Every checkpoint name in the sequence, in route order.
+    pub fn checkpoints(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        self.root.checkpoints(&mut out);
+        out
+    }
 }
 
 #[cfg(test)]

@@ -23,7 +23,6 @@ pub enum CombatControllerType {
     DwellerOfDread,
     KOTutorial,
     LiveManaTutorial,
-    ManaRegenTutorial,
     RoundsTutorial,
     SpellLockTutorial,
     TimedBlocksTutorial,
@@ -1082,24 +1081,28 @@ impl CombatManagerData {
             return Ok(());
         };
 
+        // Class names verified against the decompiled assembly (the
+        // `decoded/csharp` type dump) — the suffixes are inconsistent in the
+        // game (`…Encounter`, `…EncounterController`, and TimedHits' plural
+        // "Tutorials"), so each is matched verbatim.
         self.combat_controller_type = match name.as_str() {
             "EncounterController" => CombatControllerType::Basic,
-            "FirstEncounter" => CombatControllerType::FirstEncounter,
-            "SecondEncounter" => CombatControllerType::SecondEncounter,
-            "DwellerOfStrife" => CombatControllerType::DwellerOfStrife,
-            "DwellerOfDread" => CombatControllerType::DwellerOfDread,
-            "KOTutorial" => CombatControllerType::KOTutorial,
-            "LiveManaTutorial" => CombatControllerType::LiveManaTutorial,
-            "ManaRegenTutorial" => CombatControllerType::ManaRegenTutorial,
-            "RoundsTutorial" => CombatControllerType::RoundsTutorial,
-            "SpellLockTutorial" => CombatControllerType::SpellLockTutorial,
-            "TimedBlocksTutorial" => CombatControllerType::TimedBlocksTutorial,
-            "TimedHitsTutorial" => CombatControllerType::TimedHitsTutorial,
+            "FirstEncounterController" => CombatControllerType::FirstEncounter,
+            "SecondEncounterController" => CombatControllerType::SecondEncounter,
+            "DwellerOfStrifeFirstEncounterController" => CombatControllerType::DwellerOfStrife,
+            "DwellerOfDreadEncounterController" => CombatControllerType::DwellerOfDread,
+            "KOTutorialEncounterController" => CombatControllerType::KOTutorial,
+            "LiveManaTutorialEncounterController" => CombatControllerType::LiveManaTutorial,
+            "RoundsTutorialEncounterController" => CombatControllerType::RoundsTutorial,
+            "SpellLockTutorialEncounter" => CombatControllerType::SpellLockTutorial,
+            "TimedBlocksTutorialEncounterController" => CombatControllerType::TimedBlocksTutorial,
+            "TimedHitsTutorialsEncounterController" => CombatControllerType::TimedHitsTutorial,
             "KidsCavernEncounter" => CombatControllerType::KidsCavernEncounter,
             other => {
-                // Unmapped controllers fall back to Basic; log the raw name
-                // (debug) so we can model new encounters explicitly.
-                log::debug!("unmapped combat controller: {other}");
+                // Unmapped controllers fall back to Basic — loudly, because a
+                // special fight silently running the Basic executor is a trap
+                // (the live-mana tutorial idled for exactly this reason).
+                log::warn!("unmapped combat controller: {other}, treating as Basic");
                 CombatControllerType::Basic
             }
         };

@@ -88,7 +88,13 @@ impl CombatController {
             .data
             .combat_controller_type;
         match controller_type {
-            CombatControllerType::Basic => CombatMode::Execute,
+            // The live-mana tutorial locks every command until a charge is
+            // absorbed — a Confirm mash can't absorb (that needs Boost held),
+            // but the executor's Boosting step can: the appraiser's absorb
+            // fallback boosts first, then attacks like a normal fight.
+            CombatControllerType::Basic | CombatControllerType::LiveManaTutorial => {
+                CombatMode::Execute
+            }
             _ => CombatMode::Mash,
         }
     }
