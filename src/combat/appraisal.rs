@@ -218,7 +218,11 @@ fn score_action(
     let expected_damage = action.estimate_damage(cmd, player, enemy);
     let lethal = expected_damage >= enemy.current_hp as f32;
 
-    let mut score = expected_damage;
+    // Score the *effective* damage — capped at the target's remaining HP, like
+    // the splash contributions below. Overkill is wasted, so it must not lift
+    // an anchor over one that spends the full hit (e.g. when the splash alone
+    // kills the small enemy, the full hit belongs on its big neighbour).
+    let mut score = expected_damage.min(enemy.current_hp as f32);
     if lethal {
         score += kill_bonus(enemy);
     }
@@ -651,6 +655,76 @@ mod tests {
             on_middle.score,
             on_right.score,
             on_left.score
+        );
+    }
+
+    /// When the splash alone kills the small enemy, the full hit belongs on
+    /// the big one: ~60 into a 10-HP enemy wastes 50 damage its neighbour
+    /// could have taken, while anchoring the big enemy banks all 60 *and*
+    /// still splash-kills the small one. Overkill on the main target must not
+    /// count toward the score (it's capped at the target's remaining HP, like
+    /// splash already is).
+    #[test]
+    fn aoe_banks_overkill_on_the_survivor_when_splash_still_kills() {
+        use crate::memory::combat_manager::{CharacterMoves, CombatMove};
+
+        let mut cmd = CombatManagerData {
+            player_aoe_radius: Some(3.0),
+            ..Default::default()
+        };
+        let enemy = |hp: u32, x: f32| CombatEnemy {
+            current_hp: hp,
+            position: Some(Vector3::new(x, 0.0, 0.0)),
+            ..Default::default()
+        };
+        cmd.enemies.items = vec![
+            enemy(10, 0.0),  // small — dies to the ~36 splash
+            enemy(200, 3.0), // big — inside splash reach of the small one
+        ];
+        // matk 26 + power 12 + max roll 3 vs 0 mdef → 60 on either enemy.
+        cmd.moves = vec![CharacterMoves {
+            character: PlayerPartyCharacter::Zale,
+            moves: vec![CombatMove {
+                move_id: Some("Sunball".into()),
+                special_move_power: Some(12.0),
+                ..Default::default()
+            }],
+            ..Default::default()
+        }];
+        let player = CombatPlayer {
+            character: PlayerPartyCharacter::Zale,
+            magical_attack: 26,
+            ..Default::default()
+        };
+        let action = skills::skill_actions()
+            .into_iter()
+            .find(|a| a.internal_name() == "Sunball")
+            .unwrap();
+        let score = |enemy| {
+            score_action(
+                &cmd,
+                action.as_ref(),
+                &player,
+                enemy,
+                CombatAction::Skill {
+                    name: "Sunball".into(),
+                    cost: 8,
+                },
+            )
+        };
+
+        let on_small = score(&cmd.enemies.items[0]);
+        let on_big = score(&cmd.enemies.items[1]);
+        // Sanity: the hit really overkills the small enemy, and the splash
+        // really kills it from the big anchor.
+        assert!(on_small.lethal);
+        assert_eq!(on_big.splash_targets, 1);
+        assert!(
+            on_big.score > on_small.score,
+            "big-anchor ({}) should outrank small-anchor ({}): both kill the \
+             small enemy, but only the big anchor uses the full hit",
+            on_big.score,
+            on_small.score
         );
     }
 
