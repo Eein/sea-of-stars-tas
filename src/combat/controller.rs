@@ -5,8 +5,6 @@
 //! Not to be confused with `memory::combat_manager`, which mirrors the *game's*
 //! `CombatManager` singleton; this is the bot acting on that snapshot.
 
-use joystick::common::JoystickBtnInterface;
-
 use super::appraisal::{self, Appraisal};
 use super::skills;
 use super::turn::TurnState;
@@ -30,12 +28,6 @@ enum CombatMode {
 #[derive(Default)]
 pub struct CombatController {
     pub(super) btn: ButtonPress,
-    /// Controller index we were mashing on last frame, so we can release it if
-    /// the active player changes mid-mash.
-    pub(super) last_gamepad: Option<usize>,
-    /// Duty-cycle timer for mashing Confirm on all pads to dismiss mid-fight
-    /// dialogue.
-    dialog_timer: f64,
     /// Ranked candidate actions for the current combat state, recomputed every
     /// frame.
     pub appraisals: Vec<Appraisal>,
@@ -64,16 +56,13 @@ impl CombatController {
         match Self::mode(state) {
             CombatMode::Dialogue => {
                 self.mash_all_confirm(state, dt);
-                // Force a fresh per-player mash / turn once dialogue clears.
-                self.last_gamepad = None;
+                // Force a fresh turn once dialogue clears.
                 self.reset_turn();
             }
             CombatMode::Execute => {
-                self.dialog_timer = 0.0;
                 self.execute_turn(state, dt);
             }
             CombatMode::Mash => {
-                self.dialog_timer = 0.0;
                 self.reset_turn();
                 self.mash_all_turn(state, dt);
             }
@@ -137,7 +126,6 @@ impl CombatController {
     /// through `current_player_index`, and by these fights the party has several
     /// players, so a single-pad mash on the wrong controller stalls the fight.
     fn mash_all_turn(&mut self, state: &mut GameState, dt: f64) {
-        self.last_gamepad = None;
         if self.btn.update_all(&mut state.gamepads, dt) {
             self.btn = skills::mash_press();
         }
@@ -146,19 +134,13 @@ impl CombatController {
     /// Tap Confirm on every controller in a duty cycle to dismiss mid-fight
     /// dialogue, regardless of which player owns the prompt.
     fn mash_all_confirm(&mut self, state: &mut GameState, dt: f64) {
-        const PRESS: f64 = 0.1;
-        const CYCLE: f64 = 0.3;
-        self.dialog_timer += dt;
-        if self.dialog_timer >= CYCLE {
-            self.dialog_timer = 0.0;
-        }
-        let pressing = self.dialog_timer < PRESS;
-        for gamepad in state.gamepads.iter_mut() {
-            if pressing {
-                gamepad.press(&SosAction::Confirm);
-            } else {
-                gamepad.release(&SosAction::Confirm);
-            }
+        if self.btn.update_all(&mut state.gamepads, dt) {
+            self.btn = ButtonPress {
+                action: SosAction::Confirm,
+                press_time: 0.1,
+                release_time: 0.3,
+                timer: 0.0,
+            };
         }
     }
 

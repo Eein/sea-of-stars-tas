@@ -179,8 +179,7 @@ fn left_trial() -> Box<dyn Node<GameState, GameEvent>> {
             Move::To(1.930, 18.888, 103.072),
             Move::To(8.359, 19.002, 107.734),
             Move::To(12.489, 19.002, 99.108),
-            // Ported from the Python route: double back to catch the moving
-            // platform timing (marked a TODO there too).
+            // Double back to catch the moving platform's timing.
             Move::To(8.359, 19.002, 107.734),
             Move::To(12.489, 19.002, 99.108),
             Move::Confirm, // Doodad

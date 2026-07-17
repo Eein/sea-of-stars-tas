@@ -167,9 +167,10 @@ relevant to us once a 3rd+ party member joins, per the combo note below.)
   release on a wall-clock timer. Basics/combos are OneHit by default.
 - Submenus take a couple frames to open — don't judge one "closed" before a settle,
   or the FSM bounces on the command ring.
-- Joint combos flip `selected` between their two participants; for the current
-  two-character party a combo is reachable from either member's Combo menu, so no
-  swap. A 3rd+ member will require keying the swap off the combo's participants.
+- Joint combos flip `selected` between their two participants and are reachable
+  from any member's Combo menu; selecting one pulls a benched participant out
+  automatically, so combos never need a character swap — the participants just
+  have to exist in the party.
 - Recover from being left in a submenu (attach mid-menu) by cancelling out.
 
 ## Reference files (Python, `main` branch, repo root = source root)

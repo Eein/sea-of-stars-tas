@@ -5,7 +5,6 @@ use crate::state::StateContext;
 use data::Item;
 use data::prelude::{PlayerPartyCharacter, armor, trinkets, weapons};
 use log::info;
-use memory::game_engine::il2cpp::Class;
 use memory::game_engine::il2cpp::unity_list::*;
 use memory::game_engine::il2cpp::unity_serializable_dictionary::*;
 use memory::memory_manager::il2cpp::UnityMemoryManager;
@@ -105,6 +104,25 @@ pub struct LiveMana {
     pub small: u32,
 }
 
+impl LiveMana {
+    /// Small mana orbs merged into one charge per absorb
+    /// (`EncounterTransitionToAbsorbState.BeginMergeMana`, RVA 0x4B1CB0,
+    /// groups of 5).
+    pub const SMALL_PER_CHARGE: u32 = 5;
+
+    /// Live Mana charges the ground pool can still yield: each big particle is
+    /// one charge, every [`SMALL_PER_CHARGE`](Self::SMALL_PER_CHARGE) small
+    /// particles merge into one.
+    pub fn absorbable_charges(&self) -> u32 {
+        self.big + self.small / Self::SMALL_PER_CHARGE
+    }
+
+    /// Whether the ground pool can still yield at least one full charge.
+    pub fn can_yield_charge(&self) -> bool {
+        self.absorbable_charges() > 0
+    }
+}
+
 /// The step Zale's Sunball charge QTE is on (`SunboyShootQTESunballState.currentStep`).
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SunballChargeStep {
@@ -140,8 +158,8 @@ impl SunballChargeStep {
 /// The move charges through discrete levels: holding Confirm advances the intro
 /// then climbs the projectile's `level` one step at a time up to `max_level`.
 /// Releasing exactly at `max_level` lands the strongest hit (and its timing
-/// QTE). The executor (`CombatController::charge_should_hold`) turns this into a
-/// hold/release decision — no blind timer.
+/// QTE). The executor (`combat::skills::sunball::ChargeState`) turns this into
+/// a hold/release decision — no blind timer.
 #[derive(Default, Debug, Clone)]
 pub struct SunballCharge {
     /// The projectile's current charge level (`SunballProjectile.level`),
@@ -302,20 +320,10 @@ pub struct CharacterMoves {
 }
 
 impl CombatMove {
-    /// Read a C# `System.String` object (chars at `+0x14`).
-    fn read_string_obj(memory_context: &MemoryContext, str_obj: u64) -> Option<String> {
-        let chars = memory_context
-            .process
-            .read_pointer::<ArrayWString<64>>(str_obj + 0x14)
-            .ok()?;
-        let out = String::from_utf16(chars.as_slice()).ok()?;
-        (!out.is_empty()).then_some(out)
-    }
-
     /// Read a C# `System.String` field by name.
     fn read_string(memory_context: &MemoryContext, obj: u64, field: &str) -> Option<String> {
         let str_obj = memory_context.read_named_ptr(obj, field)?;
-        Self::read_string_obj(memory_context, str_obj)
+        memory_context.read_csharp_string(str_obj)
     }
 
     /// Resolve a move entry to its `targetSelectorScreen`.
@@ -450,7 +458,7 @@ impl CombatMove {
                 memory_context
                     .list_item_ptrs(list)
                     .into_iter()
-                    .filter_map(|s| Self::read_string_obj(memory_context, s))
+                    .filter_map(|s| memory_context.read_csharp_string(s))
                     .collect()
             })
             .unwrap_or_default();
@@ -506,8 +514,6 @@ pub struct CombatManagerData {
     pub battle_command_ring: Vec<(String, bool)>,
     /// Whether the skill/combo submenu has focus.
     pub skill_command_has_focus: bool,
-    /// Highlighted item index in the skill/combo submenu.
-    pub skill_command_index: Option<i64>,
     /// `unique_id` (UUID) of the enemy currently under the targeting cursor,
     /// if a target-select is active.
     pub selected_attack_target_guid: Option<String>,
@@ -552,79 +558,61 @@ pub struct CombatManagerData {
 /// Sentinel returned by the game for an unset pointer.
 const NULL_POINTER: u64 = 0xFFFF_FFFF;
 
-/// `(Some(id), castable)` if present, else `(None, false)`.
-fn split(hit: Option<(String, bool)>) -> (Option<String>, bool) {
-    match hit {
-        Some((id, castable)) => (Some(id), castable),
-        None => (None, false),
-    }
+/// A command-menu selector's live state: its object pointer, whether it has
+/// focus, and its highlighted item index.
+#[derive(Clone, Copy)]
+struct CommandSelector {
+    ptr: u64,
+    focus: bool,
+    index: Option<i64>,
 }
 
-/// Read the highlighted ability in a submenu (combo or skill): the selector at
-/// `offset` must be focused; its `items[selectedItemIndex]` is a
-/// `{Combo,SpecialMove}SelectorItem` whose `playerCombatMoveDefinition.combatMoveId`
-/// names the move and `canCast` says whether it's castable. `None` otherwise
-/// (submenu closed, or the items aren't move items — e.g. the command ring).
-fn read_highlighted_move(
-    memory_context: &MemoryContext,
-    enc: u64,
-    offset: u64,
-) -> Option<(String, bool)> {
-    let selector = memory_context
-        .process
-        .read_pointer_path::<u64>(enc, &[0x140, 0x50, offset])
-        .ok()
-        .filter(|s| *s != NULL_POINTER && *s != 0)?;
-    // Only trust the highlighted item while this selector has focus.
-    memory_context
-        .process
-        .read_pointer::<u8>(selector + 0x3C)
-        .ok()
-        .filter(|f| matches!(f, 1))?;
-    let idx = memory_context
-        .process
-        .read_pointer::<i64>(selector + 0x40)
-        .ok()?;
-    let items = memory_context.read_named_ptr(selector, "items")?;
-    let item = *memory_context
-        .list_item_ptrs(items)
-        .get(usize::try_from(idx).ok()?)?;
-    let move_def = memory_context.read_named_ptr(item, "playerCombatMoveDefinition")?;
-    let id = CombatMove::read_string(memory_context, move_def, "combatMoveId")?;
-    let castable = memory_context
-        .field_offset_of(item, "canCast")
-        .and_then(|off| {
-            memory_context
-                .process
-                .read_pointer::<u8>(item + off as u64)
-                .ok()
-        })
-        .is_some_and(|b| matches!(b, 1));
-    Some((id, castable))
-}
-
-/// Read a command-menu selector (`currentEncounter -> 0x140 -> 0x50 -> offset`):
-/// `(has_focus, highlighted_index)`. Returns `None` if the selector is unset.
+/// Read a command-menu selector (`currentEncounter -> 0x140 -> 0x50 -> offset`).
+/// Returns `None` if the selector is unset.
 fn read_command_selector(
     memory_context: &MemoryContext,
     enc: u64,
     offset: u64,
-) -> Option<(bool, Option<i64>)> {
-    let selector = memory_context
+) -> Option<CommandSelector> {
+    let ptr = memory_context
         .process
         .read_pointer_path::<u64>(enc, &[0x140, 0x50, offset])
         .ok()
         .filter(|s| *s != NULL_POINTER && *s != 0)?;
     let focus = memory_context
         .process
-        .read_pointer::<u8>(selector + 0x3C)
+        .read_pointer::<u8>(ptr + 0x3C)
         .map(|f| matches!(f, 1))
         .unwrap_or(false);
-    let index = memory_context
-        .process
-        .read_pointer::<i64>(selector + 0x40)
-        .ok();
-    Some((focus, index))
+    let index = memory_context.process.read_pointer::<i64>(ptr + 0x40).ok();
+    Some(CommandSelector { ptr, focus, index })
+}
+
+/// Read the highlighted ability in a submenu (combo or skill): the selector
+/// must be focused; its `items[selectedItemIndex]` is a
+/// `{Combo,SpecialMove}SelectorItem` whose `playerCombatMoveDefinition.combatMoveId`
+/// names the move and `canCast` says whether it's castable. `None` otherwise
+/// (submenu closed, or the items aren't move items — e.g. the command ring).
+fn read_highlighted_move(
+    memory_context: &MemoryContext,
+    selector: Option<CommandSelector>,
+) -> Option<(String, bool)> {
+    let selector = selector?;
+    // Only trust the highlighted item while this selector has focus.
+    if !selector.focus {
+        return None;
+    }
+    let idx = selector.index?;
+    let items = memory_context.read_named_ptr(selector.ptr, "items")?;
+    let item = *memory_context
+        .list_item_ptrs(items)
+        .get(usize::try_from(idx).ok()?)?;
+    let move_def = memory_context.read_named_ptr(item, "playerCombatMoveDefinition")?;
+    let id = CombatMove::read_string(memory_context, move_def, "combatMoveId")?;
+    let castable = memory_context
+        .read_named::<u8>(item, "canCast")
+        .is_some_and(|b| matches!(b, 1));
+    Some((id, castable))
 }
 
 impl Default for MemoryManager<CombatManagerData> {
@@ -695,13 +683,12 @@ impl CombatManagerData {
         &mut self,
         _memory_context: &MemoryContext,
     ) -> Result<(), MemoryError> {
-        for player in self.players.items.clone() {
-            if player.selected {
-                self.selected_character = Some(player.character);
-                return Ok(());
-            }
-        }
-        self.selected_character = None;
+        self.selected_character = self
+            .players
+            .items
+            .iter()
+            .find(|p| p.selected)
+            .map(|p| p.character.clone());
 
         Ok(())
     }
@@ -720,18 +707,22 @@ impl CombatManagerData {
         self.battle_command_has_focus = false;
         self.battle_command_index = None;
         self.skill_command_has_focus = false;
-        self.skill_command_index = None;
-
-        self.highlighted_combo_id = None;
 
         let Ok(enc) = memory_context.follow_fields::<u64>(&["currentEncounter"]) else {
+            self.highlighted_combo_id = None;
             return Ok(());
         };
 
-        // Top-level command ring (Attack/Skill/Combo/Item) at 0x68.
-        if let Some((focus, index)) = read_command_selector(memory_context, enc, 0x68) {
-            self.battle_command_has_focus = focus;
-            self.battle_command_index = index;
+        // Top-level command ring (Attack/Skill/Combo/Item) at 0x68; skill/combo
+        // submenu selector at 0x78 (same layout).
+        let battle_selector = read_command_selector(memory_context, enc, 0x68);
+        let skill_selector = read_command_selector(memory_context, enc, 0x78);
+        if let Some(selector) = battle_selector {
+            self.battle_command_has_focus = selector.focus;
+            self.battle_command_index = selector.index;
+        }
+        if let Some(selector) = skill_selector {
+            self.skill_command_has_focus = selector.focus;
         }
         // The ring's actual entries: each `BattleCommandSelectorItem` names its
         // `battleCommandDefinition` (whose class is the command) and carries an
@@ -739,12 +730,8 @@ impl CombatManagerData {
         // Mist trials lock Skill and Combo until the boss). Removed commands
         // would also shift the remaining ring indices, so navigation and the
         // appraiser key off this live list rather than fixed slots.
-        self.battle_command_ring = memory_context
-            .process
-            .read_pointer_path::<u64>(enc, &[0x140, 0x50, 0x68])
-            .ok()
-            .filter(|s| *s != NULL_POINTER && *s != 0)
-            .and_then(|selector| memory_context.read_named_ptr(selector, "items"))
+        self.battle_command_ring = battle_selector
+            .and_then(|selector| memory_context.read_named_ptr(selector.ptr, "items"))
             .map(|items| {
                 memory_context
                     .list_item_ptrs(items)
@@ -761,11 +748,6 @@ impl CombatManagerData {
                     .collect()
             })
             .unwrap_or_default();
-        // Skill/Combo submenu selector at 0x78 (same layout).
-        if let Some((focus, index)) = read_command_selector(memory_context, enc, 0x78) {
-            self.skill_command_has_focus = focus;
-            self.skill_command_index = index;
-        }
 
         // The move highlighted in the ability submenus. Both submenus reuse a
         // command selector whose `items` become `{Combo,SpecialMove}SelectorItem`s
@@ -773,10 +755,12 @@ impl CombatManagerData {
         // the ability and `canCast` says whether it's castable. Combos live on the
         // battle selector (0x68), skills on the skill selector (0x78). Cleared
         // when the respective submenu isn't open.
+        let unpack =
+            |hit: Option<(String, bool)>| hit.map_or((None, false), |(id, c)| (Some(id), c));
         (self.highlighted_combo_id, self.highlighted_combo_castable) =
-            split(read_highlighted_move(memory_context, enc, 0x68));
+            unpack(read_highlighted_move(memory_context, battle_selector));
         (self.highlighted_skill_id, self.highlighted_skill_castable) =
-            split(read_highlighted_move(memory_context, enc, 0x78));
+            unpack(read_highlighted_move(memory_context, skill_selector));
 
         Ok(())
     }
@@ -915,6 +899,10 @@ impl CombatManagerData {
         let mut main_hit: Option<String> = None;
         let mut current_hit: Option<String> = None;
         for &move_ptr in &self.loaded_move_ptrs {
+            // A `mainTarget` hit wins outright, so stop reading further screens.
+            if main_hit.is_some() {
+                break;
+            }
             let Some(screen) = CombatMove::active_screen(memory_context, move_ptr) else {
                 continue;
             };
@@ -968,13 +956,8 @@ impl CombatManagerData {
                 .list_item_ptrs(states)
                 .into_iter()
                 .find(|&s| {
-                    Class::from_object(memory_context.process, s)
-                        .and_then(|class| {
-                            class
-                                .class_name::<64>(memory_context.process, memory_context.module)
-                                .ok()
-                        })
-                        .and_then(|name| name.validate_utf8().ok().map(str::to_string))
+                    memory_context
+                        .object_class_name::<64>(s)
                         .is_some_and(|name| name == "SunboyShootQTESunballState")
                 })
             else {
@@ -1047,17 +1030,11 @@ impl CombatManagerData {
         let Some(controller) = memory_context.read_named_ptr(enc, "controller") else {
             return Ok(());
         };
-        let Some(class) = Class::from_object(memory_context.process, controller) else {
-            return Ok(());
-        };
-        let Ok(name) = class.class_name::<64>(memory_context.process, memory_context.module) else {
-            return Ok(());
-        };
-        let Ok(name) = name.validate_utf8() else {
+        let Some(name) = memory_context.object_class_name::<64>(controller) else {
             return Ok(());
         };
 
-        self.combat_controller_type = match name {
+        self.combat_controller_type = match name.as_str() {
             "EncounterController" => CombatControllerType::Basic,
             "FirstEncounter" => CombatControllerType::FirstEncounter,
             "SecondEncounter" => CombatControllerType::SecondEncounter,

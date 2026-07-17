@@ -430,20 +430,6 @@ impl Field {
             .read(self.field + module.offsets.monoclassfield_offset as u64)
             .ok()
     }
-
-    /// This field's name.
-    pub fn name<const N: usize>(
-        &self,
-        process: &Process,
-        module: &Module,
-    ) -> Result<ArrayCString<N>, MemoryError> {
-        self.get_name(process, module)
-    }
-
-    /// This field's offset within its declaring object.
-    pub fn offset(&self, process: &Process, module: &Module) -> Option<u32> {
-        self.get_offset(process, module)
-    }
 }
 
 ///// An IL2CPP-specific implementation for automatic pointer path resolution

@@ -62,46 +62,31 @@ pub(crate) fn mash_press() -> ButtonPress {
     }
 }
 
+/// A submenu's live signals, extracted per command kind so [`drive_submenu`]
+/// can drive both submenus with one state machine.
+struct SubmenuSignals {
+    /// The submenu is open.
+    in_submenu: bool,
+    /// `combatMoveId` of the highlighted ability, if any.
+    highlighted: Option<String>,
+    /// The highlighted ability is castable (`canCast`).
+    castable: bool,
+    /// The ability was confirmed — we're in target select now.
+    committed: bool,
+}
+
 /// Drive the combo submenu (which reuses the *battle* selector — battle focus
 /// stays true, skill focus doesn't) to `want_ability` and confirm it.
 /// [`Ok`](DriveResult::Ok) once the combo is committed (target select is up);
 /// [`Error`](DriveResult::Error) if the combo can't be found or isn't castable.
 pub(super) fn drive_combo_submenu(want_ability: &str, ctx: &mut ActionCtx) -> DriveResult {
-    if !ctx.btn.done() {
-        ctx.btn.update(ctx.gamepad, ctx.dt);
-        return DriveResult::Wait;
-    }
-    let highlighted = ctx.cmd.highlighted_combo_id.clone();
-    let in_submenu = highlighted.is_some();
-    let on_combo = highlighted.as_deref() == Some(want_ability);
-    if !ctx.cmd.battle_command_has_focus {
-        // Combo confirmed — we're in target select now.
-        ctx.scratch.timer = 0.0;
-        ctx.scratch.taps = 0;
-        ctx.scratch.visited_targets.clear();
-        return DriveResult::Ok;
-    }
-    if !in_submenu && ctx.scratch.timer < SUBMENU_SETTLE {
-        // Submenu still opening after the confirm — wait for it.
-        return DriveResult::Wait;
-    }
-    if !in_submenu
-        || ctx.scratch.taps >= MAX_TARGET_TAPS
-        || (on_combo && !ctx.cmd.highlighted_combo_castable)
-    {
-        // Shouldn't be here, can't find it, or it isn't castable — back out.
-        ctx.scratch.timer = 0.0;
-        ctx.scratch.taps = 0;
-        return DriveResult::Error;
-    }
-    if on_combo {
-        *ctx.btn = confirm_press();
-        ctx.scratch.timer = 0.0;
-        return DriveResult::Wait;
-    }
-    *ctx.btn = tap_press(SosAction::MenuDown);
-    ctx.scratch.taps += 1;
-    DriveResult::Wait
+    let signals = SubmenuSignals {
+        in_submenu: ctx.cmd.highlighted_combo_id.is_some(),
+        highlighted: ctx.cmd.highlighted_combo_id.clone(),
+        castable: ctx.cmd.highlighted_combo_castable,
+        committed: !ctx.cmd.battle_command_has_focus,
+    };
+    drive_submenu(want_ability, signals, ctx)
 }
 
 /// Drive the skill submenu (which lives on the *skill* selector — skill focus
@@ -110,36 +95,47 @@ pub(super) fn drive_combo_submenu(want_ability: &str, ctx: &mut ActionCtx) -> Dr
 /// [`Error`](DriveResult::Error) if the submenu doesn't open or the skill can't
 /// be found/cast.
 pub(super) fn drive_skill_submenu(want_ability: &str, ctx: &mut ActionCtx) -> DriveResult {
+    let in_submenu = ctx.cmd.skill_command_has_focus;
+    let signals = SubmenuSignals {
+        in_submenu,
+        highlighted: ctx.cmd.highlighted_skill_id.clone(),
+        castable: ctx.cmd.highlighted_skill_castable,
+        // Off the ring with no skill submenu → the skill was confirmed.
+        committed: !in_submenu && !ctx.cmd.battle_command_has_focus,
+    };
+    drive_submenu(want_ability, signals, ctx)
+}
+
+/// The shared submenu state machine: wait out the opening settle, step the
+/// cursor to `want_ability`, confirm it, and report committed/failed.
+fn drive_submenu(want_ability: &str, signals: SubmenuSignals, ctx: &mut ActionCtx) -> DriveResult {
     if !ctx.btn.done() {
         ctx.btn.update(ctx.gamepad, ctx.dt);
         return DriveResult::Wait;
     }
-    let in_submenu = ctx.cmd.skill_command_has_focus;
-    let highlighted = ctx.cmd.highlighted_skill_id.clone();
-    let on_skill = highlighted.as_deref() == Some(want_ability);
-    if !in_submenu && !ctx.cmd.battle_command_has_focus {
-        // Off the ring with no skill submenu → the skill was confirmed; target
-        // select now.
+    let on_ability = signals.highlighted.as_deref() == Some(want_ability);
+    if signals.committed {
+        // Ability confirmed — we're in target select now.
         ctx.scratch.timer = 0.0;
         ctx.scratch.taps = 0;
         ctx.scratch.visited_targets.clear();
         return DriveResult::Ok;
     }
-    if !in_submenu && ctx.scratch.timer < SUBMENU_SETTLE {
+    if !signals.in_submenu && ctx.scratch.timer < SUBMENU_SETTLE {
         // Submenu still opening after the confirm — wait for it.
         return DriveResult::Wait;
     }
-    if !in_submenu
+    if !signals.in_submenu
         || ctx.scratch.taps >= MAX_TARGET_TAPS
-        || (on_skill && !ctx.cmd.highlighted_skill_castable)
+        || (on_ability && !signals.castable)
     {
-        // Settled and still on the ring (submenu didn't open), can't find it, or
-        // it isn't castable — back out via command select.
+        // Settled with no submenu open, can't find the ability, or it isn't
+        // castable — back out via command select.
         ctx.scratch.timer = 0.0;
         ctx.scratch.taps = 0;
         return DriveResult::Error;
     }
-    if on_skill {
+    if on_ability {
         *ctx.btn = confirm_press();
         ctx.scratch.timer = 0.0;
         return DriveResult::Wait;

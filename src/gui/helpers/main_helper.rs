@@ -436,13 +436,25 @@ impl MainHelper {
 
                 // Live executor signals — use these to verify the (drift-prone)
                 // battle-command + target-cursor offsets against the game.
-                let command = match cmd.battle_command_index {
-                    Some(0) => "Attack",
-                    Some(1) => "Skill",
-                    Some(2) => "Combo",
-                    Some(3) => "Item",
-                    Some(_) | None => "-",
-                };
+                // Label from the live ring (scripted fights remove commands
+                // and shift the indices), falling back to the fixed mapping
+                // when the ring isn't readable.
+                let command = cmd
+                    .battle_command_index
+                    .map(|idx| {
+                        usize::try_from(idx)
+                            .ok()
+                            .and_then(|i| cmd.battle_command_ring.get(i))
+                            .map(|(name, _)| name.as_str())
+                            .unwrap_or(match idx {
+                                0 => "Attack",
+                                1 => "Skill",
+                                2 => "Combo",
+                                3 => "Item",
+                                _ => "-",
+                            })
+                    })
+                    .unwrap_or("-");
                 ui.label(format!(
                     "Command ring: focus={} idx={:?} ({})",
                     cmd.battle_command_has_focus, cmd.battle_command_index, command,

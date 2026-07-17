@@ -410,8 +410,9 @@ impl MovePath {
             }
             // Change Time of Day
             Move::ChangeTime(target_time) => self.change_time(state, target_time),
-            // Press confirm once
-            Move::Confirm => {
+            // Press confirm or cancel (B) once, e.g. to advance a dialog or
+            // back out of a menu
+            Move::Confirm | Move::Cancel => {
                 if let Some(btn) = self.btn.as_mut() {
                     if btn.update(gamepad, delta) {
                         self.btn = None;
@@ -420,21 +421,11 @@ impl MovePath {
                     }
                 } else {
                     gamepad.release_all(); // Release held joystick direction
-                    self.setup_button(SosAction::Confirm);
-                    //TODO: gamepad.press(&SosAction::Turbo);
-                }
-            }
-            // Press cancel (B) once, e.g. to back out of a menu/dialog
-            Move::Cancel => {
-                if let Some(btn) = self.btn.as_mut() {
-                    if btn.update(gamepad, delta) {
-                        self.btn = None;
-                        self.step += 1;
-                        gamepad.release_all();
-                    }
-                } else {
-                    gamepad.release_all(); // Release held joystick direction
-                    self.setup_button(SosAction::Cancel);
+                    self.setup_button(if matches!(coord, Move::Cancel) {
+                        SosAction::Cancel
+                    } else {
+                        SosAction::Confirm
+                    });
                 }
             }
             // Wait (inputs released) until the named UI view is live in

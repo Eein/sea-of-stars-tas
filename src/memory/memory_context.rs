@@ -2,6 +2,7 @@ use bytemuck::{CheckedBitPattern, Pod};
 use memory::game_engine::il2cpp::{Class, Module};
 use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::{MemoryError, Process};
+use memory::string::ArrayWString;
 
 // TODO(eein): is it possible to make this more generic so it can be
 // moved into memory crate?
@@ -137,6 +138,17 @@ impl<'a> MemoryContext<'a> {
             }
         }
         out
+    }
+
+    /// Read a C# `System.String` object's contents (UTF-16 chars at `+0x14`).
+    /// `None` on a failed read or an empty string.
+    pub fn read_csharp_string(&self, str_obj: u64) -> Option<String> {
+        let chars = self
+            .process
+            .read_pointer::<ArrayWString<64>>(str_obj + 0x14)
+            .ok()?;
+        let out = String::from_utf16(chars.as_slice()).ok()?;
+        (!out.is_empty()).then_some(out)
     }
 
     /// Resolve a `System.Type` / `RuntimeType` object to the class name it
