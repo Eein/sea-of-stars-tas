@@ -211,6 +211,18 @@ pub trait Action {
         let have = self.player(ctx.cmd).map_or(0, |p| p.mana_charge_count);
         let pool_left = ctx.cmd.live_mana.can_yield_charge();
         if have >= ctx.want_mana_charges || !pool_left || ctx.scratch.taps >= MAX_ABSORB_TAPS {
+            if have < ctx.want_mana_charges {
+                // Fail-open: proceed unboosted rather than wedge, but say so —
+                // the appraisal's damage assumed these charges, so the hit
+                // will land below the reported estimate.
+                log::warn!(
+                    "boosting gave up at {have}/{} charges (pool: {} small, {} big, {} taps) — attacking unboosted below the estimate",
+                    ctx.want_mana_charges,
+                    ctx.cmd.live_mana.small,
+                    ctx.cmd.live_mana.big,
+                    ctx.scratch.taps,
+                );
+            }
             ctx.gamepad.release(&SosAction::Boost);
             ctx.scratch.timer = 0.0;
             ctx.scratch.taps = 0;

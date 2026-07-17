@@ -575,6 +575,48 @@ impl Node<GameState, GameEvent> for SeqMove {
         state.release_all();
     }
 
+    /// Expose the moves as tree children: single-player paths list their
+    /// `Move`s directly under the node; co-op shows one subtree per player's
+    /// path. `active_child` marks the move each path is currently driving.
+    /// Every node lists its moves — collapsed sections aren't rendered, but
+    /// they must be openable by hand (to inspect, and later to pick a move to
+    /// play from).
+    /// (Co-op paths run in parallel, which the tree's single active index
+    /// can't express — the parallel node marks player 0's path.)
+    fn tree(&self, active: bool) -> SeqTreeNode {
+        let path_tree = |path: &MovePath| {
+            let in_bounds = path.step < path.coords.len();
+            SeqTreeNode {
+                label: format!("{} ({}/{})", path.name, path.step, path.coords.len()),
+                children: path
+                    .coords
+                    .iter()
+                    .enumerate()
+                    .map(|(i, m)| SeqTreeNode {
+                        label: m.to_string(),
+                        children: Vec::new(),
+                        active_child: None,
+                        active: active && in_bounds && i == path.step,
+                        completed: i < path.step,
+                    })
+                    .collect(),
+                active_child: (active && in_bounds).then_some(path.step),
+                active,
+                completed: !in_bounds,
+            }
+        };
+        match self.paths.as_slice() {
+            [path] => path_tree(path),
+            paths => SeqTreeNode {
+                label: format!("SeqMove({})", self.name),
+                children: paths.iter().map(path_tree).collect(),
+                active_child: Some(0),
+                active,
+                completed: paths.first().is_none_or(|p| p.step >= p.coords.len()),
+            },
+        }
+    }
+
     fn on_event(&mut self, state: &mut GameState, event: &GameEvent) {
         for path in &mut self.paths {
             path.on_event(state, event);

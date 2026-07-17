@@ -442,6 +442,31 @@ pub fn generate_appraisals(cmd: &CombatManagerData) -> Vec<Appraisal> {
         }
     }
 
+    // Absorb fallback: nothing is castable but the ground pool can still
+    // yield a charge — boost, then attack. This is the live-mana tutorial's
+    // signature (it locks every command and disables every move until a
+    // charge is absorbed; absorbing is what unlocks them), and in any other
+    // fight banking a free charge is still the best available play. The
+    // command-disabled filters are deliberately bypassed: the Boosting step
+    // runs before any menu is driven.
+    if appraisals.is_empty() && cmd.live_mana.can_yield_charge() {
+        let player = cmd.players.items.iter().find(|p| !p.dead && p.enabled);
+        let enemy = living_enemies().next();
+        if let (Some(player), Some(enemy)) = (player, enemy) {
+            let action = BasicAttack {
+                character: player.character.clone(),
+                timed: true,
+            };
+            appraisals.push(score_action(
+                cmd,
+                &action,
+                player,
+                enemy,
+                CombatAction::BasicAttack { timed: true },
+            ));
+        }
+    }
+
     appraisals.sort_by(|a, b| {
         b.score
             .partial_cmp(&a.score)
@@ -667,6 +692,50 @@ mod tests {
             on_middle.score,
             on_left.score
         );
+    }
+
+    /// The live-mana tutorial (`state-dump-1784323737`): every ring command
+    /// is locked and every move disabled until a charge is absorbed, with one
+    /// charge's worth of small mana on the ground. Nothing is castable, so
+    /// the appraiser falls back to a boosted basic attack — the executor's
+    /// Boosting step absorbs the charge (which is what unlocks the commands),
+    /// then the attack proceeds.
+    #[test]
+    fn absorb_fallback_when_locked_out_with_mana_on_the_ground() {
+        let mut cmd = CombatManagerData {
+            battle_command_ring: vec![
+                ("BasicAttackBattleCommand".into(), false),
+                ("SelectSpecialMoveBattleCommand".into(), false),
+                ("ComboBattleCommand".into(), false),
+                ("ItemsBattleCommand".into(), false),
+            ],
+            ..Default::default()
+        };
+        cmd.live_mana.small = 5;
+        cmd.players.items = vec![CombatPlayer {
+            character: PlayerPartyCharacter::Valere,
+            physical_attack: 19,
+            enabled: true,
+            ..Default::default()
+        }];
+        cmd.enemies.items = vec![CombatEnemy {
+            current_hp: 5,
+            physical_defense: 150,
+            ..Default::default()
+        }];
+
+        let appraisals = generate_appraisals(&cmd);
+        assert_eq!(appraisals.len(), 1, "locked-out fight should fall back");
+        let fallback = &appraisals[0];
+        assert_eq!(fallback.attacker, PlayerPartyCharacter::Valere);
+        assert_eq!(
+            fallback.mana_charges, 1,
+            "the fallback should plan to absorb the ground charge"
+        );
+
+        // With no absorbable charge the lockout really does mean "wait".
+        cmd.live_mana.small = 4;
+        assert!(generate_appraisals(&cmd).is_empty());
     }
 
     /// Kill bonuses must only count kills that land at *any* damage roll — the

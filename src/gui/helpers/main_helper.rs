@@ -16,6 +16,9 @@ pub const NAME: &str = "Main Helper";
 #[derive(Debug)]
 pub struct MainHelper {
     checkpoint: Option<String>,
+    /// Checkpoint names harvested from the route definition (built once, on
+    /// first draw) — the picker can't drift from the actual route.
+    checkpoints: Vec<String>,
     save_slot: usize,
     auto_save_present: bool,
     timer: Timer,
@@ -60,6 +63,7 @@ impl MainHelper {
     pub fn create() -> Box<Self> {
         Box::new(Self {
             checkpoint: None,
+            checkpoints: Vec::new(),
             save_slot: 1,
             auto_save_present: true,
             timer: delta::Timer::new(),
@@ -587,6 +591,12 @@ impl GuiHelper for MainHelper {
 
             ui.separator();
 
+            // The checkpoint list is generated from the route definition (the
+            // route is built once just to walk its `SeqCheckpoint`s), so the
+            // picker always matches the actual route.
+            if self.checkpoints.is_empty() {
+                self.checkpoints = tas::create_tas().checkpoints();
+            }
             egui::ComboBox::from_label("Checkpoint")
                 .selected_text(
                     self.checkpoint
@@ -595,24 +605,15 @@ impl GuiHelper for MainHelper {
                         .to_string(),
                 )
                 .show_ui(ui, |ui| {
-                    for checkpoint in [
+                    ui.selectable_value(
+                        &mut self.checkpoint,
+                        Some("New Game".to_string()),
                         "New Game",
-                        "Mooncradle Intro Cavern",
-                        "Zenith Academy Dorms",
-                        "Zenith Academy Dorms 2",
-                        "Outside Forbidden Cavern",
-                        "Before Bosslug",
-                        "After Bosslug",
-                        "Through Mountain Trail",
-                        "Upper Mountain",
-                        "Upper Mountain (Heal Room)",
-                        "Trials in the Mist",
-                        "Elder Mist Boss",
-                        "After Elder Mist Boss-fight",
-                    ] {
+                    );
+                    for checkpoint in &self.checkpoints {
                         ui.selectable_value(
                             &mut self.checkpoint,
-                            Some(checkpoint.to_string()),
+                            Some(checkpoint.clone()),
                             checkpoint,
                         );
                     }

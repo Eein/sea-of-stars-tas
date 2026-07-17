@@ -87,6 +87,14 @@ impl State {
             if let Ok(deserialized_surface) = ron::from_str::<Tree<String>>(&surface_store) {
                 *main_surface = deserialized_surface;
             }
+            // A restored layout replaces the whole tree, so any helper tab
+            // added since the layout was saved would be invisible — append
+            // the missing ones.
+            for name in gui_helpers.tree_names() {
+                if dock_state.find_tab(&name).is_none() {
+                    dock_state.push_to_first_leaf(name);
+                }
+            }
         }
 
         Self {
