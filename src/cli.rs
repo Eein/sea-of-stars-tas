@@ -342,9 +342,21 @@ pub fn snapshot_fields(game_state: &crate::state::GameState) -> Vec<(&'static st
                     .iter()
                     .enumerate()
                     .map(|(slot, p)| {
+                        let vec3 = |v: &Option<vec3_rs::Vector3<f32>>| match v {
+                            Some(v) => {
+                                format!("({:.2},{:.2},{:.2})", v.get_x(), v.get_y(), v.get_z())
+                            }
+                            None => "None".to_string(),
+                        };
                         format!(
-                            "slot {slot}: index={} playing={} first={} char={:?}",
-                            p.index, p.playing, p.first_player, p.character
+                            "slot {slot}: index={} playing={} first={} char={:?} pos={} gameobject_pos={} state={}",
+                            p.index,
+                            p.playing,
+                            p.first_player,
+                            p.character,
+                            vec3(&p.position),
+                            vec3(&p.gameobject_position),
+                            p.state,
                         )
                     })
                     .collect(),

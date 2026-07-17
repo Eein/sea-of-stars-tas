@@ -356,6 +356,9 @@ impl MainHelper {
     ) {
         const LETHAL: egui::Color32 = egui::Color32::from_rgb(120, 220, 120);
         const CHOSEN: egui::Color32 = egui::Color32::from_rgb(255, 210, 90);
+        /// The latched, in-progress action — brighter than CHOSEN so the two
+        /// lines read apart at a glance.
+        const EXECUTING: egui::Color32 = egui::Color32::from_rgb(130, 200, 255);
 
         let cmd = &game_state.memory_managers.combat_manager.data;
         // Prefer the running executor's cached ranking, so the panel shows
@@ -382,6 +385,19 @@ impl MainHelper {
                     None => {
                         ui.weak("Executor: (not running)");
                     }
+                }
+                // What is actually being driven right now: the appraisal
+                // latched into the in-progress action. Unlike "Chosen" below
+                // (the live re-ranked pick), this stays fixed for the whole
+                // action.
+                if let Some((executing, step)) = combat.and_then(|c| c.executing()) {
+                    ui.horizontal(|ui| {
+                        ui.label("Executing:");
+                        ui.colored_label(
+                            EXECUTING,
+                            format!("{} @ {:?}", executing.describe(), step),
+                        );
+                    });
                 }
                 // Callout for the current decision.
                 ui.horizontal(|ui| {
