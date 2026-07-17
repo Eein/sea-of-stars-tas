@@ -17,6 +17,10 @@ pub struct UiManagerData {
     pub open_views: Vec<String>,
     /// Frame counter for throttling the dictionary walk.
     frame: u64,
+    /// Whether the dictionary has been walked at least once — an empty result
+    /// (no views open) is a valid steady state, not a reason to rescan every
+    /// frame.
+    scanned: bool,
 }
 
 impl UiManagerData {
@@ -58,8 +62,9 @@ impl MemoryManagerUpdate for UiManagerData {
         // few frames of latency — throttle it.
         const REFRESH_FRAMES: u64 = 6;
         self.frame = self.frame.wrapping_add(1);
-        if self.frame.is_multiple_of(REFRESH_FRAMES) || self.open_views.is_empty() {
+        if self.frame.is_multiple_of(REFRESH_FRAMES) || !self.scanned {
             self.update_open_views(&memory_context)?;
+            self.scanned = true;
         }
         Ok(())
     }

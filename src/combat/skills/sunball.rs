@@ -129,6 +129,10 @@ impl Action for Sunball {
         TimingType::Charge
     }
 
+    fn qte_in_flight(&self, cmd: &CombatManagerData) -> bool {
+        cmd.sunball_charge.is_some()
+    }
+
     fn damage_types(&self) -> Vec<CombatDamageType> {
         vec![CombatDamageType::Sun]
     }

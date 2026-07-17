@@ -194,20 +194,15 @@ impl CombatController {
             .data
             .current_player_index;
 
-        // A live charge QTE that nothing is executing needs an owner: it plays
-        // out after the menu turn (so the gates below would just drop the hold),
-        // and we may not have committed it through the menus at all (self-heal a
-        // desync/restart mid-cast). Latch the charge action straight into its
-        // execution step so its own FSM drives it to completion.
-        let charge_live = state
-            .memory_managers
-            .combat_manager
-            .data
-            .sunball_charge
-            .is_some();
-        if charge_live
-            && !self.acting_in_execution()
-            && let Some(action) = skills::charge_action()
+        // A live QTE (a Sunball charge) that nothing is executing needs an
+        // owner: it plays out after the menu turn (so the gates below would
+        // just drop the hold), and we may not have committed it through the
+        // menus at all (self-heal a desync/restart mid-cast). Latch its action
+        // straight into its execution step so its own FSM drives it to
+        // completion.
+        if !self.acting_in_execution()
+            && let Some(action) =
+                skills::action_with_live_qte(&state.memory_managers.combat_manager.data)
         {
             self.turn_state = TurnState::Acting(ActingState::executing(action));
         }
@@ -222,7 +217,6 @@ impl CombatController {
             if turn.is_some() && turn != self.turn_index {
                 state.release_all();
                 self.turn_index = turn;
-                self.last_gamepad = Some(gamepad_idx);
                 self.turn_state = TurnState::idle();
             }
 

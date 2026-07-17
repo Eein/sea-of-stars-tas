@@ -39,12 +39,12 @@ pub fn skill_actions() -> Vec<Box<dyn Action>> {
     ]
 }
 
-/// The registered [`Charge`](TimingType::Charge) action (Sunball), if any. Used
-/// to (re-)latch the charge QTE onto the executor when it appears — the charge
-/// plays out after the menu turn, so it may need driving even when we didn't
-/// commit it through the menus.
-pub fn charge_action() -> Option<Box<dyn Action>> {
-    skill_actions()
-        .into_iter()
-        .find(|a| a.timing_type() == TimingType::Charge)
+/// The registered action whose own QTE is live on screen right now (e.g.
+/// Sunball's charge), if any. Used to (re-)latch the QTE onto the executor
+/// when it appears — it plays out after the menu turn, so it may need driving
+/// even when we didn't commit it through the menus.
+pub fn action_with_live_qte(
+    cmd: &crate::memory::combat_manager::CombatManagerData,
+) -> Option<Box<dyn Action>> {
+    skill_actions().into_iter().find(|a| a.qte_in_flight(cmd))
 }

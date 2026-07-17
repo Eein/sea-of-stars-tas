@@ -10,7 +10,6 @@ use data::prelude::PlayerPartyCharacter;
 use crate::combat::damage;
 use crate::combat::skills::{self, Action, BasicAttack, Combo, TargetType};
 use crate::memory::combat_manager::{CombatEnemy, CombatManagerData, CombatPlayer};
-use crate::util::vec3_ext::Vector3Ext;
 
 /// A concrete thing a player can do on their turn.
 ///
@@ -34,16 +33,6 @@ impl CombatAction {
             CombatAction::Combo { name, cost } => format!("Combo: {name} (cp {cost})"),
             CombatAction::Skill { name, cost } => format!("Skill: {name} (mp {cost})"),
         }
-    }
-
-    /// Whether the executor can currently act on this action.
-    pub fn is_executable(&self) -> bool {
-        matches!(
-            self,
-            CombatAction::BasicAttack { .. }
-                | CombatAction::Combo { .. }
-                | CombatAction::Skill { .. }
-        )
     }
 }
 
@@ -148,9 +137,6 @@ const AOE_RADIUS_FALLBACK: f32 = 3.0;
 /// The most Live Mana charges a character can hold
 /// (`CombatBoostLevelController`'s boost levels run 0..=3).
 const MAX_MANA_CHARGES: u32 = 3;
-/// Small mana orbs merged into one charge per absorb
-/// (`EncounterTransitionToAbsorbState.BeginMergeMana`, RVA 0x4B1CB0, groups of 5).
-const SMALL_MANA_PER_CHARGE: u32 = 5;
 /// Reach a hit-zone collider adds to the splash sphere: the game's
 /// `Physics.OverlapSphere` hits *colliders*, not anchor points, so an enemy is
 /// splashed when its anchor is within `radius + extent`. Calibrated against
@@ -174,14 +160,8 @@ fn aoe_secondaries<'a>(cmd: &'a CombatManagerData, main: &CombatEnemy) -> Vec<&'
         .iter()
         .filter(|e| e.current_hp != 0 && !std::ptr::eq(*e, main))
         .filter(|e| {
-            e.position.is_some_and(|p| {
-                let (dx, dy, dz) = (
-                    p.get_x() - center.get_x(),
-                    p.get_y() - center.get_y(),
-                    p.get_z() - center.get_z(),
-                );
-                (dx * dx + dy * dy + dz * dz).sqrt() <= reach
-            })
+            e.position
+                .is_some_and(|p| (p - center).magnitude() <= reach)
         })
         .collect()
 }
@@ -201,8 +181,7 @@ fn kill_bonus(enemy: &CombatEnemy) -> f32 {
 /// charge; every 5 small merge into one), capped at the game's 3. The executor's
 /// Boosting step absorbs the difference before the attack.
 fn potential_mana_charges(cmd: &CombatManagerData, player: &CombatPlayer) -> u32 {
-    let absorbable = cmd.live_mana.big + cmd.live_mana.small / SMALL_MANA_PER_CHARGE;
-    (player.mana_charge_count + absorbable).min(MAX_MANA_CHARGES)
+    (player.mana_charge_count + cmd.live_mana.absorbable_charges()).min(MAX_MANA_CHARGES)
 }
 
 /// Score a candidate action against an enemy. Damage comes from the action's own
@@ -309,19 +288,12 @@ fn command_disabled(
 }
 
 /// Whether a party character matches a move definition's `requiredCharacters`
-/// id (the game's `CharacterDefinitionId` strings, e.g. `"ZALE"`). Characters
-/// we don't model (Artificer, the god-forms, ...) match nothing, which
-/// correctly filters out their combos.
+/// id (the game's `CharacterDefinitionId` strings, e.g. `"ZALE"`). Ids we don't
+/// model (Artificer, the god-forms, ...) parse to `Unknown`, which matches
+/// nothing — correctly filtering out their combos.
 fn character_matches_id(character: &PlayerPartyCharacter, id: &str) -> bool {
-    matches!(
-        (character, id),
-        (PlayerPartyCharacter::Zale, "ZALE")
-            | (PlayerPartyCharacter::Valere, "VALERE")
-            | (PlayerPartyCharacter::Garl, "GARL")
-            | (PlayerPartyCharacter::Serai, "SERAI")
-            | (PlayerPartyCharacter::Reshan, "RESHAN")
-            | (PlayerPartyCharacter::Bst, "BST")
-    )
+    let parsed = PlayerPartyCharacter::parse(id);
+    parsed != PlayerPartyCharacter::Unknown && parsed == *character
 }
 
 /// Generate every candidate appraisal for the current combat state, ranked best
@@ -341,11 +313,11 @@ pub fn generate_appraisals(cmd: &CombatManagerData) -> Vec<Appraisal> {
         if command_disabled(cmd, &player.character, skills::BattleCommand::Attack) {
             continue;
         }
+        let action = BasicAttack {
+            character: player.character.clone(),
+            timed: true,
+        };
         for enemy in living_enemies() {
-            let action = BasicAttack {
-                character: player.character.clone(),
-                timed: true,
-            };
             appraisals.push(score_action(
                 cmd,
                 &action,
@@ -389,6 +361,9 @@ pub fn generate_appraisals(cmd: &CombatManagerData) -> Vec<Appraisal> {
                 && !combat_move.disabled
                 && combat_move.is_damaging
                 && cost <= cmd.combo_points;
+            if !is_damage_combo {
+                continue;
+            }
             // Every participating character must be in the party and alive
             // (`requiredCharacters` on the move definition) — e.g. Garl combos
             // are uncastable without Garl, and any combo needs its partners up.
@@ -401,24 +376,25 @@ pub fn generate_appraisals(cmd: &CombatManagerData) -> Vec<Appraisal> {
             if !participants_ready {
                 continue;
             }
-            let Some(name) = combat_move.move_id.as_deref().filter(|_| is_damage_combo) else {
+            let Some(name) = combat_move.move_id.as_deref() else {
                 continue;
             };
+            let action = Combo {
+                character: player.character.clone(),
+                name: name.to_string(),
+                cost,
+            };
+            let combat_action = CombatAction::Combo {
+                name: name.to_string(),
+                cost,
+            };
             for enemy in living_enemies() {
-                let action = Combo {
-                    character: player.character.clone(),
-                    name: name.to_string(),
-                    cost,
-                };
                 appraisals.push(score_action(
                     cmd,
                     &action,
                     player,
                     enemy,
-                    CombatAction::Combo {
-                        name: name.to_string(),
-                        cost,
-                    },
+                    combat_action.clone(),
                 ));
             }
         }
@@ -436,16 +412,17 @@ pub fn generate_appraisals(cmd: &CombatManagerData) -> Vec<Appraisal> {
         let Some(player) = action.player(cmd) else {
             continue;
         };
+        let combat_action = CombatAction::Skill {
+            name: action.internal_name().to_string(),
+            cost: action.cost(),
+        };
         for enemy in living_enemies() {
             appraisals.push(score_action(
                 cmd,
                 action.as_ref(),
                 player,
                 enemy,
-                CombatAction::Skill {
-                    name: action.internal_name().to_string(),
-                    cost: action.cost(),
-                },
+                combat_action.clone(),
             ));
         }
     }
@@ -458,11 +435,11 @@ pub fn generate_appraisals(cmd: &CombatManagerData) -> Vec<Appraisal> {
     appraisals
 }
 
-/// The appraisal the executor will act on: the top-ranked *executable* one
-/// (appraisals are sorted best-first). The single source of the decision rule,
-/// shared by the executor and the GUI's appraisal panel.
+/// The appraisal the executor will act on: the top-ranked one (appraisals are
+/// sorted best-first). The single source of the decision rule, shared by the
+/// executor and the GUI's appraisal panel.
 pub fn choose(appraisals: &[Appraisal]) -> Option<&Appraisal> {
-    appraisals.iter().find(|a| a.action.is_executable())
+    appraisals.first()
 }
 
 #[cfg(test)]

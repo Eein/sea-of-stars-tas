@@ -12,7 +12,6 @@ use crate::state::StateContext;
 use log::info;
 use memory::memory_manager::il2cpp::UnityMemoryManager;
 use memory::process::MemoryError;
-use memory::string::ArrayWString;
 
 #[derive(Default, Debug)]
 pub struct ProgressionManagerData {
@@ -23,6 +22,9 @@ pub struct ProgressionManagerData {
     pub unlocked_combat_moves: HashSet<String>,
     /// Frame counter for throttling the set walk (unlocks change rarely).
     frame: u64,
+    /// Whether the set has been walked at least once — an empty result is a
+    /// valid steady state (early game), not a reason to rescan every frame.
+    scanned: bool,
 }
 
 impl Default for MemoryManager<ProgressionManagerData> {
@@ -48,8 +50,9 @@ impl MemoryManagerUpdate for ProgressionManagerData {
         // Unlocks change on scroll pickups/level-ups, not per frame.
         const REFRESH_FRAMES: u64 = 60;
         self.frame = self.frame.wrapping_add(1);
-        if self.frame.is_multiple_of(REFRESH_FRAMES) || self.unlocked_combat_moves.is_empty() {
+        if self.frame.is_multiple_of(REFRESH_FRAMES) || !self.scanned {
             self.update_unlocked_moves(&memory_context)?;
+            self.scanned = true;
         }
 
         Ok(())
@@ -67,14 +70,8 @@ impl ProgressionManagerData {
         self.unlocked_combat_moves = memory_context
             .hashset_item_ptrs(set_ptr)
             .into_iter()
-            .filter_map(|str_obj| {
-                // Each slot value is a C# string (chars at +0x14).
-                let chars = memory_context
-                    .process
-                    .read_pointer::<ArrayWString<64>>(str_obj + 0x14)
-                    .ok()?;
-                String::from_utf16(chars.as_slice()).ok()
-            })
+            // Each slot value is a C# string holding the move id.
+            .filter_map(|str_obj| memory_context.read_csharp_string(str_obj))
             .collect();
         Ok(())
     }

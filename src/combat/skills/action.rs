@@ -21,8 +21,7 @@ pub enum TimingType {
     OneHit,
     /// Hold, then release when the window fires. Charge skills own their QTE:
     /// they override [`Action::execute_attacking`] with their own state machine
-    /// (see `sunball.rs`); this variant is their identity for the executor's
-    /// re-latch (see `charge_action`).
+    /// (see `sunball.rs`) and report it live via [`Action::qte_in_flight`].
     Charge,
     /// One tap per hit across a multi-hit animation.
     MultiHit,
@@ -113,6 +112,14 @@ pub trait Action {
     fn damage_types(&self) -> Vec<CombatDamageType> {
         Vec::new()
     }
+    /// Whether this action's own timed input — a QTE it drives during its
+    /// [`Attacking`](ActionStep::Attacking) step — is live on screen. The
+    /// executor uses this to (re-)latch the action straight into execution
+    /// when its QTE appears without having been committed through the menus.
+    /// Actions with such a QTE (charge skills) override this.
+    fn qte_in_flight(&self, cmd: &CombatManagerData) -> bool {
+        false
+    }
 
     // --- Appraisal (utility AI) ---
 
@@ -186,7 +193,7 @@ pub trait Action {
         const MAX_ABSORB_TAPS: u32 = 8;
 
         let have = self.player(ctx.cmd).map_or(0, |p| p.mana_charge_count);
-        let pool_left = ctx.cmd.live_mana.big > 0 || ctx.cmd.live_mana.small >= 5;
+        let pool_left = ctx.cmd.live_mana.can_yield_charge();
         if have >= ctx.want_mana_charges || !pool_left || ctx.scratch.taps >= MAX_ABSORB_TAPS {
             ctx.gamepad.release(&SosAction::Boost);
             ctx.scratch.timer = 0.0;
