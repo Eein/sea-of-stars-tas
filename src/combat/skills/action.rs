@@ -363,7 +363,14 @@ pub trait Action {
                 ctx.btn.update(ctx.gamepad, ctx.dt);
                 if timed_ready {
                     ctx.scratch.timer = 0.0; // window activity = progress
-                } else {
+                    ctx.scratch.window_seen = true;
+                } else if !ctx.scratch.window_seen {
+                    // Never saw the window: the confirm likely desynced and
+                    // the cast never launched — mash the turn along. Once the
+                    // window has fired the cast is real, and the quiet that
+                    // follows is enemy turns (often longer than the stuck
+                    // timeout) — mashing then would land a stray Confirm on
+                    // the returning menu.
                     ctx.mash_if_stuck();
                 }
             }
