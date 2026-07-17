@@ -2,8 +2,8 @@
 
 Plan for restructuring the combat executor so per-move logic lives on the
 abilities, mirroring the (clean) architecture of the Python TAS
-[shenef/SoS-TAS](https://github.com/shenef/SoS-TAS). Written at the end of the
-appraisal-MVP session; the current executor works (wins fights) but is a single
+[shenef/SoS-TAS](https://github.com/shenef/SoS-TAS). The current executor
+works (wins fights) but started as a single
 ~600-line `TurnFsm` match in `CombatManager` with all move logic inline.
 
 ## The core insight
@@ -144,7 +144,7 @@ relevant to us once a 3rd+ party member joins, per the combo note below.)
 ## Concrete steps for the refactor
 
 1. **Thin the controller.** Replace the `TurnFsm` giant match with the pipeline of
-   `if stage() { return }` calls. Keep the coarse gates we learned this session:
+   `if stage() { return }` calls. Keep the coarse gates already proven live:
    - `any_enabled` turn-gate (only act when a party member is enabled; else wait —
      this is the "not our turn / enemy acting" signal and is stable across the
      per-character `selected`/`enabled` flicker).
@@ -154,13 +154,13 @@ relevant to us once a 3rd+ party member joins, per the combo note below.)
    currently in each `TurnFsm` arm (SelectCommand → command-ring nav; SelectSkill →
    skill submenu; SelectTarget → cursor; TimingSequence → the charge/one-hit logic).
 3. **Latch the committed action** for its whole lifetime (not just timing) — resolves
-   the live-`chosen`-flicker problems we hit. Re-appraise only when there's no
+   the live-`chosen`-flicker wedges. Re-appraise only when there's no
    committed action (mirrors `action = None` → `generate_action`).
 4. **Consideration/character swap** only while `step == SelectingCommand`.
 5. **Model config on abilities**, collapse the `CombatAction` enum's per-variant
    special-casing into ability fields + a couple of trait method overrides.
 
-## Session-learned gotchas to preserve
+## Live-verified gotchas to preserve
 
 - Charge (Sunball) is **not** tied to `timed_attack_ready` (that flag is a post-hit
   "trackingAfterHit" and never opens a press window here): it's settle → hold →

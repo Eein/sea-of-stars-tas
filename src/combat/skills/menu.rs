@@ -10,8 +10,8 @@ use crate::util::vec3_ext::Vector3Ext;
 /// whatever the cursor lands on (mirrors the Python bot's bail-out).
 pub(super) const MAX_TARGET_TAPS: u32 = 16;
 /// Grace after confirming a Skill/Combo command before an unopened submenu is
-/// treated as "closed" — the submenu takes a couple frames to appear, and
-/// bouncing early wedges us on the command ring.
+/// treated as "closed" — the submenu takes a couple frames to appear after the
+/// confirm.
 const SUBMENU_SETTLE: f64 = 0.30;
 /// Directions to step the enemy cursor. Enemies can be laid out 2D, so we cycle
 /// through these when a direction stops moving the cursor.

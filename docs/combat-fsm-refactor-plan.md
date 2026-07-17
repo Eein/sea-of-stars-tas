@@ -2,8 +2,8 @@
 
 Turns [`combat-fsm-refactor.md`](combat-fsm-refactor.md) into commit-sized, in-game
 verifiable stages. The executor **works today** (wins Basic fights); every stage
-below must preserve that. You (not the harness) commit and run the game, so each
-stage is scoped to be smoke-tested on a live fight before moving on.
+below must preserve that. Each stage is one commit, scoped to be smoke-tested
+on a live fight before moving on.
 
 ## Design decisions the blueprint left open
 
@@ -116,14 +116,13 @@ gate) behave.
 - Collapse the `CombatAction` per-variant special-casing in `mod.rs`/appraiser
   into ability fields now that everything routes through the trait.
 
-*Verify:* the flicker-driven wedges from the appraisal-MVP session don't recur
-over several fights.
+*Verify:* the live-`chosen`-flicker wedges don't recur over several fights.
 
 ## Not in scope yet
 `priority_targets` boss focus-fire, benched-member swaps (3rd+ party member),
 non-`Basic` controllers. Add after the pipeline lands.
 
-## Session status (live-verified)
+## Status (live-verified)
 
 Stages 1–3 are **done and verified in-game** (drove `--route combat` on normal
 encounters, fights won end-to-end):
@@ -156,7 +155,7 @@ of `allMoveDefinitions` found:
   `available` on the move def — **none resolve**; the runtime learned flag has
   another name / lives elsewhere.
 
-Next session: find the authoritative available/learned-combo source (a
+Next: find the authoritative available/learned-combo source (a
 learned-moves list on the fighter/party, or read the combo selection screen's
 item list), then gate combos on `unlockable == 0 || <learned>` in
 `generate_appraisals`. Dropping the `loaded` filter naively would wedge the
