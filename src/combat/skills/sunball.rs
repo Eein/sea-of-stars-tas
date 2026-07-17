@@ -8,7 +8,7 @@
 use data::prelude::PlayerPartyCharacter;
 use joystick::common::JoystickBtnInterface;
 
-use super::{Action, ActionCtx, SkillResource, StepOutcome, TimingType};
+use super::{Action, ActionCtx, SkillResource, StepOutcome, TargetType, TimingType};
 use crate::control::SosAction;
 use crate::memory::combat_manager::{
     CombatDamageType, CombatEnemy, CombatManagerData, CombatPlayer, SunballCharge,
@@ -127,6 +127,15 @@ impl Action for Sunball {
     fn timing_type(&self) -> TimingType {
         // Sunball charges: hold Confirm, release on the window.
         TimingType::Charge
+    }
+
+    fn target_type(&self) -> TargetType {
+        // Sunball's target selector is a `PlayerRadiusTargetSelector`
+        // (verified live via the loaded-move selector log): the confirmed
+        // target anchors a splash sphere, so the appraiser scores the splash
+        // and anchors on the highest-value main target (e.g. the middle of a
+        // cluster).
+        TargetType::Aoe
     }
 
     fn qte_in_flight(&self, cmd: &CombatManagerData) -> bool {
