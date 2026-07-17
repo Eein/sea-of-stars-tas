@@ -152,8 +152,9 @@ pub trait Action {
             .unwrap_or_else(|| self.cost())
     }
 
-    /// Estimated damage against `enemy`. Default is a multiple of the basic
-    /// attack; damaging skills override this with their real formula.
+    /// Estimated damage against `enemy` at the highest damage roll — the
+    /// optimistic value the appraiser ranks by. Actions override
+    /// [`estimate_damage_at`](Self::estimate_damage_at), not this.
     fn estimate_damage(
         &self,
         cmd: &CombatManagerData,
@@ -161,7 +162,22 @@ pub trait Action {
         enemy: &CombatEnemy,
     ) -> f32 {
         let (_, max_roll) = cmd.damage_roll_bounds();
-        let (base, timed) = damage::basic_attack_damage(player, enemy, max_roll);
+        self.estimate_damage_at(cmd, player, enemy, max_roll)
+    }
+
+    /// Estimated damage against `enemy` with `roll` as the random damage term.
+    /// The appraiser evaluates both roll bounds: the max for the damage value,
+    /// the min to gate kill bonuses on kills that land at *any* roll (the TAS
+    /// can't steer the roll). Default is a multiple of the basic attack;
+    /// damaging skills override this with their real formula.
+    fn estimate_damage_at(
+        &self,
+        cmd: &CombatManagerData,
+        player: &CombatPlayer,
+        enemy: &CombatEnemy,
+        roll: f32,
+    ) -> f32 {
+        let (base, timed) = damage::basic_attack_damage(player, enemy, roll);
         ((base + timed) * 1.5).floor()
     }
 
@@ -352,25 +368,26 @@ pub trait Action {
 
     // --- Helpers ---
 
-    /// Damage estimate for a magic special move: the real decompiled formula
-    /// when the move's `specialMovePower` is readable from memory, the rough
-    /// magic heuristic otherwise (move not loaded yet). The executor lands its
-    /// cast QTEs — Sunball charges to max, timed hits connect — so the
-    /// estimate assumes a full charge (`1.0`). The caster's current Live Mana
-    /// charges feed the boost term.
+    /// Damage estimate for a magic special move at `roll`: the real decompiled
+    /// formula when the move's `specialMovePower` is readable from memory, the
+    /// rough magic heuristic otherwise (move not loaded yet — roll-independent,
+    /// so its kills always count as guaranteed). The executor lands its cast
+    /// QTEs — Sunball charges to max, timed hits connect — so the estimate
+    /// assumes a full charge (`1.0`). The caster's current Live Mana charges
+    /// feed the boost term.
     fn special_move_estimate(
         &self,
         cmd: &CombatManagerData,
         player: &CombatPlayer,
         enemy: &CombatEnemy,
         damage_type: CombatDamageType,
+        roll: f32,
     ) -> f32 {
         let combat_move = self.find_move(cmd);
         match combat_move.and_then(|m| m.special_move_power.map(|p| (m, p))) {
             Some((combat_move, power)) => {
-                let (_, max_roll) = cmd.damage_roll_bounds();
                 let boost = damage::special_move_boost(player, combat_move);
-                damage::special_move_damage(player, enemy, damage_type, power, boost, 1.0, max_roll)
+                damage::special_move_damage(player, enemy, damage_type, power, boost, 1.0, roll)
             }
             None => damage::magic_damage_estimate(player, enemy, damage_type),
         }

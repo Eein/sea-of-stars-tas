@@ -4,7 +4,7 @@ use crate::route::tas;
 use crate::{state::GameState, tas_runner::TasRunner};
 
 use crate::assets::ASSETS;
-use crate::combat::{CombatController, appraisal, damage};
+use crate::combat::{CombatController, appraisal};
 use crate::memory::combat_manager::CombatDamageType;
 use crate::memory::level_up_manager::LevelUpUpgrade;
 
@@ -340,31 +340,6 @@ impl MainHelper {
                 stat_image(ui, &upgrade.upgrade, upgrade.selected);
             }
         });
-    }
-
-    fn draw_damage_calculations(&self, game_state: &mut GameState, ui: &mut egui::Ui) {
-        let gmd = &game_state.memory_managers.combat_manager.data;
-        // for each player
-        for player in &gmd.players.items {
-            // for each enemy
-            ui.label(format!("{:?}", player.character));
-            for enemy in &gmd.enemies.items {
-                //calculate basic attack damage
-                let (min_roll, max_roll) = gmd.damage_roll_bounds();
-                let min_damage = damage::basic_attack_damage(player, enemy, min_roll);
-                let max_damage = damage::basic_attack_damage(player, enemy, max_roll);
-                // The game rounds the final damage with Math.Round (half to even),
-                // confirmed via ghidra decompile of PlayerBasicAttackDamage.
-                ui.label(format!(
-                    "Enemy: {:.5} | Damage: {:.3}-{:.3} Timed: {:.3}-{:.3}",
-                    enemy.unique_id,
-                    damage::round_damage(min_damage.0),
-                    damage::round_damage(max_damage.0),
-                    damage::round_damage(min_damage.0 + min_damage.1),
-                    damage::round_damage(max_damage.0 + max_damage.1)
-                ));
-            }
-        }
     }
 
     /// Show the appraisal (decision) layer's ranked candidate actions and the
@@ -773,7 +748,6 @@ impl GuiHelper for MainHelper {
         if cmd.encounter_active {
             self.draw_combat(game_state, ui);
             self.draw_players(game_state, ui);
-            self.draw_damage_calculations(game_state, ui);
             let combat = tas_runner.as_ref().and_then(|gm| gm.combat_controller());
             self.draw_appraisals(game_state, combat, ui);
             self.draw_moves(game_state, ui);

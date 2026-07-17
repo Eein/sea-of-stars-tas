@@ -146,13 +146,14 @@ impl Action for Sunball {
         vec![CombatDamageType::Sun]
     }
 
-    fn estimate_damage(
+    fn estimate_damage_at(
         &self,
         cmd: &CombatManagerData,
         player: &CombatPlayer,
         enemy: &CombatEnemy,
+        roll: f32,
     ) -> f32 {
-        self.special_move_estimate(cmd, player, enemy, CombatDamageType::Sun)
+        self.special_move_estimate(cmd, player, enemy, CombatDamageType::Sun, roll)
     }
 
     /// Drive the charge QTE: advance [`ChargeState`] from the live read, then

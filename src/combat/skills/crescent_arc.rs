@@ -34,12 +34,13 @@ impl Action for CrescentArc {
         vec![CombatDamageType::Moon]
     }
 
-    fn estimate_damage(
+    fn estimate_damage_at(
         &self,
         cmd: &CombatManagerData,
         player: &CombatPlayer,
         enemy: &CombatEnemy,
+        roll: f32,
     ) -> f32 {
-        self.special_move_estimate(cmd, player, enemy, CombatDamageType::Moon)
+        self.special_move_estimate(cmd, player, enemy, CombatDamageType::Moon, roll)
     }
 }

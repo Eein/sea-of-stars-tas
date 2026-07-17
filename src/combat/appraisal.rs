@@ -46,7 +46,8 @@ pub struct Appraisal {
     pub target_enemy_id: String,
     /// Expected damage (floored, timed hit included when `action` is timed).
     pub expected_damage: f32,
-    /// Whether `expected_damage` is enough to kill the target outright.
+    /// Whether the hit kills the target at *any* damage roll (min-roll damage
+    /// covers its HP) — a guaranteed kill, not a max-roll gamble.
     pub lethal: bool,
     /// For AOE actions: the number of *secondary* enemies predicted inside the
     /// splash sphere around the main target (each takes 0.6× damage). Zero for
@@ -216,7 +217,11 @@ fn score_action(
         player
     };
     let expected_damage = action.estimate_damage(cmd, player, enemy);
-    let lethal = expected_damage >= enemy.current_hp as f32;
+    // A kill only counts when it lands at *any* damage roll — the TAS can't
+    // steer the roll, so a kill that needs the top rolls is a gamble, not a
+    // kill. Damage terms stay at the max roll; the kill checks use the min.
+    let (min_roll, _) = cmd.damage_roll_bounds();
+    let lethal = action.estimate_damage_at(cmd, player, enemy, min_roll) >= enemy.current_hp as f32;
 
     // Score the *effective* damage — capped at the target's remaining HP, like
     // the splash contributions below. Overkill is wasted, so it must not lift
@@ -243,7 +248,13 @@ fn score_action(
                 action.estimate_damage(cmd, player, secondary) * damage::AOE_SECONDARY_MULTIPLIER,
             );
             score += splash_damage.min(secondary.current_hp as f32);
-            if splash_damage >= secondary.current_hp as f32 {
+            // Same rule as `lethal`: the splash-kill bonus needs the kill to
+            // land at the min roll too.
+            let guaranteed_splash = damage::round_damage(
+                action.estimate_damage_at(cmd, player, secondary, min_roll)
+                    * damage::AOE_SECONDARY_MULTIPLIER,
+            );
+            if guaranteed_splash >= secondary.current_hp as f32 {
                 score += kill_bonus(secondary);
             }
             splash_targets += 1;
@@ -578,11 +589,12 @@ mod tests {
     /// The dumped 3-enemy line fight (`state-dump-1784313273`): a 1-HP enemy
     /// in the middle, flanked at ~3.4 and ~3.6 (both inside the 4.7 splash
     /// reach) while the outer two sit ~7.0 apart. With Sunball modelled as
-    /// AOE, anchoring on the *middle* enemy outranks either edge: it
-    /// direct-kills the middle, splash-kills the Sun-weak right enemy, and
-    /// still chips the left one.
+    /// AOE, the middle anchor splashes both neighbours and outranks the far
+    /// *left* anchor on splash value alone. (The *right* anchor tops this
+    /// fight — its two kills land at any roll, while the middle's splash kill
+    /// needs the max; see [`kill_bonuses_require_kills_at_any_roll`].)
     #[test]
-    fn sunball_anchors_on_the_middle_of_a_cluster() {
+    fn sunball_scores_splash_from_the_middle_anchor() {
         use crate::memory::combat_manager::{
             CharacterMoves, CombatDamageType, CombatMove, DamageTypeModifierKey,
             DamageTypeModifierValue,
@@ -650,11 +662,97 @@ mod tests {
         assert_eq!(on_right.splash_targets, 1);
         assert_eq!(on_left.splash_targets, 1);
         assert!(
-            on_middle.score > on_right.score && on_middle.score > on_left.score,
-            "middle ({}) should outrank right ({}) and left ({})",
+            on_middle.score > on_left.score,
+            "middle ({}) should outrank left ({}) on its two splashes",
             on_middle.score,
-            on_right.score,
             on_left.score
+        );
+    }
+
+    /// Kill bonuses must only count kills that land at *any* damage roll — the
+    /// TAS can't steer the roll, so a kill that needs the max roll is a
+    /// gamble, not a kill. In the dumped fight the middle anchor's splash
+    /// into the 22-HP Sun-weak enemy is exactly 22 at max roll but ~21 at min
+    /// roll; the right anchor kills that enemy directly (~35 even at min
+    /// roll) and its splash kills the 1-HP middle at any roll. Two guaranteed
+    /// kills must outrank two kills-if-lucky.
+    #[test]
+    fn kill_bonuses_require_kills_at_any_roll() {
+        use crate::memory::combat_manager::{
+            CharacterMoves, CombatDamageType, CombatMove, DamageTypeModifierKey,
+            DamageTypeModifierValue,
+        };
+
+        let mut cmd = CombatManagerData {
+            player_aoe_radius: Some(3.0),
+            ..Default::default()
+        };
+        let enemy = |hp: u32, x: f32, z: f32| CombatEnemy {
+            current_hp: hp,
+            magical_defense: 50,
+            position: Some(Vector3::new(x, 60.0, z)),
+            ..Default::default()
+        };
+        let mut sun_weak = enemy(22, 92.99, 134.12);
+        sun_weak.damage_type_modifiers.items.insert(
+            DamageTypeModifierKey {
+                key: CombatDamageType::Sun,
+            },
+            DamageTypeModifierValue { value: 1.25 },
+        );
+        cmd.enemies.items = vec![
+            sun_weak,                 // right: dies at any roll only to a direct hit
+            enemy(39, 86.03, 134.67), // left
+            enemy(1, 89.64, 134.63),  // middle: dies to anything
+            enemy(30, 50.0, 134.0),   // far away: hp between min (28) and max (30) roll damage
+        ];
+        cmd.moves = vec![CharacterMoves {
+            character: PlayerPartyCharacter::Zale,
+            moves: vec![CombatMove {
+                move_id: Some("Sunball".into()),
+                special_move_power: Some(12.0),
+                ..Default::default()
+            }],
+            ..Default::default()
+        }];
+        let player = CombatPlayer {
+            character: PlayerPartyCharacter::Zale,
+            magical_attack: 16,
+            ..Default::default()
+        };
+        let action = skills::skill_actions()
+            .into_iter()
+            .find(|a| a.internal_name() == "Sunball")
+            .unwrap();
+        let score = |enemy| {
+            score_action(
+                &cmd,
+                action.as_ref(),
+                &player,
+                enemy,
+                CombatAction::Skill {
+                    name: "Sunball".into(),
+                    cost: 8,
+                },
+            )
+        };
+
+        let on_right = score(&cmd.enemies.items[0]);
+        let on_middle = score(&cmd.enemies.items[2]);
+        assert!(
+            on_right.score > on_middle.score,
+            "right-anchor ({}) should outrank middle-anchor ({}): its two \
+             kills land at any roll, the middle's splash kill needs the max",
+            on_right.score,
+            on_middle.score
+        );
+        // A kill that only lands on the top rolls is not lethal: max-roll
+        // damage (30) would kill 30 HP, min-roll damage (28) won't.
+        let knife_edge = score(&cmd.enemies.items[3]);
+        assert!(
+            !knife_edge.lethal,
+            "30 HP between the min (28) and max (30) roll damage must not be \
+             flagged lethal"
         );
     }
 
