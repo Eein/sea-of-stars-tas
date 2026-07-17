@@ -136,12 +136,12 @@ struct TurnSignals {
 impl TurnSignals {
     fn read(cmd: &CombatManagerData, chosen: Option<&Appraisal>) -> Self {
         // Only *skills* are character-specific and need a party swap. Basic
-        // attacks work for whoever's up. Combos are joint: with the current
-        // two-character party (Zale + Valere) every combo is reachable from
-        // either member's Combo menu, and `selected` flips between the two
-        // participants mid-combo, so combos never request a swap. TODO: once a
-        // third+ party member joins, a combo between two non-current members
-        // *will* need a swap; key that off the combo's participants then.
+        // attacks work for whoever's up. Combos are joint and reachable from
+        // any member's Combo menu: selecting one pulls a benched participant
+        // out automatically, so the participants only need to exist in the
+        // party. Combos never request a swap (`selected` also flips between
+        // the participants mid-combo, so there is no single character to
+        // chase).
         let want_character = match chosen.map(|a| &a.action) {
             Some(appraisal::CombatAction::Skill { .. }) => chosen.map(|a| a.attacker.clone()),
             _ => None,
