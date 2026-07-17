@@ -63,6 +63,17 @@ pub trait Node<State, Event>: Display {
             .unwrap_or_default()
             .to_string()
     }
+    /// Rewire this subtree so the node at `path` — child indices matching
+    /// [`tree`](Self::tree)'s child order — becomes the current one, ready to
+    /// execute from its start ("play from here"). An empty path targets this
+    /// node itself: reset any internal progress. Returns `false` when the
+    /// path doesn't resolve (the walk is best-effort; steps already set stay
+    /// set). The sequencer re-`enter`s the new chain afterwards — nodes that
+    /// derive state on `enter` (a conditional's selection) re-derive it then.
+    fn advance_to_path(&mut self, path: &[usize]) -> bool {
+        path.is_empty()
+    }
+
     /// Collect the name of every checkpoint in this subtree, in route order.
     /// Container nodes override to recurse into *all* their children (both
     /// branches of a conditional — the list enumerates what a run could
