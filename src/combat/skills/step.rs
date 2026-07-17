@@ -84,6 +84,11 @@ pub struct StepScratch {
     pub visited_targets: Vec<String>,
     /// `timed_attack_ready` last frame, so taps land only on the rising edge.
     pub last_timed_ready: bool,
+    /// The timed-hit window has fired at least once for this action — the
+    /// cast definitely launched. From then on a quiet stretch is enemy turns
+    /// playing out (which can far outlast the stuck timeout), not a desynced
+    /// confirm, so the anti-hang mash must stay quiet.
+    pub window_seen: bool,
 }
 
 /// Everything an `Action`'s `execute_*` step needs to drive one frame: the

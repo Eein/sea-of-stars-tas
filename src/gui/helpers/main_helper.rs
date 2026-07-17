@@ -389,16 +389,24 @@ impl MainHelper {
                 // What is actually being driven right now: the appraisal
                 // latched into the in-progress action. Unlike "Chosen" below
                 // (the live re-ranked pick), this stays fixed for the whole
-                // action.
-                if let Some((executing, step)) = combat.and_then(|c| c.executing()) {
-                    ui.horizontal(|ui| {
-                        ui.label("Executing:");
-                        ui.colored_label(
-                            EXECUTING,
-                            format!("{} @ {:?}", executing.describe(), step),
-                        );
-                    });
-                }
+                // action. Always rendered (weak "(none)" when idle): plain
+                // labels take order-based auto ids, so a row that comes and
+                // goes shifts every widget id after it — egui then spams
+                // "widget rect changed id between passes" for the whole grid.
+                ui.horizontal(|ui| {
+                    ui.label("Executing:");
+                    match combat.and_then(|c| c.executing()) {
+                        Some((executing, step)) => {
+                            ui.colored_label(
+                                EXECUTING,
+                                format!("{} @ {:?}", executing.describe(), step),
+                            );
+                        }
+                        None => {
+                            ui.weak("(none)");
+                        }
+                    }
+                });
                 // Callout for the current decision.
                 ui.horizontal(|ui| {
                     ui.label("Chosen:");
@@ -454,6 +462,8 @@ impl MainHelper {
                     "Command ring: focus={} idx={:?} ({})",
                     cmd.battle_command_has_focus, cmd.battle_command_index, command,
                 ));
+                // Constant widget count for the same auto-id reason as the
+                // Executing row above.
                 ui.horizontal(|ui| {
                     ui.label("Cursor target:");
                     match &cmd.selected_attack_target_guid {
@@ -470,6 +480,7 @@ impl MainHelper {
                         }
                         None => {
                             ui.weak("(none)");
+                            ui.weak("");
                         }
                     }
                 });
@@ -478,51 +489,56 @@ impl MainHelper {
                     return;
                 }
 
-                egui::Grid::new("appraisals")
-                    .min_col_width(10.0)
-                    .striped(true)
-                    .show(ui, |ui| {
-                        ui.label("#");
-                        ui.label("Attacker");
-                        ui.label("Action");
-                        ui.label("Target");
-                        ui.label("Dmg");
-                        ui.label("LM");
-                        ui.label("Lethal");
-                        ui.label("Score");
-                        ui.end_row();
+                // Own id scope for the grid: its labels' auto ids then depend
+                // only on their position inside the grid, not on how many
+                // widgets rendered above it.
+                ui.push_id("appraisals_grid", |ui| {
+                    egui::Grid::new("appraisals")
+                        .min_col_width(10.0)
+                        .striped(true)
+                        .show(ui, |ui| {
+                            ui.label("#");
+                            ui.label("Attacker");
+                            ui.label("Action");
+                            ui.label("Target");
+                            ui.label("Dmg");
+                            ui.label("LM");
+                            ui.label("Lethal");
+                            ui.label("Score");
+                            ui.end_row();
 
-                        for (i, appraisal) in appraisals.iter().enumerate().take(12) {
-                            let rank_color = if i == 0 { Some(CHOSEN) } else { None };
-                            let colored = |ui: &mut egui::Ui, text: String| match rank_color {
-                                Some(c) => {
-                                    ui.colored_label(c, text);
-                                }
-                                None => {
-                                    ui.label(text);
-                                }
-                            };
+                            for (i, appraisal) in appraisals.iter().enumerate().take(12) {
+                                let rank_color = if i == 0 { Some(CHOSEN) } else { None };
+                                let colored = |ui: &mut egui::Ui, text: String| match rank_color {
+                                    Some(c) => {
+                                        ui.colored_label(c, text);
+                                    }
+                                    None => {
+                                        ui.label(text);
+                                    }
+                                };
 
-                            colored(ui, format!("{}", i + 1));
-                            colored(ui, format!("{:?}", appraisal.attacker));
-                            colored(ui, appraisal.action.label());
-                            colored(ui, format!("{:.5}", appraisal.target_enemy_id));
-                            colored(ui, format!("{:.0}", appraisal.expected_damage));
-                            match appraisal.mana_charges {
-                                0 => {
+                                colored(ui, format!("{}", i + 1));
+                                colored(ui, format!("{:?}", appraisal.attacker));
+                                colored(ui, appraisal.action.label());
+                                colored(ui, format!("{:.5}", appraisal.target_enemy_id));
+                                colored(ui, format!("{:.0}", appraisal.expected_damage));
+                                match appraisal.mana_charges {
+                                    0 => {
+                                        ui.label("");
+                                    }
+                                    n => colored(ui, format!("LM{n}")),
+                                }
+                                if appraisal.lethal {
+                                    ui.colored_label(LETHAL, "kill");
+                                } else {
                                     ui.label("");
                                 }
-                                n => colored(ui, format!("LM{n}")),
+                                colored(ui, format!("{:.1}", appraisal.score));
+                                ui.end_row();
                             }
-                            if appraisal.lethal {
-                                ui.colored_label(LETHAL, "kill");
-                            } else {
-                                ui.label("");
-                            }
-                            colored(ui, format!("{:.1}", appraisal.score));
-                            ui.end_row();
-                        }
-                    });
+                        });
+                });
             });
     }
 

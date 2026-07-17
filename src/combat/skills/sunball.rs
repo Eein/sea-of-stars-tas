@@ -169,15 +169,20 @@ impl Action for Sunball {
         }
         if ctx.cmd.sunball_charge.is_some() {
             ctx.scratch.timer = 0.0; // a live QTE is progress for the watchdog
+            ctx.scratch.window_seen = true;
         }
         self.charge = self.charge.next(ctx.cmd.sunball_charge.as_ref(), ctx.dt);
         if self.charge.holding() {
             ctx.gamepad.press(&SosAction::Confirm);
         } else {
             ctx.gamepad.release(&SosAction::Confirm);
-            // Pre-QTE and post-fire lulls: if nothing happens for too long the
-            // confirms desynced — mash the turn along.
-            ctx.mash_if_stuck();
+            // Pre-QTE lull with no QTE ever seen: the confirms desynced —
+            // mash the turn along. Once the QTE has appeared the cast is
+            // real, and the post-fire quiet is enemy turns playing out (often
+            // longer than the stuck timeout) — never mash those.
+            if !ctx.scratch.window_seen {
+                ctx.mash_if_stuck();
+            }
         }
         StepOutcome::Stay
     }

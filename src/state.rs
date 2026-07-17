@@ -133,12 +133,19 @@ impl eframe::App for State {
         // puffin::set_scopes_on(true);
         // puffin_egui::profiler_window(ui.ctx());
 
-        // Attach to the game (if needed) and refresh all memory managers.
-        self.core.poll();
+        // Advance the world only on the frame's *first* pass. egui re-runs
+        // this method for multi-pass layout (e.g. a Grid resizing); polling
+        // memory and ticking the TAS again mid-frame would double the reads
+        // and mutate the data the repeat pass renders — unstable widget ids
+        // ("widget rect changed id between passes" spam) and skewed timing.
+        if ui.ctx().current_pass_index() == 0 {
+            // Attach to the game (if needed) and refresh all memory managers.
+            self.core.poll();
 
-        // Advance the running game manager, if any.
-        // TODO(orkaboy): Should probably not be here
-        let _ = self.core.run_tas();
+            // Advance the running game manager, if any.
+            // TODO(orkaboy): Should probably not be here
+            let _ = self.core.run_tas();
+        }
 
         // puffin::GlobalProfiler::lock().new_frame();
         Gui::update(self, ui, frame);
