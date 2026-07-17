@@ -45,6 +45,17 @@ impl TurnState {
         TurnState::Idle { elapsed: 0.0 }
     }
 
+    /// The appraisal latched into the in-progress action, with the step it's
+    /// on — what the executor is *actually* doing right now, as opposed to
+    /// the live re-ranked `chosen`. `None` outside [`TurnState::Acting`] (and
+    /// for the appraisal-less charge re-latch).
+    pub fn executing(&self) -> Option<(&Appraisal, ActionStep)> {
+        match self {
+            TurnState::Acting(acting) => acting.appraisal.as_ref().map(|a| (a, acting.step)),
+            _ => None,
+        }
+    }
+
     /// One-line summary of where the executor is, for the GUI/debugging.
     pub fn status(&self) -> String {
         match self {
@@ -73,6 +84,11 @@ impl Default for TurnState {
 /// per-step scratch the steps share.
 pub(super) struct ActingState {
     action: Box<dyn Action>,
+    /// The appraisal this action was latched from, kept for the GUI — the
+    /// live `chosen` keeps recomputing while the action runs, so this is the
+    /// only faithful record of what is actually being executed. `None` for
+    /// the menu-less charge re-latch, which has no appraisal behind it.
+    appraisal: Option<Appraisal>,
     /// The `unique_id` of the enemy this action targets.
     target: String,
     /// Total Live Mana charges the appraisal expects the attacker to hold —
@@ -88,6 +104,7 @@ impl ActingState {
     fn latch(appraisal: &Appraisal) -> Self {
         Self {
             action: appraisal.to_action(),
+            appraisal: Some(appraisal.clone()),
             target: appraisal.target_enemy_id.clone(),
             mana_charges: appraisal.mana_charges,
             step: ActionStep::Boosting,
@@ -102,6 +119,7 @@ impl ActingState {
     fn executing(action: Box<dyn Action>) -> Self {
         Self {
             action,
+            appraisal: None,
             target: String::new(),
             mana_charges: 0,
             step: ActionStep::Attacking,

@@ -24,6 +24,12 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                     // speed boost, then run the trail. This is the main path —
                     // the node ends when it does.
                     vec![
+                        Move::To(20.050, 5.214, -27.345),
+                        // Both players reach the meeting point before the
+                        // hi-five — the joined partner runs the scripted
+                        // scene-entry (south, possibly teleporting back)
+                        // first, so don't offer the boost until they're here.
+                        Move::AwaitSync(vec![1]),
                         Move::SpeedBoost(vec![0, 1]),
                         Move::To(19.668, 5.002, -1.733),
                         Move::To(2.189, 5.002, 15.255),
@@ -83,6 +89,8 @@ pub fn create() -> Box<dyn Node<GameState, GameEvent>> {
                     // node.
                     vec![
                         Move::Join,
+                        Move::To(20.050, 5.214, -27.345),
+                        Move::AwaitSync(vec![0]),
                         Move::SpeedBoost(vec![0, 1]),
                         Move::To(19.668, 5.002, -1.733),
                         Move::To(2.189, 5.002, 15.255),

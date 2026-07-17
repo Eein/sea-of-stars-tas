@@ -109,6 +109,12 @@ impl CombatController {
         self.chosen = appraisal::choose(&self.appraisals).cloned();
     }
 
+    /// The appraisal the executor has latched and is currently driving, with
+    /// its current step — `None` when no action is in progress.
+    pub fn executing(&self) -> Option<(&Appraisal, skills::ActionStep)> {
+        self.turn_state.executing()
+    }
+
     /// One-line executor status (turn state + latched action/step + the pad
     /// being driven) for the GUI.
     pub fn turn_status(&self, state: &GameState) -> String {

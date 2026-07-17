@@ -6,7 +6,7 @@ use crate::state::{GameEvent, GameState};
 use crate::util::vec3_ext::Vector3Ext;
 
 use joystick::prelude::*;
-use log::{info, warn};
+use log::{debug, info, warn};
 use seq::prelude::*;
 
 use vec2;
@@ -133,15 +133,32 @@ impl MovePath {
     // Checks if we've overshot the movement target by comparing our directional vector
     // to the one originally calculated at the start of the Move segment.
     fn check_overshoot(&mut self, player: &Vector3<f32>, target: &Vector3<f32>) -> bool {
+        /// A real overshoot ends up *near* the target (we ran past it at
+        /// running speed — a frame or two of travel). A flipped direction
+        /// while far away means the character was moved under us (scripted
+        /// scene-entry runs, teleports): re-anchor on the current position
+        /// and keep steering instead of skipping the move.
+        const OVERSHOOT_RANGE: f32 = 2.5;
+
         let v1 = *target - *player;
         if let Some(v2) = &self.dir {
             let dot_product = v1.dot(v2);
             // The dot product is > 0 when the vectors are pointing in the same direction,
             // and < 0 when they are pointing more than 90 degrees away from each other.
             if dot_product < 0.0 {
-                warn!("Overshoot! {}", self.coords[self.step]);
+                if v1.magnitude() <= OVERSHOOT_RANGE {
+                    warn!("Overshoot! {}", self.coords[self.step]);
+                    return true;
+                }
+                debug!(
+                    "{}: direction flipped {:.1} units from target (game moved us?) — re-anchoring {}",
+                    self.name,
+                    v1.magnitude(),
+                    self.coords[self.step],
+                );
+                self.dir = Some(v1);
             }
-            dot_product < 0.0
+            false
         } else {
             // First iteration on this segment, assign dir to the vector between the player and target.
             self.dir = Some(v1);
@@ -153,6 +170,17 @@ impl MovePath {
         const PRECISION: f64 = 0.2;
         let diff = *target - *player;
         f64::from(diff.magnitude()) < precision.unwrap_or(PRECISION)
+    }
+
+    /// A position that reads exactly (0,0,0) is the memory resetting mid
+    /// scene-swap (e.g. world map → level), not a real location — treat it as
+    /// unreadable so a move neither steers at the origin nor "overshoots"
+    /// past a target it never reached (the overshoot check would otherwise
+    /// anchor its direction on the bogus origin read).
+    fn live_position(position: &Option<Vector3<f32>>) -> Option<&Vector3<f32>> {
+        position
+            .as_ref()
+            .filter(|p| p.get_x() != 0.0 || p.get_y() != 0.0 || p.get_z() != 0.0)
     }
 
     /// Arm a single tap of `action` (0.1s press, 0.2s release) as the
@@ -222,7 +250,17 @@ impl MovePath {
 
     fn handle_coord(&mut self, state: &mut GameState, coord: Move, delta: f64) -> PathStatus {
         let sppmd = &state.memory_managers.single_player_plus_manager.data;
-        let player = &sppmd.players.items[self.player].gameobject_position;
+        // While the game owns the character (teleporting back to the leader
+        // after falling too far behind), pad input is ignored — treat the
+        // position as unreadable so moves wait for control to come back
+        // instead of steering at (or overshooting past) a character that
+        // isn't listening.
+        let game_owned = sppmd.players.items[self.player].state.contains("Teleport");
+        let player = if game_owned {
+            None
+        } else {
+            MovePath::live_position(&sppmd.players.items[self.player].gameobject_position)
+        };
 
         let gamepad = &mut state.gamepads[self.player];
 
@@ -239,8 +277,16 @@ impl MovePath {
                 let me = &sppmd.players.items[self.player];
                 let game_paused = state.memory_managers.ui_manager.data.pause_menu_open();
                 if me.playing {
+                    // Joined — but the game may still own the character (the
+                    // spawn walk-in, then a teleport-to-leader if they ended
+                    // far away). Hold everything until they're actually
+                    // controllable; advancing on `playing` alone drove the
+                    // next moves into a character that ignored the pad while
+                    // walking itself out of range.
                     gamepad.release_all();
-                    self.step += 1;
+                    if me.state == "PlayerDefaultState" {
+                        self.step += 1;
+                    }
                 } else if game_paused || !me.can_join_leave {
                     // Join maps to Start. Pressed while the pause menu is up —
                     // or while the game won't accept a join — it opens the
@@ -290,11 +336,29 @@ impl MovePath {
                 }
             }
             Move::SpeedBoost(list) => {
-                if !list.contains(&self.player) || sppmd.players.items[self.player].has_boost {
+                // Proceed only once *every* listed (and playing) player has
+                // the boost — the flags don't set on the same frame, and a
+                // participant advancing on its own flag alone walks away from
+                // a partner still mid hi-five. Absent/non-playing players
+                // don't block (e.g. a co-op route run with fewer pads).
+                let all_boosted = list.iter().all(|&p| {
+                    sppmd
+                        .players
+                        .items
+                        .get(p)
+                        .is_none_or(|player| !player.playing || player.has_boost)
+                });
+                if !list.contains(&self.player) || all_boosted {
                     gamepad.release_all();
                     self.step += 1;
                 } else {
-                    gamepad.press(&SosAction::HiFive);
+                    // Stand still while hi-fiving: clear any held stick or
+                    // buttons from the previous move, then offer the hi-five
+                    // until everyone's boost lands.
+                    gamepad.release_all();
+                    if !sppmd.players.items[self.player].has_boost {
+                        gamepad.press(&SosAction::HiFive);
+                    }
                 }
             }
             // Put text entry in log
@@ -332,6 +396,18 @@ impl MovePath {
                     } else {
                         let joy_dir = MovePath::get_dir(player, &target, false);
                         gamepad.set_ljoy(joy_dir);
+                        // Steering telemetry (`--log-level debug`): what this
+                        // path sees and sends, to separate bad reads from bad
+                        // steering when a player runs the wrong way.
+                        debug!(
+                            "{}: To({x:.2},{y:.2},{z:.2}) from ({:.2},{:.2},{:.2}) ljoy=[{:.2},{:.2}]",
+                            self.name,
+                            player.get_x(),
+                            player.get_y(),
+                            player.get_z(),
+                            joy_dir[0],
+                            joy_dir[1],
+                        );
                     }
                 }
             }
@@ -390,7 +466,7 @@ impl MovePath {
             // Move towards the target coordinate until it's reached (World map, uses different coords)
             Move::ToWorld(x, y, z) => {
                 let target = Vector3::new(x, y, z);
-                let world_pos = &sppmd.players.items[self.player].position;
+                let world_pos = MovePath::live_position(&sppmd.players.items[self.player].position);
                 if let Some(world_pos) = world_pos {
                     if MovePath::is_close(world_pos, &target, None) {
                         self.step += 1;
@@ -412,7 +488,7 @@ impl MovePath {
             Move::HoldDirWorld(dir, target) => {
                 gamepad.set_ljoy(dir);
                 let target = Vector3::new(target[0], target[1], target[2]);
-                let world_pos = &sppmd.players.items[self.player].position;
+                let world_pos = MovePath::live_position(&sppmd.players.items[self.player].position);
                 if let Some(world_pos) = world_pos
                     && MovePath::is_close(world_pos, &target, Some(1.0))
                 {
@@ -714,8 +790,9 @@ mod tests {
 
     #[test]
     fn overshoot_test() -> std::io::Result<()> {
-        // Set up dummy move path (coords are not used)
-        let mut m1 = MovePath::new("test".to_owned(), 0, vec![]);
+        use super::Move;
+        // Coords back the warn's display of the current move.
+        let mut m1 = MovePath::new("test".to_owned(), 0, vec![Move::To(100.0, 10.0, 0.0)]);
         // Set up target position and initial player position
         let target_pos = Vector3::from((100.0_f32, 10.0, 0.0));
         let mut player_pos = Vector3::from((0.0_f32, 0.0, 0.0));
@@ -734,12 +811,24 @@ mod tests {
         // Move the player and test
         player_pos = Vector3::from((10.0_f32, 50.0, 0.0));
         assert!(!m1.check_overshoot(&player_pos, &target_pos));
-        // Move the player and test
-        player_pos = Vector3::from((0.0_f32, -5.0, 30.0));
-        assert!(!m1.check_overshoot(&player_pos, &target_pos));
-        // Try to move the player "behind" the target
-        player_pos = Vector3::from((110.0_f32, 20.0, 4.0));
+        // Just past the target (within running distance): a real overshoot.
+        player_pos = Vector3::from((101.0_f32, 11.0, 0.5));
         assert!(m1.check_overshoot(&player_pos, &target_pos));
+
+        // A direction flip *far* from the target is not an overshoot — it
+        // means the game moved the character (scripted scene-entry runs,
+        // teleports). The anchor re-derives and steering resumes.
+        let mut m2 = MovePath::new("test".to_owned(), 0, vec![Move::To(100.0, 10.0, 0.0)]);
+        let start = Vector3::from((0.0_f32, 0.0, 0.0));
+        assert!(!m2.check_overshoot(&start, &target_pos));
+        let dragged_past = Vector3::from((110.0_f32, 20.0, 4.0));
+        assert!(!m2.check_overshoot(&dragged_past, &target_pos));
+        // Walking back toward the target with the re-derived anchor is fine...
+        let returning = Vector3::from((104.0_f32, 14.0, 1.0));
+        assert!(!m2.check_overshoot(&returning, &target_pos));
+        // ...and genuinely running past it now trips the overshoot.
+        let past_again = Vector3::from((99.0_f32, 9.0, 0.0));
+        assert!(m2.check_overshoot(&past_again, &target_pos));
         Ok(())
     }
 }
