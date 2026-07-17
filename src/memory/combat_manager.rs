@@ -339,6 +339,23 @@ impl CombatMove {
             .and_then(|ts| memory_context.read_named_ptr(ts, "targetSelectorScreen"))
     }
 
+    /// Class name of the move's `targetSelector` — `PlayerRadiusTargetSelector`
+    /// marks a move whose confirmed target anchors an AOE splash sphere
+    /// (`SelectAOETargets`), the default selector a single-target move. Used to
+    /// verify which moves splash against the running game; a failed read
+    /// reports which step failed (and the pointers, for a debugger follow-up).
+    fn selector_class(memory_context: &MemoryContext, move_ptr: u64) -> String {
+        let Some(component) = memory_context.read_named_ptr(move_ptr, "combatMoveComponent") else {
+            return format!("<no combatMoveComponent @ def {move_ptr:#x}>");
+        };
+        let Some(selector) = memory_context.read_named_ptr(component, "targetSelector") else {
+            return format!("<no targetSelector @ component {component:#x}>");
+        };
+        memory_context
+            .object_class_name::<64>(selector)
+            .unwrap_or_else(|| format!("<class unreadable @ selector {selector:#x}>"))
+    }
+
     /// Resolve a `CombatTarget` to its enemy's `unique_id`:
     /// `target -> owner -> enemy -> uniqueID -> guid`.
     fn resolve_target_guid(memory_context: &MemoryContext, target: u64) -> Option<String> {
@@ -529,6 +546,9 @@ pub struct CombatManagerData {
     /// scan ([`update_target_cursor`](Self::update_target_cursor)) only
     /// touches screens that can exist.
     pub(crate) loaded_move_ptrs: Vec<u64>,
+    /// Active target-selection screens whose class has been logged this fight
+    /// (AOE verification — each screen is announced once as it first activates).
+    pub(crate) logged_screens: Vec<u64>,
     /// `combatMoveId` of the combo highlighted in the combo submenu, or `None`
     /// when the submenu isn't open.
     pub highlighted_combo_id: Option<String>,
@@ -665,6 +685,7 @@ impl MemoryManagerUpdate for CombatManagerData {
             // Reset so the next fight rescans its moves.
             self.moves.clear();
             self.loaded_move_ptrs.clear();
+            self.logged_screens.clear();
         }
 
         Ok(())
@@ -867,6 +888,16 @@ impl CombatManagerData {
                     // Only loaded moves can own a live target-selector screen;
                     // cache them for the cheap per-frame cursor scan.
                     self.loaded_move_ptrs.push(move_ptr);
+                    // Once per fight: log which selector each loaded move uses,
+                    // to verify AOE modelling (`PlayerRadiusTargetSelector` =
+                    // the move splashes) against the running game. A missing
+                    // component is normal for un-instantiated (unlearned)
+                    // moves.
+                    log::debug!(
+                        "combat: {} target selector: {}",
+                        move_def.move_id.as_deref().unwrap_or("<unnamed>"),
+                        CombatMove::selector_class(memory_context, move_ptr),
+                    );
                 }
                 main_hit = main_hit.or(move_def.main_target_guid.clone());
                 current_hit = current_hit.or(move_def.current_target_guid.clone());
@@ -906,6 +937,23 @@ impl CombatManagerData {
             let Some(screen) = CombatMove::active_screen(memory_context, move_ptr) else {
                 continue;
             };
+            // AOE verification: announce each screen's class as it first
+            // activates (`CombatRadiusTargetSelectionScreen` = the move
+            // splashes). Runs mid-fight, when the objects are known-live.
+            if !self.logged_screens.contains(&screen) {
+                self.logged_screens.push(screen);
+                log::debug!(
+                    "combat: {} active target screen @ {screen:#x}: {} (selector: {})",
+                    CombatMove::read_string(memory_context, move_ptr, "combatMoveId")
+                        .as_deref()
+                        .unwrap_or("<unnamed>"),
+                    memory_context
+                        .object_class_name::<64>(screen)
+                        .as_deref()
+                        .unwrap_or("<unreadable>"),
+                    CombatMove::selector_class(memory_context, move_ptr),
+                );
+            }
             main_hit = main_hit
                 .or_else(|| CombatMove::screen_target_guid(memory_context, screen, "mainTarget"));
             current_hit = current_hit.or_else(|| {

@@ -571,6 +571,89 @@ mod tests {
         assert_eq!(appraise(&cmd).mana_charges, 2);
     }
 
+    /// The dumped 3-enemy line fight (`state-dump-1784313273`): a 1-HP enemy
+    /// in the middle, flanked at ~3.4 and ~3.6 (both inside the 4.7 splash
+    /// reach) while the outer two sit ~7.0 apart. With Sunball modelled as
+    /// AOE, anchoring on the *middle* enemy outranks either edge: it
+    /// direct-kills the middle, splash-kills the Sun-weak right enemy, and
+    /// still chips the left one.
+    #[test]
+    fn sunball_anchors_on_the_middle_of_a_cluster() {
+        use crate::memory::combat_manager::{
+            CharacterMoves, CombatDamageType, CombatMove, DamageTypeModifierKey,
+            DamageTypeModifierValue,
+        };
+
+        let mut cmd = CombatManagerData {
+            player_aoe_radius: Some(3.0),
+            ..Default::default()
+        };
+        let enemy = |hp: u32, x: f32, z: f32| CombatEnemy {
+            current_hp: hp,
+            magical_defense: 50,
+            position: Some(Vector3::new(x, 60.0, z)),
+            ..Default::default()
+        };
+        let mut sun_weak = enemy(22, 92.99, 134.12);
+        sun_weak.damage_type_modifiers.items.insert(
+            DamageTypeModifierKey {
+                key: CombatDamageType::Sun,
+            },
+            DamageTypeModifierValue { value: 1.25 },
+        );
+        cmd.enemies.items = vec![
+            sun_weak,                 // right
+            enemy(39, 86.03, 134.67), // left
+            enemy(1, 89.64, 134.63),  // middle
+        ];
+        // Sunball's live move definition, so the estimate runs the real
+        // decompiled formula (power 12) instead of the rough fallback.
+        cmd.moves = vec![CharacterMoves {
+            character: PlayerPartyCharacter::Zale,
+            moves: vec![CombatMove {
+                move_id: Some("Sunball".into()),
+                special_move_power: Some(12.0),
+                ..Default::default()
+            }],
+            ..Default::default()
+        }];
+        let player = CombatPlayer {
+            character: PlayerPartyCharacter::Zale,
+            magical_attack: 16,
+            ..Default::default()
+        };
+        let action = skills::skill_actions()
+            .into_iter()
+            .find(|a| a.internal_name() == "Sunball")
+            .unwrap();
+        let score = |enemy| {
+            score_action(
+                &cmd,
+                action.as_ref(),
+                &player,
+                enemy,
+                CombatAction::Skill {
+                    name: "Sunball".into(),
+                    cost: 8,
+                },
+            )
+        };
+
+        let on_right = score(&cmd.enemies.items[0]);
+        let on_left = score(&cmd.enemies.items[1]);
+        let on_middle = score(&cmd.enemies.items[2]);
+        assert_eq!(on_middle.splash_targets, 2);
+        assert_eq!(on_right.splash_targets, 1);
+        assert_eq!(on_left.splash_targets, 1);
+        assert!(
+            on_middle.score > on_right.score && on_middle.score > on_left.score,
+            "middle ({}) should outrank right ({}) and left ({})",
+            on_middle.score,
+            on_right.score,
+            on_left.score
+        );
+    }
+
     /// AOE scoring makes "hit the boss, splash both 1-HP adds" outrank
     /// "overkill one add directly": two splash kills beat one direct kill.
     #[test]
