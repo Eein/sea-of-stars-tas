@@ -47,14 +47,14 @@ impl Action for Combo {
         self.cost
     }
 
-    fn estimate_damage(
+    fn estimate_damage_at(
         &self,
-        cmd: &CombatManagerData,
+        _cmd: &CombatManagerData,
         player: &CombatPlayer,
         enemy: &CombatEnemy,
+        roll: f32,
     ) -> f32 {
-        let (_, max_roll) = cmd.damage_roll_bounds();
-        let (base, timed) = damage::basic_attack_damage(player, enemy, max_roll);
+        let (base, timed) = damage::basic_attack_damage(player, enemy, roll);
         ((base + timed) * COMBO_DAMAGE_FACTOR * (1.0 + self.cost as f32 * 0.5)).floor()
     }
 }
