@@ -30,7 +30,8 @@ const DROPOUT_GRACE: f64 = 0.2;
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 enum ChargeState {
     /// No live charge to drive — before the QTE appears (the caster's leap) or
-    /// after a read dropout outlived the grace. Wait, mashing if stuck.
+    /// after a read dropout outlived the grace. Wait, mashing Confirm if the
+    /// wait drags on.
     #[default]
     Awaiting,
     /// Holding through the intro. The projectile is pooled, so its `level` can

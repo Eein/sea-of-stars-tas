@@ -33,9 +33,9 @@ pub(super) enum TurnState {
     SelectingCharacter { swaps: u32 },
     /// Driving a latched action through its [`ActionStep`]s (command ring →
     /// submenu → target → timed hit). Holding the action *inside* the state is
-    /// the latch: the live `chosen` can flicker mid-animation (which used to
-    /// abandon Sunball's charge hold), but this state owns its action until it
-    /// resolves.
+    /// the latch: this state owns its action until it resolves, never re-reading
+    /// the live `chosen` (which can flicker mid-animation and must not interrupt
+    /// an in-progress hold like Sunball's charge).
     Acting(ActingState),
 }
 
@@ -138,8 +138,8 @@ impl TurnSignals {
         // Only *skills* are character-specific and need a party swap. Basic
         // attacks work for whoever's up. Combos are joint: with the current
         // two-character party (Zale + Valere) every combo is reachable from
-        // either member's Combo menu, and the two participants make `selected`
-        // flip between them — chasing that flip is what wedged us. TODO: once a
+        // either member's Combo menu, and `selected` flips between the two
+        // participants mid-combo, so combos never request a swap. TODO: once a
         // third+ party member joins, a combo between two non-current members
         // *will* need a swap; key that off the combo's participants then.
         let want_character = match chosen.map(|a| &a.action) {
@@ -244,10 +244,9 @@ impl CombatController {
 
         // Character selection takes priority over any menu. While navigating the
         // command ring or an ability submenu, if the chosen action belongs to a
-        // character who isn't the one selected, we're in the wrong place: back
-        // out of any submenu with Cancel and swap first. This keeps us from ever
-        // hunting a move in the wrong character's menu (which is what wedged us
-        // before).
+        // character who isn't the one selected, back out of any submenu with
+        // Cancel and swap first — a move is only ever looked for in its own
+        // character's menu.
         if self.must_switch_character(&signals) {
             if signals.in_submenu {
                 // Stuck in a submenu for the wrong character — cancel out of it.
@@ -370,9 +369,9 @@ impl CombatController {
         if signals.on_wanted_character() || swaps >= MAX_CHAR_SWAPS {
             // On the chosen character (or we exhausted the swap budget and
             // proceed with whoever's up) — latch the current best action and
-            // drive it from the top of its step machine. The latch is what
-            // keeps a charge from being abandoned when the live `chosen`
-            // flickers mid-animation.
+            // drive it from the top of its step machine. The live `chosen` is
+            // not consulted again for the rest of the action (it can flicker
+            // mid-animation).
             return match self.chosen.as_ref() {
                 Some(chosen) => TurnState::Acting(ActingState::latch(chosen)),
                 None => TurnState::idle(),
