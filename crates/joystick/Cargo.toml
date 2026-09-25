@@ -3,9 +3,15 @@ name = "joystick"
 version = "0.1.0"
 edition = "2024"
 
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(tas_crossover)'] }
+
 [dependencies]
 vec2 = "0.2.1"
 log = "0.4.33"
+
+[target.'cfg(any(target_os = "macos", all(target_os = "windows", tas_crossover)))'.dependencies]
+proc-maps = "0.5.0"
 
 [target.'cfg(windows)'.dependencies]
 vigem-client = "0.1.4"
