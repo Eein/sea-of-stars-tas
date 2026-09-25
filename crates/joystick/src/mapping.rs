@@ -10,6 +10,26 @@ impl GenericJoystick {
     pub fn new(index: usize) -> Self {
         GenericJoystick(Joystick::new(index))
     }
+
+    #[cfg(any(target_os = "macos", all(target_os = "windows", tas_crossover)))]
+    pub fn attach_to_process(&mut self, pid: u32, executable_name: &str) -> std::io::Result<()> {
+        self.0.attach_to_process(pid, executable_name)
+    }
+
+    #[cfg(any(target_os = "macos", all(target_os = "windows", tas_crossover)))]
+    pub fn is_attached(&self) -> bool {
+        self.0.is_attached()
+    }
+
+    #[cfg(any(target_os = "macos", all(target_os = "windows", tas_crossover)))]
+    pub fn state_file_path(&self) -> Option<&std::path::Path> {
+        self.0.state_file_path()
+    }
+
+    #[cfg(any(target_os = "macos", all(target_os = "windows", tas_crossover)))]
+    pub fn detach(&mut self) {
+        self.0.detach();
+    }
 }
 
 impl JoystickInterface for GenericJoystick {

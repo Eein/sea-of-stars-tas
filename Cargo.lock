@@ -1902,6 +1902,7 @@ version = "0.1.0"
 dependencies = [
  "evdev",
  "log",
+ "proc-maps",
  "vec2",
  "vigem-client",
 ]
