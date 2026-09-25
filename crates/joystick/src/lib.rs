@@ -44,6 +44,9 @@ pub mod mapping;
 #[cfg(target_os = "linux")]
 #[cfg_attr(target_os = "linux", path = "linux.rs")]
 pub mod joystick;
-#[cfg(target_os = "windows")]
-#[cfg_attr(target_os = "windows", path = "windows.rs")]
+#[cfg(all(target_os = "windows", not(tas_crossover)))]
+#[path = "windows.rs"]
+pub mod joystick;
+#[cfg(any(target_os = "macos", all(target_os = "windows", tas_crossover)))]
+#[path = "crossover.rs"]
 pub mod joystick;
