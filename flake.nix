@@ -14,7 +14,7 @@
         pkgs = import nixpkgs {
           inherit system overlays;
         };
-        libPath = with pkgs; lib.makeLibraryPath [
+        libPath = if pkgs.stdenv.isLinux then with pkgs; lib.makeLibraryPath [
           libGL
           libxkbcommon
           wayland
@@ -23,7 +23,7 @@
           libXcursor
           libXi
           libXrandr
-        ];
+        ] else "";
       in
       {
         devShells.default = with pkgs; mkShell {
@@ -31,8 +31,8 @@
             pkg-config
             openssl
             nodejs
-            libxcb
-            perf
+            pkgsCross.mingwW64.stdenv.cc
+            pkgsCross.mingwW64.stdenv.cc.bintools
             # wasm-pack
             cargo-flamegraph
             rust-analyzer
@@ -44,7 +44,7 @@
               # targets = [ "wasm32-unknown-unknown" ];
               extensions = ["rust-analyzer"];
             })
-          ];
+          ] ++ lib.optionals stdenv.isLinux [ libxcb perf ];
           LD_LIBRARY_PATH = libPath;
         };
       }

@@ -15,6 +15,17 @@ Please join [our Discord](https://discord.gg/ebmfGDP) if you are interested in t
 - copy `config.toml.example` to `config.toml`
 - run `cargo run` or `cargo run --release`
 
+### CrossOver controller DLL
+
+Build the app-local XInput DLL from source:
+
+```sh
+nix develop -c sh xinput/build.sh
+```
+
+This produces `target/crossover-joystick/xinput1_3.dll`. See
+[xinput/README.md](xinput/README.md) for installation and the input protocol.
+
 ## Headless CLI
 
 A GUI-free runner (`tas-cli`) is available for scripting and AI-driven
